@@ -26,7 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,7 +58,12 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+int _write(int fd, char *p, int n)
+{
+  (void)fd;
+  HAL_UART_Transmit(&huart2, (uint8_t *)p, n, HAL_MAX_DELAY);
+  return n;
+}
 /* USER CODE END 0 */
 
 /**
@@ -95,7 +100,9 @@ int main(void)
   MX_TIM3_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  setvbuf(stdout, NULL, _IONBF, 0);
+  printf("hello from STM32C031\r\n");
+  uint32_t tick = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,6 +113,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    HAL_Delay(1000);
+    printf("tick %lu\r\n", ++tick);
+    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
   }
   /* USER CODE END 3 */
 }
