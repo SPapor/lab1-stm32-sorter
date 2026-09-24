@@ -6,3 +6,4 @@ build/
 *.map
 .DS_Store
 docs/screenshots/
+wokwi.vcd
