@@ -3,11 +3,47 @@
   "author": "Кекух А.О., ІО-32",
   "editor": "wokwi",
   "parts": [
-    { "type": "board-st-nucleo-c031c6", "id": "nucleo", "top": 0, "left": 0, "attrs": {} }
+    { "type": "board-st-nucleo-c031c6", "id": "nucleo", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-lcd1602", "id": "lcd", "top": -420, "left": -60, "attrs": { "pins": "i2c" } },
+    { "type": "wokwi-mpu6050", "id": "imu", "top": -400, "left": 420, "attrs": {} },
+    { "type": "wokwi-photoresistor-sensor", "id": "ldr_gate", "top": -80, "left": 460, "attrs": {} },
+    { "type": "wokwi-photoresistor-sensor", "id": "ldr_class", "top": 120, "left": 460, "attrs": {} },
+    { "type": "wokwi-servo", "id": "gate", "top": 420, "left": -60, "attrs": {} },
+    { "type": "wokwi-pushbutton", "id": "estop", "top": 420, "left": 400, "attrs": { "color": "red" } },
+    { "type": "wokwi-logic-analyzer", "id": "logic", "top": 0, "left": -480, "attrs": {} }
   ],
   "connections": [
     [ "$serialMonitor:TX", "nucleo:PA3", "", [] ],
-    [ "$serialMonitor:RX", "nucleo:PA2", "", [] ]
+    [ "$serialMonitor:RX", "nucleo:PA2", "", [] ],
+
+    [ "imu:SCL", "nucleo:PA9", "green", [] ],
+    [ "imu:SDA", "nucleo:PA10", "blue", [] ],
+    [ "lcd:SCL", "nucleo:PA9", "green", [] ],
+    [ "lcd:SDA", "nucleo:PA10", "blue", [] ],
+
+    [ "ldr_gate:AO", "nucleo:PA0", "orange", [] ],
+    [ "ldr_class:AO", "nucleo:PA1", "gold", [] ],
+
+    [ "gate:PWM", "nucleo:PA6", "purple", [] ],
+
+    [ "estop:1.l", "nucleo:PC13", "magenta", [] ],
+    [ "estop:2.l", "nucleo:GND.1", "black", [] ],
+
+    [ "logic:D0", "nucleo:PA9", "green", [] ],
+    [ "logic:D1", "nucleo:PA10", "blue", [] ],
+    [ "logic:D2", "nucleo:PA6", "purple", [] ],
+    [ "logic:GND", "nucleo:GND.2", "black", [] ],
+
+    [ "imu:VCC", "nucleo:3V3.1", "red", [] ],
+    [ "imu:GND", "nucleo:GND.8", "black", [] ],
+    [ "ldr_gate:VCC", "nucleo:3V3.2", "red", [] ],
+    [ "ldr_gate:GND", "nucleo:GND.5", "black", [] ],
+    [ "ldr_class:VCC", "nucleo:3V3.2", "red", [] ],
+    [ "ldr_class:GND", "nucleo:GND.6", "black", [] ],
+    [ "lcd:VCC", "nucleo:5V.1", "red", [] ],
+    [ "lcd:GND", "nucleo:GND.3", "black", [] ],
+    [ "gate:V+", "nucleo:5V.2", "red", [] ],
+    [ "gate:GND", "nucleo:GND.4", "black", [] ]
   ],
   "dependencies": {}
 }
