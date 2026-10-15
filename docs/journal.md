@@ -26,3 +26,7 @@
 ## Проблема 7: Mem_Read/Mem_Write → HAL_ERROR, WHO_AM_I перестав читатись
 Симптом: після переходу на `HAL_I2C_Mem_Read`/`Mem_Write` усі транзакції з MPU-6050 повертають `st=1` (HAL_ERROR), навіть WHO_AM_I, хоча скан пристрої бачить.
 Фікс: відкат на `HAL_I2C_Master_Transmit` + `HAL_I2C_Master_Receive` (зі STOP між ними); діагностика статусів і raw-байтів 0x3B лишилась.
+
+## Проблема 8: запис 2 байтів у MPU-6050 у Wokwi → TIMEOUT, SLEEP не знімається
+Симптом: `I2C_RECOVER where=wr err=0x20 isr=0x00008003` тричі, `MPU6050 init status=3` (ERR_SLEEP), хоча WHO_AM_I = 0x68 і прискорення читається (0/0/1000 mg).
+
