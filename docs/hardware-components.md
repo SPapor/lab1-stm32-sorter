@@ -8,7 +8,7 @@
    Datasheet SCPS068, ревізія вересень 2024. 42 с.
 4. Hitachi. HD44780U (LCD-II) Dot Matrix Liquid Crystal Display
    Controller/Driver. ADE-207-272(Z), rev 0.0. 60 с.
-5. STMicroelectronics. STM32C031x4/x6 Datasheet, DS14104. 103 с.
+5. STMicroelectronics. STM32C031x4/x6 Datasheet, DS13867 Rev 4, січень 2024. 103 с.
    https://www.st.com/en/microcontrollers-microprocessors/stm32c031c6.html
 6. STMicroelectronics. STM32 Nucleo-64 boards (MB1717). User manual
    UM2953, rev 2, листопад 2024. 33 с.
