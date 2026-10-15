@@ -27,6 +27,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "i2c_hal.h"
+#include "mpu6050.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,10 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define MPU_ADDR   0x68
-#define REG_WHO    0x75
-#define REG_PWR1   0x6B
-#define REG_ACCEL  0x3B
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -50,7 +49,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+static i2c_hal_ctx_t i2c1_ctx;
+static i2c_bus_t i2c1_bus;
+static mpu6050_t imu;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,9 +59,6 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 static void i2c_scan(void);
 static uint16_t adc_read(uint32_t channel);
-static HAL_StatusTypeDef mpu_read(uint8_t reg, uint8_t *buf, uint16_t len);
-static HAL_StatusTypeDef mpu_write(uint8_t reg, uint8_t val);
-static void i2c_recover(const char *where);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -115,19 +113,10 @@ int main(void)
 
   i2c_scan();
 
-  uint8_t who = 0;
-  if (mpu_read(REG_WHO, &who, 1) == HAL_OK)
-    printf("WHO_AM_I = 0x%02X\r\n", who);
-  else
-    printf("WHO_AM_I read FAILED\r\n");
-
-  /* PWR_MGMT_1 = 0x00: clear SLEEP (bit 6, set after reset) */
-  HAL_StatusTypeDef st = mpu_write(REG_PWR1, 0x00);
-  HAL_Delay(100);
-  uint8_t pwr1 = 0xFF;
-  HAL_StatusTypeDef st_rb = mpu_read(REG_PWR1, &pwr1, 1);
-  printf("PWR_MGMT_1 write st=%d, readback st=%d val=0x%02X%s\r\n",
-         st, st_rb, pwr1, (pwr1 & 0x40) ? " (SLEEP!)" : "");
+  i2c_hal_bus_init(&i2c1_bus, &i2c1_ctx, &hi2c1, MX_I2C1_Init);
+  mpu6050_status_t imu_st = mpu6050_init(&imu, &i2c1_bus, MPU6050_ADDR_DEFAULT);
+  printf("MPU6050 init status=%d who=0x%02X tries=%u\r\n",
+         (int)imu_st, imu.who_am_i, (unsigned)imu.init_tries);
 
   /* USER CODE END 2 */
 
@@ -141,17 +130,13 @@ int main(void)
     /* USER CODE BEGIN 3 */
     HAL_Delay(1000);
 
-    uint8_t raw[6] = {0};
-    HAL_StatusTypeDef st_acc = mpu_read(REG_ACCEL, raw, 6);
-    printf("0x3B st=%d raw %02X %02X %02X %02X %02X %02X\r\n",
-           st_acc, raw[0], raw[1], raw[2], raw[3], raw[4], raw[5]);
-
-    int16_t ax = (int16_t)(raw[0] << 8 | raw[1]);
-    int16_t ay = (int16_t)(raw[2] << 8 | raw[3]);
-    int16_t az = (int16_t)(raw[4] << 8 | raw[5]);
-
-    printf("accel %6d %6d %6d | gate %4u class %4u\r\n",
-          ax, ay, az, adc_read(ADC_CHANNEL_0), adc_read(ADC_CHANNEL_1));
+    mpu6050_accel_raw_t a = {0};
+    mpu6050_status_t st_acc = mpu6050_read_accel_raw(&imu, &a);
+    printf("accel st=%d raw %6d %6d %6d | mg %5ld %5ld %5ld | gate %4u class %4u\r\n",
+           (int)st_acc, a.x, a.y, a.z,
+           (long)mpu6050_raw_to_mg(a.x), (long)mpu6050_raw_to_mg(a.y),
+           (long)mpu6050_raw_to_mg(a.z),
+           adc_read(ADC_CHANNEL_0), adc_read(ADC_CHANNEL_1));
     HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
   }
   /* USER CODE END 3 */
@@ -220,34 +205,6 @@ static uint16_t adc_read(uint32_t channel)
   uint16_t v = HAL_ADC_GetValue(&hadc1);
   HAL_ADC_Stop(&hadc1);
   return v;
-}
-
-/* Wokwi C0 I2C model: HAL never sees TXIS for the 2nd byte of a master
- * write (SCL stays low after it, err=TIMEOUT, BUSY stuck). 1-byte writes
- * (TXDR preloaded) and reads work, so no Mem_*; reinit I2C after a failure. */
-static void i2c_recover(const char *where)
-{
-  printf("  I2C fail @%s: err=0x%02lX ISR=0x%08lX\r\n",
-         where, hi2c1.ErrorCode, hi2c1.Instance->ISR);
-  HAL_I2C_DeInit(&hi2c1);
-  MX_I2C1_Init();
-}
-
-static HAL_StatusTypeDef mpu_read(uint8_t reg, uint8_t *buf, uint16_t len)
-{
-  HAL_StatusTypeDef s = HAL_I2C_Master_Transmit(&hi2c1, MPU_ADDR << 1, &reg, 1, 100);
-  if (s != HAL_OK) { i2c_recover("rd-tx"); return s; }
-  s = HAL_I2C_Master_Receive(&hi2c1, MPU_ADDR << 1, buf, len, 100);
-  if (s != HAL_OK) i2c_recover("rd-rx");
-  return s;
-}
-
-static HAL_StatusTypeDef mpu_write(uint8_t reg, uint8_t val)
-{
-  uint8_t b[2] = { reg, val };
-  HAL_StatusTypeDef s = HAL_I2C_Master_Transmit(&hi2c1, MPU_ADDR << 1, b, 2, 100);
-  if (s != HAL_OK) i2c_recover("wr");
-  return s;
 }
 /* USER CODE END 4 */
 
