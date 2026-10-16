@@ -4,6 +4,9 @@
 
 include Makefile
 
+# Бюджет flash: -Og давав 28616 байт text із 32 КБ
+OPT = -Os
+
 USER_DIRS    = Platform Devices App
 USER_SOURCES = $(foreach d,$(USER_DIRS),$(wildcard $(d)/*.c))
 

@@ -54,6 +54,8 @@ typedef struct {
 #define SERVO_SELFTEST_DEG  90u     /* середина ходу серво під час самоперевірки */
 #define TELEMETRY_PERIOD_MS 1000u   /* період рядка accel, поки stream on */
 #define CAP_NACK_ADDR       0x69u   /* MPU-6050 з AD0 = 1 — на шині немає, чекаємо NACK */
+#define CAP_SERVO_HOLD_MS   45u     /* LED_MARK після запису CCR: > 2 періоди ШИМ по 20 мс */
+#define CAP_LCD_TEXT        "CAP             "   /* 16 символів: стирає старий рядок */
 
 _Static_assert(CLI_SERVO_MAX_DEG == SERVO_HAL_MAX_DEG, "межа cap servo у cli.h != servo_hal.h");
 /* USER CODE END PD */
@@ -475,7 +477,7 @@ static void cap_accel(void)
   bus_status_t st = cap_mpu_read(MPU6050_REG_ACCEL_XOUT_H, b, sizeof b);
   cap_end();
   if (st == BUS_OK)
-    cap_report("accel", "OK", "raw=%02X %02X %02X %02X %02X %02X",
+    cap_report("accel", "OK", "raw=%02X%02X%02X%02X%02X%02X",
                b[0], b[1], b[2], b[3], b[4], b[5]);
   else
     cap_report_bus("accel", st);
@@ -517,7 +519,7 @@ static void cap_lcd(void)
   cap_begin();
   lcd_status_t ls = lcd1602_set_cursor(&lcd, 0, 1);
   if (ls == LCD_OK)
-    ls = lcd1602_print(&lcd, "CAP");
+    ls = lcd1602_print(&lcd, CAP_LCD_TEXT);
   cap_end();
   if (ls == LCD_OK)
     cap_report("lcd", "OK", "row=1 text=CAP");
@@ -525,12 +527,15 @@ static void cap_lcd(void)
     cap_report("lcd", "ERR", "isr=0x%08lX", (unsigned long)i2c1_ctx.last_isr);
 }
 
-/* Новий CCR набуває чинності з наступного періоду ШИМ (preload увімкнено HAL) */
+/* HAL вмикає preload CCR, тож нова ширина з'являється лише з наступного
+ * періоду ШИМ (до 20 мс після запису). LED_MARK тримаємо CAP_SERVO_HOLD_MS:
+ * у вікно маркера гарантовано потрапляє щонайменше один повний новий імпульс. */
 static void cap_servo(uint8_t deg)
 {
   cap_begin();
   servo_hal_set_angle(deg);
   uint16_t pulse = servo_hal_get_pulse_us();
+  HAL_Delay(CAP_SERVO_HOLD_MS);
   cap_end();
   cap_report("servo", "OK", "deg=%u pulse_us=%u", (unsigned)deg, (unsigned)pulse);
 }
