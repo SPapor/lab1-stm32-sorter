@@ -27,6 +27,11 @@
 Симптом: після переходу на `HAL_I2C_Mem_Read`/`Mem_Write` усі транзакції з MPU-6050 повертають `st=1` (HAL_ERROR), навіть WHO_AM_I, хоча скан пристрої бачить.
 Фікс: відкат на `HAL_I2C_Master_Transmit` + `HAL_I2C_Master_Receive` (зі STOP між ними); діагностика статусів і raw-байтів 0x3B лишилась.
 
-## Проблема 8: запис 2 байтів у MPU-6050 у Wokwi → TIMEOUT, SLEEP не знімається
-Симптом: `I2C_RECOVER where=wr err=0x20 isr=0x00008003` тричі, `MPU6050 init status=3` (ERR_SLEEP), хоча WHO_AM_I = 0x68 і прискорення читається (0/0/1000 mg).
+## Проблема 8: запис 2 байтів у MPU-6050 у Wokwi → TIMEOUT, шина зависає
+Симптом: при старті тричі `I2C_RECOVER where=wr err=0x20 isr=0x00008003`, далі `SELFTEST mpu6050 status=WARN who=0x68 tries=3 err=SLEEP`; `cap wr2` → `CAP wr2 st=TIMEOUT isr=0x00008003`. WHO_AM_I = 0x68 і прискорення (0/0/1000 mg) читаються.
+На шині (docs/lab_2/captures/measurements.md, скріни 21, 30): лише `S 68W A 6B A` — байта 0x00 і STOP немає. Після 9-го такту SCL лежить у 0 до наступної транзакції: 3,933 с (all.vcd) і 3,267 с (nack-order.vcd), при старті між спробами — 105,2–105,5 мс.
 
+
+## Проблема 9: 1-байтовий запис на відсутню адресу 0x69 → HAL_OK, хоча на шині NACK
+Симптом: `cap nack` → `CAP nack st=OK addr=0x69`, хоча I²C-скан при старті знаходить лише 0x27 і 0x68.
+Декодований UART на D3 після кожного маркера D4:
