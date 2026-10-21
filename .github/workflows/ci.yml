@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker image (docker/Dockerfile)
+        run: docker build -t stm32-build docker/
+
+      - name: Layer dependencies
+        run: make check-deps
+
+      - name: Firmware build
+        run: make build
+
+      - name: Host tests
+        run: make test
+
+      - name: Coverage
+        run: make coverage
+
+      - name: Upload firmware.elf
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: firmware/build/firmware.elf
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: build/coverage/
