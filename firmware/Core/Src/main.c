@@ -33,8 +33,10 @@
 #include "adc_hal.h"
 #include "servo_hal.h"
 #include "i2c_hal.h"
+#include "uart_hal.h"
 #include "mpu6050.h"
 #include "lcd1602.h"
+#include "cli.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,7 +51,13 @@ typedef struct {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define SERVO_SELFTEST_DEG 90u   /* середина ходу серво під час самоперевірки */
+#define SERVO_SELFTEST_DEG  90u     /* середина ходу серво під час самоперевірки */
+#define TELEMETRY_PERIOD_MS 1000u   /* період рядка accel, поки stream on */
+#define CAP_NACK_ADDR       0x69u   /* MPU-6050 з AD0 = 1 — на шині немає, чекаємо NACK */
+#define CAP_SERVO_HOLD_MS   45u     /* LED_MARK після запису CCR: > 2 періоди ШИМ по 20 мс */
+#define CAP_LCD_TEXT        "CAP             "   /* 16 символів: стирає старий рядок */
+
+_Static_assert(CLI_SERVO_MAX_DEG == SERVO_HAL_MAX_DEG, "межа cap servo у cli.h != servo_hal.h");
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -65,6 +73,22 @@ static i2c_bus_t i2c1_bus;
 static mpu6050_t imu;
 static lcd1602_t lcd;
 static uint8_t lcd_ready;   /* LCD пройшов probe та init */
+static cli_t cli;
+static uint8_t stream_on = 1;   /* періодичний рядок accel (команда stream) */
+
+/* Текст команди help; синтаксис розбирає App/cli.c */
+static const char *const help_lines[] = {
+  "help                this list",
+  "stream on|off       periodic 'accel' line (default on)",
+  "cap whoami          MPU-6050: write 0x75, read 1 byte",
+  "cap accel           MPU-6050: write 0x3B, read 6 bytes",
+  "cap wr2             MPU-6050: 2-byte write PWR_MGMT_1 = 0x00",
+  "cap nack            1-byte write to absent 0x69, NACK expected",
+  "cap lcd             'CAP' on LCD row 1 (1-byte PCF8574 writes)",
+  "cap servo <0..180>  set servo angle",
+  "cap adc             one gate + one class conversion",
+  "cap uart            send 0x55 and 'UART-TEST'",
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -77,6 +101,24 @@ static void selftest_report(selftest_counts_t *cnt, const char *dev, selftest_st
 static void selftest_ldr(selftest_counts_t *cnt, const char *dev, uint32_t channel);
 static const char *mpu_err_name(mpu6050_status_t st);
 static void lcd_show_selftest(const selftest_counts_t *cnt);
+static void telemetry_print(void);
+static void console_echo(char ch);
+static void cmd_run(const cli_cmd_t *cmd);
+static void cap_begin(void);
+static void cap_end(void);
+static void cap_report(const char *name, const char *st, const char *fmt, ...)
+    __attribute__((format(printf, 3, 4)));
+static const char *bus_st_name(bus_status_t st);
+static void cap_report_bus(const char *name, bus_status_t st);
+static bus_status_t cap_mpu_read(uint8_t reg, uint8_t *buf, size_t len);
+static void cap_whoami(void);
+static void cap_accel(void);
+static void cap_wr2(void);
+static void cap_nack(void);
+static void cap_lcd(void);
+static void cap_servo(uint8_t deg);
+static void cap_adc(void);
+static void cap_uart(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -134,6 +176,9 @@ int main(void)
   selftest_counts_t st = selftest_run();
   lcd_show_selftest(&st);
 
+  cli_init(&cli);
+  printf("READY type 'help'\r\n");
+  uint32_t t_telemetry = HAL_GetTick();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -144,16 +189,22 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    HAL_Delay(1000);
+    int ch = uart_hal_getc();
+    if (ch >= 0) {
+      cli_cmd_t cmd;
 
-    mpu6050_accel_raw_t a = {0};
-    mpu6050_status_t st_acc = mpu6050_read_accel_raw(&imu, &a);
-    printf("accel st=%d raw %6d %6d %6d | mg %5ld %5ld %5ld | gate %4u class %4u\r\n",
-           (int)st_acc, a.x, a.y, a.z,
-           (long)mpu6050_raw_to_mg(a.x), (long)mpu6050_raw_to_mg(a.y),
-           (long)mpu6050_raw_to_mg(a.z),
-           adc_hal_read(BOARD_ADC_CH_GATE), adc_hal_read(BOARD_ADC_CH_CLASS));
-    HAL_GPIO_TogglePin(BOARD_LED_MARK_PORT, BOARD_LED_MARK_PIN);
+      console_echo((char)ch);
+      if (cli_feed(&cli, (char)ch, &cmd)) {
+        if (ch != '\r' && ch != '\n')
+          printf("\r\n");   /* переповнення: команда завершилась посеред рядка */
+        cmd_run(&cmd);
+      }
+    }
+
+    if (stream_on && HAL_GetTick() - t_telemetry >= TELEMETRY_PERIOD_MS) {
+      t_telemetry = HAL_GetTick();
+      telemetry_print();
+    }
   }
   /* USER CODE END 3 */
 }
@@ -295,6 +346,220 @@ static void lcd_show_selftest(const selftest_counts_t *cnt)
   (void)lcd1602_print(&lcd, "Warehouse Sorter");
   (void)lcd1602_set_cursor(&lcd, 0, 1);
   (void)lcd1602_print(&lcd, line);
+}
+
+static void telemetry_print(void)
+{
+  mpu6050_accel_raw_t a = {0};
+  mpu6050_status_t st_acc = mpu6050_read_accel_raw(&imu, &a);
+
+  printf("accel st=%d raw %6d %6d %6d | mg %5ld %5ld %5ld | gate %4u class %4u\r\n",
+         (int)st_acc, a.x, a.y, a.z,
+         (long)mpu6050_raw_to_mg(a.x), (long)mpu6050_raw_to_mg(a.y),
+         (long)mpu6050_raw_to_mg(a.z),
+         adc_hal_read(BOARD_ADC_CH_GATE), adc_hal_read(BOARD_ADC_CH_CLASS));
+}
+
+/* Ехо введеного символу. Кінець рядка — завжди "\r\n", пара CR LF дає один перенос. */
+static void console_echo(char ch)
+{
+  static char prev;
+
+  if (ch == '\r' || ch == '\n') {
+    if (!(ch == '\n' && prev == '\r'))
+      printf("\r\n");
+  } else if (ch == 0x08 || ch == 0x7F) {
+    printf("\b \b");
+  } else {
+    putchar(ch);
+  }
+  prev = ch;
+}
+
+static void cmd_run(const cli_cmd_t *cmd)
+{
+  switch (cmd->id) {
+  case CLI_HELP:
+    for (size_t i = 0; i < sizeof help_lines / sizeof help_lines[0]; i++)
+      printf("%s\r\n", help_lines[i]);
+    break;
+  case CLI_STREAM:
+    stream_on = (uint8_t)cmd->arg;
+    printf("%lu STREAM st=OK on=%u\r\n", (unsigned long)HAL_GetTick(), (unsigned)stream_on);
+    break;
+  case CLI_CAP_WHOAMI: cap_whoami(); break;
+  case CLI_CAP_ACCEL:  cap_accel();  break;
+  case CLI_CAP_WR2:    cap_wr2();    break;
+  case CLI_CAP_NACK:   cap_nack();   break;
+  case CLI_CAP_LCD:    cap_lcd();    break;
+  case CLI_CAP_SERVO:  cap_servo((uint8_t)cmd->arg); break;
+  case CLI_CAP_ADC:    cap_adc();    break;
+  case CLI_CAP_UART:   cap_uart();   break;
+  default:
+    printf("%lu CLI st=BAD\r\n", (unsigned long)HAL_GetTick());
+    break;
+  }
+}
+
+/* Рамка однієї дії для логічного аналізатора: LED_MARK (PA5, канал D4) = 1 рівно
+ * на час дії. HAL_UART_Transmit повертається лише після TC, тож ехо команди вже
+ * вийшло з TX; I2C_RECOVER друкується тільки після спаду маркера. */
+static void cap_begin(void)
+{
+  i2c_hal_defer_log(&i2c1_ctx, 1);
+  HAL_GPIO_WritePin(BOARD_LED_MARK_PORT, BOARD_LED_MARK_PIN, GPIO_PIN_SET);
+}
+
+static void cap_end(void)
+{
+  HAL_GPIO_WritePin(BOARD_LED_MARK_PORT, BOARD_LED_MARK_PIN, GPIO_PIN_RESET);
+  i2c_hal_defer_log(&i2c1_ctx, 0);
+}
+
+/* Рядок FR-10: "<ms> CAP <name> st=<OK|NACK|TIMEOUT|ERR> key=value..." */
+static void cap_report(const char *name, const char *st, const char *fmt, ...)
+{
+  va_list ap;
+
+  printf("%lu CAP %s st=%s ", (unsigned long)HAL_GetTick(), name, st);
+  va_start(ap, fmt);
+  vprintf(fmt, ap);
+  va_end(ap);
+  printf("\r\n");
+}
+
+static const char *bus_st_name(bus_status_t st)
+{
+  switch (st) {
+  case BUS_OK:          return "OK";
+  case BUS_ERR_NACK:    return "NACK";
+  case BUS_ERR_TIMEOUT: return "TIMEOUT";
+  default:              return "ERR";
+  }
+}
+
+/* Невдала транзакція: ISR зафіксовано в i2c_hal до відновлення шини */
+static void cap_report_bus(const char *name, bus_status_t st)
+{
+  cap_report(name, bus_st_name(st), "isr=0x%08lX", (unsigned long)i2c1_ctx.last_isr);
+}
+
+/* Напряму через i2c_bus_t, без повторів драйвера: запис адреси регістра (1 байт),
+ * STOP, читання len байтів — як у mpu6050.c, але рівно один раз. */
+static bus_status_t cap_mpu_read(uint8_t reg, uint8_t *buf, size_t len)
+{
+  const i2c_bus_t *bus = &i2c1_bus;
+  bus_status_t st = bus->write(bus->ctx, BOARD_MPU_ADDR, &reg, 1);
+
+  if (st == BUS_OK)
+    st = bus->read(bus->ctx, BOARD_MPU_ADDR, buf, len);
+  return st;
+}
+
+static void cap_whoami(void)
+{
+  uint8_t val = 0;
+
+  cap_begin();
+  bus_status_t st = cap_mpu_read(MPU6050_REG_WHO_AM_I, &val, 1);
+  cap_end();
+  if (st == BUS_OK)
+    cap_report("whoami", "OK", "val=0x%02X", val);
+  else
+    cap_report_bus("whoami", st);
+}
+
+static void cap_accel(void)
+{
+  uint8_t b[6] = {0};
+
+  cap_begin();
+  bus_status_t st = cap_mpu_read(MPU6050_REG_ACCEL_XOUT_H, b, sizeof b);
+  cap_end();
+  if (st == BUS_OK)
+    cap_report("accel", "OK", "raw=%02X%02X%02X%02X%02X%02X",
+               b[0], b[1], b[2], b[3], b[4], b[5]);
+  else
+    cap_report_bus("accel", st);
+}
+
+/* 2-байтовий запис, що у Wokwi C0 обривається TIMEOUT (docs/journal.md, проблема 8) */
+static void cap_wr2(void)
+{
+  const uint8_t b[2] = { MPU6050_REG_PWR_MGMT_1, 0x00u };
+  const i2c_bus_t *bus = &i2c1_bus;
+
+  cap_begin();
+  bus_status_t st = bus->write(bus->ctx, BOARD_MPU_ADDR, b, sizeof b);
+  cap_end();
+  if (st == BUS_OK)
+    cap_report("wr2", "OK", "reg=0x%02X val=0x%02X", b[0], b[1]);
+  else
+    cap_report_bus("wr2", st);
+}
+
+static void cap_nack(void)
+{
+  const uint8_t b = 0x00u;
+  const i2c_bus_t *bus = &i2c1_bus;
+
+  cap_begin();
+  bus_status_t st = bus->write(bus->ctx, CAP_NACK_ADDR, &b, 1);
+  cap_end();
+  cap_report("nack", bus_st_name(st), "addr=0x%02X", CAP_NACK_ADDR);
+}
+
+static void cap_lcd(void)
+{
+  if (!lcd_ready) {
+    cap_report("lcd", "ERR", "ready=0");
+    return;
+  }
+
+  cap_begin();
+  lcd_status_t ls = lcd1602_set_cursor(&lcd, 0, 1);
+  if (ls == LCD_OK)
+    ls = lcd1602_print(&lcd, CAP_LCD_TEXT);
+  cap_end();
+  if (ls == LCD_OK)
+    cap_report("lcd", "OK", "row=1 text=CAP");
+  else
+    cap_report("lcd", "ERR", "isr=0x%08lX", (unsigned long)i2c1_ctx.last_isr);
+}
+
+/* HAL вмикає preload CCR, тож нова ширина з'являється лише з наступного
+ * періоду ШИМ (до 20 мс після запису). LED_MARK тримаємо CAP_SERVO_HOLD_MS:
+ * у вікно маркера гарантовано потрапляє щонайменше один повний новий імпульс. */
+static void cap_servo(uint8_t deg)
+{
+  cap_begin();
+  servo_hal_set_angle(deg);
+  uint16_t pulse = servo_hal_get_pulse_us();
+  HAL_Delay(CAP_SERVO_HOLD_MS);
+  cap_end();
+  cap_report("servo", "OK", "deg=%u pulse_us=%u", (unsigned)deg, (unsigned)pulse);
+}
+
+static void cap_adc(void)
+{
+  cap_begin();
+  uint16_t gate = adc_hal_read(BOARD_ADC_CH_GATE);
+  uint16_t cls = adc_hal_read(BOARD_ADC_CH_CLASS);
+  cap_end();
+  cap_report("adc", "OK", "gate=%u class=%u", (unsigned)gate, (unsigned)cls);
+}
+
+/* 0x55 разом зі старт- і стоп-бітом (LSB першим) дає на лінії меандр 0101010101 —
+ * зручно міряти тривалість біта; далі рядок для розбору символів. */
+static void cap_uart(void)
+{
+  static const uint8_t msg[] = "\x55" "UART-TEST";
+
+  cap_begin();
+  HAL_StatusTypeDef s = HAL_UART_Transmit(BOARD_UART, msg, sizeof msg - 1, HAL_MAX_DELAY);
+  cap_end();
+  printf("\r\n");
+  cap_report("uart", s == HAL_OK ? "OK" : "ERR", "bytes=%u", (unsigned)(sizeof msg - 1));
 }
 /* USER CODE END 4 */
 

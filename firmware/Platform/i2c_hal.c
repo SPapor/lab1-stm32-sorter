@@ -12,13 +12,25 @@ static bus_status_t map_status(HAL_StatusTypeDef s, uint32_t err)
     return BUS_ERR_OTHER;
 }
 
+static void print_recover(const i2c_hal_ctx_t *c)
+{
+    printf("I2C_RECOVER where=%s err=0x%02lX isr=0x%08lX\r\n",
+           c->last_where, (unsigned long)c->last_err, (unsigned long)c->last_isr);
+}
+
 /* Модель I2C у Wokwi C0: при записі HAL не бачить TXIS для другого байта
  * (SCL лишається низьким, err=TIMEOUT, BUSY залипає). Після будь-якої помилки
  * повністю переініціалізуємо периферію, інакше наступні транзакції не пройдуть. */
 static void recover(i2c_hal_ctx_t *c, const char *where)
 {
-    printf("I2C_RECOVER where=%s err=0x%02lX isr=0x%08lX\r\n",
-           where, (unsigned long)c->h->ErrorCode, (unsigned long)c->h->Instance->ISR);
+    c->last_where = where;
+    c->last_err = c->h->ErrorCode;
+    c->last_isr = c->h->Instance->ISR;
+    if (c->defer_log)
+        c->log_pending = 1;
+    else
+        print_recover(c);
+
     HAL_I2C_DeInit(c->h);
     if (c->reinit)
         c->reinit();
@@ -64,8 +76,22 @@ void i2c_hal_bus_init(i2c_bus_t *bus, i2c_hal_ctx_t *ctx, I2C_HandleTypeDef *h, 
     ctx->h = h;
     ctx->reinit = reinit;
     ctx->recover_count = 0;
+    ctx->last_where = "";
+    ctx->last_err = 0;
+    ctx->last_isr = 0;
+    ctx->defer_log = 0;
+    ctx->log_pending = 0;
 
     bus->write = hal_write;
     bus->read = hal_read;
     bus->ctx = ctx;
+}
+
+void i2c_hal_defer_log(i2c_hal_ctx_t *ctx, uint8_t on)
+{
+    ctx->defer_log = on;
+    if (!on && ctx->log_pending) {
+        print_recover(ctx);
+        ctx->log_pending = 0;
+    }
 }

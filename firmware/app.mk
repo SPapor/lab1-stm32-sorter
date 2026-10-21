@@ -1,10 +1,13 @@
 # Надбудова над згенерованим Makefile. CubeMX перезаписує firmware/Makefile
-# при кожній регенерації з firmware.ioc, тож власні каталоги (Platform/, Devices/)
+# при кожній регенерації з firmware.ioc, тож власні каталоги (Platform/, Devices/, App/)
 # і суворіші прапорці для них підключаємо тут: make -f app.mk.
 
 include Makefile
 
-USER_DIRS    = Platform Devices
+# Бюджет flash: -Og давав 28616 байт text із 32 КБ
+OPT = -Os
+
+USER_DIRS    = Platform Devices App
 USER_SOURCES = $(foreach d,$(USER_DIRS),$(wildcard $(d)/*.c))
 
 C_SOURCES   += $(USER_SOURCES)
