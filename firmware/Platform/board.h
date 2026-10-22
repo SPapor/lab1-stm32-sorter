@@ -34,7 +34,9 @@
 #define BOARD_ADC_MARK_PIN   ADC_MARK_Pin
 
 /* Кнопка E-STOP: замикає на GND, pull-up, EXTI за спадом */
-#define BOARD_ESTOP_PIN      ESTOP_Pin            /* PC13, B1, EXTI4_15 */
+#define BOARD_ESTOP_PORT     ESTOP_GPIO_Port
+#define BOARD_ESTOP_PIN      ESTOP_Pin            /* PC13, B1 */
+#define BOARD_ESTOP_IRQ      EXTI4_15_IRQn        /* лінія EXTI13 */
 
 /* 7-бітні адреси на I2C1 (pinout.md §2) */
 #define BOARD_MPU_ADDR       0x68u                /* MPU-6050, AD0 = GND */
