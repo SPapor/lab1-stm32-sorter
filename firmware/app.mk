@@ -17,6 +17,10 @@ vpath %.c $(USER_DIRS)
 USER_OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(USER_SOURCES:.c=.o)))
 $(USER_OBJECTS): CFLAGS += -Wextra -Werror
 
+# main.c генерує CubeMX, але в секціях USER CODE — власний код (composition root),
+# тож і для нього -Wextra -Werror. Решта Core/ і Drivers/ — лише -Wall.
+$(BUILD_DIR)/main.o: CFLAGS += -Wextra -Werror
+
 # Пререквізити правила лінкування в Makefile розкриваються в момент читання
 # (до C_SOURCES +=), тому власні об'єкти додаємо явно — інакше ld їх не знайде.
 $(BUILD_DIR)/$(TARGET).elf: $(USER_OBJECTS)
