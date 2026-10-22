@@ -1,91 +1,318 @@
-<mxfile host="drawio" type="device">
-<diagram id="components" name="Components">
-<mxGraphModel dx="1660" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1660" pageHeight="1080" math="0" shadow="0">
-<root>
-<mxCell id="0"/>
-<mxCell id="1" parent="0"/>
-<mxCell id="g_main" value="Core/ — main.c, секції USER CODE (composition root)" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="420" y="30" width="820" height="95" as="geometry"/></mxCell>
-<mxCell id="g_tests" value="tests/ — хостові тести (gcc, make test)" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="30" y="170" width="340" height="490" as="geometry"/></mxCell>
-<mxCell id="g_app" value="App/ — прикладна логіка" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="420" y="170" width="300" height="120" as="geometry"/></mxCell>
-<mxCell id="g_dev" value="Devices/ — драйвери пристроїв" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="420" y="330" width="700" height="270" as="geometry"/></mxCell>
-<mxCell id="g_plat" value="Platform/ — адаптація до плати" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=bottom;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="420" y="650" width="820" height="200" as="geometry"/></mxCell>
-<mxCell id="g_cube" value="Core/ — згенеровано CubeMX" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="420" y="900" width="360" height="140" as="geometry"/></mxCell>
-<mxCell id="g_drv" value="Drivers/ — вендорський код ST" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=right;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="880" y="900" width="360" height="140" as="geometry"/></mxCell>
-<mxCell id="g_ext" value="Зовнішні пристрої (стенд / Wokwi)" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#ffffff;strokeColor=#4d4d4d;" vertex="1" parent="1"><mxGeometry x="1300" y="170" width="330" height="690" as="geometry"/></mxCell>
-<mxCell id="main" value="створює i2c_bus_t, mpu6050_t, lcd1602_t, cli_t; самоперевірка, команди CLI (cap …), телеметрія, printf → USART2" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="440" y="62" width="780" height="52" as="geometry"/></mxCell>
-<mxCell id="cli" value="&lt;b&gt;cli.c / cli.h&lt;/b&gt;&lt;br&gt;розбір команд UART" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="440" y="215" width="260" height="55" as="geometry"/></mxCell>
-<mxCell id="forbid" value="&lt;b&gt;✗ заборонено для App/ і Devices/&lt;/b&gt;&lt;br&gt;stm32*.h, *_hal*.h, board.h, platform.h,&lt;br&gt;main.h, adc.h, i2c.h, tim.h, usart.h, gpio.h&lt;br&gt;&lt;i&gt;tools/check-deps.sh → make check-deps, CI&lt;/i&gt;" style="shape=note;size=14;whiteSpace=wrap;html=1;fontSize=10;fillColor=#f8cecc;strokeColor=#b85450;fontColor=#7a2b28;" vertex="1" parent="1"><mxGeometry x="745" y="180" width="245" height="110" as="geometry"/></mxCell>
-<mxCell id="mpu" value="&lt;b&gt;mpu6050.c / .h&lt;/b&gt;&lt;br&gt;MPU-6050: WHO_AM_I, SLEEP, accel" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="440" y="370" width="230" height="55" as="geometry"/></mxCell>
-<mxCell id="lcd" value="&lt;b&gt;lcd1602.c / .h&lt;/b&gt;&lt;br&gt;HD44780 через PCF8574, 1-байтові записи" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="700" y="370" width="230" height="55" as="geometry"/></mxCell>
-<mxCell id="ibus" value="&lt;div style=&quot;text-align:center&quot;&gt;«interface»&lt;br&gt;&lt;b&gt;i2c_bus_t&lt;/b&gt; (i2c_bus.h)&lt;/div&gt;&lt;hr&gt;+ write(ctx, addr7, data, len) : bus_status_t&lt;br&gt;+ read(ctx, addr7, data, len) : bus_status_t&lt;br&gt;+ ctx : void *" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;fillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="440" y="460" width="330" height="125" as="geometry"/></mxCell>
-<mxCell id="t_cli" value="&lt;b&gt;test_cli.c&lt;/b&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="50" y="220" width="150" height="40" as="geometry"/></mxCell>
-<mxCell id="t_lcd" value="&lt;b&gt;test_lcd1602.c&lt;/b&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="50" y="290" width="150" height="40" as="geometry"/></mxCell>
-<mxCell id="t_mpu" value="&lt;b&gt;test_mpu6050.c&lt;/b&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="50" y="377" width="150" height="40" as="geometry"/></mxCell>
-<mxCell id="fake" value="&lt;b&gt;fakes/fake_i2c_bus&lt;/b&gt;&lt;br&gt;mock (сценарій) +&lt;br&gt;регістри MPU,&lt;br&gt;ін&#x27;єкція NACK/TIMEOUT" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="220" y="470" width="135" height="100" as="geometry"/></mxCell>
-<mxCell id="unity" value="&lt;b&gt;unity/&lt;/b&gt; — Unity v2.7.0 (vendored)&lt;br&gt;unity.h у всіх test_* і fake" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="50" y="600" width="305" height="45" as="geometry"/></mxCell>
-<mxCell id="i2c_hal" value="&lt;b&gt;i2c_hal.c / .h&lt;/b&gt;&lt;br&gt;i2c_bus_t над HAL, recover" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="440" y="690" width="170" height="55" as="geometry"/></mxCell>
-<mxCell id="platform" value="&lt;b&gt;platform.c / .h&lt;/b&gt;&lt;br&gt;platform_delay_ms" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="440" y="770" width="170" height="55" as="geometry"/></mxCell>
-<mxCell id="adc_hal" value="&lt;b&gt;adc_hal.c / .h&lt;/b&gt;&lt;br&gt;1 перетворення + ADC_MARK" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="640" y="690" width="170" height="55" as="geometry"/></mxCell>
-<mxCell id="servo_hal" value="&lt;b&gt;servo_hal.c / .h&lt;/b&gt;&lt;br&gt;TIM3 PWM, кут → мкс" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="830" y="690" width="170" height="55" as="geometry"/></mxCell>
-<mxCell id="uart_hal" value="&lt;b&gt;uart_hal.c / .h&lt;/b&gt;&lt;br&gt;прийом USART2 опитуванням" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="1020" y="690" width="200" height="55" as="geometry"/></mxCell>
-<mxCell id="board" value="&lt;b&gt;board.h&lt;/b&gt; — усе знання про плату: хендли, канали АЦП, таймер,&lt;br&gt;маркери, адреси I²C (docs/pinout.md §1, §2)" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="640" y="770" width="580" height="60" as="geometry"/></mxCell>
-<mxCell id="cube" value="main.h, gpio.c, adc.c, i2c.c, tim.c, usart.c (MX_*_Init), stm32c0xx_it.c, hal_msp.c, hal_conf.h, startup, .ld" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="440" y="935" width="320" height="90" as="geometry"/></mxCell>
-<mxCell id="hal" value="&lt;b&gt;STM32C0xx_HAL_Driver&lt;/b&gt;&lt;br&gt;v1.4.1&lt;br&gt;(STM32Cube FW_C0 V1.4.1)" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="895" y="935" width="160" height="90" as="geometry"/></mxCell>
-<mxCell id="cmsis" value="&lt;b&gt;CMSIS&lt;/b&gt; Core 5.6&lt;br&gt;Device C0 1.4.1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="1110" y="935" width="120" height="40" as="geometry"/></mxCell>
-<mxCell id="bsp" value="&lt;b&gt;BSP&lt;/b&gt; Nucleo 1.1.1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="1110" y="985" width="120" height="40" as="geometry"/></mxCell>
-<mxCell id="mcu" value="&lt;b&gt;МК STM32C031C6 (NUCLEO-C031C6)&lt;/b&gt;&lt;br&gt;I2C1 · ADC1 · TIM3 · USART2 · GPIO/EXTI" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" vertex="1" parent="1"><mxGeometry x="1300" y="900" width="330" height="140" as="geometry"/></mxCell>
-<mxCell id="e_mpu" value="&lt;b&gt;MPU-6050&lt;/b&gt;&lt;br&gt;I2C1 PA9/PA10, 0x68" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" vertex="1" parent="1"><mxGeometry x="1400" y="210" width="215" height="55" as="geometry"/></mxCell>
-<mxCell id="e_lcd" value="&lt;b&gt;PCF8574 + LCD1602&lt;/b&gt;&lt;br&gt;I2C1 PA9/PA10, 0x27" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" vertex="1" parent="1"><mxGeometry x="1400" y="290" width="215" height="55" as="geometry"/></mxCell>
-<mxCell id="e_ldr1" value="&lt;b&gt;LDR gate&lt;/b&gt;&lt;br&gt;ADC1_IN0, PA0 (A0)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" vertex="1" parent="1"><mxGeometry x="1400" y="380" width="215" height="50" as="geometry"/></mxCell>
-<mxCell id="e_ldr2" value="&lt;b&gt;LDR class&lt;/b&gt;&lt;br&gt;ADC1_IN1, PA1 (A1)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" vertex="1" parent="1"><mxGeometry x="1400" y="450" width="215" height="50" as="geometry"/></mxCell>
-<mxCell id="e_servo" value="&lt;b&gt;Серво SG92R&lt;/b&gt;&lt;br&gt;TIM3_CH1, PA6 (D12)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" vertex="1" parent="1"><mxGeometry x="1400" y="540" width="215" height="50" as="geometry"/></mxCell>
-<mxCell id="e_btn" value="&lt;b&gt;Кнопка E-STOP (B1)&lt;/b&gt;&lt;br&gt;EXTI13, PC13" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" vertex="1" parent="1"><mxGeometry x="1400" y="630" width="215" height="50" as="geometry"/></mxCell>
-<mxCell id="e_vcp" value="&lt;b&gt;ST-LINK VCP → ПК&lt;/b&gt;&lt;br&gt;USART2 PA2/PA3, 115200 8N1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" vertex="1" parent="1"><mxGeometry x="1400" y="720" width="215" height="60" as="geometry"/></mxCell>
-<mxCell id="e1" value="cli.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.3293;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.9615;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="g_main" target="cli"><mxGeometry x="-0.3" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e2" value="mpu6050.h,&lt;br&gt;lcd1602.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.7683;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.9000;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="g_main" target="g_dev"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e3" value="board.h, i2c_hal.h,&lt;br&gt;adc_hal.h, servo_hal.h,&lt;br&gt;uart_hal.h, platform.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.9268;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.9268;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="g_main" target="g_plat"><mxGeometry x="0.905" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e4" value="main.h, adc.h, i2c.h, tim.h, usart.h, gpio.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.0000;exitY=0.4947;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" edge="1" parent="1" source="g_main" target="g_cube"><mxGeometry x="0.82" relative="1" as="geometry"><Array as="points"><mxPoint x="12" y="77"/><mxPoint x="12" y="970"/></Array><mxPoint x="0" y="-12" as="offset"/></mxGeometry></mxCell>
-<mxCell id="e5" value="i2c_bus.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.3485;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="mpu" target="ibus"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e6" value="i2c_bus.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.1522;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.8939;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="lcd" target="ibus"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e7" value="реалізує" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=block;endFill=0;endSize=12;dashed=1;strokeColor=#333333;exitX=0.5000;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.2576;entryY=1.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="i2c_hal" target="ibus"><mxGeometry x="-0.2" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e8" value="реалізує" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=block;endFill=0;endSize=12;dashed=1;strokeColor=#333333;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.4800;entryDx=0;entryDy=0;" edge="1" parent="1" source="fake" target="ibus"><mxGeometry x="0.0" relative="1" as="geometry"><mxPoint x="0" y="-14" as="offset"/></mxGeometry></mxCell>
-<mxCell id="e9" value="cli.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.4545;entryDx=0;entryDy=0;" edge="1" parent="1" source="t_cli" target="cli"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e10" value="lcd1602.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=0.5000;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="t_lcd" target="lcd"><mxGeometry x="-0.3" relative="1" as="geometry"><Array as="points"><mxPoint x="815" y="310"/></Array></mxGeometry></mxCell>
-<mxCell id="e11" value="mpu6050.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.4909;entryDx=0;entryDy=0;" edge="1" parent="1" source="t_mpu" target="mpu"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e12" value="fake_i2c_bus.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.3000;entryDx=0;entryDy=0;" edge="1" parent="1" source="t_mpu" target="fake"><mxGeometry x="-0.35" relative="1" as="geometry"><Array as="points"><mxPoint x="125" y="500"/></Array></mxGeometry></mxCell>
-<mxCell id="e13" value="fake_i2c_bus.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.7500;entryDx=0;entryDy=0;" edge="1" parent="1" source="t_lcd" target="fake"><mxGeometry x="0.576" relative="1" as="geometry"><Array as="points"><mxPoint x="40" y="310"/><mxPoint x="40" y="545"/></Array></mxGeometry></mxCell>
-<mxCell id="e14" value="unity.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.4963;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.7770;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="fake" target="unity"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e16" value="" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.1466;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="adc_hal" target="board"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e17" value="" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.4741;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="servo_hal" target="board"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e18" value="" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.8276;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="uart_hal" target="board"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e19" value="main.h, adc.h, i2c.h,&lt;br&gt;tim.h, usart.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.1034;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.7778;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="board" target="g_cube"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e20" value="stm32c0xx_hal.h&lt;br&gt;(i2c_hal.h, platform.c)" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.6768;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.5000;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="g_plat" target="hal"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e21" value="stm32c0xx_hal.h,&lt;br&gt;stm32c0xx_nucleo.h" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=1.0000;exitY=0.6071;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.6071;entryDx=0;entryDy=0;" edge="1" parent="1" source="g_cube" target="g_drv"><mxGeometry x="0.0" relative="1" as="geometry"><mxPoint x="0" y="-28" as="offset"/></mxGeometry></mxCell>
-<mxCell id="e22" value="CMSIS" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=1.0000;exitY=0.2222;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" edge="1" parent="1" source="hal" target="cmsis"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e23" value="HAL" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=1.0000;entryY=0.7778;entryDx=0;entryDy=0;" edge="1" parent="1" source="bsp" target="hal"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e24" value="регістри" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;dashed=1;dashPattern=1 3;strokeColor=#666666;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" edge="1" parent="1" source="g_drv" target="mcu"><mxGeometry x="0.0" relative="1" as="geometry"><mxPoint x="0" y="-12" as="offset"/></mxGeometry></mxCell>
-<mxCell id="e25" value="" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=cross;endSize=9;dashed=1;strokeColor=#b85450;strokeWidth=2;fontColor=#b85450;exitX=0.0000;exitY=0.4545;exitDx=0;exitDy=0;entryX=1.0000;entryY=0.5000;entryDx=0;entryDy=0;" edge="1" parent="1" source="forbid" target="g_app"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="e26" value="" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=cross;endSize=9;dashed=1;strokeColor=#b85450;strokeWidth=2;fontColor=#b85450;exitX=0.5102;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.6429;entryY=0.0000;entryDx=0;entryDy=0;" edge="1" parent="1" source="forbid" target="g_dev"><mxGeometry x="0.0" relative="1" as="geometry"></mxGeometry></mxCell>
-<mxCell id="p_e_mpu" value="" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" edge="1" parent="1" source="mcu" target="e_mpu"><mxGeometry x="0.0" relative="1" as="geometry"><Array as="points"><mxPoint x="1340" y="237.5"/></Array></mxGeometry></mxCell>
-<mxCell id="p_e_lcd" value="" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" edge="1" parent="1" source="mcu" target="e_lcd"><mxGeometry x="0.0" relative="1" as="geometry"><Array as="points"><mxPoint x="1340" y="317.5"/></Array></mxGeometry></mxCell>
-<mxCell id="p_e_ldr1" value="" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" edge="1" parent="1" source="mcu" target="e_ldr1"><mxGeometry x="0.0" relative="1" as="geometry"><Array as="points"><mxPoint x="1340" y="405.0"/></Array></mxGeometry></mxCell>
-<mxCell id="p_e_ldr2" value="" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" edge="1" parent="1" source="mcu" target="e_ldr2"><mxGeometry x="0.0" relative="1" as="geometry"><Array as="points"><mxPoint x="1340" y="475.0"/></Array></mxGeometry></mxCell>
-<mxCell id="p_e_servo" value="" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" edge="1" parent="1" source="mcu" target="e_servo"><mxGeometry x="0.0" relative="1" as="geometry"><Array as="points"><mxPoint x="1340" y="565.0"/></Array></mxGeometry></mxCell>
-<mxCell id="p_e_btn" value="" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" edge="1" parent="1" source="mcu" target="e_btn"><mxGeometry x="0.0" relative="1" as="geometry"><Array as="points"><mxPoint x="1340" y="655.0"/></Array></mxGeometry></mxCell>
-<mxCell id="p_e_vcp" value="" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" edge="1" parent="1" source="mcu" target="e_vcp"><mxGeometry x="0.0" relative="1" as="geometry"><Array as="points"><mxPoint x="1340" y="750.0"/></Array></mxGeometry></mxCell>
-<mxCell id="legend" value="Легенда" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;fontStyle=1;fontSize=12;fillColor=#ffffff;strokeColor=#999999;" vertex="1" parent="1"><mxGeometry x="30" y="690" width="340" height="205" as="geometry"/></mxCell>
-<mxCell id="leg_e0" value="" style="html=1;rounded=0;edgeStyle=none;endArrow=open;endSize=9;strokeColor=#333333;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="45" y="730" as="sourcePoint"/><mxPoint x="115" y="730" as="targetPoint"/></mxGeometry></mxCell>
-<mxCell id="leg_t0" value="#include (підпис — які заголовки)" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1"><mxGeometry x="125" y="718" width="240" height="24" as="geometry"/></mxCell>
-<mxCell id="leg_e1" value="" style="html=1;rounded=0;edgeStyle=none;endArrow=block;endFill=0;endSize=12;dashed=1;strokeColor=#333333;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="45" y="762" as="sourcePoint"/><mxPoint x="115" y="762" as="targetPoint"/></mxGeometry></mxCell>
-<mxCell id="leg_t1" value="реалізує інтерфейс i2c_bus_t" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1"><mxGeometry x="125" y="750" width="240" height="24" as="geometry"/></mxCell>
-<mxCell id="leg_e2" value="" style="html=1;rounded=0;edgeStyle=none;endArrow=cross;endSize=9;dashed=1;strokeColor=#b85450;strokeWidth=2;fontColor=#b85450;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="45" y="794" as="sourcePoint"/><mxPoint x="115" y="794" as="targetPoint"/></mxGeometry></mxCell>
-<mxCell id="leg_t2" value="заборонений напрямок (check-deps)" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1"><mxGeometry x="125" y="782" width="240" height="24" as="geometry"/></mxCell>
-<mxCell id="leg_e3" value="" style="html=1;rounded=0;edgeStyle=none;endArrow=none;strokeColor=#999999;strokeWidth=3;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="45" y="826" as="sourcePoint"/><mxPoint x="115" y="826" as="targetPoint"/></mxGeometry></mxCell>
-<mxCell id="leg_t3" value="фізичне з&#x27;єднання (шина / пін)" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1"><mxGeometry x="125" y="814" width="240" height="24" as="geometry"/></mxCell>
-<mxCell id="leg_e4" value="" style="html=1;rounded=0;edgeStyle=none;endArrow=open;endSize=9;dashed=1;dashPattern=1 3;strokeColor=#666666;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="45" y="858" as="sourcePoint"/><mxPoint x="115" y="858" as="targetPoint"/></mxGeometry></mxCell>
-<mxCell id="leg_t4" value="доступ до регістрів периферії" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1"><mxGeometry x="125" y="846" width="240" height="24" as="geometry"/></mxCell>
-<mxCell id="title" value="&lt;b&gt;Warehouse Sorter — component diagram (ЛР2)&lt;/b&gt;&lt;br&gt;стрілки — у напрямку #include" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="30" y="1000" width="360" height="40" as="geometry"/></mxCell>
-</root>
-</mxGraphModel>
-</diagram>
+<mxfile host="65bd71144e">
+    <diagram id="components" name="Components">
+        <mxGraphModel dx="894" dy="318" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1660" pageHeight="1080" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="g_main" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" value="Core/ — main.c, секції USER CODE&amp;nbsp;" vertex="1">
+                    <mxGeometry height="95" width="820" x="420" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_tests" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#e1d5e7;strokeColor=#9673a6;" value="tests/ — хостові тести (gcc, make test)" vertex="1">
+                    <mxGeometry height="490" width="340" x="32.5" y="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_app" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" value="App/ — прикладна логіка" vertex="1">
+                    <mxGeometry height="120" width="300" x="420" y="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_dev" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Devices/ — драйвери пристроїв" vertex="1">
+                    <mxGeometry height="270" width="700" x="420" y="330" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_plat" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=bottom;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Platform/ — адаптація до плати" vertex="1">
+                    <mxGeometry height="200" width="820" x="410" y="690" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_cube" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" value="Core/ — згенеровано CubeMX" vertex="1">
+                    <mxGeometry height="140" width="360" x="420" y="900" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_drv" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=right;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;" value="Drivers/ — вендорський код ST" vertex="1">
+                    <mxGeometry height="140" width="360" x="880" y="900" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_ext" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingRight=8;spacingTop=2;spacingBottom=2;fontStyle=1;fontSize=12;fillColor=#ffffff;strokeColor=#4d4d4d;" value="Зовнішні пристрої (стенд / Wokwi)" vertex="1">
+                    <mxGeometry height="690" width="330" x="1300" y="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="main" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d6b656;" value="створює i2c_bus_t, mpu6050_t, lcd1602_t, cli_t; самоперевірка, команди CLI (cap …), телеметрія, printf → USART2" vertex="1">
+                    <mxGeometry height="52" width="780" x="440" y="62" as="geometry"/>
+                </mxCell>
+                <mxCell id="cli" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#82b366;" value="&lt;b&gt;cli.c / cli.h&lt;/b&gt;&lt;br&gt;розбір команд UART" vertex="1">
+                    <mxGeometry height="55" width="260" x="440" y="215" as="geometry"/>
+                </mxCell>
+                <mxCell id="forbid" parent="1" style="shape=note;size=14;whiteSpace=wrap;html=1;fontSize=10;fillColor=#f8cecc;strokeColor=#b85450;fontColor=#7a2b28;" value="&lt;b&gt;✗ заборонено для App/ і Devices/&lt;/b&gt;&lt;br&gt;stm32*.h, *_hal*.h, board.h, platform.h,&lt;br&gt;main.h, adc.h, i2c.h, tim.h, usart.h, gpio.h&lt;br&gt;&lt;i&gt;tools/check-deps.sh → make check-deps, CI&lt;/i&gt;" vertex="1">
+                    <mxGeometry height="110" width="245" x="745" y="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="mpu" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#6c8ebf;" value="&lt;b&gt;mpu6050.c / .h&lt;/b&gt;&lt;br&gt;MPU-6050: WHO_AM_I, SLEEP, accel" vertex="1">
+                    <mxGeometry height="55" width="230" x="440" y="370" as="geometry"/>
+                </mxCell>
+                <mxCell id="lcd" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#6c8ebf;" value="&lt;b&gt;lcd1602.c / .h&lt;/b&gt;&lt;br&gt;HD44780 через PCF8574, 1-байтові записи" vertex="1">
+                    <mxGeometry height="55" width="230" x="700" y="370" as="geometry"/>
+                </mxCell>
+                <mxCell id="ibus" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;fillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=2;" value="&lt;div style=&quot;text-align:center&quot;&gt;«interface»&lt;br&gt;&lt;b&gt;i2c_bus_t&lt;/b&gt; (i2c_bus.h)&lt;/div&gt;&lt;hr&gt;+ write(ctx, addr7, data, len) : bus_status_t&lt;br&gt;+ read(ctx, addr7, data, len) : bus_status_t&lt;br&gt;+ ctx : void *" vertex="1">
+                    <mxGeometry height="125" width="330" x="440" y="460" as="geometry"/>
+                </mxCell>
+                <mxCell id="t_cli" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" value="&lt;b&gt;test_cli.c&lt;/b&gt;" vertex="1">
+                    <mxGeometry height="40" width="150" x="90" y="215" as="geometry"/>
+                </mxCell>
+                <mxCell id="t_lcd" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" value="&lt;b&gt;test_lcd1602.c&lt;/b&gt;" vertex="1">
+                    <mxGeometry height="40" width="150" x="50" y="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="t_mpu" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" value="&lt;b&gt;test_mpu6050.c&lt;/b&gt;" vertex="1">
+                    <mxGeometry height="40" width="150" x="50" y="377.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="fake" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" value="&lt;b&gt;fakes/fake_i2c_bus&lt;/b&gt;&lt;br&gt;mock&amp;nbsp; +&lt;br&gt;регістри MPU,&lt;br&gt;ін&#39;єкція NACK/TIMEOUT" vertex="1">
+                    <mxGeometry height="100" width="135" x="220" y="470" as="geometry"/>
+                </mxCell>
+                <mxCell id="unity" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" value="&lt;b&gt;unity/&lt;/b&gt; — Unity v2.7.0&amp;nbsp;&lt;br&gt;unity.h у всіх test_* і fake" vertex="1">
+                    <mxGeometry height="45" width="305" x="50" y="600" as="geometry"/>
+                </mxCell>
+                <mxCell id="i2c_hal" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="&lt;b&gt;i2c_hal.c / .h&lt;/b&gt;&lt;br&gt;i2c_bus_t над HAL, recover" vertex="1">
+                    <mxGeometry height="55" width="170" x="440" y="702.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="platform" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="&lt;b&gt;platform.c / .h&lt;/b&gt;&lt;br&gt;platform_delay_ms" vertex="1">
+                    <mxGeometry height="55" width="170" x="440" y="791" as="geometry"/>
+                </mxCell>
+                <mxCell id="adc_hal" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="&lt;b&gt;adc_hal.c / .h&lt;/b&gt;&lt;br&gt;1 перетворення + ADC_MARK" vertex="1">
+                    <mxGeometry height="55" width="170" x="640" y="690" as="geometry"/>
+                </mxCell>
+                <mxCell id="servo_hal" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="&lt;b&gt;servo_hal.c / .h&lt;/b&gt;&lt;br&gt;TIM3 PWM, кут → мкс" vertex="1">
+                    <mxGeometry height="55" width="170" x="830" y="695" as="geometry"/>
+                </mxCell>
+                <mxCell id="uart_hal" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="&lt;b&gt;uart_hal.c / .h&lt;/b&gt;&lt;br&gt;прийом USART2 опитуванням" vertex="1">
+                    <mxGeometry height="55" width="200" x="1020" y="690" as="geometry"/>
+                </mxCell>
+                <mxCell id="board" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="&lt;b&gt;board.h&lt;/b&gt; — усе знання про плату: хендли, канали АЦП, таймер,&lt;br&gt;маркери, адреси I²C (docs/pinout.md §1, §2)" vertex="1">
+                    <mxGeometry height="60" width="580" x="640" y="780" as="geometry"/>
+                </mxCell>
+                <mxCell id="cube" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d6b656;" value="main.h, gpio.c, adc.c, i2c.c, tim.c, usart.c (MX_*_Init), stm32c0xx_it.c, hal_msp.c, hal_conf.h, startup, .ld" vertex="1">
+                    <mxGeometry height="90" width="320" x="440" y="935" as="geometry"/>
+                </mxCell>
+                <mxCell id="hal" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#666666;" value="&lt;b&gt;STM32C0xx_HAL_Driver&lt;/b&gt;&lt;br&gt;v1.4.1&lt;br&gt;(STM32Cube FW_C0 V1.4.1)" vertex="1">
+                    <mxGeometry height="90" width="160" x="895" y="925" as="geometry"/>
+                </mxCell>
+                <mxCell id="cmsis" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#666666;" value="&lt;b&gt;CMSIS&lt;/b&gt; Core 5.6&lt;br&gt;Device C0 1.4.1" vertex="1">
+                    <mxGeometry height="40" width="120" x="1110" y="935" as="geometry"/>
+                </mxCell>
+                <mxCell id="bsp" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#666666;" value="&lt;b&gt;BSP&lt;/b&gt; Nucleo 1.1.1" vertex="1">
+                    <mxGeometry height="40" width="120" x="1110" y="985" as="geometry"/>
+                </mxCell>
+                <mxCell id="mcu" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" value="&lt;b&gt;МК STM32C031C6 (NUCLEO-C031C6)&lt;/b&gt;&lt;br&gt;I2C1 · ADC1 · TIM3 · USART2 · GPIO/EXTI" vertex="1">
+                    <mxGeometry height="140" width="330" x="1300" y="900" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_mpu" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" value="&lt;b&gt;MPU-6050&lt;/b&gt;&lt;br&gt;I2C1 PA9/PA10, 0x68" vertex="1">
+                    <mxGeometry height="55" width="215" x="1380" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_lcd" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" value="&lt;b&gt;PCF8574 + LCD1602&lt;/b&gt;&lt;br&gt;I2C1 PA9/PA10, 0x27" vertex="1">
+                    <mxGeometry height="55" width="215" x="1370" y="295" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_ldr1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" value="&lt;b&gt;LDR gate&lt;/b&gt;&lt;br&gt;ADC1_IN0, PA0 (A0)" vertex="1">
+                    <mxGeometry height="50" width="215" x="1380" y="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_ldr2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" value="&lt;b&gt;LDR class&lt;/b&gt;&lt;br&gt;ADC1_IN1, PA1 (A1)" vertex="1">
+                    <mxGeometry height="50" width="215" x="1380" y="450" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_servo" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" value="&lt;b&gt;Серво SG92R&lt;/b&gt;&lt;br&gt;TIM3_CH1, PA6 (D12)" vertex="1">
+                    <mxGeometry height="50" width="215" x="1380" y="540" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_btn" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" value="&lt;b&gt;Кнопка E-STOP (B1)&lt;/b&gt;&lt;br&gt;EXTI13, PC13" vertex="1">
+                    <mxGeometry height="50" width="215" x="1370" y="630" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_vcp" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#4d4d4d;strokeWidth=1;shadow=0;" value="&lt;b&gt;ST-LINK VCP → ПК&lt;/b&gt;&lt;br&gt;USART2 PA2/PA3, 115200 8N1" vertex="1">
+                    <mxGeometry height="60" width="215" x="1380" y="720" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="g_main" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.3293;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.9615;entryY=0.0000;entryDx=0;entryDy=0;" target="cli" value="cli.h">
+                    <mxGeometry relative="1" x="-0.3" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="g_main" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.7683;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.9000;entryY=0.0000;entryDx=0;entryDy=0;" target="g_dev" value="mpu6050.h,&lt;br&gt;lcd1602.h">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="g_main" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.9268;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.9268;entryY=0.0000;entryDx=0;entryDy=0;" target="g_plat" value="board.h, i2c_hal.h,&lt;br&gt;adc_hal.h, servo_hal.h,&lt;br&gt;uart_hal.h, platform.h">
+                    <mxGeometry relative="1" x="0.905" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="g_main" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.0000;exitY=0.4947;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" target="g_cube" value="main.h, adc.h, i2c.h, tim.h, usart.h, gpio.h">
+                    <mxGeometry relative="1" x="0.82" as="geometry">
+                        <mxPoint y="-12" as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="12" y="77"/>
+                            <mxPoint x="12" y="970"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" source="mpu" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.3485;entryY=0.0000;entryDx=0;entryDy=0;" target="ibus" value="i2c_bus.h">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="lcd" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.1522;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.8939;entryY=0.0000;entryDx=0;entryDy=0;" target="ibus" value="i2c_bus.h">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="i2c_hal" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=block;endFill=0;endSize=12;dashed=1;strokeColor=#333333;exitX=0.5000;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.2576;entryY=1.0000;entryDx=0;entryDy=0;" target="ibus" value="реалізує">
+                    <mxGeometry relative="1" x="-0.2" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="fake" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=block;endFill=0;endSize=12;dashed=1;strokeColor=#333333;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.4800;entryDx=0;entryDy=0;" target="ibus" value="реалізує">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint y="-14" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e9" edge="1" parent="1" source="t_cli" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.4545;entryDx=0;entryDy=0;" target="cli" value="cli.h">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" edge="1" parent="1" source="t_lcd" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=0.5000;entryY=0.0000;entryDx=0;entryDy=0;" target="lcd" value="lcd1602.h">
+                    <mxGeometry relative="1" x="-0.3" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="815" y="310"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e11" edge="1" parent="1" source="t_mpu" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.4909;entryDx=0;entryDy=0;" target="mpu" value="mpu6050.h">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" edge="1" parent="1" source="t_mpu" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.3000;entryDx=0;entryDy=0;" target="fake" value="fake_i2c_bus.h">
+                    <mxGeometry relative="1" x="-0.35" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="125" y="500"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e13" edge="1" parent="1" source="t_lcd" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.7500;entryDx=0;entryDy=0;" target="fake" value="fake_i2c_bus.h">
+                    <mxGeometry relative="1" x="0.576" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="40" y="310"/>
+                            <mxPoint x="40" y="545"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e14" edge="1" parent="1" source="fake" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.4963;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.7770;entryY=0.0000;entryDx=0;entryDy=0;" target="unity" value="unity.h">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e16" edge="1" parent="1" source="adc_hal" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.1466;entryY=0.0000;entryDx=0;entryDy=0;" target="board" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e17" edge="1" parent="1" source="servo_hal" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.4741;entryY=0.0000;entryDx=0;entryDy=0;" target="board" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e18" edge="1" parent="1" source="uart_hal" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.8276;entryY=0.0000;entryDx=0;entryDy=0;" target="board" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e19" edge="1" parent="1" source="board" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.1034;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.7778;entryY=0.0000;entryDx=0;entryDy=0;" target="g_cube" value="main.h, adc.h, i2c.h,&lt;br&gt;tim.h, usart.h">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e20" edge="1" parent="1" source="g_plat" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.6768;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.5000;entryY=0.0000;entryDx=0;entryDy=0;" target="hal" value="stm32c0xx_hal.h&lt;div&gt;&lt;br/&gt;&lt;/div&gt;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e21" edge="1" parent="1" source="g_cube" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=1.0000;exitY=0.6071;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.6071;entryDx=0;entryDy=0;" target="g_drv" value="stm32c0xx_hal.h,&lt;br&gt;stm32c0xx_nucleo.h">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint y="-28" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e22" edge="1" parent="1" source="hal" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=1.0000;exitY=0.2222;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" target="cmsis" value="CMSIS">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e23" edge="1" parent="1" source="bsp" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;strokeColor=#333333;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=1.0000;entryY=0.7778;entryDx=0;entryDy=0;" target="hal" value="HAL">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e24" edge="1" parent="1" source="g_drv" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=open;endSize=9;dashed=1;dashPattern=1 3;strokeColor=#666666;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" target="mcu" value="регістри">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint y="-12" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e25" edge="1" parent="1" source="forbid" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=cross;endSize=9;dashed=1;strokeColor=#b85450;strokeWidth=2;fontColor=#b85450;exitX=0.0000;exitY=0.4545;exitDx=0;exitDy=0;entryX=1.0000;entryY=0.5000;entryDx=0;entryDy=0;" target="g_app" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e26" edge="1" parent="1" source="forbid" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=cross;endSize=9;dashed=1;strokeColor=#b85450;strokeWidth=2;fontColor=#b85450;exitX=0.5102;exitY=1.0000;exitDx=0;exitDy=0;entryX=0.6429;entryY=0.0000;entryDx=0;entryDy=0;" target="g_dev" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="p_e_mpu" edge="1" parent="1" source="mcu" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" target="e_mpu" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1340" y="237.5"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="p_e_lcd" edge="1" parent="1" source="mcu" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" target="e_lcd" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1340" y="317.5"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="p_e_ldr1" edge="1" parent="1" source="mcu" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" target="e_ldr1" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1340" y="405"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="p_e_ldr2" edge="1" parent="1" source="mcu" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" target="e_ldr2" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1340" y="475"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="p_e_servo" edge="1" parent="1" source="mcu" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" target="e_servo" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1340" y="565"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="p_e_btn" edge="1" parent="1" source="mcu" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" target="e_btn" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1340" y="655"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="p_e_vcp" edge="1" parent="1" source="mcu" style="html=1;rounded=0;edgeStyle=none;fontSize=10;labelBackgroundColor=#ffffff;endArrow=none;strokeColor=#999999;strokeWidth=3;exitX=0.1212;exitY=0.0000;exitDx=0;exitDy=0;entryX=0.0000;entryY=0.5000;entryDx=0;entryDy=0;" target="e_vcp" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1340" y="750"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="legend" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;fontStyle=1;fontSize=12;fillColor=#ffffff;strokeColor=#999999;" value="Легенда" vertex="1">
+                    <mxGeometry height="205" width="340" x="30" y="690" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_e0" edge="1" parent="1" style="html=1;rounded=0;edgeStyle=none;endArrow=open;endSize=9;strokeColor=#333333;" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="45" y="730" as="sourcePoint"/>
+                        <mxPoint x="115" y="730" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="leg_t0" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" value="#include (" vertex="1">
+                    <mxGeometry height="24" width="240" x="125" y="718" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_e1" edge="1" parent="1" style="html=1;rounded=0;edgeStyle=none;endArrow=block;endFill=0;endSize=12;dashed=1;strokeColor=#333333;" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="45" y="762" as="sourcePoint"/>
+                        <mxPoint x="115" y="762" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="leg_t1" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" value="реалізує інтерфейс i2c_bus_t" vertex="1">
+                    <mxGeometry height="24" width="240" x="125" y="750" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_e2" edge="1" parent="1" style="html=1;rounded=0;edgeStyle=none;endArrow=cross;endSize=9;dashed=1;strokeColor=#b85450;strokeWidth=2;fontColor=#b85450;" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="45" y="794" as="sourcePoint"/>
+                        <mxPoint x="115" y="794" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="leg_t2" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" value="заборонений напрямок&amp;nbsp;" vertex="1">
+                    <mxGeometry height="24" width="240" x="125" y="782" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_e3" edge="1" parent="1" style="html=1;rounded=0;edgeStyle=none;endArrow=none;strokeColor=#999999;strokeWidth=3;" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="45" y="826" as="sourcePoint"/>
+                        <mxPoint x="115" y="826" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="leg_t3" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" value="фізичне з&#39;єднання&amp;nbsp;" vertex="1">
+                    <mxGeometry height="24" width="240" x="125" y="814" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_e4" edge="1" parent="1" style="html=1;rounded=0;edgeStyle=none;endArrow=open;endSize=9;dashed=1;dashPattern=1 3;strokeColor=#666666;" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="45" y="858" as="sourcePoint"/>
+                        <mxPoint x="115" y="858" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="leg_t4" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" value="доступ до регістрів периферії" vertex="1">
+                    <mxGeometry height="24" width="240" x="125" y="846" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
 </mxfile>
