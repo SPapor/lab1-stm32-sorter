@@ -56,6 +56,7 @@ typedef struct {
 #define CAP_NACK_ADDR       0x69u   /* MPU-6050 з AD0 = 1 — на шині немає, чекаємо NACK */
 #define CAP_SERVO_HOLD_MS   45u     /* LED_MARK після запису CCR: > 2 періоди ШИМ по 20 мс */
 #define CAP_LCD_TEXT        "CAP             "   /* 16 символів: стирає старий рядок */
+#define ESTOP_DEBOUNCE_MS   20u     /* EXTI кнопки вимкнено на цей час після першого фронту */
 
 _Static_assert(CLI_SERVO_MAX_DEG == SERVO_HAL_MAX_DEG, "межа cap servo у cli.h != servo_hal.h");
 /* USER CODE END PD */
@@ -75,6 +76,8 @@ static lcd1602_t lcd;
 static uint8_t lcd_ready;   /* LCD пройшов probe та init */
 static cli_t cli;
 static uint8_t stream_on = 1;   /* періодичний рядок accel (команда stream) */
+static volatile uint8_t estop_pending;      /* був фронт PC13, EXTI вимкнено до кінця брязкоту */
+static volatile uint32_t estop_edge_ms;     /* час першого фронту */
 
 /* Текст команди help; синтаксис розбирає App/cli.c */
 static const char *const help_lines[] = {
@@ -119,6 +122,8 @@ static void cap_lcd(void);
 static void cap_servo(uint8_t deg);
 static void cap_adc(void);
 static void cap_uart(void);
+static void estop_poll(void);
+static void estop_report(uint16_t presses);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -200,6 +205,8 @@ int main(void)
         cmd_run(&cmd);
       }
     }
+
+    estop_poll();
 
     if (stream_on && HAL_GetTick() - t_telemetry >= TELEMETRY_PERIOD_MS) {
       t_telemetry = HAL_GetTick();
@@ -560,6 +567,48 @@ static void cap_uart(void)
   cap_end();
   printf("\r\n");
   cap_report("uart", s == HAL_OK ? "OK" : "ERR", "bytes=%u", (unsigned)(sizeof msg - 1));
+}
+
+/* Кнопка E-STOP (PC13, EXTI за спадом, pull-up). Кнопка Wokwi брязкотить до 2,4 мс
+ * і дає до ~200 фронтів на перехід, а клік тримає кнопку від 33 мс (запис PC13 на D6).
+ * Щоб не обробляти кожен фронт, після першого EXTI вимикається, а рішення приймає
+ * estop_poll. Перехід у стан E-STOP (FR-07) — наступна ЛР. */
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin != BOARD_ESTOP_PIN)
+    return;
+  HAL_NVIC_DisableIRQ(BOARD_ESTOP_IRQ);
+  estop_edge_ms = HAL_GetTick();
+  estop_pending = 1;
+}
+
+/* Через ESTOP_DEBOUNCE_MS після фронту: PC13 = 0 — натискання; PC13 = 1 — це був
+ * брязкіт при відпусканні. Фронти, що прийшли за цей час, скидаються, EXTI вмикається. */
+static void estop_poll(void)
+{
+  static uint16_t presses;
+
+  if (!estop_pending || HAL_GetTick() - estop_edge_ms < ESTOP_DEBOUNCE_MS)
+    return;
+  estop_pending = 0;
+  if (HAL_GPIO_ReadPin(BOARD_ESTOP_PORT, BOARD_ESTOP_PIN) == GPIO_PIN_RESET)
+    estop_report(++presses);
+  __HAL_GPIO_EXTI_CLEAR_FALLING_IT(BOARD_ESTOP_PIN);
+  HAL_NVIC_ClearPendingIRQ(BOARD_ESTOP_IRQ);
+  HAL_NVIC_EnableIRQ(BOARD_ESTOP_IRQ);
+}
+
+/* Рядок FR-10 і лічильник на LCD (рядок 1, 16 символів — стирає старий текст) */
+static void estop_report(uint16_t presses)
+{
+  char line[LCD1602_COLS + 1];
+
+  printf("%lu ESTOP press n=%u\r\n", (unsigned long)HAL_GetTick(), (unsigned)presses);
+  if (!lcd_ready)
+    return;
+  snprintf(line, sizeof line, "E-STOP n=%-7u", (unsigned)presses);
+  (void)lcd1602_set_cursor(&lcd, 0, 1);
+  (void)lcd1602_print(&lcd, line);
 }
 /* USER CODE END 4 */
 
