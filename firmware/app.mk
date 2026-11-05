@@ -7,6 +7,9 @@ include Makefile
 # Бюджет flash: -Og давав 28616 байт text із 32 КБ
 OPT = -Os
 
+# Заповнення FLASH/RAM за регіонами скрипту лінкера — у вивід кожної збірки
+LDFLAGS += -Wl,--print-memory-usage
+
 USER_DIRS    = Platform Devices App
 USER_SOURCES = $(foreach d,$(USER_DIRS),$(wildcard $(d)/*.c))
 
