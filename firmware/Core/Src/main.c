@@ -52,13 +52,18 @@ typedef struct {
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define SERVO_SELFTEST_DEG  90u     /* середина ходу серво під час самоперевірки */
+#define ESTOP_DEBOUNCE_MS   20u     /* EXTI кнопки вимкнено на цей час після першого фронту */
+
+/* Вимірювальний harness ЛР2 (команди cap …, I2C-скан, телеметрія stream) —
+ * лише у збірці make -f app.mk LAB2_CAP=1 */
+#ifdef LAB2_CAP
 #define TELEMETRY_PERIOD_MS 1000u   /* період рядка accel, поки stream on */
 #define CAP_NACK_ADDR       0x69u   /* MPU-6050 з AD0 = 1 — на шині немає, чекаємо NACK */
 #define CAP_SERVO_HOLD_MS   45u     /* LED_MARK після запису CCR: > 2 періоди ШИМ по 20 мс */
 #define CAP_LCD_TEXT        "CAP             "   /* 16 символів: стирає старий рядок */
-#define ESTOP_DEBOUNCE_MS   20u     /* EXTI кнопки вимкнено на цей час після першого фронту */
 
 _Static_assert(CLI_SERVO_MAX_DEG == SERVO_HAL_MAX_DEG, "межа cap servo у cli.h != servo_hal.h");
+#endif
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -75,13 +80,16 @@ static mpu6050_t imu;
 static lcd1602_t lcd;
 static uint8_t lcd_ready;   /* LCD пройшов probe та init */
 static cli_t cli;
+#ifdef LAB2_CAP
 static uint8_t stream_on = 1;   /* періодичний рядок accel (команда stream) */
+#endif
 static volatile uint8_t estop_pending;      /* був фронт PC13, EXTI вимкнено до кінця брязкоту */
 static volatile uint32_t estop_edge_ms;     /* час першого фронту */
 
 /* Текст команди help; синтаксис розбирає App/cli.c */
 static const char *const help_lines[] = {
   "help                this list",
+#ifdef LAB2_CAP
   "stream on|off       periodic 'accel' line (default on)",
   "cap whoami          MPU-6050: write 0x75, read 1 byte",
   "cap accel           MPU-6050: write 0x3B, read 6 bytes",
@@ -91,22 +99,26 @@ static const char *const help_lines[] = {
   "cap servo <0..180>  set servo angle",
   "cap adc             one gate + one class conversion",
   "cap uart            send 0x55 and 'UART-TEST'",
+#endif
 };
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-static void i2c_scan(void);
 static selftest_counts_t selftest_run(void);
 static void selftest_report(selftest_counts_t *cnt, const char *dev, selftest_status_t st,
                             const char *fmt, ...) __attribute__((format(printf, 4, 5)));
 static void selftest_ldr(selftest_counts_t *cnt, const char *dev, uint32_t channel);
 static const char *mpu_err_name(mpu6050_status_t st);
 static void lcd_show_selftest(const selftest_counts_t *cnt);
-static void telemetry_print(void);
 static void console_echo(char ch);
 static void cmd_run(const cli_cmd_t *cmd);
+static void estop_poll(void);
+static void estop_report(uint16_t presses);
+#ifdef LAB2_CAP
+static void i2c_scan(void);
+static void telemetry_print(void);
 static void cap_begin(void);
 static void cap_end(void);
 static void cap_report(const char *name, const char *st, const char *fmt, ...)
@@ -122,8 +134,7 @@ static void cap_lcd(void);
 static void cap_servo(uint8_t deg);
 static void cap_adc(void);
 static void cap_uart(void);
-static void estop_poll(void);
-static void estop_report(uint16_t presses);
+#endif
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -175,7 +186,9 @@ int main(void)
   HAL_ADCEx_Calibration_Start(BOARD_ADC);
   servo_hal_start();
 
+#ifdef LAB2_CAP
   i2c_scan();
+#endif
 
   i2c_hal_bus_init(&i2c1_bus, &i2c1_ctx, BOARD_I2C, BOARD_I2C_REINIT);
   selftest_counts_t st = selftest_run();
@@ -183,7 +196,9 @@ int main(void)
 
   cli_init(&cli);
   printf("READY type 'help'\r\n");
+#ifdef LAB2_CAP
   uint32_t t_telemetry = HAL_GetTick();
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -208,10 +223,12 @@ int main(void)
 
     estop_poll();
 
+#ifdef LAB2_CAP
     if (stream_on && HAL_GetTick() - t_telemetry >= TELEMETRY_PERIOD_MS) {
       t_telemetry = HAL_GetTick();
       telemetry_print();
     }
+#endif
   }
   /* USER CODE END 3 */
 }
@@ -253,14 +270,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-static void i2c_scan(void)
-{
-  printf("I2C scan:\r\n");
-  for (uint8_t a = 0x08; a < 0x78; a++)
-    if (HAL_I2C_IsDeviceReady(BOARD_I2C, a << 1, 2, 10) == HAL_OK)
-      printf("  found 0x%02X\r\n", a);
-}
-
 /* Рядок FR-10: "<ms> SELFTEST <пристрій> status=<OK|WARN|FAIL> key=value..." */
 static void selftest_report(selftest_counts_t *cnt, const char *dev, selftest_status_t st,
                             const char *fmt, ...)
@@ -355,18 +364,6 @@ static void lcd_show_selftest(const selftest_counts_t *cnt)
   (void)lcd1602_print(&lcd, line);
 }
 
-static void telemetry_print(void)
-{
-  mpu6050_accel_raw_t a = {0};
-  mpu6050_status_t st_acc = mpu6050_read_accel_raw(&imu, &a);
-
-  printf("accel st=%d raw %6d %6d %6d | mg %5ld %5ld %5ld | gate %4u class %4u\r\n",
-         (int)st_acc, a.x, a.y, a.z,
-         (long)mpu6050_raw_to_mg(a.x), (long)mpu6050_raw_to_mg(a.y),
-         (long)mpu6050_raw_to_mg(a.z),
-         adc_hal_read(BOARD_ADC_CH_GATE), adc_hal_read(BOARD_ADC_CH_CLASS));
-}
-
 /* Ехо введеного символу. Кінець рядка — завжди "\r\n", пара CR LF дає один перенос. */
 static void console_echo(char ch)
 {
@@ -390,6 +387,7 @@ static void cmd_run(const cli_cmd_t *cmd)
     for (size_t i = 0; i < sizeof help_lines / sizeof help_lines[0]; i++)
       printf("%s\r\n", help_lines[i]);
     break;
+#ifdef LAB2_CAP
   case CLI_STREAM:
     stream_on = (uint8_t)cmd->arg;
     printf("%lu STREAM st=OK on=%u\r\n", (unsigned long)HAL_GetTick(), (unsigned)stream_on);
@@ -402,10 +400,32 @@ static void cmd_run(const cli_cmd_t *cmd)
   case CLI_CAP_SERVO:  cap_servo((uint8_t)cmd->arg); break;
   case CLI_CAP_ADC:    cap_adc();    break;
   case CLI_CAP_UART:   cap_uart();   break;
+#endif
   default:
     printf("%lu CLI st=BAD\r\n", (unsigned long)HAL_GetTick());
     break;
   }
+}
+
+#ifdef LAB2_CAP
+static void i2c_scan(void)
+{
+  printf("I2C scan:\r\n");
+  for (uint8_t a = 0x08; a < 0x78; a++)
+    if (HAL_I2C_IsDeviceReady(BOARD_I2C, a << 1, 2, 10) == HAL_OK)
+      printf("  found 0x%02X\r\n", a);
+}
+
+static void telemetry_print(void)
+{
+  mpu6050_accel_raw_t a = {0};
+  mpu6050_status_t st_acc = mpu6050_read_accel_raw(&imu, &a);
+
+  printf("accel st=%d raw %6d %6d %6d | mg %5ld %5ld %5ld | gate %4u class %4u\r\n",
+         (int)st_acc, a.x, a.y, a.z,
+         (long)mpu6050_raw_to_mg(a.x), (long)mpu6050_raw_to_mg(a.y),
+         (long)mpu6050_raw_to_mg(a.z),
+         adc_hal_read(BOARD_ADC_CH_GATE), adc_hal_read(BOARD_ADC_CH_CLASS));
 }
 
 /* Рамка однієї дії для логічного аналізатора: LED_MARK (PA5, канал D4) = 1 рівно
@@ -568,6 +588,7 @@ static void cap_uart(void)
   printf("\r\n");
   cap_report("uart", s == HAL_OK ? "OK" : "ERR", "bytes=%u", (unsigned)(sizeof msg - 1));
 }
+#endif /* LAB2_CAP */
 
 /* Кнопка E-STOP (PC13, EXTI за спадом, pull-up). Кнопка Wokwi брязкотить до 2,4 мс
  * і дає до ~200 фронтів на перехід, а клік тримає кнопку від 33 мс (запис PC13 на D6).

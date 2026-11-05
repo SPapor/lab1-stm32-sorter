@@ -4,6 +4,7 @@
 
 #define CLI_MAX_WORDS 3u   /* найдовша команда: cap servo <кут> */
 
+#ifdef LAB2_CAP
 typedef struct {
     const char *name;
     cli_cmd_id_t id;
@@ -19,6 +20,7 @@ static const cap_entry_t cap_table[] = {
     { "adc",    CLI_CAP_ADC },
     { "uart",   CLI_CAP_UART },
 };
+#endif
 
 void cli_init(cli_t *c)
 {
@@ -47,6 +49,7 @@ static unsigned split(char *s, char *w[], unsigned max)
     }
 }
 
+#ifdef LAB2_CAP
 /* Десяткове число без знака 0..max; 0 — успіх, -1 — не число або поза межами. */
 static int parse_uint(const char *s, int32_t max, int32_t *out)
 {
@@ -64,12 +67,14 @@ static int parse_uint(const char *s, int32_t max, int32_t *out)
     *out = v;
     return 0;
 }
+#endif
 
 static cli_cmd_id_t parse_words(char *w[], unsigned n, int32_t *arg)
 {
     if (n == 1u && strcmp(w[0], "help") == 0)
         return CLI_HELP;
 
+#ifdef LAB2_CAP
     if (n == 2u && strcmp(w[0], "stream") == 0) {
         if (strcmp(w[1], "on") == 0) {
             *arg = 1;
@@ -89,6 +94,9 @@ static cli_cmd_id_t parse_words(char *w[], unsigned n, int32_t *arg)
                 if (strcmp(w[1], cap_table[i].name) == 0)
                     return cap_table[i].id;
     }
+#else
+    (void)arg;
+#endif
     return CLI_CMD_BAD;
 }
 

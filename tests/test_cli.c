@@ -1,4 +1,5 @@
-/* Тести розбору команд UART (firmware/App/cli.c). */
+/* Тести розбору команд UART (firmware/App/cli.c). Файл збирається двічі:
+ * test_cli — збірка продукту, test_cli_lab2 — з -DLAB2_CAP (команди stream, cap …). */
 
 #include <string.h>
 #include "unity.h"
@@ -49,6 +50,7 @@ static void test_help(void)
     assert_line("help\r", CLI_HELP, 0);
 }
 
+#ifdef LAB2_CAP
 static void test_stream_on_off(void)
 {
     assert_line("stream on\r", CLI_STREAM, 1);
@@ -104,6 +106,16 @@ static void test_cap_servo_bad_argument(void)
     assert_line("cap servo 90 1\r", CLI_CMD_BAD, 0);
 }
 
+#else
+/* Без LAB2_CAP команди harness ЛР2 не розпізнаються */
+static void test_lab2_commands_rejected(void)
+{
+    assert_line("stream on\r", CLI_CMD_BAD, 0);
+    assert_line("cap whoami\r", CLI_CMD_BAD, 0);
+    assert_line("cap servo 90\r", CLI_CMD_BAD, 0);
+}
+#endif
+
 static void test_unknown_and_case(void)
 {
     assert_line("foo\r", CLI_CMD_BAD, 0);
@@ -113,7 +125,9 @@ static void test_unknown_and_case(void)
 
 static void test_extra_spaces(void)
 {
+#ifdef LAB2_CAP
     assert_line("   cap   servo   45   \r", CLI_CAP_SERVO, 45);
+#endif
     assert_line(" help \n", CLI_HELP, 0);
 }
 
@@ -128,15 +142,19 @@ static void test_crlf_gives_one_command(void)
 {
     TEST_ASSERT_EQUAL_INT(1, feed_str("help\r\n"));
     TEST_ASSERT_EQUAL_INT(CLI_HELP, last.id);
+#ifdef LAB2_CAP
     TEST_ASSERT_EQUAL_INT(2, feed_str("cap lcd\r\ncap adc\r\n"));
     TEST_ASSERT_EQUAL_INT(CLI_CAP_ADC, last.id);
+#endif
     TEST_ASSERT_EQUAL_INT(0, feed_str("\r\n\r\n"));
 }
 
 static void test_backspace(void)
 {
     assert_line("helx\bp\r", CLI_HELP, 0);
+#ifdef LAB2_CAP
     assert_line("cap servo 9\x7F" "18\r", CLI_CAP_SERVO, 18);
+#endif
 }
 
 static void test_backspace_on_empty_line(void)
@@ -144,6 +162,7 @@ static void test_backspace_on_empty_line(void)
     assert_line("\b\b\x7Fhelp\r", CLI_HELP, 0);
 }
 
+#ifdef LAB2_CAP
 static void test_arg_cleared_between_commands(void)
 {
     assert_line("cap servo 120\r", CLI_CAP_SERVO, 120);
@@ -164,6 +183,7 @@ static void test_longest_line_fits(void)
 
     assert_line(line, CLI_CAP_SERVO, 90);
 }
+#endif
 
 /* 32-й символ одразу дає CLI_CMD_BAD; решта рядка, включно з backspace, відкидається,
  * кінець рядка вже не дає команди, наступний рядок розбирається нормально. */
@@ -194,20 +214,26 @@ int main(void)
 {
     UNITY_BEGIN();
     RUN_TEST(test_help);
+#ifdef LAB2_CAP
     RUN_TEST(test_stream_on_off);
     RUN_TEST(test_stream_bad_argument);
     RUN_TEST(test_cap_commands);
     RUN_TEST(test_cap_bad);
     RUN_TEST(test_cap_servo_range);
     RUN_TEST(test_cap_servo_bad_argument);
+#else
+    RUN_TEST(test_lab2_commands_rejected);
+#endif
     RUN_TEST(test_unknown_and_case);
     RUN_TEST(test_extra_spaces);
     RUN_TEST(test_empty_lines_give_no_command);
     RUN_TEST(test_crlf_gives_one_command);
     RUN_TEST(test_backspace);
     RUN_TEST(test_backspace_on_empty_line);
+#ifdef LAB2_CAP
     RUN_TEST(test_arg_cleared_between_commands);
     RUN_TEST(test_longest_line_fits);
+#endif
     RUN_TEST(test_overflow);
     RUN_TEST(test_init_drops_partial_line);
     return UNITY_END();

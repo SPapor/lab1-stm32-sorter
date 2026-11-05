@@ -12,11 +12,15 @@ CFLAGS   = -std=c11 -Wall -Wextra -Werror -O0 -g --coverage -fprofile-abs-path -
 CPPFLAGS = -I$(FW)/Devices -I$(FW)/App -Iunity -Ifakes
 LDFLAGS  = --coverage
 
-TESTS = test_mpu6050 test_lcd1602 test_cli
+TESTS = test_mpu6050 test_lcd1602 test_cli test_cli_lab2
 
 test_mpu6050_SRC = test_mpu6050.c fakes/fake_i2c_bus.c $(FW)/Devices/mpu6050.c
 test_lcd1602_SRC = test_lcd1602.c fakes/fake_i2c_bus.c $(FW)/Devices/lcd1602.c
 test_cli_SRC     = test_cli.c $(FW)/App/cli.c
+
+# Той самий cli.c і test_cli.c у збірці з harness ЛР2 (firmware: make -f app.mk LAB2_CAP=1)
+test_cli_lab2_SRC  = $(test_cli_SRC)
+test_cli_lab2_DEFS = -DLAB2_CAP
 
 vpath %.c . fakes unity $(FW)/Devices $(FW)/App
 
@@ -25,7 +29,7 @@ $(1)_OBJ = $$(addprefix $(BUILD)/$(1)/,$$(notdir $$($(1)_SRC:.c=.o)) unity.o)
 $(BUILD)/$(1)/$(1): $$($(1)_OBJ)
 	$$(CC) $$(LDFLAGS) -o $$@ $$^
 $(BUILD)/$(1)/%.o: %.c | $(BUILD)/$(1)
-	$$(CC) $$(CFLAGS) $$(CPPFLAGS) -c -o $$@ $$<
+	$$(CC) $$(CFLAGS) $$(CPPFLAGS) $$($(1)_DEFS) -c -o $$@ $$<
 $(BUILD)/$(1):
 	mkdir -p $$@
 -include $$($(1)_OBJ:.o=.d)
