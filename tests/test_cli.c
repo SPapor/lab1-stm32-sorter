@@ -50,6 +50,32 @@ static void test_help(void)
     assert_line("help\r", CLI_HELP, 0);
 }
 
+static void test_status_reset(void)
+{
+    assert_line("status\r", CLI_STATUS, 0);
+    assert_line("reset\r", CLI_RESET, 0);
+}
+
+static void test_status_reset_take_no_argument(void)
+{
+    assert_line("status now\r", CLI_CMD_BAD, 0);
+    assert_line("reset all\r", CLI_CMD_BAD, 0);
+}
+
+static void test_log_on_off(void)
+{
+    assert_line("log on\r", CLI_LOG, 1);
+    assert_line("log off\r", CLI_LOG, 0);
+}
+
+static void test_log_bad_argument(void)
+{
+    assert_line("log\r", CLI_CMD_BAD, 0);
+    assert_line("log 1\r", CLI_CMD_BAD, 0);
+    assert_line("log ON\r", CLI_CMD_BAD, 0);
+    assert_line("log on now\r", CLI_CMD_BAD, 0);
+}
+
 #ifdef LAB2_CAP
 static void test_stream_on_off(void)
 {
@@ -128,6 +154,7 @@ static void test_extra_spaces(void)
 #ifdef LAB2_CAP
     assert_line("   cap   servo   45   \r", CLI_CAP_SERVO, 45);
 #endif
+    assert_line("   log   on   \r", CLI_LOG, 1);
     assert_line(" help \n", CLI_HELP, 0);
 }
 
@@ -142,6 +169,8 @@ static void test_crlf_gives_one_command(void)
 {
     TEST_ASSERT_EQUAL_INT(1, feed_str("help\r\n"));
     TEST_ASSERT_EQUAL_INT(CLI_HELP, last.id);
+    TEST_ASSERT_EQUAL_INT(2, feed_str("status\r\nreset\r\n"));
+    TEST_ASSERT_EQUAL_INT(CLI_RESET, last.id);
 #ifdef LAB2_CAP
     TEST_ASSERT_EQUAL_INT(2, feed_str("cap lcd\r\ncap adc\r\n"));
     TEST_ASSERT_EQUAL_INT(CLI_CAP_ADC, last.id);
@@ -152,6 +181,7 @@ static void test_crlf_gives_one_command(void)
 static void test_backspace(void)
 {
     assert_line("helx\bp\r", CLI_HELP, 0);
+    assert_line("log of\x7F\x7F" "on\r", CLI_LOG, 1);
 #ifdef LAB2_CAP
     assert_line("cap servo 9\x7F" "18\r", CLI_CAP_SERVO, 18);
 #endif
@@ -162,13 +192,18 @@ static void test_backspace_on_empty_line(void)
     assert_line("\b\b\x7Fhelp\r", CLI_HELP, 0);
 }
 
-#ifdef LAB2_CAP
 static void test_arg_cleared_between_commands(void)
 {
+    assert_line("log on\r", CLI_LOG, 1);
+    assert_line("status\r", CLI_STATUS, 0);
+    assert_line("log on\r", CLI_LOG, 1);
+    assert_line("log maybe\r", CLI_CMD_BAD, 0);
+#ifdef LAB2_CAP
     assert_line("cap servo 120\r", CLI_CAP_SERVO, 120);
     assert_line("help\r", CLI_HELP, 0);
     assert_line("stream on\r", CLI_STREAM, 1);
     assert_line("cap servo 999\r", CLI_CMD_BAD, 0);
+#endif
 }
 
 /* 31 символ — максимум (CLI_BUF_LEN − 1 під '\0'). */
@@ -177,13 +212,16 @@ static void test_longest_line_fits(void)
     char line[CLI_BUF_LEN + 1];
 
     memset(line, ' ', CLI_BUF_LEN - 1u);
-    memcpy(line, "cap servo 90", 12);
+    memcpy(line, "log on", 6);
     line[CLI_BUF_LEN - 1u] = '\r';
     line[CLI_BUF_LEN] = '\0';
+    assert_line(line, CLI_LOG, 1);
 
+#ifdef LAB2_CAP
+    memcpy(line, "cap servo 90", 12);
     assert_line(line, CLI_CAP_SERVO, 90);
-}
 #endif
+}
 
 /* 32-й символ одразу дає CLI_CMD_BAD; решта рядка, включно з backspace, відкидається,
  * кінець рядка вже не дає команди, наступний рядок розбирається нормально. */
@@ -214,6 +252,10 @@ int main(void)
 {
     UNITY_BEGIN();
     RUN_TEST(test_help);
+    RUN_TEST(test_status_reset);
+    RUN_TEST(test_status_reset_take_no_argument);
+    RUN_TEST(test_log_on_off);
+    RUN_TEST(test_log_bad_argument);
 #ifdef LAB2_CAP
     RUN_TEST(test_stream_on_off);
     RUN_TEST(test_stream_bad_argument);
@@ -230,10 +272,8 @@ int main(void)
     RUN_TEST(test_crlf_gives_one_command);
     RUN_TEST(test_backspace);
     RUN_TEST(test_backspace_on_empty_line);
-#ifdef LAB2_CAP
     RUN_TEST(test_arg_cleared_between_commands);
     RUN_TEST(test_longest_line_fits);
-#endif
     RUN_TEST(test_overflow);
     RUN_TEST(test_init_drops_partial_line);
     return UNITY_END();

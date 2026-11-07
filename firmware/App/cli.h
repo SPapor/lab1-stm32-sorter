@@ -14,6 +14,9 @@
 
 typedef enum {
     CLI_HELP = 0,     /* help */
+    CLI_STATUS,       /* status: стан і лічильники */
+    CLI_RESET,        /* reset: лічильники в нуль */
+    CLI_LOG,          /* log on|off: рядки подій FR-10; arg = 1 / 0 */
 #ifdef LAB2_CAP
     CLI_STREAM,       /* stream on|off; arg = 1 / 0 */
     CLI_CAP_WHOAMI,   /* cap whoami */
