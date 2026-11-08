@@ -430,9 +430,11 @@ static void telemetry_print(void)
 
 /* Рамка однієї дії для логічного аналізатора: LED_MARK (PA5, канал D4) = 1 рівно
  * на час дії. HAL_UART_Transmit повертається лише після TC, тож ехо команди вже
- * вийшло з TX; I2C_RECOVER друкується тільки після спаду маркера. */
+ * вийшло з TX; I2C_RECOVER друкується тільки після спаду маркера. Повтори FR-09
+ * на час дії вимкнено: на записі — рівно одна транзакція. */
 static void cap_begin(void)
 {
+  i2c_hal_set_tries(&i2c1_ctx, 1);
   i2c_hal_defer_log(&i2c1_ctx, 1);
   HAL_GPIO_WritePin(BOARD_LED_MARK_PORT, BOARD_LED_MARK_PIN, GPIO_PIN_SET);
 }
@@ -441,6 +443,7 @@ static void cap_end(void)
 {
   HAL_GPIO_WritePin(BOARD_LED_MARK_PORT, BOARD_LED_MARK_PIN, GPIO_PIN_RESET);
   i2c_hal_defer_log(&i2c1_ctx, 0);
+  i2c_hal_set_tries(&i2c1_ctx, I2C_HAL_MAX_TRIES);
 }
 
 /* Рядок FR-10: "<ms> CAP <name> st=<OK|NACK|TIMEOUT|ERR> key=value..." */
