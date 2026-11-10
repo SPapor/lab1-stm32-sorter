@@ -1,9 +1,10 @@
 IMAGE ?= stm32-build
 RUN = docker run --rm -v $(PWD):/workspace -w /workspace --user $$(id -u):$$(id -g) $(IMAGE)
 
-# Варіант збірки: make build LAB2_CAP=1 (harness ЛР2), TEST_I2C_FAULT=1 (тест FR-09)
+# Варіант збірки: make build LAB2_CAP=1 (harness ЛР2), TEST_I2C_FAULT=1 (тест FR-09),
+# PERF=0 (без вимірювального модуля, docs/perf.md)
 build:
-	$(RUN) make -C firmware -f app.mk all LAB2_CAP=$(LAB2_CAP) TEST_I2C_FAULT=$(TEST_I2C_FAULT)
+	$(RUN) make -C firmware -f app.mk all LAB2_CAP=$(LAB2_CAP) TEST_I2C_FAULT=$(TEST_I2C_FAULT) PERF=$(PERF)
 
 clean:
 	$(RUN) make -C firmware -f app.mk clean

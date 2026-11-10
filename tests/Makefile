@@ -13,7 +13,8 @@ CPPFLAGS = -I$(FW)/Devices -I$(FW)/App -Iunity -Ifakes
 LDFLAGS  = --coverage
 
 TESTS = test_mpu6050 test_lcd1602 test_cli test_cli_lab2 \
-        test_period test_gate test_classify test_impact test_sorter test_health
+        test_period test_gate test_classify test_impact test_sorter test_health \
+        test_perf
 
 test_mpu6050_SRC = test_mpu6050.c fakes/fake_i2c_bus.c $(FW)/Devices/mpu6050.c
 test_lcd1602_SRC = test_lcd1602.c fakes/fake_i2c_bus.c $(FW)/Devices/lcd1602.c
@@ -30,6 +31,9 @@ test_classify_SRC = test_classify.c $(FW)/App/classify.c
 test_impact_SRC   = test_impact.c $(FW)/App/impact.c
 test_sorter_SRC   = test_sorter.c $(FW)/App/sorter.c
 test_health_SRC   = test_health.c $(FW)/App/health.c
+
+# Вимірювальний модуль (ЛР3, крок 2)
+test_perf_SRC     = test_perf.c $(FW)/App/perf.c
 
 vpath %.c . fakes unity $(FW)/Devices $(FW)/App
 

@@ -43,6 +43,10 @@
 #include "impact.h"
 #include "sorter.h"
 #include "health.h"
+#if PERF
+#include "perf.h"
+#include "perf_hal.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -91,6 +95,11 @@ _Static_assert(CLI_SERVO_MAX_DEG == SERVO_HAL_MAX_DEG, "межа cap servo у cl
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+#if PERF
+/* Похибка методу (docs/perf.md): вартість самого виміру, тактів */
+static uint32_t perf_now_cyc;    /* порожній інтервал між двома perf_now() */
+static uint32_t perf_pair_cyc;   /* t0 = perf_now(); perf_add(&s, perf_now() - t0) */
+#endif
 static i2c_hal_ctx_t i2c1_ctx;
 static i2c_bus_t i2c1_bus;
 static mpu6050_t imu;
@@ -160,6 +169,9 @@ static const char *mpu_err_name(mpu6050_status_t st);
 static void lcd_show_selftest(const selftest_counts_t *cnt);
 static void console_echo(char ch);
 static void cmd_run(const cli_cmd_t *cmd);
+#if PERF
+static void perf_calibrate(void);
+#endif
 #if defined(LAB2_CAP) || defined(TEST_I2C_FAULT)
 static const char *bus_st_name(bus_status_t st);
 #endif
@@ -231,7 +243,13 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   setvbuf(stdout, NULL, _IONBF, 0);
+#if PERF
+  perf_hal_init();
+#endif
   ev_log("BOOT", "fw=%s", FW_NAME);
+#if PERF
+  perf_calibrate();
+#endif
   HAL_ADCEx_Calibration_Start(BOARD_ADC);
   servo_hal_start();
 
@@ -532,6 +550,41 @@ static void lcd_task(void)
   if (st != LCD_OK)
     ev_log("LCD_ERR", "isr=0x%08lX", (unsigned long)i2c1_ctx.last_isr);
 }
+
+#if PERF
+/* ---------------------------------------------------------------------------
+ * Вимірювання (docs/perf.md)
+ * ------------------------------------------------------------------------- */
+
+/* Похибка методу. now_cyc — порожній інтервал між двома perf_now(): на стільки
+ * завищений кожен вимір. pair_cyc — скільки тактів циклу забирає пара
+ * «t0 = perf_now(); perf_add(&s, perf_now() - t0)» понад now_cyc. Мінімум із 16
+ * спроб: у будь-яку може влізти SysTick. */
+static void perf_calibrate(void)
+{
+  perf_stat_t cal = { .name = "cal" };
+  uint32_t cpu_mhz = perf_hal_cpu_hz() / 1000000u;
+
+  perf_now_cyc = UINT32_MAX;
+  perf_pair_cyc = UINT32_MAX;
+  for (int i = 0; i < 16; i++) {
+    uint32_t a = perf_now();
+    uint32_t b = perf_now();
+    uint32_t t0 = perf_now();
+    perf_add(&cal, perf_now() - t0);
+    uint32_t c = perf_now();
+
+    if (b - a < perf_now_cyc)
+      perf_now_cyc = b - a;
+    if (c - b - (b - a) < perf_pair_cyc)
+      perf_pair_cyc = c - b - (b - a);
+  }
+  ev_log("PERF", "cpu_hz=%lu now_cyc=%lu now_ns=%lu pair_cyc=%lu pair_ns=%lu",
+         (unsigned long)perf_hal_cpu_hz(),
+         (unsigned long)perf_now_cyc, (unsigned long)(perf_now_cyc * 1000u / cpu_mhz),
+         (unsigned long)perf_pair_cyc, (unsigned long)(perf_pair_cyc * 1000u / cpu_mhz));
+}
+#endif
 
 #ifdef TEST_I2C_FAULT
 /* PRD, тест FR-09: раз на I2C_FAULT_PERIOD_MS — читання 1 байта з відсутньої
