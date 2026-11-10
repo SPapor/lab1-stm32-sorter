@@ -813,11 +813,10 @@ static void perf_setup(void)
 static uint32_t perf_begin(unsigned id)
 {
   BOARD_PROBE_ON(BOARD_PROBE_TASK_PIN);
-  uint32_t t0 = perf_now();
-
+  /* джитер — до t0: облік старту (там ділення) не входить у час задачі */
   if (task_period[id] != NULL)
-    perf_period_start(task_period[id], t0, cyc_per_us);
-  return t0;
+    perf_period_start(task_period[id], perf_now(), cyc_per_us);
+  return perf_now();
 }
 
 static void perf_end(unsigned id, uint32_t t0)
