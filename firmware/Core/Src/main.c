@@ -144,6 +144,13 @@ static perf_stat_t st_i2c = { .name = "i2c_xfer" };           /* виклик ш
 static perf_stat_t st_uart_line = { .name = "uart_line" };    /* один рядок журналу в UART */
 static perf_stat_t st_lcd_update = { .name = "lcd_update" };  /* обидва рядки LCD */
 
+/* Затримки реакції (методичка 5.1, приклад 2) */
+static perf_stat_t st_estop_lat = { .name = "estop_latency" };   /* фронт PC13 → реакція */
+static perf_stat_t st_parcel_lat = { .name = "parcel_latency" }; /* PARCEL_IN → запис CCR, FR-03 */
+static volatile uint32_t estop_irq_cyc;   /* perf_now() у EXTI-колбеку */
+static uint32_t parcel_cyc;               /* perf_now() у момент PARCEL_IN */
+static uint8_t i2c_failed;                /* остання транзакція впала: наступна вдала — EVT i2c_ok */
+
 /* Джитер, пропуски й гістограма періодичних задач */
 static perf_period_t per_gate, per_imu, per_lcd;
 #ifdef LAB2_CAP
@@ -242,6 +249,8 @@ static uint32_t perf_begin(unsigned id);
 static void perf_end(unsigned id, uint32_t t0);
 static bus_status_t meas_write(void *ctx, uint8_t addr7, const uint8_t *data, size_t len);
 static bus_status_t meas_read(void *ctx, uint8_t addr7, uint8_t *data, size_t len);
+static void i2c_measured(uint32_t t0, bus_status_t st);
+static void evt(const char *name, uint64_t t_us);
 #endif
 #if defined(LAB2_CAP) || defined(TEST_I2C_FAULT)
 static const char *bus_st_name(bus_status_t st);
@@ -501,9 +510,17 @@ static void uart_rx_run(int ch)
 
     console_echo((char)ch);
     if (cli_feed(&cli, (char)ch, &cmd)) {
+#if PERF
+      uint64_t us_rx = perf_now_us64();   /* цикл дійшов до кінця рядка команди */
+#endif
       if (ch != '\r' && ch != '\n')
         printf("\r\n");   /* переповнення: команда завершилась посеред рядка */
       cmd_run(&cmd);
+#if PERF
+      uint64_t us_reply = perf_now_us64();
+      evt("cmd_rx", us_rx);
+      evt("cmd_reply", us_reply);
+#endif
     }
   } while ((ch = uart_hal_getc()) >= 0);
 }
@@ -516,6 +533,9 @@ void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
   if (GPIO_Pin != BOARD_ESTOP_PIN)
     return;
   HAL_NVIC_DisableIRQ(BOARD_ESTOP_IRQ);
+#if PERF
+  estop_irq_cyc = perf_now();
+#endif
   estop_edge_ms = HAL_GetTick();
   estop_pending = 1;
 }
@@ -535,6 +555,13 @@ static void estop_run(void)
   static uint16_t presses;
 
   estop_pending = 0;
+#if PERF
+  /* Мітку ISR читаємо до EnableIRQ: поки переривання вимкнене, колбек її не
+   * перезапише. Час реакції — момент, коли цикл дійшов до рішення. */
+  uint32_t t_irq = estop_irq_cyc;
+  uint32_t t_react = perf_now();
+  uint64_t us_react = perf_now_us64();
+#endif
   uint8_t pressed = (HAL_GPIO_ReadPin(BOARD_ESTOP_PORT, BOARD_ESTOP_PIN) == GPIO_PIN_RESET);
   __HAL_GPIO_EXTI_CLEAR_FALLING_IT(BOARD_ESTOP_PIN);
   HAL_NVIC_ClearPendingIRQ(BOARD_ESTOP_IRQ);
@@ -544,6 +571,12 @@ static void estop_run(void)
     sorter_state_t st = sorter_estop_toggle(&sorter);
     presses++;
     ev_log("ESTOP", "n=%u state=%s", (unsigned)presses, sorter_state_name(st));
+#if PERF
+    uint32_t lat = t_react - t_irq;   /* включно з ESTOP_DEBOUNCE_MS */
+    perf_add(&st_estop_lat, lat);
+    evt("estop_irq", us_react - perf_cyc_to_us(lat, cyc_per_us));
+    evt("estop_react", us_react);
+#endif
   }
 }
 
@@ -561,6 +594,9 @@ static void gate_run(void)
   uint16_t raw = adc_hal_read(BOARD_ADC_CH_GATE);
   switch (gate_update(&gate, raw)) {
   case GATE_EV_IN:
+#if PERF
+    parcel_cyc = perf_now();
+#endif
     led_mark(1);
     parcel_ms = HAL_GetTick();
     parcel_pending = 1;
@@ -596,6 +632,10 @@ static void sort_run(void)
   int accepted = sorter_parcel_in(&sorter, cls, &d);
   if (accepted)
     servo_hal_set_angle(d.angle);
+#if PERF
+  uint32_t t_dec = perf_now();          /* CCR записано (або посилку пропущено) */
+  uint64_t us_dec = perf_now_us64();
+#endif
   led_mark(0);
   uint32_t lat_ms = HAL_GetTick() - parcel_ms;
 
@@ -606,6 +646,15 @@ static void sort_run(void)
   else
     ev_log("SORT_SKIP", "state=%s class=%s",
            sorter_state_name(sorter.state), classify_name(cls));
+#if PERF
+  /* EVT друкуємо після дії: рядок журналу (~3 мс) не входить у затримку */
+  uint32_t lat = t_dec - parcel_cyc;
+  evt("parcel_in", us_dec - perf_cyc_to_us(lat, cyc_per_us));
+  if (accepted) {
+    perf_add(&st_parcel_lat, lat);
+    evt("servo_set", us_dec);
+  }
+#endif
 }
 
 /* Кожні IMU_PERIOD_MS: прискорення MPU-6050; |a| > 2 g — прапорець удару для
@@ -754,7 +803,7 @@ static bus_status_t meas_write(void *ctx, uint8_t addr7, const uint8_t *data, si
   uint32_t t0 = perf_now();
   bus_status_t st = raw->write(raw->ctx, addr7, data, len);
 
-  perf_add(&st_i2c, perf_now() - t0);
+  i2c_measured(t0, st);
   return st;
 }
 
@@ -764,8 +813,36 @@ static bus_status_t meas_read(void *ctx, uint8_t addr7, uint8_t *data, size_t le
   uint32_t t0 = perf_now();
   bus_status_t st = raw->read(raw->ctx, addr7, data, len);
 
-  perf_add(&st_i2c, perf_now() - t0);
+  i2c_measured(t0, st);
   return st;
+}
+
+/* EVT i2c_fail — кожна транзакція, що впала після всіх спроб FR-09;
+ * EVT i2c_ok — перша вдала після збою (шина ожила) */
+static void i2c_measured(uint32_t t0, bus_status_t st)
+{
+  perf_add(&st_i2c, perf_now() - t0);
+  if (st != BUS_OK) {
+    i2c_failed = 1;
+    evt("i2c_fail", perf_now_us64());
+  } else if (i2c_failed) {
+    i2c_failed = 0;
+    evt("i2c_ok", perf_now_us64());
+  }
+}
+
+/* Журнал подій (методичка 5.2): "<мс> EVT t_us=<64-біт мкс> name=<подія>".
+ * printf з newlib-nano не вміє %llu, тому 64 біти — двома частинами по 10^9.
+ * Як і решта подій, вимикається командою log off. */
+static void evt(const char *name, uint64_t t_us)
+{
+  uint32_t lo;
+  uint32_t hi = perf_udiv64(t_us, 1000000000u, &lo);
+
+  if (hi != 0u)
+    ev_log("EVT", "t_us=%lu%09lu name=%s", (unsigned long)hi, (unsigned long)lo, name);
+  else
+    ev_log("EVT", "t_us=%lu name=%s", (unsigned long)lo, name);
 }
 #endif
 
