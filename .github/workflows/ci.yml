@@ -16,8 +16,14 @@ jobs:
       - name: Layer dependencies
         run: make check-deps
 
-      - name: Firmware build (LAB2_CAP harness)
+      - name: Firmware build (LAB2_CAP harness, without PERF)
         run: make build LAB2_CAP=1
+
+      - name: Firmware build (PERF=0)
+        run: make build PERF=0
+
+      - name: Firmware build (TEST_I2C_FAULT)
+        run: make build TEST_I2C_FAULT=1
 
       - name: Firmware build
         run: make build
