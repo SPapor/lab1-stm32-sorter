@@ -12,7 +12,8 @@
 
 #include <stdint.h>
 
-/* Запам'ятовує тактів на тік (SystemCoreClock / 1000) і на мікросекунду.
+/* Запам'ятовує тактів на тік (SystemCoreClock / 1000) і на мікросекунду, і
+ * налаштовує службові піни PB13, PB14 як виходи (не з CubeMX, див. board.h).
  * Викликати після SystemClock_Config, коли SysTick уже переналаштований. */
 void perf_hal_init(void);
 

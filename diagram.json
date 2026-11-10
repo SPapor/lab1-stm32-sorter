@@ -34,8 +34,9 @@
     [ "logic:D2", "nucleo:PA6", "purple", [] ],
     [ "logic:D3", "nucleo:PA2", "white", [] ],
     [ "logic:D4", "nucleo:PA5", "limegreen", [] ],
-    [ "logic:D5", "nucleo:PA15", "cyan", [] ],
-    [ "logic:D6", "nucleo:PC13", "magenta", [] ],
+    [ "logic:D5", "nucleo:PC13", "magenta", [] ],
+    [ "logic:D6", "nucleo:PB13", "cyan", [] ],
+    [ "logic:D7", "nucleo:PB14", "orange", [] ],
     [ "logic:GND", "nucleo:GND.2", "black", [] ],
 
     [ "imu:VCC", "nucleo:3V3.1", "red", [] ],

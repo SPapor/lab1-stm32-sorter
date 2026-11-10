@@ -33,6 +33,17 @@
 #define BOARD_ADC_MARK_PORT  ADC_MARK_GPIO_Port   /* PA15, D7 (CN9-8), маркер АЦП, канал D5 */
 #define BOARD_ADC_MARK_PIN   ADC_MARK_Pin
 
+/* Службові піни вимірювань ЛР3 (методичка 5.3, docs/perf.md). Не з CubeMX:
+ * їх налаштовує perf_hal_init, щоб не перегенеровувати проєкт
+ * (pinout.md §1, примітка; docs/journal.md, проблема 12) */
+#define BOARD_PROBE_PORT         GPIOB
+#define BOARD_PROBE_CLK_ENABLE() __HAL_RCC_GPIOB_CLK_ENABLE()
+#define BOARD_PROBE_TASK_PIN     GPIO_PIN_13      /* PB13, CN10-30 (morpho), канал D6: працює будь-яка задача */
+#define BOARD_PROBE_LCD_PIN      GPIO_PIN_14      /* PB14, CN10-28 (morpho), канал D7: працює lcd_task */
+/* Запис у BSRR — одна інструкція str: біти 0..15 ставлять 1, біти 16..31 скидають у 0 */
+#define BOARD_PROBE_ON(pin)      (BOARD_PROBE_PORT->BSRR = (pin))
+#define BOARD_PROBE_OFF(pin)     (BOARD_PROBE_PORT->BSRR = (uint32_t)(pin) << 16)
+
 /* Кнопка E-STOP: замикає на GND, pull-up, EXTI за спадом */
 #define BOARD_ESTOP_PORT     ESTOP_GPIO_Port
 #define BOARD_ESTOP_PIN      ESTOP_Pin            /* PC13, B1 */

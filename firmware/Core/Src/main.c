@@ -696,7 +696,13 @@ static void lcd_task(void)
 {
   if (!lcd_ready || !period_due(&t_lcd, HAL_GetTick(), LCD_PERIOD_MS))
     return;
+#if PERF
+  BOARD_PROBE_ON(BOARD_PROBE_LCD_PIN);    /* D7: головний блокувальник циклу */
+#endif
   TASK_RUN(PT_LCD, lcd_run());
+#if PERF
+  BOARD_PROBE_OFF(BOARD_PROBE_LCD_PIN);
+#endif
 }
 
 static void lcd_run(void)
@@ -778,8 +784,11 @@ static void perf_setup(void)
 #endif
 }
 
+/* D6 (PB13) = 1, поки працює будь-яка задача: на аналізаторі ширина імпульсу —
+ * час задачі, відстань між фронтами — період і джитер (методичка 5.3) */
 static uint32_t perf_begin(unsigned id)
 {
+  BOARD_PROBE_ON(BOARD_PROBE_TASK_PIN);
   uint32_t t0 = perf_now();
 
   if (task_period[id] != NULL)
@@ -791,6 +800,7 @@ static void perf_end(unsigned id, uint32_t t0)
 {
   uint32_t cyc = perf_now() - t0;
 
+  BOARD_PROBE_OFF(BOARD_PROBE_TASK_PIN);
   perf_add(&st_task[id], cyc);
   perf_load_busy(&load, cyc);
 }

@@ -1,13 +1,24 @@
 #include "perf_hal.h"
-#include "stm32c0xx_hal.h"
+#include "board.h"
 
 static uint32_t cyc_per_tick;   /* SystemCoreClock / 1000; SysTick->LOAD = cyc_per_tick - 1 */
 static uint32_t cyc_per_us;
 
 void perf_hal_init(void)
 {
+    GPIO_InitTypeDef g = {0};
+
     cyc_per_tick = SystemCoreClock / 1000u;   /* HAL_TICK_FREQ_DEFAULT: 1 тік = 1 мс */
     cyc_per_us = SystemCoreClock / 1000000u;
+
+    /* PB13, PB14 — push-pull виходи, як LED_MARK і ADC_MARK у CubeMX */
+    BOARD_PROBE_CLK_ENABLE();
+    BOARD_PROBE_OFF(BOARD_PROBE_TASK_PIN | BOARD_PROBE_LCD_PIN);
+    g.Pin = BOARD_PROBE_TASK_PIN | BOARD_PROBE_LCD_PIN;
+    g.Mode = GPIO_MODE_OUTPUT_PP;
+    g.Pull = GPIO_NOPULL;
+    g.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(BOARD_PROBE_PORT, &g);
 }
 
 /* Номер тіку і такти від його початку — узгоджена пара.
