@@ -46,6 +46,9 @@
 #if PERF
 #include "perf.h"
 #include "perf_hal.h"
+#include "memmark.h"
+#include "mem_hal.h"
+#include <malloc.h>
 #endif
 /* USER CODE END Includes */
 
@@ -251,6 +254,8 @@ static bus_status_t meas_write(void *ctx, uint8_t addr7, const uint8_t *data, si
 static bus_status_t meas_read(void *ctx, uint8_t addr7, uint8_t *data, size_t len);
 static void i2c_measured(uint32_t t0, bus_status_t st);
 static void evt(const char *name, uint64_t t_us);
+static void stack_report(void);
+static void heap_report(void);
 #endif
 #if defined(LAB2_CAP) || defined(TEST_I2C_FAULT)
 static const char *bus_st_name(bus_status_t st);
@@ -297,7 +302,11 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+#if PERF
+  /* Stack painting першим рядком main (методичка 5.4): резерв стека
+   * [_estack - _Min_Stack_Size, SP - 16 слів) — шаблоном; поточний кадр не чіпаємо */
+  memmark_paint(mem_hal_stack_bottom(), mem_hal_sp() - 16, MEMMARK_PATTERN);
+#endif
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -364,6 +373,10 @@ int main(void)
   cli_init(&cli);
   t_gate = t_imu = t_lcd = HAL_GetTick();   /* підсумок самоперевірки на LCD — ще LCD_PERIOD_MS */
   ev_log("STATE", "state=%s", sorter_state_name(sorter.state));
+#if PERF
+  stack_report();               /* глибина стека й купа після старту (методичка 5.4) */
+  heap_report();
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -839,6 +852,30 @@ static void i2c_measured(uint32_t t0, bus_status_t st)
     i2c_failed = 0;
     evt("i2c_ok", perf_now_us64());
   }
+}
+
+/* Глибина стека за stack painting. used = reserved — шаблон зіпсовано до самого
+ * низу: стек, найімовірніше, вийшов за резерв _Min_Stack_Size і щось перезаписав */
+static void stack_report(void)
+{
+  uint32_t *bottom = mem_hal_stack_bottom();
+  uint32_t *top = mem_hal_stack_top();
+  uint32_t used = memmark_used_bytes(bottom, top, MEMMARK_PATTERN);
+  uint32_t reserved = (uint32_t)((top - bottom) * (int)sizeof(uint32_t));
+
+  cli_reply("STACK", "used=%lu reserved=%lu free=%lu overflow=%u",
+            (unsigned long)used, (unsigned long)reserved, (unsigned long)(reserved - used),
+            (unsigned)(used >= reserved));
+}
+
+/* Купа newlib (printf і stdio беруть пам'ять через malloc): arena — скільки
+ * забрано в sbrk (не зменшується, тож це пік), used / free — усередині арени */
+static void heap_report(void)
+{
+  struct mallinfo mi = mallinfo();
+
+  cli_reply("HEAP", "arena=%u used=%u free=%u",
+            (unsigned)mi.arena, (unsigned)mi.uordblks, (unsigned)mi.fordblks);
 }
 
 /* Журнал подій (методичка 5.2): "<мс> EVT t_us=<64-біт мкс> name=<подія>".

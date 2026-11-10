@@ -35,8 +35,17 @@ $(BUILD_DIR)/$(TARGET).elf: $(USER_OBJECTS)
 BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
 
-# PERF завжди визначений (#if PERF): 0 лише явно, порожнє значення = 1
+# PERF завжди визначений (#if PERF): 0 лише явно, порожнє значення = 1.
+# Harness ЛР2 і вимірювальний модуль разом не вміщаються в 32 КБ flash
+# (docs/perf.md, розділ про розмір), тож з LAB2_CAP=1 за замовчуванням PERF=0.
+ifeq ($(LAB2_CAP),1)
+ifeq ($(PERF),1)
+$(error LAB2_CAP=1 разом з PERF=1 не вміщується в 32 КБ flash (docs/perf.md); зберіть з PERF=0)
+endif
+PERF_ON := 0
+else
 PERF_ON := $(if $(filter 0,$(PERF)),0,1)
+endif
 C_DEFS += -DPERF=$(PERF_ON)
 
 # Об'єкти в Makefile залежать лише від .c і Makefile, тож після зміни варіанта
@@ -44,6 +53,10 @@ C_DEFS += -DPERF=$(PERF_ON)
 # об'єкти від нього залежать: перемикання варіанта = повна перезбірка.
 BUILD_CFG  = $(BUILD_DIR)/build.cfg
 BUILD_LINE = $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0)) PERF=$(PERF_ON)
+
+# Стек власних функцій (методичка 5.4): build/*.su → tools/stack_usage.py; кадр понад
+# 512 байт — попередження, з -Werror — помилка. Map з --cref — у Makefile CubeMX.
+$(USER_OBJECTS) $(BUILD_DIR)/main.o: CFLAGS += -fstack-usage -Wstack-usage=512
 
 $(BUILD_CFG): FORCE | $(BUILD_DIR)
 	@echo '$(BUILD_LINE)' | cmp -s - $@ || echo '$(BUILD_LINE)' > $@

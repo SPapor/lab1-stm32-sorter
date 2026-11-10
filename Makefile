@@ -21,7 +21,14 @@ coverage:
 check-deps:
 	sh tools/check-deps.sh
 
+# Після make build: найбільші кадри стека (.su) і flash/RAM за модулями (map), на хості
+stack-usage:
+	python3 tools/stack_usage.py firmware/build
+
+map-summary:
+	python3 tools/map_summary.py firmware/build/firmware.map
+
 shell:
 	docker run --rm -it -v $(PWD):/workspace -w /workspace --user $$(id -u):$$(id -g) $(IMAGE) bash
 
-.PHONY: build clean test coverage check-deps shell
+.PHONY: build clean test coverage check-deps stack-usage map-summary shell
