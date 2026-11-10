@@ -1,5 +1,7 @@
-/* Тести розбору команд UART (firmware/App/cli.c). Файл збирається двічі:
- * test_cli — збірка продукту, test_cli_lab2 — з -DLAB2_CAP (команди stream, cap …). */
+/* Тести розбору команд UART (firmware/App/cli.c). Файл збирається тричі, як
+ * варіанти прошивки: test_cli — продукт (-DPERF=1, команди вимірювань),
+ * test_cli_noperf — -DPERF=0, test_cli_lab2 — -DLAB2_CAP (команди stream, cap …;
+ * з LAB2_CAP прошивка збирається без PERF). */
 
 #include <string.h>
 #include "unity.h"
@@ -67,6 +69,66 @@ static void test_log_on_off(void)
     assert_line("log on\r", CLI_LOG, 1);
     assert_line("log off\r", CLI_LOG, 0);
 }
+
+#if PERF
+static void test_perf_commands(void)
+{
+    assert_line("stats\r", CLI_STATS, 0);
+    assert_line("stats reset\r", CLI_STATS_RESET, 0);
+    assert_line("load\r", CLI_LOAD, 0);
+    assert_line("stack\r", CLI_STACK, 0);
+    assert_line("heap\r", CLI_HEAP, 0);
+    TEST_ASSERT_EQUAL_STRING("", last.name);
+}
+
+static void test_perf_commands_bad(void)
+{
+    assert_line("stats all\r", CLI_CMD_BAD, 0);
+    assert_line("stats reset now\r", CLI_CMD_BAD, 0);
+    assert_line("load 1\r", CLI_CMD_BAD, 0);
+    assert_line("stack now\r", CLI_CMD_BAD, 0);
+    assert_line("heap 2\r", CLI_CMD_BAD, 0);
+}
+
+/* hist <задача>: назву лише копіюємо — які задачі мають гістограму, знає main.c */
+static void test_hist_name(void)
+{
+    assert_line("hist gate\r", CLI_HIST, 0);
+    TEST_ASSERT_EQUAL_STRING("gate", last.name);
+    assert_line("  hist   lcd  \r", CLI_HIST, 0);
+    TEST_ASSERT_EQUAL_STRING("lcd", last.name);
+    assert_line("hist 12345678901\r", CLI_HIST, 0);         /* 11 символів — максимум */
+    TEST_ASSERT_EQUAL_STRING("12345678901", last.name);
+}
+
+static void test_hist_bad(void)
+{
+    assert_line("hist\r", CLI_CMD_BAD, 0);
+    TEST_ASSERT_EQUAL_STRING("", last.name);
+    assert_line("hist gate imu\r", CLI_CMD_BAD, 0);
+    assert_line("hist 123456789012\r", CLI_CMD_BAD, 0);     /* 12 — не вміщується з '\0' */
+    TEST_ASSERT_EQUAL_STRING("", last.name);
+}
+
+/* Назва від попередньої hist не «протікає» в наступні команди */
+static void test_name_cleared_between_commands(void)
+{
+    assert_line("hist imu\r", CLI_HIST, 0);
+    assert_line("status\r", CLI_STATUS, 0);
+    TEST_ASSERT_EQUAL_STRING("", last.name);
+}
+#else
+/* Без PERF команди вимірювань не розпізнаються */
+static void test_perf_commands_rejected(void)
+{
+    assert_line("stats\r", CLI_CMD_BAD, 0);
+    assert_line("stats reset\r", CLI_CMD_BAD, 0);
+    assert_line("load\r", CLI_CMD_BAD, 0);
+    assert_line("stack\r", CLI_CMD_BAD, 0);
+    assert_line("heap\r", CLI_CMD_BAD, 0);
+    assert_line("hist gate\r", CLI_CMD_BAD, 0);
+}
+#endif
 
 static void test_log_bad_argument(void)
 {
@@ -255,6 +317,15 @@ int main(void)
     RUN_TEST(test_status_reset);
     RUN_TEST(test_status_reset_take_no_argument);
     RUN_TEST(test_log_on_off);
+#if PERF
+    RUN_TEST(test_perf_commands);
+    RUN_TEST(test_perf_commands_bad);
+    RUN_TEST(test_hist_name);
+    RUN_TEST(test_hist_bad);
+    RUN_TEST(test_name_cleared_between_commands);
+#else
+    RUN_TEST(test_perf_commands_rejected);
+#endif
     RUN_TEST(test_log_bad_argument);
 #ifdef LAB2_CAP
     RUN_TEST(test_stream_on_off);

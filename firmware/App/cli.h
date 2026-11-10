@@ -2,12 +2,14 @@
 #define CLI_H
 
 /* Розбір рядкових команд з UART. Лише логіка: нічого не друкує і не знає про
- * HAL, тому збирається й тестується на хості. Команди вимірювального harness ЛР2
- * (stream, cap …) є лише у збірці з LAB2_CAP. */
+ * HAL, тому збирається й тестується на хості. Команди вимірювань ЛР3 (stats,
+ * load, stack, heap, hist) є лише у збірці з PERF=1, команди harness ЛР2
+ * (stream, cap …) — лише з LAB2_CAP. */
 
 #include <stdint.h>
 
 #define CLI_BUF_LEN        32u    /* буфер рядка разом з '\0': до 31 символу */
+#define CLI_NAME_LEN       12u    /* аргумент-слово (hist <задача>) разом з '\0' */
 #ifdef LAB2_CAP
 #define CLI_SERVO_MAX_DEG  180    /* межа аргументу «cap servo» */
 #endif
@@ -17,6 +19,14 @@ typedef enum {
     CLI_STATUS,       /* status: стан і лічильники */
     CLI_RESET,        /* reset: лічильники в нуль */
     CLI_LOG,          /* log on|off: рядки подій FR-10; arg = 1 / 0 */
+#if PERF
+    CLI_STATS,        /* stats: STAT задач, затримок, блокувальних викликів */
+    CLI_STATS_RESET,  /* stats reset */
+    CLI_LOAD,         /* load: завантаження CPU за останнє вікно */
+    CLI_STACK,        /* stack: глибина стека (stack painting) */
+    CLI_HEAP,         /* heap: купа (mallinfo) */
+    CLI_HIST,         /* hist <задача>: гістограма джитера; name = задача */
+#endif
 #ifdef LAB2_CAP
     CLI_STREAM,       /* stream on|off; arg = 1 / 0 */
     CLI_CAP_WHOAMI,   /* cap whoami */
@@ -33,7 +43,8 @@ typedef enum {
 
 typedef struct {
     cli_cmd_id_t id;
-    int32_t arg;      /* 0, якщо команда без аргументу */
+    int32_t arg;                /* 0, якщо команда без аргументу */
+    char name[CLI_NAME_LEN];    /* аргумент-слово; "" для інших команд */
 } cli_cmd_t;
 
 typedef struct {

@@ -49,6 +49,7 @@
 #include "memmark.h"
 #include "mem_hal.h"
 #include <malloc.h>
+#include <string.h>
 #endif
 /* USER CODE END Includes */
 
@@ -86,6 +87,9 @@ enum {
 #define PERF_WIN_MS         1000u   /* вікно завантаження CPU, docs/perf.md */
 
 #define FW_NAME             "lab3-superloop"
+#ifndef GIT_HASH
+#define GIT_HASH            "unknown"   /* app.mk передає -DGIT_HASH з git describe */
+#endif
 #define SERVO_SELFTEST_DEG  90u     /* середина ходу серво під час самоперевірки */
 
 #ifdef TEST_I2C_FAULT
@@ -203,6 +207,12 @@ static const char *const help_lines[] = {
   "status              state, counters A/B/REJECT",
   "reset               zero the counters",
   "log on|off          event lines on UART (default on)",
+#if PERF
+  "stats [reset]       timing stats",
+  "load                CPU load, 1 s",
+  "stack | heap        memory",
+  "hist gate|imu|lcd   jitter histogram",
+#endif
 #ifdef LAB2_CAP
   "stream on|off       periodic 'accel' line (default on)",
   "cap whoami          MPU-6050: write 0x75, read 1 byte",
@@ -256,6 +266,11 @@ static void i2c_measured(uint32_t t0, bus_status_t st);
 static void evt(const char *name, uint64_t t_us);
 static void stack_report(void);
 static void heap_report(void);
+static void stats_report(void);
+static void stats_reset(void);
+static void load_line(void (*out)(const char *, const char *, ...));
+static void load_report(void);
+static void hist_report(const char *name);
 #endif
 #if defined(LAB2_CAP) || defined(TEST_I2C_FAULT)
 static const char *bus_st_name(bus_status_t st);
@@ -337,7 +352,7 @@ int main(void)
   perf_hal_init();
   perf_setup();
 #endif
-  ev_log("BOOT", "fw=%s", FW_NAME);
+  ev_log("BOOT", "fw=%s git=%s perf=%u", FW_NAME, GIT_HASH, (unsigned)PERF);
 #if PERF
   perf_calibrate();
 #endif
@@ -392,9 +407,7 @@ int main(void)
 #if PERF
     uint32_t t_loop = perf_now();
     if (perf_load_poll(&load, t_loop))
-      ev_log("LOAD", "pct=%lu pm=%lu win_cyc=%lu busy_cyc=%lu",
-             (unsigned long)load.last_pct, (unsigned long)load.last_pm,
-             (unsigned long)load.last_win, (unsigned long)load.last_busy);
+      load_line(ev_log);
 #endif
     uart_rx_task();
     estop_task();
@@ -763,7 +776,6 @@ static void lcd_run(void)
 static void perf_calibrate(void)
 {
   perf_stat_t cal = { .name = "cal" };
-  uint32_t cpu_mhz = perf_hal_cpu_hz() / 1000000u;
 
   perf_now_cyc = UINT32_MAX;
   perf_pair_cyc = UINT32_MAX;
@@ -779,10 +791,9 @@ static void perf_calibrate(void)
     if (c - b - (b - a) < perf_pair_cyc)
       perf_pair_cyc = c - b - (b - a);
   }
-  ev_log("PERF", "cpu_hz=%lu now_cyc=%lu now_ns=%lu pair_cyc=%lu pair_ns=%lu",
-         (unsigned long)perf_hal_cpu_hz(),
-         (unsigned long)perf_now_cyc, (unsigned long)(perf_now_cyc * 1000u / cpu_mhz),
-         (unsigned long)perf_pair_cyc, (unsigned long)(perf_pair_cyc * 1000u / cpu_mhz));
+  ev_log("PERF", "cpu_hz=%lu now_cyc=%lu pair_cyc=%lu",
+         (unsigned long)perf_hal_cpu_hz(), (unsigned long)perf_now_cyc,
+         (unsigned long)perf_pair_cyc);
 }
 
 static void perf_setup(void)
@@ -876,6 +887,107 @@ static void heap_report(void)
 
   cli_reply("HEAP", "arena=%u used=%u free=%u",
             (unsigned)mi.arena, (unsigned)mi.uordblks, (unsigned)mi.fordblks);
+}
+
+/* Один рядок STAT (методичка 5.1), час у мкс. Ключі однакові для всіх рядків:
+ * у задач за подією і блокувальних викликів period_us=0 і нулі джитера.
+ * Джитер старту знаковий, miss — інтервал між стартами понад 2 періоди */
+static void stat_line(const perf_stat_t *s, const perf_period_t *p)
+{
+  static const perf_period_t none;
+
+  if (p == NULL)
+    p = &none;
+  cli_reply("STAT", "name=%s n=%lu min_us=%lu avg_us=%lu max_us=%lu period_us=%lu "
+            "jit_min_us=%ld jit_max_us=%ld miss=%lu", s->name, (unsigned long)s->count,
+            (unsigned long)perf_cyc_to_us(s->min, cyc_per_us),
+            (unsigned long)perf_cyc_to_us(perf_avg(s), cyc_per_us),
+            (unsigned long)perf_cyc_to_us(s->max, cyc_per_us),
+            (unsigned long)p->period_us, (long)p->jit_min_us, (long)p->jit_max_us,
+            (unsigned long)p->missed);
+}
+
+/* Команда stats: шапка з версією і похибкою методу, далі всі STAT і лічильники UART */
+static void stats_report(void)
+{
+  static const perf_stat_t *const other[] = {
+    &st_loop, &st_i2c, &st_uart_line, &st_lcd_update, &st_estop_lat, &st_parcel_lat,
+  };
+  uint32_t rx, ore;
+
+  cli_reply("PERF", "git=%s now_cyc=%lu pair_cyc=%lu cyc_per_us=%lu", GIT_HASH,
+            (unsigned long)perf_now_cyc, (unsigned long)perf_pair_cyc, (unsigned long)cyc_per_us);
+  for (unsigned i = 0; i < PT_COUNT; i++)
+    stat_line(&st_task[i], task_period[i]);
+  for (size_t i = 0; i < sizeof other / sizeof other[0]; i++)
+    stat_line(other[i], NULL);
+  uart_hal_counters(&rx, &ore);
+  cli_reply("UART", "rx=%lu ore=%lu", (unsigned long)rx, (unsigned long)ore);
+}
+
+/* stats reset: усі STAT, джитер, гістограми й лічильники UART у нуль.
+ * Вікно завантаження не чіпаємо — воно й так оновлюється щосекунди */
+static void stats_reset(void)
+{
+  static perf_stat_t *const other[] = {
+    &st_loop, &st_i2c, &st_uart_line, &st_lcd_update, &st_estop_lat, &st_parcel_lat,
+  };
+
+  for (unsigned i = 0; i < PT_COUNT; i++) {
+    perf_stat_reset(&st_task[i]);
+    if (task_period[i] != NULL)
+      perf_period_reset(task_period[i]);
+  }
+  for (size_t i = 0; i < sizeof other / sizeof other[0]; i++)
+    perf_stat_reset(other[i]);
+  uart_hal_counters_reset();
+  cli_reply("STATS", "reset=1");
+}
+
+/* LOAD за останнє закрите вікно (методичка 5.1, приклад 4). Щосекунди з циклу —
+ * як подія (log off вимикає), командою load — завжди */
+static void load_line(void (*out)(const char *, const char *, ...))
+{
+  out("LOAD", "pct=%lu pm=%lu win_cyc=%lu busy_cyc=%lu windows=%lu",
+      (unsigned long)load.last_pct, (unsigned long)load.last_pm,
+      (unsigned long)load.last_win, (unsigned long)load.last_busy,
+      (unsigned long)load.windows);
+}
+
+static void load_report(void)
+{
+  load_line(cli_reply);
+}
+
+/* Команда hist <задача>: шапка і по рядку на кожен непорожній кошик 100 мкс.
+ * Крайні кошики — «нижче за -1000 мкс» і «від 2000 мкс» */
+static void hist_report(const char *name)
+{
+  const perf_period_t *p = NULL;
+
+  for (unsigned i = 0; i < PT_COUNT; i++)
+    if (task_period[i] != NULL && strcmp(st_task[i].name, name) == 0)
+      p = task_period[i];
+  if (p == NULL) {
+    cli_reply("HIST", "name=%s st=BAD", name);
+    return;
+  }
+  cli_reply("HIST", "name=%s period_us=%lu n=%lu step_us=%d",
+            name, (unsigned long)p->period_us, (unsigned long)p->n, PERF_HIST_STEP_US);
+  for (unsigned b = 0; b < PERF_HIST_BINS; b++) {
+    long lo = perf_hist_lo_us(b);
+
+    if (p->hist[b] == 0u)
+      continue;
+    if (b == 0u)
+      cli_reply("HIST", "name=%s lo_us=-inf hi_us=%d n=%lu", name, PERF_HIST_LO_US,
+                (unsigned long)p->hist[b]);
+    else if (b == PERF_HIST_BINS - 1u)
+      cli_reply("HIST", "name=%s lo_us=%ld hi_us=inf n=%lu", name, lo, (unsigned long)p->hist[b]);
+    else
+      cli_reply("HIST", "name=%s lo_us=%ld hi_us=%ld n=%lu", name, lo,
+                lo + PERF_HIST_STEP_US, (unsigned long)p->hist[b]);
+  }
 }
 
 /* Журнал подій (методичка 5.2): "<мс> EVT t_us=<64-біт мкс> name=<подія>".
@@ -1066,6 +1178,14 @@ static void cmd_run(const cli_cmd_t *cmd)
     log_on = (uint8_t)cmd->arg;
     cli_reply("LOG", "on=%u", (unsigned)log_on);
     break;
+#if PERF
+  case CLI_STATS:       stats_report(); break;
+  case CLI_STATS_RESET: stats_reset(); break;
+  case CLI_LOAD:        load_report(); break;
+  case CLI_STACK:       stack_report(); break;
+  case CLI_HEAP:        heap_report(); break;
+  case CLI_HIST:        hist_report(cmd->name); break;
+#endif
 #ifdef LAB2_CAP
   case CLI_STREAM:
     stream_on = (uint8_t)cmd->arg;

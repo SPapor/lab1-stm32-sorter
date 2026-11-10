@@ -54,6 +54,19 @@ C_DEFS += -DPERF=$(PERF_ON)
 BUILD_CFG  = $(BUILD_DIR)/build.cfg
 BUILD_LINE = $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0)) PERF=$(PERF_ON)
 
+# Версія прошивки в банері й першому рядку журналу (методичка 5.2, 6): git-хеш,
+# з «-dirty», якщо збирали з незакоміченими змінами. Кореневий Makefile передає його
+# з хоста (у Docker git може не бути). Лише main.o, і перезбирається він лише тоді,
+# коли хеш змінився (штамп git.cfg).
+GIT_HASH ?= $(shell git -C .. describe --always --dirty --abbrev=8 2>/dev/null || echo unknown)
+GIT_CFG = $(BUILD_DIR)/git.cfg
+
+$(GIT_CFG): FORCE | $(BUILD_DIR)
+	@echo '$(GIT_HASH)' | cmp -s - $@ || echo '$(GIT_HASH)' > $@
+
+$(BUILD_DIR)/main.o: CFLAGS += -DGIT_HASH=\"$(GIT_HASH)\"
+$(BUILD_DIR)/main.o: $(GIT_CFG)
+
 # Стек власних функцій (методичка 5.4): build/*.su → tools/stack_usage.py; кадр понад
 # 512 байт — попередження, з -Werror — помилка. Map з --cref — у Makefile CubeMX.
 $(USER_OBJECTS) $(BUILD_DIR)/main.o: CFLAGS += -fstack-usage -Wstack-usage=512
