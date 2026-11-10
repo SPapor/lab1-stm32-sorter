@@ -239,9 +239,15 @@ int main(void)
   i2c_scan();
 #endif
 
-  /* FR-08: самоперевірка; FAIL хоча б одного пристрою — FAULT до перезапуску */
+  /* FR-08: самоперевірка; FAIL хоча б одного пристрою — FAULT до перезапуску.
+   * На час самоперевірки — 1 спроба I2C: mpu6050_init сам повторює запис
+   * PWR_MGMT_1 3 рази, а в Wokwi кожен 2-байтовий запис — TIMEOUT 100 мс
+   * (docs/journal.md, проблема 8), інакше було б 3 × 3 тайм-аути. FR-09
+   * (до 3 спроб) — лише в робочому циклі. */
   i2c_hal_bus_init(&i2c1_bus, &i2c1_ctx, BOARD_I2C, BOARD_I2C_REINIT);
+  i2c_hal_set_tries(&i2c1_ctx, 1);
   selftest_counts_t st = selftest_run();
+  i2c_hal_set_tries(&i2c1_ctx, I2C_HAL_MAX_TRIES);
   lcd_show_selftest(&st);
   sorter_init(&sorter, st.fail != 0u);
   if (sorter.state == SORTER_FAULT)
