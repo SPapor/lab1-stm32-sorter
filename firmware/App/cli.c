@@ -4,13 +4,15 @@
 
 #define CLI_MAX_WORDS 3u   /* найдовша команда: cap servo <кут> */
 
+/* Команда-слово → ідентифікатор */
 typedef struct {
     const char *name;
     cli_cmd_id_t id;
-} cap_entry_t;
+} cmd_entry_t;
 
+#ifdef LAB2_CAP
 /* «cap <name>» без аргументу; servo з аргументом розбирається окремо */
-static const cap_entry_t cap_table[] = {
+static const cmd_entry_t cap_table[] = {
     { "whoami", CLI_CAP_WHOAMI },
     { "accel",  CLI_CAP_ACCEL },
     { "wr2",    CLI_CAP_WR2 },
@@ -19,6 +21,7 @@ static const cap_entry_t cap_table[] = {
     { "adc",    CLI_CAP_ADC },
     { "uart",   CLI_CAP_UART },
 };
+#endif
 
 void cli_init(cli_t *c)
 {
@@ -47,6 +50,7 @@ static unsigned split(char *s, char *w[], unsigned max)
     }
 }
 
+#ifdef LAB2_CAP
 /* Десяткове число без знака 0..max; 0 — успіх, -1 — не число або поза межами. */
 static int parse_uint(const char *s, int32_t max, int32_t *out)
 {
@@ -64,21 +68,39 @@ static int parse_uint(const char *s, int32_t max, int32_t *out)
     *out = v;
     return 0;
 }
+#endif
+
+/* «<name> on|off»: arg = 1 / 0; інший аргумент — CLI_CMD_BAD. */
+static cli_cmd_id_t parse_on_off(const char *word, cli_cmd_id_t id, int32_t *arg)
+{
+    if (strcmp(word, "on") == 0) {
+        *arg = 1;
+        return id;
+    }
+    if (strcmp(word, "off") == 0)
+        return id;
+    return CLI_CMD_BAD;
+}
 
 static cli_cmd_id_t parse_words(char *w[], unsigned n, int32_t *arg)
 {
-    if (n == 1u && strcmp(w[0], "help") == 0)
-        return CLI_HELP;
+    static const cmd_entry_t single[] = {
+        { "help",   CLI_HELP },
+        { "status", CLI_STATUS },
+        { "reset",  CLI_RESET },
+    };
 
-    if (n == 2u && strcmp(w[0], "stream") == 0) {
-        if (strcmp(w[1], "on") == 0) {
-            *arg = 1;
-            return CLI_STREAM;
-        }
-        if (strcmp(w[1], "off") == 0)
-            return CLI_STREAM;
-        return CLI_CMD_BAD;
-    }
+    if (n == 1u)
+        for (size_t i = 0; i < sizeof single / sizeof single[0]; i++)
+            if (strcmp(w[0], single[i].name) == 0)
+                return single[i].id;
+
+    if (n == 2u && strcmp(w[0], "log") == 0)
+        return parse_on_off(w[1], CLI_LOG, arg);
+
+#ifdef LAB2_CAP
+    if (n == 2u && strcmp(w[0], "stream") == 0)
+        return parse_on_off(w[1], CLI_STREAM, arg);
 
     if (n >= 2u && strcmp(w[0], "cap") == 0) {
         if (strcmp(w[1], "servo") == 0)
@@ -89,6 +111,7 @@ static cli_cmd_id_t parse_words(char *w[], unsigned n, int32_t *arg)
                 if (strcmp(w[1], cap_table[i].name) == 0)
                     return cap_table[i].id;
     }
+#endif
     return CLI_CMD_BAD;
 }
 

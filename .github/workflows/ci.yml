@@ -16,6 +16,9 @@ jobs:
       - name: Layer dependencies
         run: make check-deps
 
+      - name: Firmware build (LAB2_CAP harness)
+        run: make build LAB2_CAP=1
+
       - name: Firmware build
         run: make build
 

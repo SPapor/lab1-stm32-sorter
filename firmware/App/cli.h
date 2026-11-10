@@ -2,15 +2,22 @@
 #define CLI_H
 
 /* Розбір рядкових команд з UART. Лише логіка: нічого не друкує і не знає про
- * HAL, тому збирається й тестується на хості. */
+ * HAL, тому збирається й тестується на хості. Команди вимірювального harness ЛР2
+ * (stream, cap …) є лише у збірці з LAB2_CAP. */
 
 #include <stdint.h>
 
 #define CLI_BUF_LEN        32u    /* буфер рядка разом з '\0': до 31 символу */
+#ifdef LAB2_CAP
 #define CLI_SERVO_MAX_DEG  180    /* межа аргументу «cap servo» */
+#endif
 
 typedef enum {
     CLI_HELP = 0,     /* help */
+    CLI_STATUS,       /* status: стан і лічильники */
+    CLI_RESET,        /* reset: лічильники в нуль */
+    CLI_LOG,          /* log on|off: рядки подій FR-10; arg = 1 / 0 */
+#ifdef LAB2_CAP
     CLI_STREAM,       /* stream on|off; arg = 1 / 0 */
     CLI_CAP_WHOAMI,   /* cap whoami */
     CLI_CAP_ACCEL,    /* cap accel */
@@ -20,6 +27,7 @@ typedef enum {
     CLI_CAP_SERVO,    /* cap servo <0..180>; arg = кут */
     CLI_CAP_ADC,      /* cap adc */
     CLI_CAP_UART,     /* cap uart */
+#endif
     CLI_CMD_BAD       /* невідома команда, хибний аргумент або переповнення */
 } cli_cmd_id_t;
 
