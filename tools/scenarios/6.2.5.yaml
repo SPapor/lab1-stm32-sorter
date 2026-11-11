@@ -1,0 +1,51 @@
+# 6.2.5 - пошук точки зламу: крутимо ручки set і дивимось, коли gate/imu
+# починають пропускати запуски і FR-03 перестає вкладатися в 50 мс.
+# Кожен блок: set -> stats reset -> 10 с МК -> stats. docs/scenarios.md, 6.2.5.
+name: "6.2.5"
+title: "Точка зламу: lcd_ms, lcd_chars, imu_ms"
+setup: [log on]
+steps:
+  - comment: "період LCD: 500 -> 200 -> 100 -> 50 -> 32 мс"
+  - send: set lcd_ms 500
+  - send: stats reset
+  - wait_mcu: 10
+  - send: stats
+  - send: set lcd_ms 200
+  - send: stats reset
+  - wait_mcu: 10
+  - send: stats
+  - send: set lcd_ms 100
+  - send: stats reset
+  - wait_mcu: 10
+  - send: stats
+  - send: set lcd_ms 50
+  - send: stats reset
+  - wait_mcu: 10
+  - send: stats
+  - send: set lcd_ms 32
+  - send: stats reset
+  - wait_mcu: 10
+  - send: stats
+  - comment: "та сама частота LCD (100 мс), але лише змінені символи, по 4 за прохід"
+  - send: set lcd_ms 100
+  - send: set lcd_chars 4
+  - send: stats reset
+  - wait_mcu: 10
+  - send: stats
+  - send: set lcd_chars 0
+  - send: set lcd_ms 500
+  - comment: "період imu: 10 -> 5 -> 2 -> 1 мс"
+  - send: set imu_ms 5
+  - send: stats reset
+  - wait_mcu: 10
+  - send: stats
+  - send: set imu_ms 2
+  - send: stats reset
+  - wait_mcu: 10
+  - send: stats
+  - send: set imu_ms 1
+  - send: stats reset
+  - wait_mcu: 10
+  - send: stats
+  - send: set imu_ms 10
+final: [load, stack, heap]

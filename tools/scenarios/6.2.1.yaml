@@ -1,0 +1,9 @@
+# 6.2.1 - довга операція і періодична задача: LCD (~31,5 мс) кожні 100 мс
+# замість 500. Джитер gate/imu порівнюю з S1. docs/scenarios.md, 6.2.1.
+name: "6.2.1"
+title: "Довга операція (LCD кожні 100 мс) і періодичні gate/imu"
+setup: [stats reset, log on, set lcd_ms 100]
+steps:
+  - comment: "нічого не чіпаю 30 с часу МК"
+  - wait_mcu: 30
+final: [stats, load, hist gate, hist imu, hist lcd, set lcd_ms 500]

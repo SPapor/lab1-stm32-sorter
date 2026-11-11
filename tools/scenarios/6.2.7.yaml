@@ -1,0 +1,10 @@
+# 6.2.7 - старт: від скидання до першого коректного виміру кожного сенсора.
+# Скрипт запускати ДО симуляції: він чекає на RFC2217 (--wait-connect) і застає
+# BOOT та EVT ready_*. Якщо ні - те саме є в рядку STARTUP команди stats.
+name: "6.2.7"
+title: "Старт: BOOT -> ready_gate/class/imu/lcd"
+knobs_reset: false
+steps:
+  - comment: "чекаю 5 с часу МК після старту"
+  - wait_mcu: 5
+final: [stats]

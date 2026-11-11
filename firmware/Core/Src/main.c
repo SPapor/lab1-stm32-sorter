@@ -61,6 +61,9 @@ typedef struct {
   unsigned ok, warn, fail;
 } selftest_counts_t;
 
+/* Сенсори для сценарію старту (методичка 6.2.7, docs/scenarios.md) */
+enum { RDY_GATE = 0, RDY_CLASS, RDY_IMU, RDY_LCD, RDY_COUNT };
+
 /* Номери задач super loop для вимірювань (docs/perf.md) */
 enum {
   PT_UART = 0,
@@ -87,6 +90,7 @@ enum {
 #define ESTOP_DEBOUNCE_MS   20u     /* estop_task: EXTI кнопки вимкнено на цей час після першого фронту */
 
 #define PERF_WIN_MS         1000u   /* вікно завантаження CPU, docs/perf.md */
+#define IMU_READY_MG        500     /* |a| від 0,5 g — MPU справді міряє (у SLEEP на залізі дає нулі) */
 
 #define FW_NAME             "lab3-superloop"
 #ifndef GIT_HASH
@@ -117,6 +121,17 @@ _Static_assert(CLI_SERVO_MAX_DEG == SERVO_HAL_MAX_DEG, "межа cap servo у cl
 /* Обгортка роботи задачі (методичка 5.1, приклад 1): такти до й після, джитер
  * старту періодичної задачі, завантаження. Викликається лише тоді, коли задача
  * справді працює, а не тільки перевіряє свій час. PERF=0 — просто виклик. */
+/* Перший коректний вимір сенсора після скидання (методичка 6.2.7). Без PERF
+ * умова READY_IF не обчислюється */
+#if PERF
+#define READY(what) ready_mark(what)
+#define READY_IF(cond, what) \
+  do { if (ready_us[what] == 0u && (cond)) ready_mark(what); } while (0)
+#else
+#define READY(what) ((void)0)
+#define READY_IF(cond, what) ((void)0)
+#endif
+
 #if PERF
 #define TASK_RUN(id, call) \
   do { uint32_t t0_ = perf_begin(id); call; perf_end((id), t0_); } while (0)
@@ -154,6 +169,11 @@ static perf_stat_t st_lcd_update;    /* lcd_update: обидва рядки LCD 
 /* Затримки реакції (методичка 5.1, приклад 2) */
 static perf_stat_t st_estop_lat;     /* estop_latency: фронт PC13 → реакція */
 static perf_stat_t st_parcel_lat;    /* parcel_latency: PARCEL_IN → запис CCR, FR-03 */
+
+/* Старт: мкс від скидання (uwTick = 0 у HAL_Init) до BOOT і до першого
+ * коректного виміру кожного сенсора; 0 — ще не було */
+static uint32_t boot_us;
+static uint32_t ready_us[RDY_COUNT];
 static volatile uint32_t estop_irq_cyc;   /* perf_now() у EXTI-колбеку */
 static uint32_t parcel_cyc;               /* perf_now() у момент PARCEL_IN */
 static uint8_t i2c_failed;                /* остання транзакція впала: наступна вдала — EVT i2c_ok */
@@ -252,7 +272,7 @@ static void led_mark(uint8_t on);
 static selftest_counts_t selftest_run(void);
 static void selftest_report(selftest_counts_t *cnt, const char *dev, health_t h,
                             const char *fmt, ...) __attribute__((format(printf, 4, 5)));
-static void selftest_ldr(selftest_counts_t *cnt, const char *dev, uint32_t channel);
+static health_t selftest_ldr(selftest_counts_t *cnt, const char *dev, uint32_t channel);
 static void fault_note(const char *reason, const char *text);
 static const char *mpu_err_name(mpu6050_status_t st);
 static void lcd_show_selftest(const selftest_counts_t *cnt);
@@ -284,6 +304,8 @@ static void load_report(void);
 static void hist_report(const char *name);
 static void knobs_line(void);
 static void set_knob(const char *name, int32_t v);
+static void ready_mark(unsigned what);
+static void ready_flush(void);
 #endif
 #if defined(LAB2_CAP) || defined(TEST_I2C_FAULT)
 static const char *bus_st_name(bus_status_t st);
@@ -374,6 +396,11 @@ int main(void)
 #endif
   ev_log("BOOT", "fw=%s git=%s perf=%u", FW_NAME, GIT_HASH, (unsigned)PERF);
 #if PERF
+  {
+    uint64_t t = perf_now_us64();
+    boot_us = (uint32_t)t;
+    evt("boot", t);
+  }
   knobs_line();
   perf_calibrate();
 #endif
@@ -440,6 +467,7 @@ int main(void)
     telemetry_task();
 #endif
 #if PERF
+    ready_flush();
     perf_add(&st_loop, perf_now() - t_loop);
 #endif
   }
@@ -639,6 +667,7 @@ static void gate_task(void)
 static void gate_run(void)
 {
   uint16_t raw = adc_hal_read(BOARD_ADC_CH_GATE);
+  READY_IF(health_ldr(raw, ADC_HAL_MAX_RAW) == HEALTH_OK, RDY_GATE);
   switch (gate_update(&gate, raw)) {
   case GATE_EV_IN:
 #if PERF
@@ -675,6 +704,7 @@ static void sort_run(void)
   parcel_pending = 0;
 
   uint16_t raw = adc_hal_read(BOARD_ADC_CH_CLASS);
+  READY_IF(health_ldr(raw, ADC_HAL_MAX_RAW) == HEALTH_OK, RDY_CLASS);
   parcel_class_t cls = classify(raw);
   int accepted = sorter_parcel_in(&sorter, cls, &d);
   if (accepted)
@@ -731,6 +761,7 @@ static void imu_run(void)
   int32_t y = mpu6050_raw_to_mg(a.y);
   int32_t z = mpu6050_raw_to_mg(a.z);
   uint32_t m2 = impact_mag2(x, y, z);
+  READY_IF(m2 >= (uint32_t)IMU_READY_MG * IMU_READY_MG, RDY_IMU);
   if (impact_over(m2) && sorter_impact(&sorter))
     ev_log("IMPACT", "amag_mg=%lu x_mg=%ld y_mg=%ld z_mg=%ld",
            (unsigned long)impact_isqrt(m2), (long)x, (long)y, (long)z);
@@ -805,6 +836,7 @@ static void lcd_run(uint8_t due)
 #if PERF
   perf_add(&st_lcd_update, perf_now() - t0);
 #endif
+  READY_IF(st == LCD_OK, RDY_LCD);
   if (st != LCD_OK) {
     memset(lcd_shown, 0, sizeof lcd_shown);   /* що на екрані — невідомо: наступний період перепише все */
     lcd_pending = 0;
@@ -1005,6 +1037,10 @@ static void stats_report(void)
   cli_reply("PERF", "git=%s now_cyc=%lu pair_cyc=%lu cyc_per_us=%lu", GIT_HASH,
             (unsigned long)perf_now_cyc, (unsigned long)perf_pair_cyc, (unsigned long)cyc_per_us);
   knobs_line();
+  cli_reply("STARTUP", "boot_us=%lu gate_us=%lu class_us=%lu imu_us=%lu lcd_us=%lu",
+            (unsigned long)boot_us, (unsigned long)ready_us[RDY_GATE],
+            (unsigned long)ready_us[RDY_CLASS], (unsigned long)ready_us[RDY_IMU],
+            (unsigned long)ready_us[RDY_LCD]);
   for (unsigned i = 0; i < PT_COUNT; i++)
     stat_line(&st_task[i], task_period[i]);
   for (size_t i = 0; i < sizeof other / sizeof other[0]; i++)
@@ -1075,6 +1111,39 @@ static void hist_report(const char *name)
     else
       cli_reply("HIST", "name=%s lo_us=%ld hi_us=%ld n=%lu", name, lo,
                 lo + PERF_HIST_STEP_US, (unsigned long)p->hist[b]);
+  }
+}
+
+/* Перший коректний вимір сенсора (лише раз): мітка часу для рядка STARTUP у
+ * stats і EVT ready_<сенсор>. STARTUP не загубиться, навіть якщо скрипт підключився до
+ * UART уже після старту. 32 біти мкс вистачає на 71 хв від скидання */
+static void ready_mark(unsigned what)
+{
+  uint32_t t;
+
+  if (ready_us[what] != 0u)
+    return;
+  t = (uint32_t)perf_now_us64();
+  ready_us[what] = t ? t : 1u;
+}
+
+/* EVT ready_<сенсор> друкується наприкінці проходу циклу, поза задачами: рядок
+ * (~3,5 мс) не потрапляє ні в час задачі, ні в шлях PARCEL_IN -> CCR */
+static void ready_flush(void)
+{
+  static const char *const name[RDY_COUNT] = {
+    [RDY_GATE] = "ready_gate", [RDY_CLASS] = "ready_class",
+    [RDY_IMU] = "ready_imu", [RDY_LCD] = "ready_lcd",
+  };
+  static uint8_t printed;
+
+  if (printed == (1u << RDY_COUNT) - 1u)
+    return;
+  for (unsigned i = 0; i < RDY_COUNT; i++) {
+    if (ready_us[i] != 0u && !(printed & (1u << i))) {
+      printed |= (uint8_t)(1u << i);
+      evt(name[i], ready_us[i]);
+    }
   }
 }
 
@@ -1177,11 +1246,13 @@ static void fault_note(const char *reason, const char *text)
   }
 }
 
-static void selftest_ldr(selftest_counts_t *cnt, const char *dev, uint32_t channel)
+static health_t selftest_ldr(selftest_counts_t *cnt, const char *dev, uint32_t channel)
 {
   uint16_t raw = adc_hal_read(channel);
+  health_t h = health_ldr(raw, ADC_HAL_MAX_RAW);
 
-  selftest_report(cnt, dev, health_ldr(raw, ADC_HAL_MAX_RAW), "raw=%u", (unsigned)raw);
+  selftest_report(cnt, dev, h, "raw=%u", (unsigned)raw);
+  return h;
 }
 
 static const char *mpu_err_name(mpu6050_status_t st)
@@ -1228,8 +1299,10 @@ static selftest_counts_t selftest_run(void)
     fault_note("LCD_NOT_FOUND", "LCD not found");
   }
 
-  selftest_ldr(&cnt, "ldr_gate", BOARD_ADC_CH_GATE);
-  selftest_ldr(&cnt, "ldr_class", BOARD_ADC_CH_CLASS);
+  if (selftest_ldr(&cnt, "ldr_gate", BOARD_ADC_CH_GATE) == HEALTH_OK)
+    READY(RDY_GATE);
+  if (selftest_ldr(&cnt, "ldr_class", BOARD_ADC_CH_CLASS) == HEALTH_OK)
+    READY(RDY_CLASS);
 
   /* Серво: ставимо 90° і читаємо CCR назад */
   servo_hal_set_angle(SERVO_SELFTEST_DEG);

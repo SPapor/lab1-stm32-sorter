@@ -1,0 +1,18 @@
+# 6.2.3 - потік команд по UART: чи губляться байти (ore, rx проти надісланого) і
+# скільки минає між командою і відповіддю (EVT cmd_rx -> cmd_reply).
+name: "6.2.3"
+title: "Потік команд: втрати байтів і команда -> відповідь"
+setup: [stats reset, log on]
+steps:
+  - comment: "1) 20 x status з паузою 0,5 с - мають пройти всі"
+  - stream: {cmd: status, rate_hz: 2, count: 20}
+  - wait_mcu: 2
+  - comment: "2) 50 x status без пауз"
+  - stream: {cmd: status, rate_hz: 0, count: 50}
+  - wait_mcu: 3
+  - comment: "3) 50 x status без пауз, поки LCD оновлюється кожні 100 мс"
+  - send: set lcd_ms 100
+  - stream: {cmd: status, rate_hz: 0, count: 50}
+  - wait_mcu: 3
+  - send: set lcd_ms 500
+final: [stats]
