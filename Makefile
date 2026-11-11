@@ -30,7 +30,11 @@ stack-usage:
 map-summary:
 	python3 tools/map_summary.py firmware/build/firmware.map
 
+# Тести хост-скриптів (розбір сценаріїв, логів, VCD) - без Wokwi, на хості
+tools-test:
+	python3 -m unittest discover -s tools/tests
+
 shell:
 	docker run --rm -it -v $(PWD):/workspace -w /workspace --user $$(id -u):$$(id -g) $(IMAGE) bash
 
-.PHONY: build clean test coverage check-deps stack-usage map-summary shell
+.PHONY: build clean test coverage check-deps stack-usage map-summary tools-test shell
