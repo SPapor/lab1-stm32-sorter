@@ -82,13 +82,20 @@ static cli_cmd_id_t parse_on_off(const char *word, cli_cmd_id_t id, int32_t *arg
     return CLI_CMD_BAD;
 }
 
-static cli_cmd_id_t parse_words(char *w[], unsigned n, int32_t *arg)
+static cli_cmd_id_t parse_words(char *w[], unsigned n, cli_cmd_t *out)
 {
     static const cmd_entry_t single[] = {
         { "help",   CLI_HELP },
         { "status", CLI_STATUS },
         { "reset",  CLI_RESET },
+#if PERF
+        { "stats",  CLI_STATS },
+        { "load",   CLI_LOAD },
+        { "stack",  CLI_STACK },
+        { "heap",   CLI_HEAP },
+#endif
     };
+    int32_t *arg = &out->arg;
 
     if (n == 1u)
         for (size_t i = 0; i < sizeof single / sizeof single[0]; i++)
@@ -97,6 +104,21 @@ static cli_cmd_id_t parse_words(char *w[], unsigned n, int32_t *arg)
 
     if (n == 2u && strcmp(w[0], "log") == 0)
         return parse_on_off(w[1], CLI_LOG, arg);
+
+#if PERF
+    if (n == 2u && strcmp(w[0], "stats") == 0)
+        return strcmp(w[1], "reset") == 0 ? CLI_STATS_RESET : CLI_CMD_BAD;
+
+    /* Назву задачі лише копіюємо: які задачі мають гістограму, знає main.c */
+    if (n == 2u && strcmp(w[0], "hist") == 0) {
+        size_t len = strlen(w[1]);
+
+        if (len >= CLI_NAME_LEN)
+            return CLI_CMD_BAD;
+        memcpy(out->name, w[1], len + 1u);
+        return CLI_HIST;
+    }
+#endif
 
 #ifdef LAB2_CAP
     if (n == 2u && strcmp(w[0], "stream") == 0)
@@ -131,9 +153,12 @@ int cli_feed(cli_t *c, char ch, cli_cmd_t *out)
         if (n == 0u)
             return 0;
         out->arg = 0;
-        out->id = (n > CLI_MAX_WORDS) ? CLI_CMD_BAD : parse_words(w, n, &out->arg);
-        if (out->id == CLI_CMD_BAD)
+        out->name[0] = '\0';
+        out->id = (n > CLI_MAX_WORDS) ? CLI_CMD_BAD : parse_words(w, n, out);
+        if (out->id == CLI_CMD_BAD) {
             out->arg = 0;
+            out->name[0] = '\0';
+        }
         return 1;
     }
 
@@ -150,6 +175,7 @@ int cli_feed(cli_t *c, char ch, cli_cmd_t *out)
         c->overflow = 1;
         out->id = CLI_CMD_BAD;
         out->arg = 0;
+        out->name[0] = '\0';
         return 1;
     }
     c->buf[c->len++] = ch;

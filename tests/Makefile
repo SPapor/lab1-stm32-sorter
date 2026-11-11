@@ -12,16 +12,21 @@ CFLAGS   = -std=c11 -Wall -Wextra -Werror -O0 -g --coverage -fprofile-abs-path -
 CPPFLAGS = -I$(FW)/Devices -I$(FW)/App -Iunity -Ifakes
 LDFLAGS  = --coverage
 
-TESTS = test_mpu6050 test_lcd1602 test_cli test_cli_lab2 \
-        test_period test_gate test_classify test_impact test_sorter test_health
+TESTS = test_mpu6050 test_lcd1602 test_cli test_cli_noperf test_cli_lab2 \
+        test_period test_gate test_classify test_impact test_sorter test_health \
+        test_perf test_memmark
 
 test_mpu6050_SRC = test_mpu6050.c fakes/fake_i2c_bus.c $(FW)/Devices/mpu6050.c
 test_lcd1602_SRC = test_lcd1602.c fakes/fake_i2c_bus.c $(FW)/Devices/lcd1602.c
 test_cli_SRC     = test_cli.c $(FW)/App/cli.c
+test_cli_DEFS    = -DPERF=1
 
-# Той самий cli.c і test_cli.c у збірці з harness ЛР2 (firmware: make -f app.mk LAB2_CAP=1)
-test_cli_lab2_SRC  = $(test_cli_SRC)
-test_cli_lab2_DEFS = -DLAB2_CAP
+# Той самий cli.c і test_cli.c у варіантах прошивки: без вимірювань (PERF=0) і з
+# harness ЛР2 (LAB2_CAP=1, а з ним app.mk завжди ставить PERF=0)
+test_cli_noperf_SRC  = $(test_cli_SRC)
+test_cli_noperf_DEFS = -DPERF=0
+test_cli_lab2_SRC    = $(test_cli_SRC)
+test_cli_lab2_DEFS   = -DLAB2_CAP -DPERF=0
 
 # Чиста логіка super loop (ЛР3)
 test_period_SRC   = test_period.c $(FW)/App/period.c
@@ -30,6 +35,10 @@ test_classify_SRC = test_classify.c $(FW)/App/classify.c
 test_impact_SRC   = test_impact.c $(FW)/App/impact.c
 test_sorter_SRC   = test_sorter.c $(FW)/App/sorter.c
 test_health_SRC   = test_health.c $(FW)/App/health.c
+
+# Вимірювальний модуль (ЛР3, крок 2)
+test_perf_SRC     = test_perf.c $(FW)/App/perf.c
+test_memmark_SRC  = test_memmark.c $(FW)/App/memmark.c
 
 vpath %.c . fakes unity $(FW)/Devices $(FW)/App
 

@@ -28,17 +28,48 @@ $(BUILD_DIR)/main.o: CFLAGS += -Wextra -Werror
 # (до C_SOURCES +=), тому власні об'єкти додаємо явно — інакше ld їх не знайде.
 $(BUILD_DIR)/$(TARGET).elf: $(USER_OBJECTS)
 
-# Варіанти збірки (за замовчуванням — лише продукт):
+# Варіанти збірки (за замовчуванням — продукт з вимірювальним модулем):
 #   LAB2_CAP=1       — вимірювальний harness ЛР2: команди cap …, I2C-скан, телеметрія stream
 #   TEST_I2C_FAULT=1 — тест FR-09 з PRD: періодичне звернення до відсутньої адреси 0x69
+#   PERF=0           — без вимірювального модуля ЛР3 (docs/perf.md); за замовчуванням 1
 BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
+
+# PERF завжди визначений (#if PERF): 0 лише явно, порожнє значення = 1.
+# Harness ЛР2 і вимірювальний модуль разом не вміщаються в 32 КБ flash
+# (docs/perf.md, розділ про розмір), тож з LAB2_CAP=1 за замовчуванням PERF=0.
+ifeq ($(LAB2_CAP),1)
+ifeq ($(PERF),1)
+$(error LAB2_CAP=1 разом з PERF=1 не вміщується в 32 КБ flash (docs/perf.md); зберіть з PERF=0)
+endif
+PERF_ON := 0
+else
+PERF_ON := $(if $(filter 0,$(PERF)),0,1)
+endif
+C_DEFS += -DPERF=$(PERF_ON)
 
 # Об'єкти в Makefile залежать лише від .c і Makefile, тож після зміни варіанта
 # make узяв би старі .o. Варіант пишемо у файл, лише коли він змінився, і всі
 # об'єкти від нього залежать: перемикання варіанта = повна перезбірка.
 BUILD_CFG  = $(BUILD_DIR)/build.cfg
-BUILD_LINE = $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0))
+BUILD_LINE = $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0)) PERF=$(PERF_ON)
+
+# Версія прошивки в банері й першому рядку журналу (методичка 5.2, 6): git-хеш,
+# з «-dirty», якщо збирали з незакоміченими змінами. Кореневий Makefile передає його
+# з хоста (у Docker git може не бути). Лише main.o, і перезбирається він лише тоді,
+# коли хеш змінився (штамп git.cfg).
+GIT_HASH ?= $(shell git -C .. describe --always --dirty --abbrev=8 2>/dev/null || echo unknown)
+GIT_CFG = $(BUILD_DIR)/git.cfg
+
+$(GIT_CFG): FORCE | $(BUILD_DIR)
+	@echo '$(GIT_HASH)' | cmp -s - $@ || echo '$(GIT_HASH)' > $@
+
+$(BUILD_DIR)/main.o: CFLAGS += -DGIT_HASH=\"$(GIT_HASH)\"
+$(BUILD_DIR)/main.o: $(GIT_CFG)
+
+# Стек власних функцій (методичка 5.4): build/*.su → tools/stack_usage.py; кадр понад
+# 512 байт — попередження, з -Werror — помилка. Map з --cref — у Makefile CubeMX.
+$(USER_OBJECTS) $(BUILD_DIR)/main.o: CFLAGS += -fstack-usage -Wstack-usage=512
 
 $(BUILD_CFG): FORCE | $(BUILD_DIR)
 	@echo '$(BUILD_LINE)' | cmp -s - $@ || echo '$(BUILD_LINE)' > $@

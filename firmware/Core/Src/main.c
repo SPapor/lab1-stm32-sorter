@@ -43,6 +43,14 @@
 #include "impact.h"
 #include "sorter.h"
 #include "health.h"
+#if PERF
+#include "perf.h"
+#include "perf_hal.h"
+#include "memmark.h"
+#include "mem_hal.h"
+#include <malloc.h>
+#include <string.h>
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,6 +59,20 @@
 typedef struct {
   unsigned ok, warn, fail;
 } selftest_counts_t;
+
+/* Номери задач super loop для вимірювань (docs/perf.md) */
+enum {
+  PT_UART = 0,
+  PT_ESTOP,
+  PT_GATE,
+  PT_SORT,
+  PT_IMU,
+  PT_LCD,
+#ifdef LAB2_CAP
+  PT_TELEMETRY,
+#endif
+  PT_COUNT
+};
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -62,7 +84,12 @@ typedef struct {
 #define LCD_PERIOD_MS       500u    /* lcd_task: стан і лічильники на LCD1602, FR-06 */
 #define ESTOP_DEBOUNCE_MS   20u     /* estop_task: EXTI кнопки вимкнено на цей час після першого фронту */
 
+#define PERF_WIN_MS         1000u   /* вікно завантаження CPU, docs/perf.md */
+
 #define FW_NAME             "lab3-superloop"
+#ifndef GIT_HASH
+#define GIT_HASH            "unknown"   /* app.mk передає -DGIT_HASH з git describe */
+#endif
 #define SERVO_SELFTEST_DEG  90u     /* середина ходу серво під час самоперевірки */
 
 #ifdef TEST_I2C_FAULT
@@ -85,12 +112,68 @@ _Static_assert(CLI_SERVO_MAX_DEG == SERVO_HAL_MAX_DEG, "межа cap servo у cl
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+/* Обгортка роботи задачі (методичка 5.1, приклад 1): такти до й після, джитер
+ * старту періодичної задачі, завантаження. Викликається лише тоді, коли задача
+ * справді працює, а не тільки перевіряє свій час. PERF=0 — просто виклик. */
+#if PERF
+#define TASK_RUN(id, call) \
+  do { uint32_t t0_ = perf_begin(id); call; perf_end((id), t0_); } while (0)
+#else
+#define TASK_RUN(id, call) call
+#endif
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+#if PERF
+/* Похибка методу (docs/perf.md): вартість самого виміру, тактів */
+static uint32_t perf_now_cyc;    /* порожній інтервал між двома perf_now() */
+static uint32_t perf_pair_cyc;   /* t0 = perf_now(); perf_add(&s, perf_now() - t0) */
+
+static uint32_t cyc_per_us;
+static perf_load_t load;         /* LOAD раз на PERF_WIN_MS */
+
+/* STAT для кожної задачі — лише запуски з роботою */
+static perf_stat_t st_task[PT_COUNT] = {
+  [PT_UART]  = { .name = "uart_rx" },
+  [PT_ESTOP] = { .name = "estop" },
+  [PT_GATE]  = { .name = "gate" },
+  [PT_SORT]  = { .name = "sort" },
+  [PT_IMU]   = { .name = "imu" },
+  [PT_LCD]   = { .name = "lcd" },
+#ifdef LAB2_CAP
+  [PT_TELEMETRY] = { .name = "telemetry" },
+#endif
+};
+static perf_stat_t st_loop = { .name = "loop" };              /* повний прохід циклу */
+static perf_stat_t st_i2c = { .name = "i2c_xfer" };           /* виклик шини, з повторами FR-09 */
+static perf_stat_t st_uart_line = { .name = "uart_line" };    /* один рядок журналу в UART */
+static perf_stat_t st_lcd_update = { .name = "lcd_update" };  /* обидва рядки LCD */
+
+/* Затримки реакції (методичка 5.1, приклад 2) */
+static perf_stat_t st_estop_lat = { .name = "estop_latency" };   /* фронт PC13 → реакція */
+static perf_stat_t st_parcel_lat = { .name = "parcel_latency" }; /* PARCEL_IN → запис CCR, FR-03 */
+static volatile uint32_t estop_irq_cyc;   /* perf_now() у EXTI-колбеку */
+static uint32_t parcel_cyc;               /* perf_now() у момент PARCEL_IN */
+static uint8_t i2c_failed;                /* остання транзакція впала: наступна вдала — EVT i2c_ok */
+
+/* Джитер, пропуски й гістограма періодичних задач */
+static perf_period_t per_gate, per_imu, per_lcd;
+#ifdef LAB2_CAP
+static perf_period_t per_tele;
+#endif
+static perf_period_t *const task_period[PT_COUNT] = {
+  [PT_GATE] = &per_gate,
+  [PT_IMU]  = &per_imu,
+  [PT_LCD]  = &per_lcd,
+#ifdef LAB2_CAP
+  [PT_TELEMETRY] = &per_tele,
+#endif
+};
+
+static i2c_bus_t i2c1_raw;       /* шина i2c_hal; i2c1_bus поверх неї міряє кожну транзакцію */
+#endif
 static i2c_hal_ctx_t i2c1_ctx;
 static i2c_bus_t i2c1_bus;
 static mpu6050_t imu;
@@ -124,6 +207,12 @@ static const char *const help_lines[] = {
   "status              state, counters A/B/REJECT",
   "reset               zero the counters",
   "log on|off          event lines on UART (default on)",
+#if PERF
+  "stats [reset]       timing stats",
+  "load                CPU load, 1 s",
+  "stack | heap        memory",
+  "hist gate|imu|lcd   jitter histogram",
+#endif
 #ifdef LAB2_CAP
   "stream on|off       periodic 'accel' line (default on)",
   "cap whoami          MPU-6050: write 0x75, read 1 byte",
@@ -160,6 +249,29 @@ static const char *mpu_err_name(mpu6050_status_t st);
 static void lcd_show_selftest(const selftest_counts_t *cnt);
 static void console_echo(char ch);
 static void cmd_run(const cli_cmd_t *cmd);
+static void uart_rx_run(int ch);
+static void estop_run(void);
+static void gate_run(void);
+static void sort_run(void);
+static void imu_run(void);
+static void lcd_run(void);
+#if PERF
+static void perf_calibrate(void);
+static void perf_setup(void);
+static uint32_t perf_begin(unsigned id);
+static void perf_end(unsigned id, uint32_t t0);
+static bus_status_t meas_write(void *ctx, uint8_t addr7, const uint8_t *data, size_t len);
+static bus_status_t meas_read(void *ctx, uint8_t addr7, uint8_t *data, size_t len);
+static void i2c_measured(uint32_t t0, bus_status_t st);
+static void evt(const char *name, uint64_t t_us);
+static void stack_report(void);
+static void heap_report(void);
+static void stats_report(void);
+static void stats_reset(void);
+static void load_line(void (*out)(const char *, const char *, ...));
+static void load_report(void);
+static void hist_report(const char *name);
+#endif
 #if defined(LAB2_CAP) || defined(TEST_I2C_FAULT)
 static const char *bus_st_name(bus_status_t st);
 #endif
@@ -169,6 +281,7 @@ static void i2c_fault_probe(void);
 #ifdef LAB2_CAP
 static void i2c_scan(void);
 static void telemetry_task(void);
+static void telemetry_run(void);
 static void cap_begin(void);
 static void cap_end(void);
 static void cap_report(const char *name, const char *st, const char *fmt, ...)
@@ -204,7 +317,11 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+#if PERF
+  /* Stack painting першим рядком main (методичка 5.4): резерв стека
+   * [_estack - _Min_Stack_Size, SP - 16 слів) — шаблоном; поточний кадр не чіпаємо */
+  memmark_paint(mem_hal_stack_bottom(), mem_hal_sp() - 16, MEMMARK_PATTERN);
+#endif
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -231,7 +348,14 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   setvbuf(stdout, NULL, _IONBF, 0);
-  ev_log("BOOT", "fw=%s", FW_NAME);
+#if PERF
+  perf_hal_init();
+  perf_setup();
+#endif
+  ev_log("BOOT", "fw=%s git=%s perf=%u", FW_NAME, GIT_HASH, (unsigned)PERF);
+#if PERF
+  perf_calibrate();
+#endif
   HAL_ADCEx_Calibration_Start(BOARD_ADC);
   servo_hal_start();
 
@@ -239,9 +363,22 @@ int main(void)
   i2c_scan();
 #endif
 
-  /* FR-08: самоперевірка; FAIL хоча б одного пристрою — FAULT до перезапуску */
+  /* FR-08: самоперевірка; FAIL хоча б одного пристрою — FAULT до перезапуску.
+   * На час самоперевірки — 1 спроба I2C: mpu6050_init сам повторює запис
+   * PWR_MGMT_1 3 рази, а в Wokwi кожен 2-байтовий запис — TIMEOUT 100 мс
+   * (docs/journal.md, проблема 8), інакше було б 3 × 3 тайм-аути. FR-09
+   * (до 3 спроб) — лише в робочому циклі. */
+#if PERF
+  i2c_hal_bus_init(&i2c1_raw, &i2c1_ctx, BOARD_I2C, BOARD_I2C_REINIT);
+  i2c1_bus.write = meas_write;
+  i2c1_bus.read = meas_read;
+  i2c1_bus.ctx = &i2c1_raw;
+#else
   i2c_hal_bus_init(&i2c1_bus, &i2c1_ctx, BOARD_I2C, BOARD_I2C_REINIT);
+#endif
+  i2c_hal_set_tries(&i2c1_ctx, 1);
   selftest_counts_t st = selftest_run();
+  i2c_hal_set_tries(&i2c1_ctx, I2C_HAL_MAX_TRIES);
   lcd_show_selftest(&st);
   sorter_init(&sorter, st.fail != 0u);
   if (sorter.state == SORTER_FAULT)
@@ -251,6 +388,10 @@ int main(void)
   cli_init(&cli);
   t_gate = t_imu = t_lcd = HAL_GetTick();   /* підсумок самоперевірки на LCD — ще LCD_PERIOD_MS */
   ev_log("STATE", "state=%s", sorter_state_name(sorter.state));
+#if PERF
+  stack_report();               /* глибина стека й купа після старту (методичка 5.4) */
+  heap_report();
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -263,6 +404,11 @@ int main(void)
     /* USER CODE BEGIN 3 */
     /* Super loop: задачі по черзі; кожна сама перевіряє свій час і повертає
      * керування. Блокувальні виклики всередині задач — docs/tasks.md. */
+#if PERF
+    uint32_t t_loop = perf_now();
+    if (perf_load_poll(&load, t_loop))
+      load_line(ev_log);
+#endif
     uart_rx_task();
     estop_task();
     gate_task();
@@ -271,6 +417,9 @@ int main(void)
     lcd_task();
 #ifdef LAB2_CAP
     telemetry_task();
+#endif
+#if PERF
+    perf_add(&st_loop, perf_now() - t_loop);
 #endif
   }
   /* USER CODE END 3 */
@@ -320,9 +469,15 @@ void SystemClock_Config(void)
  * ------------------------------------------------------------------------- */
 static void ev_vprint(const char *event, const char *fmt, va_list ap)
 {
+#if PERF
+  uint32_t t0 = perf_now();
+#endif
   printf("%lu %s ", (unsigned long)HAL_GetTick(), event);
   vprintf(fmt, ap);
   printf("\r\n");
+#if PERF
+  perf_add(&st_uart_line, perf_now() - t0);
+#endif
 }
 
 /* Подія: друкується, лише поки log on */
@@ -366,18 +521,34 @@ static void led_mark(uint8_t on)
  * безперервному потоці), решта губиться (ORE). */
 static void uart_rx_task(void)
 {
-  int ch;
+  int ch = uart_hal_getc();
 
-  while ((ch = uart_hal_getc()) >= 0) {
+  if (ch < 0)
+    return;
+  TASK_RUN(PT_UART, uart_rx_run(ch));
+}
+
+/* Перший байт уже прочитано; решту, що встигла прийти, забираємо тут же */
+static void uart_rx_run(int ch)
+{
+  do {
     cli_cmd_t cmd;
 
     console_echo((char)ch);
     if (cli_feed(&cli, (char)ch, &cmd)) {
+#if PERF
+      uint64_t us_rx = perf_now_us64();   /* цикл дійшов до кінця рядка команди */
+#endif
       if (ch != '\r' && ch != '\n')
         printf("\r\n");   /* переповнення: команда завершилась посеред рядка */
       cmd_run(&cmd);
+#if PERF
+      uint64_t us_reply = perf_now_us64();
+      evt("cmd_rx", us_rx);
+      evt("cmd_reply", us_reply);
+#endif
     }
-  }
+  } while ((ch = uart_hal_getc()) >= 0);
 }
 
 /* Кнопка E-STOP (PC13, EXTI за спадом, pull-up). ISR лише фіксує перший фронт і
@@ -388,6 +559,9 @@ void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
   if (GPIO_Pin != BOARD_ESTOP_PIN)
     return;
   HAL_NVIC_DisableIRQ(BOARD_ESTOP_IRQ);
+#if PERF
+  estop_irq_cyc = perf_now();
+#endif
   estop_edge_ms = HAL_GetTick();
   estop_pending = 1;
 }
@@ -397,11 +571,23 @@ void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
  * скидаються, EXTI вмикається знову — ще до друку рядка. */
 static void estop_task(void)
 {
-  static uint16_t presses;
-
   if (!estop_pending || HAL_GetTick() - estop_edge_ms < ESTOP_DEBOUNCE_MS)
     return;
+  TASK_RUN(PT_ESTOP, estop_run());
+}
+
+static void estop_run(void)
+{
+  static uint16_t presses;
+
   estop_pending = 0;
+#if PERF
+  /* Мітку ISR читаємо до EnableIRQ: поки переривання вимкнене, колбек її не
+   * перезапише. Час реакції — момент, коли цикл дійшов до рішення. */
+  uint32_t t_irq = estop_irq_cyc;
+  uint32_t t_react = perf_now();
+  uint64_t us_react = perf_now_us64();
+#endif
   uint8_t pressed = (HAL_GPIO_ReadPin(BOARD_ESTOP_PORT, BOARD_ESTOP_PIN) == GPIO_PIN_RESET);
   __HAL_GPIO_EXTI_CLEAR_FALLING_IT(BOARD_ESTOP_PIN);
   HAL_NVIC_ClearPendingIRQ(BOARD_ESTOP_IRQ);
@@ -411,6 +597,12 @@ static void estop_task(void)
     sorter_state_t st = sorter_estop_toggle(&sorter);
     presses++;
     ev_log("ESTOP", "n=%u state=%s", (unsigned)presses, sorter_state_name(st));
+#if PERF
+    uint32_t lat = t_react - t_irq;   /* включно з ESTOP_DEBOUNCE_MS */
+    perf_add(&st_estop_lat, lat);
+    evt("estop_irq", us_react - perf_cyc_to_us(lat, cyc_per_us));
+    evt("estop_react", us_react);
+#endif
   }
 }
 
@@ -420,10 +612,17 @@ static void gate_task(void)
 {
   if (!period_due(&t_gate, HAL_GetTick(), GATE_PERIOD_MS))
     return;
+  TASK_RUN(PT_GATE, gate_run());
+}
 
+static void gate_run(void)
+{
   uint16_t raw = adc_hal_read(BOARD_ADC_CH_GATE);
   switch (gate_update(&gate, raw)) {
   case GATE_EV_IN:
+#if PERF
+    parcel_cyc = perf_now();
+#endif
     led_mark(1);
     parcel_ms = HAL_GetTick();
     parcel_pending = 1;
@@ -443,10 +642,15 @@ static void gate_task(void)
  * Нова ширина імпульсу на PA6 з'являється з наступного періоду ШИМ (≤ 20 мс). */
 static void sort_task(void)
 {
-  sorter_decision_t d;
-
   if (!parcel_pending)
     return;
+  TASK_RUN(PT_SORT, sort_run());
+}
+
+static void sort_run(void)
+{
+  sorter_decision_t d;
+
   parcel_pending = 0;
 
   uint16_t raw = adc_hal_read(BOARD_ADC_CH_CLASS);
@@ -454,6 +658,10 @@ static void sort_task(void)
   int accepted = sorter_parcel_in(&sorter, cls, &d);
   if (accepted)
     servo_hal_set_angle(d.angle);
+#if PERF
+  uint32_t t_dec = perf_now();          /* CCR записано (або посилку пропущено) */
+  uint64_t us_dec = perf_now_us64();
+#endif
   led_mark(0);
   uint32_t lat_ms = HAL_GetTick() - parcel_ms;
 
@@ -464,16 +672,29 @@ static void sort_task(void)
   else
     ev_log("SORT_SKIP", "state=%s class=%s",
            sorter_state_name(sorter.state), classify_name(cls));
+#if PERF
+  /* EVT друкуємо після дії: рядок журналу (~3 мс) не входить у затримку */
+  uint32_t lat = t_dec - parcel_cyc;
+  evt("parcel_in", us_dec - perf_cyc_to_us(lat, cyc_per_us));
+  if (accepted) {
+    perf_add(&st_parcel_lat, lat);
+    evt("servo_set", us_dec);
+  }
+#endif
 }
 
 /* Кожні IMU_PERIOD_MS: прискорення MPU-6050; |a| > 2 g — прапорець удару для
  * посилки, що зараз їде до gate (FR-04). Рядок IMPACT — один на посилку. */
 static void imu_task(void)
 {
-  mpu6050_accel_raw_t a;
-
   if (!imu_ready || !period_due(&t_imu, HAL_GetTick(), IMU_PERIOD_MS))
     return;
+  TASK_RUN(PT_IMU, imu_run());
+}
+
+static void imu_run(void)
+{
+  mpu6050_accel_raw_t a;
 
 #ifdef TEST_I2C_FAULT
   i2c_fault_probe();
@@ -499,11 +720,21 @@ static void imu_task(void)
  * 34 байти HD44780 по ≈ 926 мкс — ≈ 31,5 мс блокування за запуск. */
 static void lcd_task(void)
 {
-  char row0[LCD1602_COLS + 1];
-  char row1[LCD1602_COLS + 1];
-
   if (!lcd_ready || !period_due(&t_lcd, HAL_GetTick(), LCD_PERIOD_MS))
     return;
+#if PERF
+  BOARD_PROBE_ON(BOARD_PROBE_LCD_PIN);    /* D7: головний блокувальник циклу */
+#endif
+  TASK_RUN(PT_LCD, lcd_run());
+#if PERF
+  BOARD_PROBE_OFF(BOARD_PROBE_LCD_PIN);
+#endif
+}
+
+static void lcd_run(void)
+{
+  char row0[LCD1602_COLS + 1];
+  char row1[LCD1602_COLS + 1];
 
   if (sorter.state == SORTER_FAULT) {
     snprintf(row0, sizeof row0, "%-16s", "FAULT:");
@@ -516,6 +747,9 @@ static void lcd_task(void)
              (unsigned long)sorter.count[BIN_REJECT]);
   }
 
+#if PERF
+  uint32_t t0 = perf_now();
+#endif
   lcd_status_t st = lcd1602_set_cursor(&lcd, 0, 0);
   if (st == LCD_OK)
     st = lcd1602_print(&lcd, row0);
@@ -523,9 +757,252 @@ static void lcd_task(void)
     st = lcd1602_set_cursor(&lcd, 0, 1);
   if (st == LCD_OK)
     st = lcd1602_print(&lcd, row1);
+#if PERF
+  perf_add(&st_lcd_update, perf_now() - t0);
+#endif
   if (st != LCD_OK)
     ev_log("LCD_ERR", "isr=0x%08lX", (unsigned long)i2c1_ctx.last_isr);
 }
+
+#if PERF
+/* ---------------------------------------------------------------------------
+ * Вимірювання (docs/perf.md)
+ * ------------------------------------------------------------------------- */
+
+/* Похибка методу. now_cyc — порожній інтервал між двома perf_now(): на стільки
+ * завищений кожен вимір. pair_cyc — скільки тактів циклу забирає пара
+ * «t0 = perf_now(); perf_add(&s, perf_now() - t0)» понад now_cyc. Мінімум із 16
+ * спроб: у будь-яку може влізти SysTick. */
+static void perf_calibrate(void)
+{
+  perf_stat_t cal = { .name = "cal" };
+
+  perf_now_cyc = UINT32_MAX;
+  perf_pair_cyc = UINT32_MAX;
+  for (int i = 0; i < 16; i++) {
+    uint32_t a = perf_now();
+    uint32_t b = perf_now();
+    uint32_t t0 = perf_now();
+    perf_add(&cal, perf_now() - t0);
+    uint32_t c = perf_now();
+
+    if (b - a < perf_now_cyc)
+      perf_now_cyc = b - a;
+    if (c - b - (b - a) < perf_pair_cyc)
+      perf_pair_cyc = c - b - (b - a);
+  }
+  ev_log("PERF", "cpu_hz=%lu now_cyc=%lu pair_cyc=%lu",
+         (unsigned long)perf_hal_cpu_hz(), (unsigned long)perf_now_cyc,
+         (unsigned long)perf_pair_cyc);
+}
+
+static void perf_setup(void)
+{
+  cyc_per_us = perf_hal_cpu_hz() / 1000000u;
+  perf_load_init(&load, perf_hal_cpu_hz() / 1000u * PERF_WIN_MS);   /* 1 с = SystemCoreClock тактів */
+  perf_period_init(&per_gate, GATE_PERIOD_MS * 1000u);
+  perf_period_init(&per_imu, IMU_PERIOD_MS * 1000u);
+  perf_period_init(&per_lcd, LCD_PERIOD_MS * 1000u);
+#ifdef LAB2_CAP
+  perf_period_init(&per_tele, TELEMETRY_PERIOD_MS * 1000u);
+#endif
+}
+
+/* D6 (PB13) = 1, поки працює будь-яка задача: на аналізаторі ширина імпульсу —
+ * час задачі, відстань між фронтами — період і джитер (методичка 5.3) */
+static uint32_t perf_begin(unsigned id)
+{
+  BOARD_PROBE_ON(BOARD_PROBE_TASK_PIN);
+  /* джитер — до t0: облік старту (там ділення) не входить у час задачі */
+  if (task_period[id] != NULL)
+    perf_period_start(task_period[id], perf_now(), cyc_per_us);
+  return perf_now();
+}
+
+static void perf_end(unsigned id, uint32_t t0)
+{
+  uint32_t cyc = perf_now() - t0;
+
+  BOARD_PROBE_OFF(BOARD_PROBE_TASK_PIN);
+  perf_add(&st_task[id], cyc);
+  perf_load_busy(&load, cyc);
+}
+
+/* Вимірювальна шина поверх i2c_hal: кожен виклик write/read драйвера —
+ * один вимір i2c_xfer, разом з повторами й відновленням FR-09 */
+static bus_status_t meas_write(void *ctx, uint8_t addr7, const uint8_t *data, size_t len)
+{
+  const i2c_bus_t *raw = ctx;
+  uint32_t t0 = perf_now();
+  bus_status_t st = raw->write(raw->ctx, addr7, data, len);
+
+  i2c_measured(t0, st);
+  return st;
+}
+
+static bus_status_t meas_read(void *ctx, uint8_t addr7, uint8_t *data, size_t len)
+{
+  const i2c_bus_t *raw = ctx;
+  uint32_t t0 = perf_now();
+  bus_status_t st = raw->read(raw->ctx, addr7, data, len);
+
+  i2c_measured(t0, st);
+  return st;
+}
+
+/* EVT i2c_fail — кожна транзакція, що впала після всіх спроб FR-09;
+ * EVT i2c_ok — перша вдала після збою (шина ожила) */
+static void i2c_measured(uint32_t t0, bus_status_t st)
+{
+  perf_add(&st_i2c, perf_now() - t0);
+  if (st != BUS_OK) {
+    i2c_failed = 1;
+    evt("i2c_fail", perf_now_us64());
+  } else if (i2c_failed) {
+    i2c_failed = 0;
+    evt("i2c_ok", perf_now_us64());
+  }
+}
+
+/* Глибина стека за stack painting. used = reserved — шаблон зіпсовано до самого
+ * низу: стек, найімовірніше, вийшов за резерв _Min_Stack_Size і щось перезаписав */
+static void stack_report(void)
+{
+  uint32_t *bottom = mem_hal_stack_bottom();
+  uint32_t *top = mem_hal_stack_top();
+  uint32_t used = memmark_used_bytes(bottom, top, MEMMARK_PATTERN);
+  uint32_t reserved = (uint32_t)((top - bottom) * (int)sizeof(uint32_t));
+
+  cli_reply("STACK", "used=%lu reserved=%lu free=%lu overflow=%u",
+            (unsigned long)used, (unsigned long)reserved, (unsigned long)(reserved - used),
+            (unsigned)(used >= reserved));
+}
+
+/* Купа newlib (printf і stdio беруть пам'ять через malloc): arena — скільки
+ * забрано в sbrk (не зменшується, тож це пік), used / free — усередині арени */
+static void heap_report(void)
+{
+  struct mallinfo mi = mallinfo();
+
+  cli_reply("HEAP", "arena=%u used=%u free=%u",
+            (unsigned)mi.arena, (unsigned)mi.uordblks, (unsigned)mi.fordblks);
+}
+
+/* Один рядок STAT (методичка 5.1), час у мкс. Ключі однакові для всіх рядків:
+ * у задач за подією і блокувальних викликів period_us=0 і нулі джитера.
+ * Джитер старту знаковий, miss — інтервал між стартами понад 2 періоди */
+static void stat_line(const perf_stat_t *s, const perf_period_t *p)
+{
+  static const perf_period_t none;
+
+  if (p == NULL)
+    p = &none;
+  cli_reply("STAT", "name=%s n=%lu min_us=%lu avg_us=%lu max_us=%lu period_us=%lu "
+            "jit_min_us=%ld jit_max_us=%ld miss=%lu", s->name, (unsigned long)s->count,
+            (unsigned long)perf_cyc_to_us(s->min, cyc_per_us),
+            (unsigned long)perf_cyc_to_us(perf_avg(s), cyc_per_us),
+            (unsigned long)perf_cyc_to_us(s->max, cyc_per_us),
+            (unsigned long)p->period_us, (long)p->jit_min_us, (long)p->jit_max_us,
+            (unsigned long)p->missed);
+}
+
+/* Команда stats: шапка з версією і похибкою методу, далі всі STAT і лічильники UART */
+static void stats_report(void)
+{
+  static const perf_stat_t *const other[] = {
+    &st_loop, &st_i2c, &st_uart_line, &st_lcd_update, &st_estop_lat, &st_parcel_lat,
+  };
+  uint32_t rx, ore;
+
+  cli_reply("PERF", "git=%s now_cyc=%lu pair_cyc=%lu cyc_per_us=%lu", GIT_HASH,
+            (unsigned long)perf_now_cyc, (unsigned long)perf_pair_cyc, (unsigned long)cyc_per_us);
+  for (unsigned i = 0; i < PT_COUNT; i++)
+    stat_line(&st_task[i], task_period[i]);
+  for (size_t i = 0; i < sizeof other / sizeof other[0]; i++)
+    stat_line(other[i], NULL);
+  uart_hal_counters(&rx, &ore);
+  cli_reply("UART", "rx=%lu ore=%lu", (unsigned long)rx, (unsigned long)ore);
+}
+
+/* stats reset: усі STAT, джитер, гістограми й лічильники UART у нуль.
+ * Вікно завантаження не чіпаємо — воно й так оновлюється щосекунди */
+static void stats_reset(void)
+{
+  static perf_stat_t *const other[] = {
+    &st_loop, &st_i2c, &st_uart_line, &st_lcd_update, &st_estop_lat, &st_parcel_lat,
+  };
+
+  for (unsigned i = 0; i < PT_COUNT; i++) {
+    perf_stat_reset(&st_task[i]);
+    if (task_period[i] != NULL)
+      perf_period_reset(task_period[i]);
+  }
+  for (size_t i = 0; i < sizeof other / sizeof other[0]; i++)
+    perf_stat_reset(other[i]);
+  uart_hal_counters_reset();
+  cli_reply("STATS", "reset=1");
+}
+
+/* LOAD за останнє закрите вікно (методичка 5.1, приклад 4). Щосекунди з циклу —
+ * як подія (log off вимикає), командою load — завжди */
+static void load_line(void (*out)(const char *, const char *, ...))
+{
+  out("LOAD", "pct=%lu pm=%lu win_cyc=%lu busy_cyc=%lu windows=%lu",
+      (unsigned long)load.last_pct, (unsigned long)load.last_pm,
+      (unsigned long)load.last_win, (unsigned long)load.last_busy,
+      (unsigned long)load.windows);
+}
+
+static void load_report(void)
+{
+  load_line(cli_reply);
+}
+
+/* Команда hist <задача>: шапка і по рядку на кожен непорожній кошик 100 мкс.
+ * Крайні кошики — «нижче за -1000 мкс» і «від 2000 мкс» */
+static void hist_report(const char *name)
+{
+  const perf_period_t *p = NULL;
+
+  for (unsigned i = 0; i < PT_COUNT; i++)
+    if (task_period[i] != NULL && strcmp(st_task[i].name, name) == 0)
+      p = task_period[i];
+  if (p == NULL) {
+    cli_reply("HIST", "name=%s st=BAD", name);
+    return;
+  }
+  cli_reply("HIST", "name=%s period_us=%lu n=%lu step_us=%d",
+            name, (unsigned long)p->period_us, (unsigned long)p->n, PERF_HIST_STEP_US);
+  for (unsigned b = 0; b < PERF_HIST_BINS; b++) {
+    long lo = perf_hist_lo_us(b);
+
+    if (p->hist[b] == 0u)
+      continue;
+    if (b == 0u)
+      cli_reply("HIST", "name=%s lo_us=-inf hi_us=%d n=%lu", name, PERF_HIST_LO_US,
+                (unsigned long)p->hist[b]);
+    else if (b == PERF_HIST_BINS - 1u)
+      cli_reply("HIST", "name=%s lo_us=%ld hi_us=inf n=%lu", name, lo, (unsigned long)p->hist[b]);
+    else
+      cli_reply("HIST", "name=%s lo_us=%ld hi_us=%ld n=%lu", name, lo,
+                lo + PERF_HIST_STEP_US, (unsigned long)p->hist[b]);
+  }
+}
+
+/* Журнал подій (методичка 5.2): "<мс> EVT t_us=<64-біт мкс> name=<подія>".
+ * printf з newlib-nano не вміє %llu, тому 64 біти — двома частинами по 10^9.
+ * Як і решта подій, вимикається командою log off. */
+static void evt(const char *name, uint64_t t_us)
+{
+  uint32_t lo;
+  uint32_t hi = perf_udiv64(t_us, 1000000000u, &lo);
+
+  if (hi != 0u)
+    ev_log("EVT", "t_us=%lu%09lu name=%s", (unsigned long)hi, (unsigned long)lo, name);
+  else
+    ev_log("EVT", "t_us=%lu name=%s", (unsigned long)lo, name);
+}
+#endif
 
 #ifdef TEST_I2C_FAULT
 /* PRD, тест FR-09: раз на I2C_FAULT_PERIOD_MS — читання 1 байта з відсутньої
@@ -700,6 +1177,14 @@ static void cmd_run(const cli_cmd_t *cmd)
     log_on = (uint8_t)cmd->arg;
     cli_reply("LOG", "on=%u", (unsigned)log_on);
     break;
+#if PERF
+  case CLI_STATS:       stats_report(); break;
+  case CLI_STATS_RESET: stats_reset(); break;
+  case CLI_LOAD:        load_report(); break;
+  case CLI_STACK:       stack_report(); break;
+  case CLI_HEAP:        heap_report(); break;
+  case CLI_HIST:        hist_report(cmd->name); break;
+#endif
 #ifdef LAB2_CAP
   case CLI_STREAM:
     stream_on = (uint8_t)cmd->arg;
@@ -748,11 +1233,15 @@ static void i2c_scan(void)
 static void telemetry_task(void)
 {
   static uint32_t t_tele;
-  mpu6050_accel_raw_t a = {0};
 
   if (!stream_on || !period_due(&t_tele, HAL_GetTick(), TELEMETRY_PERIOD_MS))
     return;
+  TASK_RUN(PT_TELEMETRY, telemetry_run());
+}
 
+static void telemetry_run(void)
+{
+  mpu6050_accel_raw_t a = {0};
   mpu6050_status_t st_acc = mpu6050_read_accel_raw(&imu, &a);
   printf("accel st=%d raw %6d %6d %6d | mg %5ld %5ld %5ld | gate %4u class %4u\r\n",
          (int)st_acc, a.x, a.y, a.z,
