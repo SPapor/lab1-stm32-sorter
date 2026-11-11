@@ -1,10 +1,10 @@
 <mxfile host="65bd71144e">
     <diagram id="wiring" name="Схема підключення">
-        <mxGraphModel dx="1520" dy="998" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1420" pageHeight="1060" math="0" shadow="0">
+        <mxGraphModel dx="1520" dy="998" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1420" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="c11" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=18;fontStyle=1;" value="Warehouse Sorter — схема підключення (ЛР2, форма B)&lt;br&gt;&lt;font style=&amp;quot;font-size:12px;font-weight:normal&amp;quot;&gt;NUCLEO-C031C6 · STM32C031C6T6 LQFP48 · відповідає docs/pinout.md і diagram.json · Кекух А.О., ІО-32&lt;/font&gt;" vertex="1">
+                <mxCell id="c11" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=18;fontStyle=1;" value="Warehouse Sorter — схема підключення (ЛР2-ЛР3, форма B)&lt;br&gt;&lt;font style=&amp;quot;font-size:12px;font-weight:normal&amp;quot;&gt;NUCLEO-C031C6 · STM32C031C6T6 LQFP48 · відповідає docs/pinout.md і diagram.json · Кекух А.О., ІО-32&lt;/font&gt;" vertex="1">
                     <mxGeometry height="50" width="760" x="300" y="10" as="geometry"/>
                 </mxCell>
                 <mxCell id="c12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;verticalAlign=top;fontStyle=1;fontSize=13;strokeWidth=2;fillColor=#E3F2FD;strokeColor=#0D47A1;" value="NUCLEO-C031C6 (MB1717)&lt;br&gt;&lt;font style=&amp;quot;font-size:11px;font-weight:normal&amp;quot;&gt;STM32C031C6T6, 48 МГц (HSE X3)&lt;/font&gt;" vertex="1">
@@ -22,7 +22,7 @@
                 <mxCell id="c16" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;fillColor=#ffffff;strokeColor=#C2185B;" value="&lt;b&gt;PA5&lt;/b&gt; · D13&lt;br&gt;LD4 / маркер FR-03" vertex="1">
                     <mxGeometry height="30" width="145" x="736" y="470" as="geometry"/>
                 </mxCell>
-                <mxCell id="c17" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;fillColor=#ffffff;strokeColor=#C2185B;" value="&lt;b&gt;PA15&lt;/b&gt; · D7&lt;br&gt;маркер АЦП" vertex="1">
+                <mxCell id="c17" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;fillColor=#ffffff;strokeColor=#C2185B;" value="&lt;b&gt;PA15&lt;/b&gt; · D7&lt;br&gt;маркер АЦП (LAB2_CAP)" vertex="1">
                     <mxGeometry height="30" width="145" x="736" y="510" as="geometry"/>
                 </mxCell>
                 <mxCell id="c18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;fillColor=#ffffff;strokeColor=#EF6C00;" value="&lt;b&gt;PA0&lt;/b&gt; · A0&lt;br&gt;ADC1_IN0" vertex="1">
@@ -239,7 +239,7 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="c89" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;verticalAlign=top;fontStyle=1;fontSize=13;strokeWidth=2;fillColor=#FAFAFA;strokeColor=#424242;" value="Логічний аналізатор (wokwi-logic-analyzer → VCD → PulseView)" vertex="1">
-                    <mxGeometry height="200" width="360" x="900" y="840" as="geometry"/>
+                    <mxGeometry height="238" width="360" x="900" y="840" as="geometry"/>
                 </mxCell>
                 <mxCell id="c90" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;strokeColor=#2E7D32;fontColor=#2E7D32;fontStyle=1;dashed=1;" value="D0 ← PA9 SCL" vertex="1">
                     <mxGeometry height="28" width="160" x="915" y="880" as="geometry"/>
@@ -256,11 +256,23 @@
                 <mxCell id="c94" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;strokeColor=#C2185B;fontColor=#C2185B;fontStyle=1;dashed=1;" value="D4 ← PA5 маркер FR-03" vertex="1">
                     <mxGeometry height="28" width="160" x="1085" y="880" as="geometry"/>
                 </mxCell>
-                <mxCell id="c95" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;strokeColor=#C2185B;fontColor=#C2185B;fontStyle=1;dashed=1;" value="D5 ← PA15 маркер АЦП" vertex="1">
+                <mxCell id="c95" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;strokeColor=#C2185B;fontColor=#C2185B;fontStyle=1;dashed=1;" value="D5 ← PC13 кнопка E-STOP" vertex="1">
                     <mxGeometry height="28" width="160" x="1085" y="918" as="geometry"/>
                 </mxCell>
                 <mxCell id="c96" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;strokeColor=#212121;fontColor=#212121;fontStyle=1;dashed=1;" value="GND ← GND плати" vertex="1">
+                    <mxGeometry height="28" width="160" x="1085" y="1032" as="geometry"/>
+                </mxCell>
+                <mxCell id="c140" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;strokeColor=#C2185B;fontColor=#C2185B;fontStyle=1;dashed=1;" value="D6 ← PB13 працює задача" vertex="1">
                     <mxGeometry height="28" width="160" x="1085" y="956" as="geometry"/>
+                </mxCell>
+                <mxCell id="c141" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;strokeColor=#C2185B;fontColor=#C2185B;fontStyle=1;dashed=1;" value="D7 ← PB14 працює lcd_task" vertex="1">
+                    <mxGeometry height="28" width="160" x="1085" y="994" as="geometry"/>
+                </mxCell>
+                <mxCell id="c142" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;fillColor=#ffffff;strokeColor=#C2185B;" value="&lt;b&gt;PB13&lt;/b&gt; · CN10-30&lt;br&gt;службовий: задача (ЛР3)" vertex="1">
+                    <mxGeometry height="30" width="145" x="499" y="490" as="geometry"/>
+                </mxCell>
+                <mxCell id="c143" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;strokeWidth=1;fillColor=#ffffff;strokeColor=#C2185B;" value="&lt;b&gt;PB14&lt;/b&gt; · CN10-28&lt;br&gt;службовий: lcd_task (ЛР3)" vertex="1">
+                    <mxGeometry height="30" width="145" x="499" y="530" as="geometry"/>
                 </mxCell>
                 <mxCell id="c97" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;verticalAlign=top;fontStyle=1;fontSize=13;strokeWidth=2;fillColor=#FFFFFF;strokeColor=#9E9E9E;" value="Легенда" vertex="1">
                     <mxGeometry height="200" width="300" x="80" y="840" as="geometry"/>
