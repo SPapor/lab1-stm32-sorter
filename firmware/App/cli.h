@@ -9,7 +9,8 @@
 #include <stdint.h>
 
 #define CLI_BUF_LEN        32u    /* буфер рядка разом з '\0': до 31 символу */
-#define CLI_NAME_LEN       12u    /* аргумент-слово (hist <задача>) разом з '\0' */
+#define CLI_NAME_LEN       12u    /* аргумент-слово (hist <задача>, set <ручка>) разом з '\0' */
+#define CLI_SET_MAX        65535  /* межа значення «set <ручка> <значення>» */
 #ifdef LAB2_CAP
 #define CLI_SERVO_MAX_DEG  180    /* межа аргументу «cap servo» */
 #endif
@@ -26,6 +27,7 @@ typedef enum {
     CLI_STACK,        /* stack: глибина стека (stack painting) */
     CLI_HEAP,         /* heap: купа (mallinfo) */
     CLI_HIST,         /* hist <задача>: гістограма джитера; name = задача */
+    CLI_SET,          /* set <ручка> <0..65535>: name = ручка, arg = значення */
 #endif
 #ifdef LAB2_CAP
     CLI_STREAM,       /* stream on|off; arg = 1 / 0 */

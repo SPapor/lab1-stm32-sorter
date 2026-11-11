@@ -110,6 +110,31 @@ static void test_hist_bad(void)
     TEST_ASSERT_EQUAL_STRING("", last.name);
 }
 
+/* set <ручка> <0..65535>: ручку й значення лише розбираємо, межі перевіряє main.c */
+static void test_set(void)
+{
+    assert_line("set lcd_ms 100\r", CLI_SET, 100);
+    TEST_ASSERT_EQUAL_STRING("lcd_ms", last.name);
+    assert_line("  set   lcd_chars   0 \r", CLI_SET, 0);
+    TEST_ASSERT_EQUAL_STRING("lcd_chars", last.name);
+    assert_line("set imu_ms 65535\r", CLI_SET, CLI_SET_MAX);
+    assert_line("set log 007\r", CLI_SET, 7);
+    TEST_ASSERT_EQUAL_STRING("log", last.name);
+}
+
+static void test_set_bad(void)
+{
+    assert_line("set\r", CLI_CMD_BAD, 0);
+    assert_line("set lcd_ms\r", CLI_CMD_BAD, 0);
+    assert_line("set lcd_ms 65536\r", CLI_CMD_BAD, 0);
+    assert_line("set lcd_ms -1\r", CLI_CMD_BAD, 0);
+    assert_line("set lcd_ms 1e3\r", CLI_CMD_BAD, 0);
+    assert_line("set lcd_ms 10 20\r", CLI_CMD_BAD, 0);
+    assert_line("set 123456789012 1\r", CLI_CMD_BAD, 0);
+    TEST_ASSERT_EQUAL_STRING("", last.name);
+    assert_line("hist gate 5\r", CLI_CMD_BAD, 0);      /* у hist немає значення */
+}
+
 /* Назва від попередньої hist не «протікає» в наступні команди */
 static void test_name_cleared_between_commands(void)
 {
@@ -127,6 +152,7 @@ static void test_perf_commands_rejected(void)
     assert_line("stack\r", CLI_CMD_BAD, 0);
     assert_line("heap\r", CLI_CMD_BAD, 0);
     assert_line("hist gate\r", CLI_CMD_BAD, 0);
+    assert_line("set lcd_ms 100\r", CLI_CMD_BAD, 0);
 }
 #endif
 
@@ -322,6 +348,8 @@ int main(void)
     RUN_TEST(test_perf_commands_bad);
     RUN_TEST(test_hist_name);
     RUN_TEST(test_hist_bad);
+    RUN_TEST(test_set);
+    RUN_TEST(test_set_bad);
     RUN_TEST(test_name_cleared_between_commands);
 #else
     RUN_TEST(test_perf_commands_rejected);
