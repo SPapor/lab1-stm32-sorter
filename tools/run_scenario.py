@@ -13,8 +13,9 @@
 wokwi-cli закінчує і пише VCD). Маркер - саме рядок відповіді: прошивка друкує
 його цілим, а ехо набраної команди може перемежовуватися іншими рядками.
 Безкоштовний тариф Wokwi обриває сеанс wokwi-cli через 5 хв. Схема для wokwi-cli -
-копія diagram.json з більшим буфером аналізатора (ANALYZER_BUFFER змін; за
-замовчуванням Wokwi тримає 1 млн, а I2C на D0/D1 заповнює їх за ~24 с).
+копія diagram.json без каналів аналізатора CLI_DROP (I2C на D0/D1 і UART TX на D3):
+буфер Wokwi - 1 млн змін, I2C заповнює його за ~24 с, а великий запис wokwi-cli
+не може забрати (з'єднання рветься). Для tools/vcd_timing.py вони не потрібні.
 Підказки людині в цьому режимі - лише позначки в лозі, а замість Enter скрипт
 чекає auto секунд часу МК (поле кроку prompt; без нього - wait, без нього - 0).
 Потрібен WOKWI_CLI_TOKEN у середовищі.
@@ -101,7 +102,7 @@ RAW_KEEP = 1 << 20           # скільки останніх сирих бай
 CLI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'wokwi')
 CLI_PORT = 'rfc2217://localhost:4001'
 CLI_DIAGRAM = '.diagram.json'                      # у tools/wokwi, будується з diagram.json
-ANALYZER_BUFFER = 10_000_000                       # змін рівня, ~4 хв з I2C
+CLI_DROP = {'logic:D0', 'logic:D1', 'logic:D3'}    # канали аналізатора, яких у wokwi-cli немає
 MARK_GO, MARK_END = 'set go 0', 'set end 0'      # відповідь: SET name=go|end st=BAD
 
 
@@ -681,9 +682,7 @@ def start_cli(actions, sim_limit, vcd):
     import subprocess
     with open(os.path.join(CLI_DIR, '..', '..', 'diagram.json'), encoding='utf-8') as f:
         diagram = json.load(f)
-    for part in diagram['parts']:
-        if part['type'] == 'wokwi-logic-analyzer':
-            part.setdefault('attrs', {})['bufferSize'] = str(ANALYZER_BUFFER)
+    diagram['connections'] = [c for c in diagram['connections'] if not CLI_DROP & set(c[:2])]
     with open(os.path.join(CLI_DIR, CLI_DIAGRAM), 'w', encoding='utf-8') as f:
         json.dump(diagram, f, indent=2)
     cmd = ['wokwi-cli', '--quiet', '--diagram-file', CLI_DIAGRAM,
