@@ -12,7 +12,9 @@
 відповіді SET name=go починаються дії), після final - set end 0 (на SET name=end
 wokwi-cli закінчує і пише VCD). Маркер - саме рядок відповіді: прошивка друкує
 його цілим, а ехо набраної команди може перемежовуватися іншими рядками.
-Безкоштовний тариф Wokwi обриває сеанс wokwi-cli через 5 хв.
+Безкоштовний тариф Wokwi обриває сеанс wokwi-cli через 5 хв. Схема для wokwi-cli -
+копія diagram.json з більшим буфером аналізатора (ANALYZER_BUFFER змін; за
+замовчуванням Wokwi тримає 1 млн, а I2C на D0/D1 заповнює їх за ~24 с).
 Підказки людині в цьому режимі - лише позначки в лозі, а замість Enter скрипт
 чекає auto секунд часу МК (поле кроку prompt; без нього - wait, без нього - 0).
 Потрібен WOKWI_CLI_TOKEN у середовищі.
@@ -98,6 +100,8 @@ ECHO_TIMEOUT = 2.0           # с хоста на ехо одного байта
 RAW_KEEP = 1 << 20           # скільки останніх сирих байтів UART тримати для пошуку ехо
 CLI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'wokwi')
 CLI_PORT = 'rfc2217://localhost:4001'
+CLI_DIAGRAM = '.diagram.json'                      # у tools/wokwi, будується з diagram.json
+ANALYZER_BUFFER = 10_000_000                       # змін рівня, ~4 хв з I2C
 MARK_GO, MARK_END = 'set go 0', 'set end 0'      # відповідь: SET name=go|end st=BAD
 
 
@@ -457,8 +461,9 @@ def type_line(ser, rec, text, char_timeout=ECHO_TIMEOUT, sleep=time.sleep, clock
 
 
 def command(ser, rec, cmd, timeout=REPLY_TIMEOUT, tries=TRIES, sleep=time.sleep,
-            clock=time.monotonic, char_timeout=ECHO_TIMEOUT):
-    """Набрати команду і дочекатися відповіді; повторити, якщо її загублено."""
+            clock=time.monotonic, char_timeout=ECHO_TIMEOUT, done=None):
+    """Набрати команду і дочекатися відповіді; повторити, якщо її загублено.
+    done(рядки) - своя ознака успіху замість відповіді з EVT cmd_reply."""
     want = reply_events(cmd)
     for attempt in range(1, tries + 1):
         mark = rec.mark()
@@ -474,8 +479,9 @@ def command(ser, rec, cmd, timeout=REPLY_TIMEOUT, tries=TRIES, sleep=time.sleep,
         allowed_bad = 0 if attempt == 1 else 1      # CR попереду міг закрити побитий рядок
         deadline = clock() + timeout / slow
         while True:
-            ok, bad = check_reply(rec.since(mark), want, rec.is_quiet())
-            if ok:
+            lines = rec.since(mark)
+            ok, bad = check_reply(lines, want, rec.is_quiet())
+            if ok or (done is not None and done(lines)):
                 return True
             if bad > allowed_bad:
                 why = 'CLI st=BAD'
@@ -588,7 +594,9 @@ def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wai
     for c in sc.get('final', DEFAULT_FINAL):
         cmd(c)
     if auto:
-        cmd(MARK_END)
+        # wokwi-cli зупиняє симуляцію одразу на рядку SET name=end, EVT уже не буде
+        command(ser, rec, MARK_END, timeout=timeout, sleep=sleep,
+                done=lambda lines: any('SET name=end' in s for s in lines))
     # дочекатися рядків, що йдуть уже після останньої відповіді
     last, t_end = -1, time.monotonic() + final_wait
     while time.monotonic() < t_end and rec.lines != last:
@@ -662,7 +670,14 @@ def main(argv=None):
 def start_cli(actions, sim_limit, vcd):
     """wokwi-cli у фоні: проєкт tools/wokwi (та сама прошивка і diagram.json)."""
     import subprocess
-    cmd = ['wokwi-cli', '--quiet', '--diagram-file', '../../diagram.json',
+    with open(os.path.join(CLI_DIR, '..', '..', 'diagram.json'), encoding='utf-8') as f:
+        diagram = json.load(f)
+    for part in diagram['parts']:
+        if part['type'] == 'wokwi-logic-analyzer':
+            part.setdefault('attrs', {})['bufferSize'] = str(ANALYZER_BUFFER)
+    with open(os.path.join(CLI_DIR, CLI_DIAGRAM), 'w', encoding='utf-8') as f:
+        json.dump(diagram, f, indent=2)
+    cmd = ['wokwi-cli', '--quiet', '--diagram-file', CLI_DIAGRAM,
            '--scenario', os.path.abspath(actions), '--timeout', str(int(sim_limit * 1000))]
     if vcd:
         os.makedirs(os.path.dirname(vcd), exist_ok=True)

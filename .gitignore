@@ -8,3 +8,4 @@ build/
 docs/screenshots/
 wokwi.vcd
 __pycache__/
+tools/wokwi/.diagram.json

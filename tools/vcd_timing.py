@@ -81,7 +81,7 @@ def pulses(ch):
 def press_starts(d5, quiet_us=PRESS_QUIET_US):
     """Початок кожного натискання: спад після ≥ quiet_us без жодного фронту."""
     out, last = [], None
-    for t, v in d5:
+    for t, v in d5[1:]:                  # початковий рівень - не фронт
         if v == 0 and (last is None or t - last >= quiet_us):
             out.append(t)
         last = t
