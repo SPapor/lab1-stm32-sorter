@@ -5,5 +5,5 @@
 name: "S1 простій"
 version: 1
 steps:
-  - wait-serial: "SET name=go"
-  - wait-serial: "SET name=end"
+  - wait-serial: "SET name=go st=BAD\r\n"
+  - wait-serial: "SET name=end st=BAD\r\n"

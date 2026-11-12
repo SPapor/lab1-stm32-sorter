@@ -5,7 +5,7 @@
 name: "S2 10 посилок"
 version: 1
 steps:
-  - wait-serial: "SET name=go"
+  - wait-serial: "SET name=go st=BAD\r\n"
   - set-control: {part-id: ldr_class, control: lux, value: 500}
   - delay: 500ms
   - set-control: {part-id: ldr_gate, control: lux, value: 10}
@@ -67,4 +67,4 @@ steps:
   - set-control: {part-id: ldr_gate, control: lux, value: 500}
   - delay: 1500ms
   - set-control: {part-id: ldr_class, control: lux, value: 500}
-  - wait-serial: "SET name=end"
+  - wait-serial: "SET name=end st=BAD\r\n"

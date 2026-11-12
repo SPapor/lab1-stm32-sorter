@@ -225,6 +225,7 @@ class Recorder:
         self.last_ms = None
         self.stamps = collections.deque(maxlen=512)   # (час хоста, мітка МК)
         self.rx = []                      # усі рядки МК - для пошуку відповідей
+        self.closing = False              # після маркера кінця wokwi-cli закриває з'єднання
         self.raw = bytearray()            # сирі байти - для пошуку ехо
         self.raw_base = 0                 # номер першого байта raw від підключення
         self.lines = 0
@@ -241,7 +242,8 @@ class Recorder:
             try:
                 chunk = self.ser.read(256)
             except Exception as e:              # з'єднання з Wokwi обірвалося
-                self.note(f'# помилка читання: {e}')
+                if not self.closing:
+                    self.note(f'# помилка читання: {e}')
                 break
             if not chunk:
                 continue
@@ -594,9 +596,13 @@ def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wai
     for c in sc.get('final', DEFAULT_FINAL):
         cmd(c)
     if auto:
-        # wokwi-cli зупиняє симуляцію одразу на рядку SET name=end, EVT уже не буде
-        command(ser, rec, MARK_END, timeout=timeout, sleep=sleep,
-                done=lambda lines: any('SET name=end' in s for s in lines))
+        # wokwi-cli зупиняє симуляцію одразу після рядка SET name=end, EVT уже не буде
+        rec.closing = True
+        try:
+            command(ser, rec, MARK_END, timeout=timeout, sleep=sleep,
+                    done=lambda lines: any('SET name=end' in s for s in lines))
+        except Exception as e:                  # з'єднання закрите: wokwi-cli уже завершився
+            rec.note(f'# з\'єднання закрите після {MARK_END}: {e}')
     # дочекатися рядків, що йдуть уже після останньої відповіді
     last, t_end = -1, time.monotonic() + final_wait
     while time.monotonic() < t_end and rec.lines != last:
@@ -660,7 +666,10 @@ def main(argv=None):
         rec.note('# перервано вручну (Ctrl+C)')
     finally:
         rec.finish(read_cfg(args.build, 'git.cfg'))
-        ser.close()
+        try:
+            ser.close()
+        except Exception:
+            pass
         if cli is not None:
             finish_cli(cli)
     print(f'лог: {path} ({rec.lines} рядків від МК)' + (f', VCD: {vcd}' if vcd else ''))

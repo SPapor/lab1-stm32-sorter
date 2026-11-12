@@ -5,7 +5,7 @@
 name: "6.2.2 40 натискань B1"
 version: 1
 steps:
-  - wait-serial: "SET name=go"
+  - wait-serial: "SET name=go st=BAD\r\n"
   - delay: 500ms
   - set-control: {part-id: estop, control: pressed, value: 1}
   - delay: 150ms
@@ -166,4 +166,4 @@ steps:
   - set-control: {part-id: estop, control: pressed, value: 1}
   - delay: 150ms
   - set-control: {part-id: estop, control: pressed, value: 0}
-  - wait-serial: "SET name=end"
+  - wait-serial: "SET name=end st=BAD\r\n"

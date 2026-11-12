@@ -5,9 +5,9 @@
 name: "6.2.4 SDA на GND"
 version: 1
 steps:
-  - wait-serial: "SET name=go"
+  - wait-serial: "SET name=go st=BAD\r\n"
   - delay: 20500ms
   - set-control: {part-id: sda_gnd, control: pressed, value: 1}
   - delay: 2000ms
   - set-control: {part-id: sda_gnd, control: pressed, value: 0}
-  - wait-serial: "SET name=end"
+  - wait-serial: "SET name=end st=BAD\r\n"
