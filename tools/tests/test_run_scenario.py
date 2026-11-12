@@ -241,6 +241,12 @@ class CommandTest(unittest.TestCase):
         # '1' з мітки "102407 LOAD" - не ехо; ехо - '1' після кінця рядка
         data = b'102407 LOAD pct=20\r\n1'
         self.assertEqual(rs.find_echo(ord(' '), data, ord('1'), True), len(data) - 1)
+        # ехо '0' впритул до рядка "298268 LOAD": остання мітка МК 297268
+        data = b'0298268 LOAD pct=20\r\n'
+        self.assertEqual(rs.find_echo(ord('0'), data, ord('0'), True, 297268), 0)
+        # справжній рядок "298268 LOAD", а чекаємо '2': не ехо
+        data = b'298268 LOAD pct=20\r\n'
+        self.assertEqual(rs.find_echo(ord(' '), data, ord('2'), True, 297268), -1)
 
     def test_bad_reply_is_repeated_at_once(self):
         ser = FakeMcu(bad=1)

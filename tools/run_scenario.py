@@ -63,6 +63,7 @@ PERF_GIT = re.compile(r'^\d+ PERF\b.*\bgit=(\S+)')
 KNOBS_LOG = re.compile(r'^\d+ KNOBS\b.*\blog=(\d)')
 LOG_ON = re.compile(r'^\d+ LOG on=(\d)')
 LINE_START = re.compile(rb'\d+ [A-Z]')
+DIGITS = re.compile(rb'\d+')
 # Дозволені набори ключів кроку
 STEP_FORMS = [{'send'}, {'send', 'wait'}, {'wait'}, {'wait_mcu'}, {'prompt'}, {'prompt', 'wait'},
               {'stream'}, {'repeat'}, {'comment'}]
@@ -385,21 +386,30 @@ def check_reply(lines, want, quiet=False):
     return False, bad
 
 
-def find_echo(before, data, ch, at_start):
+def find_echo(before, data, ch, at_start, ref_ms=None):
     """Індекс ехо байта ch у data або -1. Ехо прошивка друкує між рядками, тож
     байт рахується ехо, лише якщо перед ним кінець рядка або попереднє ехо
     (at_start - data починається одразу після нього). Так літера всередині
-    чужого рядка (LOAD, EVT) не сприймається як ехо."""
+    чужого рядка (LOAD, EVT) не сприймається як ехо. Цифра перед "<мс> ПОДІЯ"
+    може бути і ехо, і першою цифрою мітки: що з двох чисел (з нею чи без неї)
+    ближче до ref_ms - останньої мітки МК, - те й мітка."""
     for i, b in enumerate(data):
         if b != ch:
             continue
         prev = data[i - 1] if i > 0 else before
         if not ((i == 0 and at_start) or prev == 0x0A):
             continue
-        if LINE_START.match(data, i):           # цифра - початок рядка "<мс> ПОДІЯ"
+        if LINE_START.match(data, i) and not echo_before_line(data, i, ref_ms):
             continue
         return i
     return -1
+
+
+def echo_before_line(data, i, ref_ms):
+    run = DIGITS.match(data, i).group()
+    if ref_ms is None or len(run) < 2:
+        return False
+    return abs(int(run[1:]) - ref_ms) <= abs(int(run) - ref_ms)   # мітка МК не починається з 0
 
 
 def type_line(ser, rec, text, char_timeout=ECHO_TIMEOUT, sleep=time.sleep, clock=time.monotonic):
@@ -415,7 +425,7 @@ def type_line(ser, rec, text, char_timeout=ECHO_TIMEOUT, sleep=time.sleep, clock
         deadline = clock() + char_timeout
         while True:
             before, data = rec.raw_since(pos)
-            i = find_echo(before, data, ch, at_start)
+            i = find_echo(before, data, ch, at_start, rec.last_ms)
             if i >= 0:
                 pos += i + 1
                 at_start = True
