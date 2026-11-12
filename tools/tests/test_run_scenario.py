@@ -40,30 +40,33 @@ class FakeSerial:
 
 
 class FakeMcu(FakeSerial):
-    """Відповідає на команди, як прошивка: ехо, рядок відповіді, EVT cmd_rx і cmd_reply.
-    drop - скільки перших команд загубити цілком, bad - на скільки відповісти CLI st=BAD,
-    evt=False - як при log < 2."""
+    """Відповідає, як прошивка: ехо кожного байта, на CR - "\\r\\n", рядок відповіді,
+    EVT cmd_rx і cmd_reply. lose - скільки перших байтів загубити (ні ехо, ні в буфер),
+    bad - на скільки команд відповісти CLI st=BAD, evt=False - як при log < 2."""
     REPLY = {'stats': ['PERF git=abc now_cyc=52', 'UART rx=6 ore=0'], 'stats reset': ['STATS reset=1'],
              'load': ['LOAD pct=7 pm=72'], 'stack': ['STACK used=612 reserved=1024 free=412 overflow=0'],
              'status': ['STATUS state=READY log=1']}
 
-    def __init__(self, data=b'', drop=0, bad=0, evt=True):
+    def __init__(self, data=b'', lose=0, bad=0, evt=True):
         super().__init__(data)
-        self.drop, self.bad, self.evt = drop, bad, evt
+        self.lose, self.bad, self.evt = lose, bad, evt
         self.buf, self.ms, self.cmds = b'', 100, []
 
     def write(self, b):
         super().write(b)
-        self.buf += b
-        while b'\r' in self.buf:
-            line, self.buf = self.buf.split(b'\r', 1)
-            cmd = line.decode()
+        for ch in b:
+            if self.lose:
+                self.lose -= 1
+                continue
+            if ch != 0x0D:
+                self.buf += bytes([ch])
+                self.push(bytes([ch]))
+                continue
+            self.push(b'\r\n')
+            cmd, self.buf = self.buf.decode(), b''
             if not cmd:
                 continue
             self.cmds.append(cmd)
-            if self.drop:
-                self.drop -= 1
-                continue
             if self.bad:
                 self.bad -= 1
                 out = ['CLI st=BAD']
@@ -74,7 +77,7 @@ class FakeMcu(FakeSerial):
             if self.evt:
                 out = out + ['EVT t_us=1 name=cmd_rx', 'EVT t_us=2 name=cmd_reply']
             self.ms += 10
-            self.push(line + b'\r\n' + ''.join(f'{self.ms} {o}\r\n' for o in out).encode())
+            self.push(''.join(f'{self.ms} {o}\r\n' for o in out).encode())
 
 
 def recorder(tmp, ser, clock=time.monotonic):
@@ -219,13 +222,22 @@ class CommandTest(unittest.TestCase):
         self.assertEqual(ser.written, b'stats\r')
         self.assertIn('# > stats', log)
 
-    def test_lost_command_is_repeated_with_cr(self):
-        ser = FakeMcu(drop=1)
-        ok, _, log = self.run_command(ser, 'stats', timeout=0.2)
+    def test_lost_byte_then_repeat_with_cr(self):
+        ser = FakeMcu(lose=1)                        # 's' загублено: прошивка бачить "tats"
+        ok, _, log = self.run_command(ser, 'stats', timeout=0.5, char_timeout=0.1)
         self.assertTrue(ok)
         self.assertEqual(ser.written, b'stats\r\rstats\r')
-        self.assertIn('# "stats": немає відповіді, спроба 1 з 4', log)
+        self.assertEqual(ser.cmds, ['tats', 'stats'])
+        self.assertIn('# "stats": без ехо 1 байт', log)
+        self.assertIn('# "stats": CLI st=BAD, спроба 1 з 4', log)
         self.assertIn('# > stats ' + rs.RETRY_NOTE, log)
+
+    def test_find_echo_skips_letters_inside_lines(self):
+        # 's' з "busy_cyc" не ехо; ехо - 's' після кінця рядка
+        data = b'12 LOAD pct=1 busy_cyc=5\r\ns'
+        self.assertEqual(rs.find_echo(None, data, ord('s'), False), len(data) - 1)
+        self.assertEqual(rs.find_echo(ord('x'), b'st', ord('s'), True), 0)
+        self.assertEqual(rs.find_echo(ord('x'), b'st', ord('s'), False), -1)
 
     def test_bad_reply_is_repeated_at_once(self):
         ser = FakeMcu(bad=1)
@@ -236,10 +248,10 @@ class CommandTest(unittest.TestCase):
         self.assertIn('# "load": CLI st=BAD, спроба 1 з 4', log)
 
     def test_gives_up(self):
-        ser = FakeMcu(drop=10)
-        ok, _, log = self.run_command(ser, 'stack', timeout=0.1, tries=2)
+        ser = FakeMcu(lose=100)
+        ok, _, log = self.run_command(ser, 'stack', timeout=0.1, tries=2, char_timeout=0.02)
         self.assertFalse(ok)
-        self.assertEqual(ser.cmds, ['stack', 'stack'])
+        self.assertEqual(ser.written, b'stack\r\rstack\r')
         self.assertEqual(log[-1], '# "stack" так і не виконалась')
 
     def test_quiet_log_without_evt(self):

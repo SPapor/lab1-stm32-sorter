@@ -13,12 +13,13 @@
 умовами прогону. Далі - рядки МК як є, без часу хоста: час подій беремо лише з
 міток МК (<мс>, t_us), методичка 5.2. Рядки, що починаються з '#', пише сам скрипт.
 
-Команди. Прошивка приймає UART опитуванням без FIFO і не читає його, поки друкує
-відповідь або перемальовує LCD (до ~31,5 мс), тож байти команди можуть загубитися.
-Тому кожну команду з setup, send і final скрипт шле окремо і чекає на відповідь:
-рядок відповіді саме цієї команди і EVT cmd_reply після нього. Якщо відповіді
-немає або прийшло CLI st=BAD, команда йде ще раз, з CR попереду (він закриває
-недописаний рядок у буфері CLI), до TRIES спроб. У лозі це "# > cmd (повтор ...)".
+Команди. Прошивка приймає UART опитуванням без FIFO: тримає один прийнятий байт,
+а поки друкує відповідь, перемальовує LCD (~40 мс) чи читає MPU (~1 мс), наступні
+губляться. Тому команди з setup, send і final скрипт набирає по байту, як людина
+в терміналі: наступний байт - лише після ехо попереднього. Потім чекає на відповідь:
+рядок відповіді саме цієї команди і EVT cmd_reply після нього. Якщо відповіді немає
+або прийшло CLI st=BAD (наприклад, у буфері CLI лишився чужий байт), команда йде ще
+раз з CR попереду, до TRIES спроб. У лозі це "# > cmd (повтор ...)".
 Потік (stream) шле команди без очікування: це навантаження, втрати там і міряємо.
 
 Перед setup скрипт повертає ручки set до значень після скидання (KNOBS_DEFAULT):
@@ -77,6 +78,8 @@ TRIES = 4
 TIMEOUT_FACTOR = 20.0        # у скільки разів Wokwi може бути повільнішим за реальний час
 SPEED_WINDOW_S = 20.0        # за скільки останніх секунд хоста оцінюється швидкість симуляції
 EXTRAP_MS = 1500             # далі останньої мітки час МК не екстраполюється (пауза симуляції)
+ECHO_TIMEOUT = 2.0           # с хоста на ехо одного байта (цикл може стояти на I2C до 3 × 100 мс)
+RAW_KEEP = 1 << 20           # скільки останніх сирих байтів UART тримати для пошуку ехо
 
 
 # ---- сценарій ----------------------------------------------------------------
@@ -197,6 +200,8 @@ class Recorder:
         self.last_ms = None
         self.stamps = collections.deque(maxlen=512)   # (час хоста, мітка МК)
         self.rx = []                      # усі рядки МК - для пошуку відповідей
+        self.raw = bytearray()            # сирі байти - для пошуку ехо
+        self.raw_base = 0                 # номер першого байта raw від підключення
         self.lines = 0
         self.lock = threading.Lock()
         self.stop = threading.Event()
@@ -215,6 +220,7 @@ class Recorder:
                 break
             if not chunk:
                 continue
+            self.feed_raw(chunk)
             buf += chunk
             while True:
                 i = buf.find(b'\n')
@@ -253,6 +259,24 @@ class Recorder:
             self.rx.append(line)
             self.lines += 1
             self._write(line)
+
+    def feed_raw(self, chunk):
+        with self.lock:
+            self.raw += chunk
+            if len(self.raw) > RAW_KEEP:
+                drop = len(self.raw) - RAW_KEEP // 2
+                del self.raw[:drop]
+                self.raw_base += drop
+
+    def raw_pos(self):
+        with self.lock:
+            return self.raw_base + len(self.raw)
+
+    def raw_since(self, pos):
+        """(байт перед pos або None, байти від pos)."""
+        with self.lock:
+            i = max(pos - self.raw_base, 0)
+            return (self.raw[i - 1] if i > 0 else None), bytes(self.raw[i:])
 
     def note(self, text):
         """Рядок від скрипта (починається з '#')."""
@@ -360,20 +384,62 @@ def check_reply(lines, want, quiet=False):
     return False, bad
 
 
+def find_echo(before, data, ch, at_start):
+    """Індекс ехо байта ch у data або -1. Ехо прошивка друкує між рядками, тож
+    байт рахується ехо, лише якщо перед ним кінець рядка або попереднє ехо
+    (at_start - data починається одразу після нього). Так літера всередині
+    чужого рядка (LOAD, EVT) не сприймається як ехо."""
+    for i, b in enumerate(data):
+        if b != ch:
+            continue
+        prev = data[i - 1] if i > 0 else before
+        if (i == 0 and at_start) or prev == 0x0A:
+            return i
+    return -1
+
+
+def type_line(ser, rec, text, char_timeout=ECHO_TIMEOUT, sleep=time.sleep, clock=time.monotonic):
+    """Набрати text по байту: наступний - після ехо попереднього. Без ехо за
+    char_timeout байт, можливо, загублено - решта все одно йде, а що вийшло,
+    покаже відповідь. Повертає, скільки байтів так і не дали ехо."""
+    pos = rec.raw_pos()
+    before, _ = rec.raw_since(pos)
+    at_start = before in (None, 0x0A)
+    missed = 0
+    for ch in text.encode():
+        ser.write(bytes([ch]))
+        deadline = clock() + char_timeout
+        while True:
+            before, data = rec.raw_since(pos)
+            i = find_echo(before, data, ch, at_start)
+            if i >= 0:
+                pos += i + 1
+                at_start = True
+                break
+            if clock() >= deadline:
+                missed += 1                     # ехо наступного - знову одразу за pos
+                break
+            sleep(0.002)
+    return missed
+
+
 def command(ser, rec, cmd, timeout=REPLY_TIMEOUT, tries=TRIES, sleep=time.sleep,
-            clock=time.monotonic):
-    """Надіслати команду і дочекатися відповіді; повторити, якщо її загублено."""
+            clock=time.monotonic, char_timeout=ECHO_TIMEOUT):
+    """Набрати команду і дочекатися відповіді; повторити, якщо її загублено."""
     want = reply_events(cmd)
     for attempt in range(1, tries + 1):
         mark = rec.mark()
+        slow = min(rec.speed(), 1.0)
         if attempt == 1:
             rec.note(f'# > {cmd}')
-            ser.write((cmd + '\r').encode())
+            missed = type_line(ser, rec, cmd + '\r', char_timeout / slow, sleep, clock)
         else:
             rec.note(f'# > {cmd} {RETRY_NOTE}')
-            ser.write(('\r' + cmd + '\r').encode())
+            missed = type_line(ser, rec, '\r' + cmd + '\r', char_timeout / slow, sleep, clock)
+        if missed:
+            rec.note(f'# "{cmd}": без ехо {missed} байт')
         allowed_bad = 0 if attempt == 1 else 1      # CR попереду міг закрити побитий рядок
-        deadline = clock() + timeout / min(rec.speed(), 1.0)
+        deadline = clock() + timeout / slow
         while True:
             ok, bad = check_reply(rec.since(mark), want, rec.is_quiet())
             if ok:
