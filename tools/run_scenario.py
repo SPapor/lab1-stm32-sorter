@@ -62,6 +62,7 @@ BOOT_PERF = re.compile(r'^\d+ BOOT\b.*\bperf=(\d)')
 PERF_GIT = re.compile(r'^\d+ PERF\b.*\bgit=(\S+)')
 KNOBS_LOG = re.compile(r'^\d+ KNOBS\b.*\blog=(\d)')
 LOG_ON = re.compile(r'^\d+ LOG on=(\d)')
+LINE_START = re.compile(rb'\d+ [A-Z]')
 # Дозволені набори ключів кроку
 STEP_FORMS = [{'send'}, {'send', 'wait'}, {'wait'}, {'wait_mcu'}, {'prompt'}, {'prompt', 'wait'},
               {'stream'}, {'repeat'}, {'comment'}]
@@ -393,8 +394,11 @@ def find_echo(before, data, ch, at_start):
         if b != ch:
             continue
         prev = data[i - 1] if i > 0 else before
-        if (i == 0 and at_start) or prev == 0x0A:
-            return i
+        if not ((i == 0 and at_start) or prev == 0x0A):
+            continue
+        if LINE_START.match(data, i):           # цифра - початок рядка "<мс> ПОДІЯ"
+            continue
+        return i
     return -1
 
 

@@ -238,6 +238,9 @@ class CommandTest(unittest.TestCase):
         self.assertEqual(rs.find_echo(None, data, ord('s'), False), len(data) - 1)
         self.assertEqual(rs.find_echo(ord('x'), b'st', ord('s'), True), 0)
         self.assertEqual(rs.find_echo(ord('x'), b'st', ord('s'), False), -1)
+        # '1' з мітки "102407 LOAD" - не ехо; ехо - '1' після кінця рядка
+        data = b'102407 LOAD pct=20\r\n1'
+        self.assertEqual(rs.find_echo(ord(' '), data, ord('1'), True), len(data) - 1)
 
     def test_bad_reply_is_repeated_at_once(self):
         ser = FakeMcu(bad=1)
