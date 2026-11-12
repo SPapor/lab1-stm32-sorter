@@ -1,0 +1,93 @@
+# Дії для tools/run_scenario.py --wokwi (wokwi-cli, час симуляції).
+# Старт - на рядку SET name=go (скрипт шле set go 0 після setup), кінець - SET name=end.
+# impact-20ms (FR-04 під навантаженням): 10 посилок класу A раз на 3 с, за 0,5 с до
+# кожної - удар X = 2 g при Z = 1 g лише на 20 мс. Скрипт тим часом шле stats двічі
+# на секунду, як у S3, і цикл стоїть до ~200 мс: скільки ударів побачить imu_task.
+name: "impact-20ms удар 20 мс"
+version: 1
+steps:
+  - wait-serial: "SET name=go st=BAD\r\n"
+  - set-control: {part-id: ldr_class, control: lux, value: 500}
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - set-control: {part-id: imu, control: accelZ, value: 1}
+  - delay: 1000ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 20ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 480ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 20ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 480ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 20ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 480ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 20ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 480ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 20ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 480ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 20ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 480ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 20ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 480ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 20ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 480ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 20ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 480ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 20ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 480ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - wait-serial: "SET name=end st=BAD\r\n"
