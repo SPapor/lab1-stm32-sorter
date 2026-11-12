@@ -240,6 +240,8 @@ class VcdTimingTest(unittest.TestCase):
         self.assertEqual(vt.press_starts(d5), [100000, 300000])
         # після скидання D5 = 0, доки не ввімкнулася підтяжка: це не натискання
         self.assertEqual(vt.press_starts([(0, 0), (1200, 1), (500000, 0)]), [500000])
+        # вікно (vcd_window.py) вирізано посеред брязкоту: спад через 100 мкс після початку - не натискання
+        self.assertEqual(vt.press_starts([(0, 1), (100, 0), (400, 1), (200000, 0)]), [200000])
 
 
 if __name__ == '__main__':
