@@ -64,6 +64,7 @@ wokwi-cli закінчує і пише VCD). Маркер - саме рядок 
       - comment: "довільна позначка в лозі"
     final: [stats, load, stack, heap]  # за замовчуванням саме ці
     knobs_reset: true                  # за замовчуванням
+    drop_part: [imu]                   # схема без деталей (як --drop-part), лише з --wokwi
 """
 import argparse
 import collections
@@ -178,6 +179,9 @@ def validate(sc):
             raise ValueError(f'{key}: список команд')
     if 'knobs_reset' in sc and not isinstance(sc['knobs_reset'], bool):
         raise ValueError('knobs_reset: true або false')
+    if 'drop_part' in sc and not (isinstance(sc['drop_part'], list)
+                                  and all(isinstance(p, str) for p in sc['drop_part'])):
+        raise ValueError('drop_part: список деталей, як у --drop-part')
 
 
 def expand(steps):
@@ -782,8 +786,10 @@ def main(argv=None):
                          'docs/captures/<назва логу>_<деталь>.png (lcd@3000). МС - раніше за кінець '
                          'сценарію: wokwi-cli чекає на знімок і доти не пише VCD')
     args = ap.parse_args(argv)
-    if (args.vcd or args.drop_part or args.screenshot) and not args.wokwi:
-        ap.error('--vcd, --drop-part і --screenshot - лише з --wokwi: '
+    sc = load_scenario(args.scenario)
+    drop = list(dict.fromkeys(args.drop_part + sc.get('drop_part', [])))
+    if (args.vcd or drop or args.screenshot) and not args.wokwi:
+        ap.error('--vcd, --drop-part (і drop_part у сценарії) та --screenshot - лише з --wokwi: '
                  'у VS Code запис і схему дає сам Wokwi')
     shot = None
     if args.screenshot:
@@ -792,18 +798,17 @@ def main(argv=None):
             ap.error('--screenshot: ДЕТАЛЬ@МС, наприклад lcd@3000')
         shot = (part, int(ms))
     if args.wokwi:
-        problem = cli_args_problem(args.wokwi, args.drop_part, shot, args.sim_limit, args.vcd)
+        problem = cli_args_problem(args.wokwi, drop, shot, args.sim_limit, args.vcd)
         if problem:
             ap.error(problem)
 
-    sc = load_scenario(args.scenario)
     port = args.port or (CLI_PORT if args.wokwi else 'rfc2217://localhost:4000')
     now = datetime.datetime.now()
     path = log_path(args.out, sc['name'], now)
     base = os.path.join('docs', 'captures', os.path.basename(path)[:-4])
     vcd = base + '.vcd' if args.vcd else None
     png = f'{base}_{shot[0]}.png' if shot else None
-    cli = (start_cli(args.wokwi, args.sim_limit, vcd, args.drop_part, shot and shot + (png,))
+    cli = (start_cli(args.wokwi, args.sim_limit, vcd, drop, shot and shot + (png,))
            if args.wokwi else None)
     alive = (lambda: cli.poll() is None) if cli is not None else None
     try:
@@ -814,7 +819,7 @@ def main(argv=None):
         sys.exit(str(e) or 'перервано вручну (Ctrl+C)')
     rec = Recorder(ser, path, {'scenario': sc['name'], 'build': read_cfg(args.build, 'build.cfg'),
                                'port': port, 'host_start': f'{now:%Y-%m-%dT%H:%M:%S}',
-                               'drop': args.drop_part})
+                               'drop': drop})
     rec.alive = alive
     rec.start()
     done = False

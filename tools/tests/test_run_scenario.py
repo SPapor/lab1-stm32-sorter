@@ -122,6 +122,7 @@ class ScenarioTest(unittest.TestCase):
             {'name': 'S', 'steps': [{'stream': {'cmd': 'stats', 'count': 1, 'duration': 1}}]},
             {'name': 'S', 'steps': [{'repeat': {'times': 0, 'steps': []}}]},
             {'name': 'S', 'steps': [], 'final': 'stats'},
+            {'name': 'S', 'steps': [], 'drop_part': 'imu'},                  # не список
         ]
         for sc in bad:
             with self.assertRaises(ValueError, msg=sc):
@@ -509,6 +510,8 @@ class CliTest(unittest.TestCase):
         for extra in (['--vcd'], ['--drop-part', 'imu'], ['--screenshot', 'lcd@3000']):
             with self.assertRaises(SystemExit):
                 rs.main(['tools/scenarios/S1.yaml'] + extra)
+        with self.assertRaises(SystemExit):                    # сценарій сам прибирає imu
+            rs.main(['tools/scenarios/6.2.7-fault.yaml'])
 
     def test_cli_diagram_drops_part_and_its_wires(self):
         d = {'parts': [{'id': 'nucleo'}, {'id': 'imu'}, {'id': 'lcd'}, {'id': 'logic'}],

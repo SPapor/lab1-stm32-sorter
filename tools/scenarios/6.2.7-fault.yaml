@@ -8,6 +8,7 @@
 name: "6.2.7-fault"
 title: "Старт без MPU-6050: FAULT (FR-08)"
 knobs_reset: false
+drop_part: [imu]                    # без --wokwi сценарій не запуститься
 steps:
   - wait_mcu: 3
 final: [status, stats]

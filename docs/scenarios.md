@@ -71,7 +71,7 @@
 
 Мета: типовий режим з PRD - посилки раз на кілька секунд, рідкі команди, журнал увімкнено.
 
-Кроки: `python3 tools/run_scenario.py tools/scenarios/S2.yaml` (без вікна - `--wokwi tools/wokwi/S2.yaml --vcd`). Посилка кожні 3 с (gate 10 лк ~1 с -> 500 лк), class по колу 500 / 100 / 10 лк, разом 30. Скрипт раз на ~17 с шле `status` (`wait_mcu: 15` і ~2,4 с на набір команди) - це «рідкі команди». Разом ~135 с часу МК, без вікна - ~3,5 хв реального часу, тобто до межі `wokwi-cli` у 5 хв лишається ~1,5 хв. 30 посилок - щоб у FR-03 було не менше 30 подій (методичка 6.3).
+Кроки: `python3 tools/run_scenario.py tools/scenarios/S2.yaml` (без вікна - `--wokwi tools/wokwi/S2.yaml --vcd`). Посилка кожні 3 с (gate 10 лк ~1 с -> 500 лк), class по колу 500 / 100 / 10 лк, разом 30. Скрипт раз на ~17 с шле `status` (15 с часу МК і ~2,4 с на набір команди, тобто приблизно після кожних 5-6 посилок) - це «рідкі команди», а у VS Code перед кожним `status` ще й чекає Enter, щоб не обігнати людину. Лог кроку 5 (`S2_2026-11-12_1904`) записано версією без цих підказок: без вікна обидві поводяться однаково. Разом ~135 с часу МК, без вікна - ~3,5 хв реального часу, тобто до межі `wokwi-cli` у 5 хв лишається ~1,5 хв. 30 посилок - щоб у FR-03 було не менше 30 подій (методичка 6.3).
 
 Що міряю: `parcel_latency`, рядки `SORT` (class, route), `EVT parcel_in -> servo_set`, STAT задач, LOAD.
 
@@ -229,7 +229,7 @@
 
 Мета: друга половина 6.2.7 - сенсор, якого немає. У Wokwi MPU-6050 завжди «готовий» (не знімає SLEEP, але читається), тож неготовий сенсор перевіряю так, як у плані тестування PRD: прибираю його зі схеми.
 
-Кроки: лише без вікна - `python3 tools/run_scenario.py tools/scenarios/6.2.7-fault.yaml --wokwi tools/wokwi/6.2.7-fault.yaml --drop-part imu --screenshot lcd@3000 --vcd`.
+Кроки: лише без вікна - `python3 tools/run_scenario.py tools/scenarios/6.2.7-fault.yaml --wokwi tools/wokwi/6.2.7-fault.yaml --drop-part imu --screenshot lcd@3000 --vcd`. Сценарій сам задає `drop_part: [imu]`, тож без `--wokwi` скрипт його не запустить, а `--drop-part imu` можна й не писати.
 
 Що має вийти: `SELFTEST dev=mpu6050 status=FAIL`, `FAULT reason=MPU_NOT_FOUND`, `STATE state=FAULT`, на LCD (знімок) - «FAULT:» / «MPU not found»; консоль відповідає (`STATUS ... fault=MPU_NOT_FOUND`), imu_task не запускається (`STAT imu n=0`, `STARTUP imu_us=0`). Якщо скрипт підключився до `wokwi-cli` із запізненням і перших рядків немає, FAULT однаково видно в `status`, `STARTUP` і на знімку.
 
