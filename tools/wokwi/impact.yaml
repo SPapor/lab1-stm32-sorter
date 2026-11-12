@@ -1,0 +1,49 @@
+# Дії для tools/run_scenario.py --wokwi (wokwi-cli, час симуляції).
+# Старт - на рядку SET name=go (скрипт шле set go 0 після setup), кінець - SET name=end.
+# impact (FR-04, FR-05): 6 посилок класу A раз на 4 с; перед 1-ю, 3-ю і 5-ю удар
+# X = 2 g при Z = 1 g на 0,3 с, |a| = 2,24 g (по одній осі в Wokwi більше ~2 g немає,
+# журнал, проблема 16). Посилки з ударом мають піти в брак, без удару - в A.
+name: "impact удар"
+version: 1
+steps:
+  - wait-serial: "SET name=go st=BAD\r\n"
+  - set-control: {part-id: ldr_class, control: lux, value: 500}
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - set-control: {part-id: imu, control: accelZ, value: 1}
+  - delay: 700ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 300ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 3000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 2200ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 300ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 3000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 2200ms
+  - set-control: {part-id: imu, control: accelX, value: 2}
+  - delay: 300ms
+  - set-control: {part-id: imu, control: accelX, value: 0}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 3000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - wait-serial: "SET name=end st=BAD\r\n"

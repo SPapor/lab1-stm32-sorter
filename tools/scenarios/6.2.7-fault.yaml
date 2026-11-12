@@ -1,0 +1,13 @@
+# 6.2.7 / FR-08: старт без MPU-6050. Самоперевірка має перевести продукт у FAULT
+# (рядок FAULT reason=MPU_NOT_FOUND, на LCD - «FAULT:» / «MPU not found»), а консоль -
+# лишитися живою. Лише без вікна, схема - diagram.json без imu:
+#   run_scenario.py tools/scenarios/6.2.7-fault.yaml --wokwi tools/wokwi/6.2.7-fault.yaml \
+#       --drop-part imu --screenshot lcd@3000
+# Якщо скрипт підключився із запізненням і перші рядки (SELFTEST) пропали, FAULT
+# однаково видно у фінальному status (fault=MPU_NOT_FOUND), у STARTUP (imu_us=0) і на знімку LCD.
+name: "6.2.7-fault"
+title: "Старт без MPU-6050: FAULT (FR-08)"
+knobs_reset: false
+steps:
+  - wait_mcu: 3
+final: [status, stats]

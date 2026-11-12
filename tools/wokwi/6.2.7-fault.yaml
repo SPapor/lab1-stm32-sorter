@@ -1,0 +1,8 @@
+# Дії для tools/run_scenario.py --wokwi (wokwi-cli, час симуляції).
+# Старт - на рядку SET name=go (скрипт шле set go 0 після setup), кінець - SET name=end.
+# 6.2.7-fault (FR-08): старт без MPU-6050 (--drop-part imu). Дій немає, лише маркери.
+name: "6.2.7 без MPU"
+version: 1
+steps:
+  - wait-serial: "SET name=go st=BAD\r\n"
+  - wait-serial: "SET name=end st=BAD\r\n"

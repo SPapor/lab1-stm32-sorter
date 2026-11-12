@@ -1,16 +1,15 @@
-# S2 - номінальний режим (методичка 6.1): посилки раз на кілька секунд, рідкі
-# команди, журнал увімкнено. docs/scenarios.md, S2.
+# S2 - номінальний режим (методичка 6.1): посилки раз на 3 с, рідкі команди, журнал
+# увімкнено. 30 посилок - щоб у FR-03 було ≥ 30 подій (методичка 6.3). docs/scenarios.md, S2.
 name: S2
-title: "Номінальний: 10 посилок, рідкі команди, log on"
+title: "Номінальний: 30 посилок, рідкі команди, log on"
 setup: [stats reset, log on]
 steps:
-  - prompt: "class-LDR на 500 лк (клас A). Далі 10 посилок. Посилка = gate-LDR на 10 лк ~1 с, потім назад 500 лк. Enter - старт"
+  - prompt: "Далі ~90 с: посилка кожні 3 с (gate 10 лк ~1 с -> 500 лк), class по колу 500 / 100 / 10 лк, разом 30. Скрипт сам шле status раз на 15 с. Enter - старт"
+    auto: 0
   - repeat:
-      times: 10
+      times: 6
       steps:
-        - prompt: "Посилка: gate 10 лк ~1 с -> 500 лк. Між посилками міняй class по колу 500 / 100 / 10 лк. Enter після посилки"
-          auto: 3
+        - wait_mcu: 15
         - send: status
-          wait: 2
-  - wait_mcu: 5
+  - wait_mcu: 3
 final: [stats, load, stack, heap, hist gate, hist imu, hist lcd]
