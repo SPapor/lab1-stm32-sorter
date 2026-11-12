@@ -28,18 +28,30 @@ void perf_hal_init(void)
  * додаємо його самі. VAL у такому разі читаємо ще раз — перехід міг статися між
  * першим читанням VAL і перевіркою PENDSTSET, і тоді перше значення «старе».
  * COUNTFLAG у SysTick->CTRL не чіпаємо: читання його скидає.
+ * У Wokwi PENDSTSET з'являється не відразу після переходу через 0: кілька тактів
+ * VAL уже новий, а тік ще старий, і час стрибає на 1 мс назад. Тому, якщо від
+ * початку тіку минуло менше PERF_RELOAD_GUARD тактів, а PENDSTSET немає, пара
+ * читається ще раз з дозволеними перериваннями - SysTick_Handler устигає
+ * збільшити uwTick. На залізі це щонайбільше PERF_RELOAD_GUARD тактів очікування.
  * Похибка: якщо переривання були заборонені довше за 1 мс, тік губиться. */
+#define PERF_RELOAD_GUARD 128u
+
 static uint32_t read_tick(uint32_t *in_tick)
 {
-    uint32_t primask = __get_PRIMASK();
-    __disable_irq();
-    uint32_t tick = uwTick;
-    uint32_t val = SysTick->VAL;
-    if (SCB->ICSR & SCB_ICSR_PENDSTSET_Msk) {
+    uint32_t tick, val, pend;
+
+    do {
+        uint32_t primask = __get_PRIMASK();
+        __disable_irq();
+        tick = uwTick;
         val = SysTick->VAL;
-        tick++;
-    }
-    __set_PRIMASK(primask);
+        pend = SCB->ICSR & SCB_ICSR_PENDSTSET_Msk;
+        if (pend) {
+            val = SysTick->VAL;
+            tick++;
+        }
+        __set_PRIMASK(primask);
+    } while (!pend && SysTick->LOAD - val < PERF_RELOAD_GUARD);
 
     *in_tick = SysTick->LOAD - val;
     return tick;
