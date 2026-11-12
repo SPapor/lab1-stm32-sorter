@@ -208,6 +208,10 @@ def log_path(out_dir, name, now):
     return path
 
 
+class LinkLost(Exception):
+    """З'єднання з симуляцією обірвалося або wokwi-cli завершився посеред прогону."""
+
+
 # ---- запис логу --------------------------------------------------------------
 
 class Recorder:
@@ -229,6 +233,8 @@ class Recorder:
         self.stamps = collections.deque(maxlen=512)   # (час хоста, мітка МК)
         self.rx = []                      # усі рядки МК - для пошуку відповідей
         self.closing = False              # після маркера кінця wokwi-cli закриває з'єднання
+        self.alive = None                 # alive() - чи живий ще wokwi-cli
+        self.broken = None                # чому обірвалося читання
         self.split = StreamSplitter()
         self.echo = bytearray()           # байти ехо, відділені від рядків МК
         self.echo_base = 0                # номер першого байта echo від підключення
@@ -248,6 +254,7 @@ class Recorder:
                 chunk = self.ser.read(256)
             except Exception as e:              # з'єднання з Wokwi обірвалося
                 if not self.closing:
+                    self.broken = str(e) or type(e).__name__
                     self.note(f'# помилка читання: {e}')
                 break
             if not chunk:
@@ -375,6 +382,16 @@ class Recorder:
                 return None
             h1, m1 = self.stamps[-1]
             return m1 + min((self.clock() - h1) * 1000.0 * self._speed(), EXTRAP_MS)
+
+    def check(self):
+        """LinkLost, якщо читання обірвалося або wokwi-cli завершився. Після маркера
+        кінця (closing) це не помилка, а нормальний кінець прогону."""
+        if self.closing:
+            return
+        if self.broken is not None:
+            raise LinkLost(f"з'єднання обірвалося: {self.broken}")
+        if self.alive is not None and not self.alive():
+            raise LinkLost('wokwi-cli завершився посеред прогону')
 
     def is_quiet(self):
         """log < 2: EVT (і cmd_reply теж) прошивка не друкує."""
@@ -540,6 +557,7 @@ def type_line(ser, rec, text, char_timeout=ECHO_TIMEOUT, sleep=time.sleep, clock
             if clock() >= deadline:
                 missed += 1
                 break
+            rec.check()
             sleep(0.002)
     return missed
 
@@ -573,6 +591,7 @@ def command(ser, rec, cmd, timeout=REPLY_TIMEOUT, tries=TRIES, sleep=time.sleep,
             if clock() >= deadline:
                 why = 'немає відповіді'
                 break
+            rec.check()
             sleep(0.02)
         rec.note(f'# "{cmd}": {why}, спроба {attempt} з {tries}')
     rec.note(f'# "{cmd}" так і не виконалась')
@@ -592,6 +611,7 @@ def wait_mcu(rec, seconds, timeout_factor=TIMEOUT_FACTOR, sleep=time.sleep):
             start = cur
         elif cur is not None and cur - start >= seconds * 1000:
             return True
+        rec.check()
         sleep(0.2)
     rec.note(f'# wait_mcu {seconds} с: час МК не дійшов (немає рядків з <мс>? увімкніть log on)')
     return False
@@ -615,6 +635,7 @@ def stream(ser, rec, cmd, rate_hz, duration=None, count=None, sleep=time.sleep,
     sent, stalled = 0, False
     while count is None or sent < count:
         while period and now() < t0 + sent * period and clock() < host_end:
+            rec.check()
             sleep(0.005)
         if clock() >= host_end:
             stalled = True
@@ -694,9 +715,10 @@ def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wai
         sleep(0.5)
 
 
-def connect(url, wait_s, sleep=time.sleep):
+def connect(url, wait_s, sleep=time.sleep, alive=None):
     """RFC2217-сервер Wokwi з'являється лише з запуском симуляції: чекаємо до wait_s с.
-    Для сценарію старту (6.2.7) скрипт запускають раніше за симуляцію."""
+    Для сценарію старту (6.2.7) скрипт запускають раніше за симуляцію. alive() - чи
+    живий ще wokwi-cli, який має підняти сервер: якщо ні, чекати далі нема чого."""
     import serial
     t_end = time.monotonic() + wait_s
     told = False
@@ -704,9 +726,12 @@ def connect(url, wait_s, sleep=time.sleep):
         try:
             return serial.serial_for_url(url, baudrate=115200, timeout=0.2)
         except (serial.SerialException, OSError) as e:
+            if alive is not None and not alive():
+                raise LinkLost(f'{url}: wokwi-cli завершився, так і не піднявши RFC2217-сервер')
             if time.monotonic() >= t_end:
-                sys.exit(f'{url}: немає з\'єднання ({e}). Симуляція запущена? '
-                         'У wokwi.toml є rfc2217ServerPort = 4000?')
+                hint = ('wokwi-cli ще стартує? Можна збільшити --wait-connect.' if alive is not None
+                        else 'Симуляція запущена? У wokwi.toml є rfc2217ServerPort = 4000?')
+                raise LinkLost(f"{url}: немає з'єднання ({e}). {hint}")
             if not told:
                 print(f'чекаю на {url} (симуляцію у VS Code або wokwi-cli) ...', flush=True)
                 told = True
@@ -731,6 +756,8 @@ def main(argv=None):
     ap.add_argument('--sim-limit', type=float, default=900,
                     help='з --wokwi: межа часу симуляції, с (900)')
     args = ap.parse_args(argv)
+    if args.vcd and not args.wokwi:
+        ap.error('--vcd - лише з --wokwi: у VS Code запис пише сам Wokwi (wokwi.vcd після Stop)')
 
     sc = load_scenario(args.scenario)
     port = args.port or (CLI_PORT if args.wokwi else 'rfc2217://localhost:4000')
@@ -740,14 +767,25 @@ def main(argv=None):
     if args.vcd:
         vcd = os.path.join('docs', 'captures', os.path.basename(path)[:-4] + '.vcd')
     cli = start_cli(args.wokwi, args.sim_limit, vcd) if args.wokwi else None
-    ser = connect(port, args.wait_connect)
+    alive = (lambda: cli.poll() is None) if cli is not None else None
+    try:
+        ser = connect(port, args.wait_connect, alive=alive)
+    except (LinkLost, KeyboardInterrupt) as e:
+        if cli is not None:
+            finish_cli(cli, wait_s=0)
+        sys.exit(str(e) or 'перервано вручну (Ctrl+C)')
     rec = Recorder(ser, path, {'scenario': sc['name'], 'build': read_cfg(args.build, 'build.cfg'),
                                'port': port, 'host_start': f'{now:%Y-%m-%dT%H:%M:%S}'})
+    rec.alive = alive
     rec.start()
+    done = False
     try:
         run(sc, ser, rec, hash_wait=args.hash_wait, timeout=args.reply_timeout, auto=cli is not None)
+        done = True
     except KeyboardInterrupt:
         rec.note('# перервано вручну (Ctrl+C)')
+    except LinkLost as e:
+        rec.note(f'# прогін зупинено: {e}')
     finally:
         rec.finish(read_cfg(args.build, 'git.cfg'))
         try:
@@ -755,8 +793,10 @@ def main(argv=None):
         except Exception:
             pass
         if cli is not None:
-            finish_cli(cli)
-    print(f'лог: {path} ({rec.lines} рядків від МК)' + (f', VCD: {vcd}' if vcd else ''))
+            # прогін не дійшов до set end 0 - wokwi-cli чекав би на нього до --sim-limit
+            finish_cli(cli, wait_s=300 if done else 0)
+    have_vcd = vcd is not None and os.path.exists(vcd)
+    print(f'лог: {path} ({rec.lines} рядків від МК)' + (f', VCD: {vcd}' if have_vcd else ''))
     return path
 
 
@@ -784,7 +824,7 @@ def start_cli(actions, sim_limit, vcd):
 
 
 def finish_cli(proc, wait_s=300):
-    """Дочекатися, поки wokwi-cli допише VCD і вийде."""
+    """Дочекатися, поки wokwi-cli допише VCD і вийде; wait_s=0 - зупинити одразу."""
     try:
         code = proc.wait(timeout=wait_s)
     except Exception:

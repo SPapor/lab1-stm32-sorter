@@ -452,5 +452,54 @@ class RunTest(unittest.TestCase):
             rec.finish('x')
 
 
+
+class CliTest(unittest.TestCase):
+    """wokwi-cli, що впав, видно одразу, а не після довгих тайм-аутів."""
+
+    def test_connect_stops_when_cli_died(self):
+        t0 = time.monotonic()
+        with self.assertRaises(rs.LinkLost) as cm:
+            rs.connect('rfc2217://localhost:1', 60, sleep=short_sleep, alive=lambda: False)
+        self.assertLess(time.monotonic() - t0, 5)
+        self.assertIn('wokwi-cli', str(cm.exception))
+
+    def test_wait_mcu_stops_when_cli_died(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = recorder(tmp, FakeSerial())
+            rec.feed('1000 LOAD pct=1')
+            rec.alive = lambda: False
+            t0 = time.monotonic()
+            with self.assertRaises(rs.LinkLost):
+                rs.wait_mcu(rec, 54, sleep=short_sleep)
+            self.assertLess(time.monotonic() - t0, 1)
+            rec.closing = True                     # після set end 0 вихід wokwi-cli - норма
+            rec.check()
+            rec.finish('x')
+
+    def test_command_stops_when_link_broken(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ser = FakeSerial()                     # ехо немає
+            rec = recorder(tmp, ser)
+            rec.git = 'abc'
+            rec.broken = 'Connection reset'
+            with self.assertRaises(rs.LinkLost):
+                rs.command(ser, rec, 'stats', sleep=short_sleep)
+            rec.finish('x')
+
+    def test_finish_cli_now_does_not_wait(self):
+        import collections
+        import subprocess
+        proc = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)'])
+        proc.tail = collections.deque(['wokwi-cli: тест'])
+        t0 = time.monotonic()
+        rs.finish_cli(proc, wait_s=0)
+        self.assertLess(time.monotonic() - t0, 5)
+        self.assertIsNotNone(proc.poll())
+
+    def test_vcd_only_with_wokwi(self):
+        with self.assertRaises(SystemExit):
+            rs.main(['tools/scenarios/S1.yaml', '--vcd'])
+
+
 if __name__ == '__main__':
     unittest.main()
