@@ -7,7 +7,7 @@
 #include "stm32c0xx_hal.h"
 #include "i2c_bus.h"
 
-#define I2C_HAL_TIMEOUT_MS 100u
+#define I2C_HAL_TIMEOUT_MS 5u     /* найдовша робоча транзакція (6 байтів MPU) ~0,7 мс */
 #define I2C_HAL_MAX_TRIES  3u     /* FR-09: транзакція + до 2 повторів, після кожної помилки — відновлення */
 
 typedef struct {
