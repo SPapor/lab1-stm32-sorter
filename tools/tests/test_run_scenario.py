@@ -506,8 +506,60 @@ class CliTest(unittest.TestCase):
         self.assertIsNotNone(proc.poll())
 
     def test_vcd_only_with_wokwi(self):
-        with self.assertRaises(SystemExit):
-            rs.main(['tools/scenarios/S1.yaml', '--vcd'])
+        for extra in (['--vcd'], ['--drop-part', 'imu'], ['--screenshot', 'lcd@3000']):
+            with self.assertRaises(SystemExit):
+                rs.main(['tools/scenarios/S1.yaml'] + extra)
+
+    def test_cli_diagram_drops_part_and_its_wires(self):
+        d = {'parts': [{'id': 'nucleo'}, {'id': 'imu'}, {'id': 'lcd'}, {'id': 'logic'}],
+             'connections': [['nucleo:PA9', 'imu:SCL', 'green', []],
+                             ['nucleo:PA9', 'lcd:SCL', 'green', []],
+                             ['nucleo:PA9', 'logic:D0', 'green', []],
+                             ['nucleo:PA6', 'logic:D2', 'green', []]]}
+        out = rs.cli_diagram(d, ['imu'])
+        self.assertEqual([p['id'] for p in out['parts']], ['nucleo', 'lcd', 'logic'])
+        self.assertEqual([c[1] for c in out['connections']], ['lcd:SCL', 'logic:D2'])
+        self.assertEqual(len(d['parts']), 4)                  # вихідна схема не змінилась
+        with self.assertRaises(ValueError):
+            rs.cli_diagram(d, ['mpu'])
+
+    def test_cli_args_checked_before_wokwi_cli(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            markers = os.path.join(tmp, 'markers.yaml')
+            with open(markers, 'w', encoding='utf-8') as f:
+                f.write('steps:\n  - wait-serial: "SET name=go st=BAD"\n')
+            accel = os.path.join(tmp, 'accel.yaml')
+            with open(accel, 'w', encoding='utf-8') as f:
+                f.write('steps:\n  - set-control: {part-id: imu, control: accelX, value: 2}\n')
+            self.assertIsNone(rs.cli_args_problem(markers, ['imu'], ('lcd', 3000), 900))
+            self.assertIn('mpu', rs.cli_args_problem(markers, ['mpu']))
+            self.assertIn('imu', rs.cli_args_problem(accel, ['imu']))      # файл дій крутить imu
+            self.assertIn('lcd', rs.cli_args_problem(markers, ['lcd'], ('lcd', 3000)))
+            self.assertIn('lcdx', rs.cli_args_problem(markers, [], ('lcdx', 3000)))
+            self.assertIn('--sim-limit', rs.cli_args_problem(markers, [], ('lcd', 1000000), 900))
+            self.assertIn('немає файлу', rs.cli_args_problem(os.path.join(tmp, 'nope.yaml')))
+            self.assertIn('не екран', rs.cli_args_problem(markers, [], ('estop', 3000)))
+            self.assertIn('--vcd', rs.cli_args_problem(markers, ['logic'], vcd=True))
+            quoted = os.path.join(tmp, 'quoted.yaml')
+            with open(quoted, 'w', encoding='utf-8') as f:
+                f.write('# part-id: lcd - лише коментар\nsteps:\n'
+                        '  - set-control: {part-id: "imu", control: accelX, value: 2}\n')
+            self.assertEqual(rs.action_parts(open(quoted, encoding='utf-8').read()), {'imu'})
+            self.assertIn('imu', rs.cli_args_problem(quoted, ['imu']))
+            self.assertIsNone(rs.cli_args_problem(quoted, ['lcd']))
+            for bad in (['--drop-part', 'mpu'], ['--screenshot', 'lcd@\u00b3000']):
+                with self.assertRaises(SystemExit):            # помилка аргументів, а не traceback
+                    rs.main(['tools/scenarios/S1.yaml', '--wokwi', markers] + bad)
+
+    def test_header_names_dropped_parts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            meta = {'scenario': 'T', 'build': 'PERF=1', 'port': 'fake://',
+                    'host_start': '2026-11-12T20:00:00', 'drop': ['imu']}
+            rec = rs.Recorder(FakeSerial(), os.path.join(tmp, 'T.log'), meta)
+            self.assertTrue(rec.header().endswith(' drop=imu'))
+            rec.meta['drop'] = []
+            self.assertIn('host_start=2026-11-12T20:00:00', rec.header())
+            self.assertNotIn('drop=', rec.header())
 
 
 if __name__ == '__main__':

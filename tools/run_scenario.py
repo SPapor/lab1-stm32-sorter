@@ -104,6 +104,8 @@ ECHO_KEEP = 1 << 16          # скільки останніх байтів ех
 CLI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'wokwi')
 CLI_PORT = 'rfc2217://localhost:4001'
 CLI_DIAGRAM = '.diagram.json'                      # у tools/wokwi, будується з diagram.json
+DIAGRAM = os.path.join(CLI_DIR, '..', '..', 'diagram.json')
+DISPLAYS = ('lcd', 'ssd1306', 'ili9341', 'st7735', 'st7789', 'epaper')   # що знімає --screenshot
 CLI_DROP = {'logic:D0', 'logic:D1', 'logic:D3'}    # канали аналізатора, яких у wokwi-cli немає
 MARK_GO, MARK_END = 'set go 0', 'set end 0'      # відповідь: SET name=go|end st=BAD
 
@@ -420,7 +422,8 @@ class Recorder:
         m = self.meta
         return (f'# git={self.git or "unknown"} (з {self.git_from or "-"}) '
                 f'scenario={m["scenario"]} build="{m["build"]}" perf={self.perf or "?"} '
-                f'port={m["port"]} host_start={m["host_start"]}')
+                f'port={m["port"]} host_start={m["host_start"]}'
+                + (f' drop={",".join(m["drop"])}' if m.get('drop') else ''))
 
     def finish(self, fallback_git):
         self.stop.set()
@@ -771,18 +774,37 @@ def main(argv=None):
                     help='з --wokwi: запис аналізатора в docs/captures/<назва логу>.vcd')
     ap.add_argument('--sim-limit', type=float, default=900,
                     help='з --wokwi: межа часу симуляції, с (900)')
+    ap.add_argument('--drop-part', action='append', default=[], metavar='ID',
+                    help='з --wokwi: прибрати деталь зі схеми разом з її з\'єднаннями '
+                         '(imu - старт без MPU-6050, FR-08); можна кілька')
+    ap.add_argument('--screenshot', metavar='ДЕТАЛЬ@МС',
+                    help='з --wokwi: знімок дисплея на МС мс часу симуляції, '
+                         'docs/captures/<назва логу>_<деталь>.png (lcd@3000). МС - раніше за кінець '
+                         'сценарію: wokwi-cli чекає на знімок і доти не пише VCD')
     args = ap.parse_args(argv)
-    if args.vcd and not args.wokwi:
-        ap.error('--vcd - лише з --wokwi: у VS Code запис пише сам Wokwi (wokwi.vcd після Stop)')
+    if (args.vcd or args.drop_part or args.screenshot) and not args.wokwi:
+        ap.error('--vcd, --drop-part і --screenshot - лише з --wokwi: '
+                 'у VS Code запис і схему дає сам Wokwi')
+    shot = None
+    if args.screenshot:
+        part, _, ms = args.screenshot.partition('@')
+        if not part or not (ms.isascii() and ms.isdigit()):
+            ap.error('--screenshot: ДЕТАЛЬ@МС, наприклад lcd@3000')
+        shot = (part, int(ms))
+    if args.wokwi:
+        problem = cli_args_problem(args.wokwi, args.drop_part, shot, args.sim_limit, args.vcd)
+        if problem:
+            ap.error(problem)
 
     sc = load_scenario(args.scenario)
     port = args.port or (CLI_PORT if args.wokwi else 'rfc2217://localhost:4000')
     now = datetime.datetime.now()
     path = log_path(args.out, sc['name'], now)
-    vcd = None
-    if args.vcd:
-        vcd = os.path.join('docs', 'captures', os.path.basename(path)[:-4] + '.vcd')
-    cli = start_cli(args.wokwi, args.sim_limit, vcd) if args.wokwi else None
+    base = os.path.join('docs', 'captures', os.path.basename(path)[:-4])
+    vcd = base + '.vcd' if args.vcd else None
+    png = f'{base}_{shot[0]}.png' if shot else None
+    cli = (start_cli(args.wokwi, args.sim_limit, vcd, args.drop_part, shot and shot + (png,))
+           if args.wokwi else None)
     alive = (lambda: cli.poll() is None) if cli is not None else None
     try:
         ser = connect(port, args.wait_connect, alive=alive)
@@ -791,7 +813,8 @@ def main(argv=None):
             finish_cli(cli, wait_s=0)
         sys.exit(str(e) or 'перервано вручну (Ctrl+C)')
     rec = Recorder(ser, path, {'scenario': sc['name'], 'build': read_cfg(args.build, 'build.cfg'),
-                               'port': port, 'host_start': f'{now:%Y-%m-%dT%H:%M:%S}'})
+                               'port': port, 'host_start': f'{now:%Y-%m-%dT%H:%M:%S}',
+                               'drop': args.drop_part})
     rec.alive = alive
     rec.start()
     done = False
@@ -811,17 +834,90 @@ def main(argv=None):
         if cli is not None:
             # прогін не дійшов до set end 0 - wokwi-cli чекав би на нього до --sim-limit
             finish_cli(cli, wait_s=300 if done else 0)
-    have_vcd = vcd is not None and os.path.exists(vcd)
-    print(f'лог: {path} ({rec.lines} рядків від МК)' + (f', VCD: {vcd}' if have_vcd else ''))
+    made = [f for f in (vcd, png) if f and os.path.exists(f)]
+    print(f'лог: {path} ({rec.lines} рядків від МК)' + ''.join(f', {f}' for f in made))
+    for f in (vcd, png):
+        if f and f not in made:
+            print(f'не записано: {f} (wokwi-cli не дійшов до кінця або знімок пізніше за кінець сценарію)',
+                  file=sys.stderr)
     return path
 
 
-def start_cli(actions, sim_limit, vcd):
-    """wokwi-cli у фоні: проєкт tools/wokwi (та сама прошивка і diagram.json)."""
+def cli_diagram(diagram, drop_parts=()):
+    """Схема для wokwi-cli: diagram.json без каналів аналізатора CLI_DROP і без деталей
+    drop_parts разом з їхніми з'єднаннями."""
+    drop = set(drop_parts)
+    unknown = drop - {p['id'] for p in diagram['parts']}
+    if unknown:
+        raise ValueError(f'у diagram.json немає деталей: {", ".join(sorted(unknown))}')
+    out = dict(diagram)
+    out['parts'] = [p for p in diagram['parts'] if p['id'] not in drop]
+    out['connections'] = [c for c in diagram['connections']
+                          if not CLI_DROP & set(c[:2])
+                          and not drop & {end.split(':')[0] for end in c[:2]}]
+    return out
+
+
+def action_parts(text):
+    """part-id усіх кроків файлу дій wokwi-cli (YAML; без PyYAML - за рядками, без коментарів)."""
+    try:
+        import yaml
+    except ImportError:
+        return set(re.findall(r'^[^#\n]*part-id:\s*["\']?([\w-]+)', text, re.M))
+    found = set()
+
+    def walk(x):
+        if isinstance(x, dict):
+            for k, v in x.items():
+                if k == 'part-id' and isinstance(v, str):
+                    found.add(v)
+                else:
+                    walk(v)
+        elif isinstance(x, list):
+            for v in x:
+                walk(v)
+    walk(yaml.safe_load(text))
+    return found
+
+
+def cli_args_problem(actions, drop_parts=(), shot=None, sim_limit=None, vcd=False):
+    """Що не так з --drop-part, --screenshot і --vcd для diagram.json і файлу дій, або None.
+    Перевіряється до запуску wokwi-cli: інакше він падає вже посеред прогону.
+    shot - (деталь, мс)."""
+    if not os.path.exists(actions):
+        return f'--wokwi: немає файлу дій {actions}'
+    with open(DIAGRAM, encoding='utf-8') as f:
+        try:
+            kept = cli_diagram(json.load(f), drop_parts)
+        except ValueError as e:
+            return f'--drop-part: {e}'
+    types = {p['id']: p['type'] for p in kept['parts']}
+    drop = set(drop_parts)
+    with open(actions, encoding='utf-8') as f:
+        used = action_parts(f.read())
+    if used & drop:
+        return (f'--drop-part: {actions} керує {", ".join(sorted(used & drop))}, '
+                'а цю деталь прибрано зі схеми')
+    if vcd and 'wokwi-logic-analyzer' not in types.values():
+        return '--vcd: аналізатора в схемі не лишилося (--drop-part)'
+    if shot:
+        part, ms = shot
+        if part not in types:
+            return (f'--screenshot: деталь {part} прибрано --drop-part' if part in drop
+                    else f'--screenshot: у diagram.json немає деталі {part}')
+        if not any(d in types[part] for d in DISPLAYS):
+            return f'--screenshot: {part} ({types[part]}) - не екран, wokwi-cli знімає лише дисплеї'
+        if sim_limit is not None and ms >= sim_limit * 1000:
+            return f'--screenshot: {ms} мс - пізніше за --sim-limit {sim_limit:g} с'
+    return None
+
+
+def start_cli(actions, sim_limit, vcd, drop_parts=(), shot=None):
+    """wokwi-cli у фоні: проєкт tools/wokwi (та сама прошивка і diagram.json).
+    shot - (деталь, мс часу симуляції, файл) для знімка."""
     import subprocess
-    with open(os.path.join(CLI_DIR, '..', '..', 'diagram.json'), encoding='utf-8') as f:
-        diagram = json.load(f)
-    diagram['connections'] = [c for c in diagram['connections'] if not CLI_DROP & set(c[:2])]
+    with open(DIAGRAM, encoding='utf-8') as f:
+        diagram = cli_diagram(json.load(f), drop_parts)
     with open(os.path.join(CLI_DIR, CLI_DIAGRAM), 'w', encoding='utf-8') as f:
         json.dump(diagram, f, indent=2)
     cmd = ['wokwi-cli', '--quiet', '--diagram-file', CLI_DIAGRAM,
@@ -829,6 +925,11 @@ def start_cli(actions, sim_limit, vcd):
     if vcd:
         os.makedirs(os.path.dirname(vcd), exist_ok=True)
         cmd += ['--vcd-file', os.path.abspath(vcd)]
+    if shot:
+        part, ms, file = shot
+        os.makedirs(os.path.dirname(file), exist_ok=True)
+        cmd += ['--screenshot-part', part, '--screenshot-time', str(ms),
+                '--screenshot-file', os.path.abspath(file)]
     proc = subprocess.Popen(cmd + [CLI_DIR], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     proc.tail = collections.deque(maxlen=30)
 
