@@ -560,7 +560,9 @@ def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wai
         sleep(0.1)
     if rec.git is None:
         cmd('stats')
-    if sc.get('knobs_reset', True):
+    if auto:
+        rec.note('# ручки - як після скидання: wokwi-cli щоразу стартує з нуля')
+    elif sc.get('knobs_reset', True):
         for c in KNOBS_DEFAULT:
             cmd(c)
     for c in sc.get('setup', []):
