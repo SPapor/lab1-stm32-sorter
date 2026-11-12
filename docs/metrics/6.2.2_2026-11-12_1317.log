@@ -1,0 +1,320 @@
+# git=3c1a2135 (з BOOT) scenario=6.2.2 build="LAB2_CAP=0 TEST_I2C_FAULT=0 PERF=1" perf=1 port=rfc2217://localhost:4001 host_start=2026-11-12T13:17:20
+# сценарій 6.2.2: E-STOP під час довгої операції, 40 натискань
+2 BOOT fw=lab3-superloop git=3c1a2135 perf=1
+7 EVT t_us=7047 name=boot
+10 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+16 PERF cpu_hz=48000000 now_cyc=440 pair_cyc=1153
+# ручки - як після скидання: wokwi-cli щоразу стартує з нуля
+# > stats reset
+28 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+35 EVT t_us=35225 name=i2c_fail
+40 EVT t_us=39409 name=i2c_ok
+49 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+56 EVT t_us=56220 name=i2c_fail
+61 EVT t_us=60411 name=i2c_ok
+70 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+77 EVT t_us=77229 name=i2c_fail
+82 EVT t_us=81418 name=i2c_ok
+85 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+161 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+166 SELFTEST dev=ldr_gate status=OK raw=1001
+171 SELFTEST dev=ldr_class status=OK raw=1001
+176 SELFTEST dev=servo status=OK pulse_us=1500
+181 SELFTEST_END ok=4 warn=1 fail=0
+221 STATE state=READY
+224 STACK used=824 reserved=1024 free=200 overflow=0
+230 HEAP arena=436 used=436 free=0
+s235 EVT t_us=171460 name=ready_gate
+240 EVT t_us=176347 name=ready_class
+244 EVT t_us=235261 name=ready_imu
+ta759 EVT t_us=759214 name=ready_lcd
+t1259 LOAD pct=19 pm=192 win_cyc=49217928 busy_cyc=9446985 windows=1
+s r2260 LOAD pct=20 pm=195 win_cyc=48064821 busy_cyc=9375799 windows=2
+es3260 LOAD pct=20 pm=195 win_cyc=48001296 busy_cyc=9371648 windows=3
+et
+3945 STATS reset=1
+3947 EVT t_us=3944987 name=cmd_rx
+3952 EVT t_us=3947271 name=cmd_reply
+# > log on
+4260 LOAD pct=21 pm=205 win_cyc=48001330 busy_cyc=9858664 windows=4
+log5260 LOAD pct=20 pm=195 win_cyc=48001164 busy_cyc=9374948 windows=5
+ on6260 LOAD pct=20 pm=195 win_cyc=48000974 busy_cyc=9374087 windows=6
+
+6368 LOG on=1
+6371 EVT t_us=6368725 name=cmd_rx
+6375 EVT t_us=6370482 name=cmd_reply
+# > set lcd_ms 100
+set 7260 LOAD pct=21 pm=205 win_cyc=48000850 busy_cyc=9848824 windows=7
+lcd8260 LOAD pct=20 pm=195 win_cyc=48000405 busy_cyc=9375096 windows=8
+_m9260 LOAD pct=20 pm=195 win_cyc=48002189 busy_cyc=9372301 windows=9
+s 110260 LOAD pct=20 pm=195 win_cyc=48000922 busy_cyc=9375011 windows=10
+00
+11094 KNOBS lcd_ms=100 lcd_chars=0 imu_ms=10 log=2
+11100 EVT t_us=11094532 name=cmd_rx
+11105 EVT t_us=11100019 name=cmd_reply
+# > set go 0
+11260 LOAD pct=24 pm=243 win_cyc=48001024 busy_cyc=11670904 windows=11
+s11543 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+et12261 LOAD pct=50 pm=498 win_cyc=48000648 busy_cyc=23888545 windows=12
+ go13261 LOAD pct=47 pm=469 win_cyc=48001008 busy_cyc=22521157 windows=13
+ 013643 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+
+13748 SET name=go st=BAD
+13751 EVT t_us=13748507 name=cmd_rx
+13756 EVT t_us=13751307 name=cmd_reply
+# ! Натисни B1 40 разів з різними паузами (0,3-2 с). Кожне натискання - або в ESTOP, або назад у READY, рахуються всі. Аналізатор пише D5 (кнопка), D6, D7. Enter, коли закінчиш (робить wokwi-cli)
+14261 LOAD pct=51 pm=509 win_cyc=48000512 busy_cyc=24414740 windows=14
+14271 ESTOP n=1 state=ESTOP
+14274 EVT t_us=14251405 name=estop_irq
+14279 EVT t_us=14271082 name=estop_react
+14344 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+15249 ESTOP n=2 state=READY
+15253 EVT t_us=15204471 name=estop_irq
+15257 EVT t_us=15249355 name=estop_react
+15263 LOAD pct=52 pm=520 win_cyc=48139253 busy_cyc=25021001 windows=15
+16263 LOAD pct=47 pm=468 win_cyc=48000827 busy_cyc=22460074 windows=16
+17264 LOAD pct=47 pm=469 win_cyc=48002556 busy_cyc=22508586 windows=17
+17350 ESTOP n=3 state=ESTOP
+17354 EVT t_us=17321487 name=estop_irq
+17359 EVT t_us=17350665 name=estop_react
+18264 LOAD pct=48 pm=480 win_cyc=48001862 busy_cyc=23029189 windows=18
+18650 ESTOP n=4 state=READY
+18654 EVT t_us=18614540 name=estop_irq
+18659 EVT t_us=18650359 name=estop_react
+19264 LOAD pct=48 pm=480 win_cyc=48001444 busy_cyc=23028416 windows=19
+19650 ESTOP n=5 state=ESTOP
+19654 EVT t_us=19594516 name=estop_irq
+19659 EVT t_us=19650357 name=estop_react
+20264 LOAD pct=48 pm=480 win_cyc=48000102 busy_cyc=23032039 windows=20
+21264 LOAD pct=47 pm=469 win_cyc=48001562 busy_cyc=22506584 windows=21
+21754 ESTOP n=6 state=READY
+21757 EVT t_us=21734571 name=estop_irq
+21762 EVT t_us=21754061 name=estop_react
+22264 LOAD pct=48 pm=481 win_cyc=48000286 busy_cyc=23085438 windows=22
+22951 ESTOP n=7 state=ESTOP
+22955 EVT t_us=22909753 name=estop_irq
+22960 EVT t_us=22951339 name=estop_react
+23264 LOAD pct=48 pm=480 win_cyc=48002555 busy_cyc=23030714 windows=23
+23390 ESTOP n=8 state=READY
+23393 EVT t_us=23370582 name=estop_irq
+23398 EVT t_us=23390032 name=estop_react
+24264 LOAD pct=48 pm=480 win_cyc=48001011 busy_cyc=23031077 windows=24
+25187 ESTOP n=9 state=ESTOP
+25190 EVT t_us=25167656 name=estop_irq
+25195 EVT t_us=25187068 name=estop_react
+25264 LOAD pct=48 pm=481 win_cyc=48000329 busy_cyc=23084605 windows=25
+26264 LOAD pct=47 pm=469 win_cyc=48000484 busy_cyc=22517872 windows=26
+27051 ESTOP n=10 state=READY
+27055 EVT t_us=27003659 name=estop_irq
+27060 EVT t_us=27051357 name=estop_react
+27264 LOAD pct=48 pm=480 win_cyc=48002307 busy_cyc=23038272 windows=27
+27751 ESTOP n=11 state=ESTOP
+27755 EVT t_us=27717695 name=estop_irq
+27760 EVT t_us=27751353 name=estop_react
+28264 LOAD pct=48 pm=480 win_cyc=48001097 busy_cyc=23036158 windows=28
+29264 LOAD pct=47 pm=469 win_cyc=48001000 busy_cyc=22514246 windows=29
+29492 ESTOP n=12 state=READY
+29496 EVT t_us=29472709 name=estop_irq
+29501 EVT t_us=29492239 name=estop_react
+30212 ESTOP n=13 state=ESTOP
+30216 EVT t_us=30192730 name=estop_irq
+30221 EVT t_us=30212424 name=estop_react
+30265 LOAD pct=49 pm=492 win_cyc=48054290 busy_cyc=23660533 windows=30
+31266 LOAD pct=47 pm=468 win_cyc=48064891 busy_cyc=22514309 windows=31
+31823 ESTOP n=14 state=READY
+31826 EVT t_us=31803762 name=estop_irq
+31831 EVT t_us=31823059 name=estop_react
+32275 LOAD pct=48 pm=477 win_cyc=48415061 busy_cyc=23098715 windows=32
+32465 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+33120 ESTOP n=15 state=ESTOP
+33123 EVT t_us=33100908 name=estop_irq
+33128 EVT t_us=33120055 name=estop_react
+33276 LOAD pct=51 pm=509 win_cyc=48069216 busy_cyc=24453087 windows=33
+33885 ESTOP n=16 state=READY
+33888 EVT t_us=33865810 name=estop_irq
+33893 EVT t_us=33885042 name=estop_react
+34276 LOAD pct=48 pm=480 win_cyc=48001257 busy_cyc=23039891 windows=34
+34389 ESTOP n=17 state=ESTOP
+34392 EVT t_us=34369852 name=estop_irq
+34397 EVT t_us=34389060 name=estop_react
+35276 LOAD pct=48 pm=481 win_cyc=48000756 busy_cyc=23088696 windows=35
+36065 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+36115 ESTOP n=18 state=READY
+36118 EVT t_us=36095898 name=estop_irq
+36123 EVT t_us=36115055 name=estop_react
+36276 LOAD pct=51 pm=510 win_cyc=48000795 busy_cyc=24456734 windows=36
+37276 LOAD pct=47 pm=469 win_cyc=48000969 busy_cyc=22512742 windows=37
+37775 ESTOP n=19 state=ESTOP
+37779 EVT t_us=37727899 name=estop_irq
+37784 EVT t_us=37775336 name=estop_react
+38270 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+38308 LOAD pct=50 pm=496 win_cyc=49530994 busy_cyc=24584125 windows=38
+39308 LOAD pct=47 pm=469 win_cyc=48002536 busy_cyc=22510620 windows=39
+39731 ESTOP n=20 state=READY
+39734 EVT t_us=39711930 name=estop_irq
+39739 EVT t_us=39731065 name=estop_react
+39978 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+40291 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+40316 LOAD pct=53 pm=535 win_cyc=48377018 busy_cyc=25876107 windows=40
+40324 ESTOP n=21 state=ESTOP
+40328 EVT t_us=40263959 name=estop_irq
+40333 EVT t_us=40324497 name=estop_react
+41316 LOAD pct=48 pm=480 win_cyc=48000262 busy_cyc=23033871 windows=41
+41883 ESTOP n=22 state=READY
+41887 EVT t_us=41854074 name=estop_irq
+41892 EVT t_us=41883372 name=estop_react
+42316 LOAD pct=48 pm=480 win_cyc=48000612 busy_cyc=23040323 windows=42
+43316 LOAD pct=47 pm=469 win_cyc=48001884 busy_cyc=22506124 windows=43
+43794 ESTOP n=23 state=ESTOP
+43798 EVT t_us=43775006 name=estop_irq
+43803 EVT t_us=43794426 name=estop_react
+44316 LOAD pct=48 pm=481 win_cyc=48002592 busy_cyc=23087412 windows=44
+44583 ESTOP n=24 state=READY
+44587 EVT t_us=44544063 name=estop_irq
+44592 EVT t_us=44583371 name=estop_react
+45316 LOAD pct=48 pm=480 win_cyc=48000876 busy_cyc=23040016 windows=45
+46316 LOAD pct=47 pm=469 win_cyc=48001008 busy_cyc=22512524 windows=46
+46395 ESTOP n=25 state=ESTOP
+46398 EVT t_us=46375131 name=estop_irq
+46403 EVT t_us=46395048 name=estop_react
+47316 LOAD pct=48 pm=481 win_cyc=48001056 busy_cyc=23092544 windows=47
+48283 ESTOP n=26 state=READY
+48287 EVT t_us=48248104 name=estop_irq
+48292 EVT t_us=48283373 name=estop_react
+48317 LOAD pct=48 pm=481 win_cyc=48026720 busy_cyc=23089886 windows=48
+49183 ESTOP n=27 state=ESTOP
+49187 EVT t_us=49131127 name=estop_irq
+49192 EVT t_us=49183355 name=estop_react
+49317 LOAD pct=48 pm=479 win_cyc=48001000 busy_cyc=22991948 windows=49
+50317 LOAD pct=47 pm=469 win_cyc=48000060 busy_cyc=22508640 windows=50
+50584 ESTOP n=28 state=READY
+50588 EVT t_us=50546173 name=estop_irq
+50593 EVT t_us=50584376 name=estop_react
+51317 LOAD pct=48 pm=480 win_cyc=48001896 busy_cyc=23040811 windows=51
+52231 ESTOP n=29 state=ESTOP
+52234 EVT t_us=52211187 name=estop_irq
+52239 EVT t_us=52231066 name=estop_react
+52317 LOAD pct=48 pm=481 win_cyc=48002268 busy_cyc=23092730 windows=52
+53184 ESTOP n=30 state=READY
+53188 EVT t_us=53141255 name=estop_irq
+53193 EVT t_us=53184356 name=estop_react
+53317 LOAD pct=48 pm=480 win_cyc=48000180 busy_cyc=23041810 windows=53
+54317 LOAD pct=47 pm=469 win_cyc=48002496 busy_cyc=22511013 windows=54
+55291 ESTOP n=31 state=ESTOP
+55294 EVT t_us=55271279 name=estop_irq
+55299 EVT t_us=55291070 name=estop_react
+55317 LOAD pct=48 pm=481 win_cyc=48001836 busy_cyc=23084069 windows=55
+55934 ESTOP n=32 state=READY
+55937 EVT t_us=55914273 name=estop_irq
+55942 EVT t_us=55934074 name=estop_react
+56317 LOAD pct=48 pm=481 win_cyc=48000739 busy_cyc=23096602 windows=56
+57317 LOAD pct=47 pm=469 win_cyc=48001933 busy_cyc=22512993 windows=57
+57686 ESTOP n=33 state=ESTOP
+57690 EVT t_us=57666325 name=estop_irq
+57695 EVT t_us=57686353 name=estop_react
+58317 LOAD pct=48 pm=480 win_cyc=48002448 busy_cyc=23039822 windows=58
+58986 ESTOP n=34 state=READY
+58990 EVT t_us=58962443 name=estop_irq
+58995 EVT t_us=58986355 name=estop_react
+59317 LOAD pct=48 pm=480 win_cyc=48002519 busy_cyc=23039515 windows=59
+60202 ESTOP n=35 state=ESTOP
+60205 EVT t_us=60182358 name=estop_irq
+60210 EVT t_us=60202043 name=estop_react
+60317 LOAD pct=48 pm=481 win_cyc=48000697 busy_cyc=23092136 windows=60
+61213 ESTOP n=36 state=READY
+61216 EVT t_us=61193400 name=estop_irq
+61221 EVT t_us=61213083 name=estop_react
+61317 LOAD pct=48 pm=481 win_cyc=48000912 busy_cyc=23095228 windows=61
+61932 ESTOP n=37 state=ESTOP
+61935 EVT t_us=61912391 name=estop_irq
+61940 EVT t_us=61932055 name=estop_react
+62317 LOAD pct=48 pm=481 win_cyc=48001535 busy_cyc=23097720 windows=62
+63303 ESTOP n=38 state=READY
+63306 EVT t_us=63283415 name=estop_irq
+63311 EVT t_us=63303040 name=estop_react
+63317 LOAD pct=48 pm=481 win_cyc=48001084 busy_cyc=23088118 windows=63
+64018 ESTOP n=39 state=ESTOP
+64021 EVT t_us=63998459 name=estop_irq
+64026 EVT t_us=64018072 name=estop_react
+64317 LOAD pct=48 pm=481 win_cyc=48000969 busy_cyc=23096379 windows=64
+65317 LOAD pct=47 pm=469 win_cyc=48001715 busy_cyc=22510925 windows=65
+65786 ESTOP n=40 state=READY
+65790 EVT t_us=65763477 name=estop_irq
+65795 EVT t_us=65786335 name=estop_react
+66318 LOAD pct=48 pm=480 win_cyc=48000925 busy_cyc=23038949 windows=66
+67318 LOAD pct=47 pm=469 win_cyc=48001632 busy_cyc=22510570 windows=67
+68318 LOAD pct=47 pm=469 win_cyc=48001283 busy_cyc=22512654 windows=68
+68981 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+69318 LOAD pct=50 pm=497 win_cyc=48000325 busy_cyc=23876870 windows=69
+70318 LOAD pct=47 pm=469 win_cyc=48001164 busy_cyc=22512023 windows=70
+# > stats
+st71318 LOAD pct=47 pm=469 win_cyc=48001984 busy_cyc=22515981 windows=71
+ats72318 LOAD pct=47 pm=469 win_cyc=48000780 busy_cyc=22520026 windows=72
+
+72586 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+72593 KNOBS lcd_ms=100 lcd_chars=0 imu_ms=10 log=2
+72598 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235261 lcd_us=759214
+72608 STAT name=uart_rx n=37 min_us=62 avg_us=1413 max_us=15194 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+72620 STAT name=estop n=80 min_us=58 avg_us=6672 max_us=13347 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+72632 STAT name=gate n=9072 min_us=113 avg_us=115 max_us=135 period_us=5000 jit_min_us=-962 jit_max_us=89792 miss=683
+72644 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+72654 STAT name=imu n=4875 min_us=1026 avg_us=1038 max_us=1066 period_us=10000 jit_min_us=-989 jit_max_us=84792 miss=638
+72668 STAT name=lcd n=629 min_us=38110 avg_us=38632 max_us=71608 period_us=100000 jit_min_us=-626 jit_max_us=14001 miss=0
+72680 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+72691 STAT name=loop n=656872 min_us=37 avg_us=89 max_us=71739 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+72703 STAT name=i2c_xfer n=95294 min_us=242 avg_us=278 max_us=33692 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+72716 STAT name=uart_line n=213 min_us=1700 avg_us=5518 max_us=12723 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+72728 STAT name=lcd_update n=629 min_us=37876 avg_us=38397 max_us=71373 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+72741 STAT name=estop_latency n=40 min_us=19135 avg_us=28259 max_us=60538 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+72753 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+72764 UART rx=37 ore=0
+72767 EVT t_us=72586533 name=cmd_rx
+72772 EVT t_us=72767278 name=cmd_reply
+# > load
+73011 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+l73318 LOAD pct=63 pm=630 win_cyc=48000720 busy_cyc=30225262 windows=73
+oad74318 LOAD pct=47 pm=469 win_cyc=48001512 busy_cyc=22520771 windows=74
+
+74616 LOAD pct=47 pm=469 win_cyc=48001512 busy_cyc=22520771 windows=74
+74624 EVT t_us=74616556 name=cmd_rx
+74629 EVT t_us=74624313 name=cmd_reply
+# > hist lcd
+hi75318 LOAD pct=48 pm=484 win_cyc=48002484 busy_cyc=23241671 windows=75
+st 76318 LOAD pct=47 pm=469 win_cyc=48001860 busy_cyc=22518484 windows=76
+lcd77318 LOAD pct=47 pm=469 win_cyc=48001944 busy_cyc=22519751 windows=77
+
+77552 HIST name=lcd period_us=100000 n=662 step_us=100
+77558 HIST name=lcd lo_us=-700 hi_us=-600 n=1
+77563 HIST name=lcd lo_us=-600 hi_us=-500 n=3
+77568 HIST name=lcd lo_us=-400 hi_us=-300 n=13
+77573 HIST name=lcd lo_us=-300 hi_us=-200 n=4
+77578 HIST name=lcd lo_us=-200 hi_us=-100 n=19
+77583 HIST name=lcd lo_us=-100 hi_us=0 n=348
+77588 HIST name=lcd lo_us=0 hi_us=100 n=239
+77592 HIST name=lcd lo_us=100 hi_us=200 n=9
+77597 HIST name=lcd lo_us=200 hi_us=300 n=4
+77602 HIST name=lcd lo_us=300 hi_us=400 n=13
+77607 HIST name=lcd lo_us=1000 hi_us=1100 n=1
+77612 HIST name=lcd lo_us=1100 hi_us=1200 n=2
+77617 HIST name=lcd lo_us=1300 hi_us=1400 n=1
+77622 HIST name=lcd lo_us=2000 hi_us=inf n=5
+77627 EVT t_us=77552095 name=cmd_rx
+77632 EVT t_us=77627175 name=cmd_reply
+# > set lcd_ms 500
+s78318 LOAD pct=51 pm=510 win_cyc=48001152 busy_cyc=24460763 windows=78
+et 79318 LOAD pct=47 pm=469 win_cyc=48000696 busy_cyc=22524240 windows=79
+lcd80318 LOAD pct=47 pm=469 win_cyc=48001032 busy_cyc=22522267 windows=80
+_ms81271 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+81318 LOAD pct=50 pm=498 win_cyc=48000744 busy_cyc=23887289 windows=81
+ 5082318 LOAD pct=47 pm=469 win_cyc=48001248 busy_cyc=22518567 windows=82
+0
+82676 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+82682 EVT t_us=82676585 name=cmd_rx
+82687 EVT t_us=82682092 name=cmd_reply
+# > set end 0
+s83318 LOAD pct=31 pm=311 win_cyc=48000348 busy_cyc=14917932 windows=83
+et 84318 LOAD pct=20 pm=195 win_cyc=48000504 busy_cyc=9374665 windows=84
+end85318 LOAD pct=20 pm=195 win_cyc=48000816 busy_cyc=9375219 windows=85
+ 086318 LOAD pct=20 pm=195 win_cyc=48002148 busy_cyc=9370516 windows=86
+
+86442 SET name=end st=BAD
