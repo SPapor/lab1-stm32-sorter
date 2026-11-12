@@ -51,7 +51,7 @@ def _int(d, k, default=0):
 def parse_lines(lines):
     run = {'git': '?', 'scenario': '?', 'build': '?', 'blocks': [], 'load': [], 'stack': [],
            'heap': [], 'bad_cmds': 0, 'knobs': None, 'events': []}
-    block, sent, in_stream = None, 0, False
+    block, sent, in_stream, reset = None, 0, False, False
     lines = list(lines)
     for line in lines:
         line = line.rstrip('\n')
@@ -64,6 +64,7 @@ def parse_lines(lines):
                 cmd = line[4:-len(RETRY_NOTE) - 1] if retry else line[4:]
                 if cmd == 'stats reset':
                     sent = 0                   # rx у прошивці теж обнуляється
+                    reset = True
                 else:
                     sent += len(cmd) + 1 + retry   # команда + '\r' (+ CR попереду при повторі)
             elif line.startswith('# >> потік "'):
@@ -75,9 +76,11 @@ def parse_lines(lines):
                     in_stream = False
             continue
         ev, kv = event_of(line)
-        if ev == 'PERF' and 'git' in kv:
+        if ev == 'BOOT':
+            reset = True                       # МК стартував у цьому лозі: лічильники з нуля
+        elif ev == 'PERF' and 'git' in kv:
             block = {'knobs': None, 'startup': None, 'stat': {}, 'uart': None,
-                     'load': run['load'][-1] if run['load'] else None}
+                     'load': run['load'][-1] if run['load'] else None, 'reset': reset}
             run['blocks'].append(block)
         elif ev == 'KNOBS':
             run['knobs'] = kv
@@ -253,13 +256,18 @@ def blocks_table(run):
         p = par.get('max_us') if par.get('n') else 2600   # розрахунок, якщо посилок не було
         fr = fr03_estimate_us(b, p)
         mark = '' if par.get('n') else '*'
-        lines.append(f'| {" ".join(f"{a}={c}" for a, c in k.items())} | '
+        label = ' '.join(f'{a}={c}' for a, c in k.items()) + ('' if b['reset'] else ' (без stats reset)')
+        lines.append(f'| {label} | '
                      f'{"-" if load is None else str(load) + " %"} | {fmt_ms(g.get("jit_max_us"))} | '
                      f'{fmt_n(g.get("miss"))} | {fmt_ms(i.get("jit_max_us"))} | {fmt_n(i.get("miss"))} | '
                      f'{fmt_ms(lc.get("max_us"))} | {fmt_ms(fr)}{mark} |')
     lines.append('')
     lines.append('\\* без посилок у блоці: PARCEL_IN -> CCR взято з розрахунку, 2,6 мс (docs/tasks.md). '
                  'Час - симуляційний (Wokwi).')
+    if any(not b['reset'] for b in run['blocks']):
+        lines.append('')
+        lines.append('«Без stats reset» - до блоку в цьому лозі не було ні `stats reset`, ні `BOOT`: '
+                     'лічильники накопичені з попереднього скидання, разом з тим, що МК робив до прогону.')
     return '\n'.join(lines)
 
 

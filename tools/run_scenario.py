@@ -3,6 +3,22 @@
 
     tools/run_scenario.py tools/scenarios/S1.yaml [--port rfc2217://localhost:4000]
                           [--out docs/metrics] [--build firmware/build]
+    tools/run_scenario.py tools/scenarios/S2.yaml --wokwi tools/wokwi/S2.yaml [--vcd]
+
+Без --wokwi скрипт підключається до симуляції у VS Code, а руками діє людина.
+З --wokwi він сам запускає wokwi-cli (проєкт tools/wokwi/, RFC2217 на 4001) зі
+сценарієм дій: LDR, кнопки (set-control) за часом симуляції. Обидва сценарії
+синхронізуються маркерами в UART: після setup скрипт шле set go 0 (на рядку
+відповіді SET name=go починаються дії), після final - set end 0 (на SET name=end
+wokwi-cli закінчує і пише VCD). Маркер - саме рядок відповіді: прошивка друкує
+його цілим, а ехо набраної команди може перемежовуватися іншими рядками.
+Безкоштовний тариф Wokwi обриває сеанс wokwi-cli через 5 хв. Схема для wokwi-cli -
+копія diagram.json без каналів аналізатора CLI_DROP (I2C на D0/D1 і UART TX на D3):
+буфер Wokwi - 1 млн змін, I2C заповнює його за ~24 с, а великий запис wokwi-cli
+не може забрати (з'єднання рветься). Для tools/vcd_timing.py вони не потрібні.
+Підказки людині в цьому режимі - лише позначки в лозі, а замість Enter скрипт
+чекає auto секунд часу МК (поле кроку prompt; без нього - wait, без нього - 0).
+Потрібен WOKWI_CLI_TOKEN у середовищі.
 
 У wokwi.toml має бути rfc2217ServerPort = 4000, симуляція запущена, а вкладка
 симулятора у VS Code - видима (інакше Wokwi ставить симуляцію на паузу).
@@ -13,12 +29,15 @@
 умовами прогону. Далі - рядки МК як є, без часу хоста: час подій беремо лише з
 міток МК (<мс>, t_us), методичка 5.2. Рядки, що починаються з '#', пише сам скрипт.
 
-Команди. Прошивка приймає UART опитуванням без FIFO і не читає його, поки друкує
-відповідь або перемальовує LCD (до ~31,5 мс), тож байти команди можуть загубитися.
-Тому кожну команду з setup, send і final скрипт шле окремо і чекає на відповідь:
-рядок відповіді саме цієї команди і EVT cmd_reply після нього. Якщо відповіді
-немає або прийшло CLI st=BAD, команда йде ще раз, з CR попереду (він закриває
-недописаний рядок у буфері CLI), до TRIES спроб. У лозі це "# > cmd (повтор ...)".
+Команди. Прошивка приймає UART опитуванням без FIFO: тримає один прийнятий байт,
+а поки друкує відповідь, перемальовує LCD (~40 мс) чи читає MPU (~1 мс), наступні
+губляться. Тому команди з setup, send і final скрипт набирає по байту, як людина
+в терміналі: наступний байт - лише після ехо попереднього. Ехо скрипт відділяє від
+рядків МК розбором потоку (StreamSplitter): рядок FR-10 прошивка друкує цілим, а ехо
+буває лише між рядками. Потім чекає на відповідь:
+рядок відповіді саме цієї команди і EVT cmd_reply після нього. Якщо відповіді немає
+або прийшло CLI st=BAD (наприклад, у буфері CLI лишився чужий байт), команда йде ще
+раз з CR попереду, до TRIES спроб. У лозі це "# > cmd (повтор ...)".
 Потік (stream) шле команди без очікування: це навантаження, втрати там і міряємо.
 
 Перед setup скрипт повертає ручки set до значень після скидання (KNOBS_DEFAULT):
@@ -39,6 +58,7 @@
       - wait_mcu: 60                  # пауза за часом МК (по мітках <мс>)
       - prompt: "Натисни B1"          # підказка людині; без wait - чекати Enter
         wait: 30                      #   з wait - просто почекати
+        auto: 5                       #   з --wokwi - чекати 5 с часу МК
       - stream: {cmd: stats, rate_hz: 2, duration: 10}   # потік за часом МК; rate_hz 0 - без пауз
       - repeat: {times: 5, steps: [{send: status}, {wait: 1}]}
       - comment: "довільна позначка в лозі"
@@ -61,9 +81,10 @@ BOOT_PERF = re.compile(r'^\d+ BOOT\b.*\bperf=(\d)')
 PERF_GIT = re.compile(r'^\d+ PERF\b.*\bgit=(\S+)')
 KNOBS_LOG = re.compile(r'^\d+ KNOBS\b.*\blog=(\d)')
 LOG_ON = re.compile(r'^\d+ LOG on=(\d)')
+LINE_HEAD = re.compile(rb'(\d+)(?:( )([A-Z])?)?')   # початок рядка FR-10: "<мс> ПОДІЯ"
 # Дозволені набори ключів кроку
 STEP_FORMS = [{'send'}, {'send', 'wait'}, {'wait'}, {'wait_mcu'}, {'prompt'}, {'prompt', 'wait'},
-              {'stream'}, {'repeat'}, {'comment'}]
+              {'prompt', 'auto'}, {'prompt', 'wait', 'auto'}, {'stream'}, {'repeat'}, {'comment'}]
 DEFAULT_FINAL = ['stats', 'load', 'stack', 'heap']
 KNOBS_DEFAULT = ['set log 2', 'set lcd_ms 500', 'set lcd_chars 0', 'set imu_ms 10']
 # За яким рядком видно, що виконалась саме ця команда (перший збіг за початком)
@@ -77,6 +98,14 @@ TRIES = 4
 TIMEOUT_FACTOR = 20.0        # у скільки разів Wokwi може бути повільнішим за реальний час
 SPEED_WINDOW_S = 20.0        # за скільки останніх секунд хоста оцінюється швидкість симуляції
 EXTRAP_MS = 1500             # далі останньої мітки час МК не екстраполюється (пауза симуляції)
+ECHO_TIMEOUT = 2.0           # с хоста на ехо одного байта (цикл стоїть до ~0,2 с: відповідь stats)
+ECHO_HOLD = 0.1              # с хоста: цифри в кінці потоку - ехо, якщо за цей час не стали рядком МК
+ECHO_KEEP = 1 << 16          # скільки останніх байтів ехо тримати
+CLI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'wokwi')
+CLI_PORT = 'rfc2217://localhost:4001'
+CLI_DIAGRAM = '.diagram.json'                      # у tools/wokwi, будується з diagram.json
+CLI_DROP = {'logic:D0', 'logic:D1', 'logic:D3'}    # канали аналізатора, яких у wokwi-cli немає
+MARK_GO, MARK_END = 'set go 0', 'set end 0'      # відповідь: SET name=go|end st=BAD
 
 
 # ---- сценарій ----------------------------------------------------------------
@@ -117,6 +146,8 @@ def validate_steps(steps, where='steps'):
             _num(st['wait'], f'{w}.wait')
         if 'wait_mcu' in st:
             _num(st['wait_mcu'], f'{w}.wait_mcu')
+        if 'auto' in st:
+            _num(st['auto'], f'{w}.auto')
         if 'prompt' in st and not isinstance(st['prompt'], str):
             raise ValueError(f'{w}: prompt - текст підказки')
         if 'stream' in st:
@@ -177,6 +208,10 @@ def log_path(out_dir, name, now):
     return path
 
 
+class LinkLost(Exception):
+    """З'єднання з симуляцією обірвалося або wokwi-cli завершився посеред прогону."""
+
+
 # ---- запис логу --------------------------------------------------------------
 
 class Recorder:
@@ -197,6 +232,13 @@ class Recorder:
         self.last_ms = None
         self.stamps = collections.deque(maxlen=512)   # (час хоста, мітка МК)
         self.rx = []                      # усі рядки МК - для пошуку відповідей
+        self.closing = False              # після маркера кінця wokwi-cli закриває з'єднання
+        self.alive = None                 # alive() - чи живий ще wokwi-cli
+        self.broken = None                # чому обірвалося читання
+        self.split = StreamSplitter()
+        self.echo = bytearray()           # байти ехо, відділені від рядків МК
+        self.echo_base = 0                # номер першого байта echo від підключення
+        self.back = 0                     # скільки міток поспіль пішли назад
         self.lines = 0
         self.lock = threading.Lock()
         self.stop = threading.Event()
@@ -211,10 +253,14 @@ class Recorder:
             try:
                 chunk = self.ser.read(256)
             except Exception as e:              # з'єднання з Wokwi обірвалося
-                self.note(f'# помилка читання: {e}')
+                if not self.closing:
+                    self.broken = str(e) or type(e).__name__
+                    self.note(f'# помилка читання: {e}')
                 break
             if not chunk:
                 continue
+            with self.lock:
+                self._split(chunk)
             buf += chunk
             while True:
                 i = buf.find(b'\n')
@@ -222,37 +268,84 @@ class Recorder:
                     break
                 line = buf[:i].rstrip(b'\r').decode('utf-8', 'replace')
                 buf = buf[i + 1:]
-                self.feed(line)
+                self.log_line(line)
         if buf:
-            self.feed(buf.decode('utf-8', 'replace'))
+            self.log_line(buf.decode('utf-8', 'replace'))
 
     def feed(self, line):
-        """Один рядок від МК."""
+        """Один рядок від МК (без ехо): розібрати і записати в лог."""
         with self.lock:
-            m = FR10.match(line)
-            if m:
-                self.last_ms = int(m.group(1))
-                self.stamps.append((self.clock(), self.last_ms))
-            if self.git is None:
-                g = BOOT_GIT.match(line) or PERF_GIT.match(line)
-                if g:
-                    self.git = g.group(1)
-                    self.git_from = 'BOOT' if line.split()[1:2] == ['BOOT'] else 'PERF'
-            p = BOOT_PERF.match(line)
-            if p:
-                self.perf = p.group(1)
-            elif self.perf is None and PERF_GIT.match(line):
-                self.perf = '1'
-            k = KNOBS_LOG.match(line)
-            if k:
-                self.log_level = int(k.group(1))
-            else:
-                k = LOG_ON.match(line)
-                if k:
-                    self.log_level = 2 if k.group(1) == '1' else 0
-            self.rx.append(line)
+            self._parse(line)
             self.lines += 1
             self._write(line)
+
+    def log_line(self, line):
+        """Сирий рядок потоку - у лог як є, разом з ехо, що до нього приліпилося."""
+        with self.lock:
+            self.lines += 1
+            self._write(line)
+
+    def _split(self, chunk):
+        for kind, v in self.split.feed(chunk, self.clock(), self._echo_digits):
+            if kind == 'echo':
+                self.echo.append(v)
+            else:
+                self._parse(v.decode('utf-8', 'replace'))
+        if len(self.echo) > ECHO_KEEP:
+            drop = len(self.echo) - ECHO_KEEP // 2
+            del self.echo[:drop]
+            self.echo_base += drop
+
+    def _echo_digits(self, run):
+        est = None
+        if self.stamps:
+            h1, m1 = self.stamps[-1]
+            est = m1 + (self.clock() - h1) * 1000.0 * self._speed()
+        return echo_digits(run, self.last_ms, est)
+
+    def _parse(self, line):
+        m = FR10.match(line)
+        if m:
+            ms = int(m.group(1))
+            if m.group(2) == 'BOOT':              # МК скинуто: час почався знову
+                self.last_ms = None
+                self.stamps.clear()
+            if self.last_ms is None or ms >= self.last_ms or self.back >= 2:
+                if self.back >= 2:                # три мітки поспіль назад - назад пішов сам час
+                    self.stamps.clear()
+                self.last_ms, self.back = ms, 0
+                self.stamps.append((self.clock(), ms))
+            else:
+                self.back += 1
+        if self.git is None:
+            g = BOOT_GIT.match(line) or PERF_GIT.match(line)
+            if g:
+                self.git = g.group(1)
+                self.git_from = 'BOOT' if line.split()[1:2] == ['BOOT'] else 'PERF'
+        p = BOOT_PERF.match(line)
+        if p:
+            self.perf = p.group(1)
+        elif self.perf is None and PERF_GIT.match(line):
+            self.perf = '1'
+        k = KNOBS_LOG.match(line)
+        if k:
+            self.log_level = int(k.group(1))
+        else:
+            k = LOG_ON.match(line)
+            if k:
+                self.log_level = 2 if k.group(1) == '1' else 0
+        self.rx.append(line)
+
+    def echo_pos(self):
+        with self.lock:
+            return self.echo_base + len(self.echo)
+
+    def echo_since(self, pos):
+        """Байти ехо від pos. Цифри, що чекали ECHO_HOLD, дозрівають і тут, а не лише
+        з новими байтами: з log off нових рядків може не бути довго."""
+        with self.lock:
+            self._split(b'')
+            return bytes(self.echo[max(pos - self.echo_base, 0):])
 
     def note(self, text):
         """Рядок від скрипта (починається з '#')."""
@@ -289,6 +382,16 @@ class Recorder:
                 return None
             h1, m1 = self.stamps[-1]
             return m1 + min((self.clock() - h1) * 1000.0 * self._speed(), EXTRAP_MS)
+
+    def check(self):
+        """LinkLost, якщо читання обірвалося або wokwi-cli завершився. Після маркера
+        кінця (closing) це не помилка, а нормальний кінець прогону."""
+        if self.closing:
+            return
+        if self.broken is not None:
+            raise LinkLost(f"з'єднання обірвалося: {self.broken}")
+        if self.alive is not None and not self.alive():
+            raise LinkLost('wokwi-cli завершився посеред прогону')
 
     def is_quiet(self):
         """log < 2: EVT (і cmd_reply теж) прошивка не друкує."""
@@ -360,23 +463,127 @@ def check_reply(lines, want, quiet=False):
     return False, bad
 
 
+class StreamSplitter:
+    """Ділить сирий потік UART на рядки МК і байти ехо.
+
+    Прошивка друкує рядок FR-10 ("<мс> ПОДІЯ ...", CR LF) цілим, а ехо набраного байта -
+    лише між рядками. Тож на межі рядків цифри, пробіл і велика літера - початок рядка
+    МК, а будь-що інше - ехо (CR прошивка відлунює як CR LF, LF пропускаємо). Ехо-цифра
+    впритул до рядка ("5" + "59123 LOAD") злипається з міткою, і скільки перших цифр -
+    ехо, вирішує choose(цифри). Цифри в самому кінці потоку можуть бути ще недочитаною
+    міткою, тож вони чекають до hold с, поки не стане ясно. Рядки не у форматі FR-10
+    (help, вивід LAB2_CAP) розбираються як ехо."""
+
+    def __init__(self, hold=ECHO_HOLD):
+        self.buf = b''
+        self.in_line = False
+        self.hold = hold
+        self.tail_since = None
+
+    def feed(self, chunk, now, choose):
+        """Видає ('line', bytes) і ('echo', байт) у порядку потоку. Це генератор: рядок
+        треба розібрати до того, як choose вирішуватиме про наступний, - choose дивиться
+        на останню мітку."""
+        self.buf += chunk
+        start = len(self.buf)
+        waiting = False
+        while self.buf:
+            if self.in_line:
+                i = self.buf.find(b'\n')
+                if i < 0:
+                    break
+                line, self.buf, self.in_line = self.buf[:i].rstrip(b'\r'), self.buf[i + 1:], False
+                yield 'line', line
+                continue
+            b = self.buf[0]
+            if b == 0x0A:
+                self.buf = self.buf[1:]
+                continue
+            m = LINE_HEAD.match(self.buf)
+            if m is None:
+                self.buf = self.buf[1:]
+                yield 'echo', b
+                continue
+            if m.group(3):
+                run = m.group(1)
+                k = choose(run)
+                self.buf, self.in_line = self.buf[k:], True
+                for c in run[:k]:
+                    yield 'echo', c
+                continue
+            if m.end() == len(self.buf):          # кінець потоку: мітка чи ехо - ще не видно
+                if self.tail_since is None or len(self.buf) < start:
+                    self.tail_since = now         # чекаємо з моменту, коли цей хвіст став початком
+                if now - self.tail_since < self.hold:
+                    waiting = True
+                    break
+            self.buf = self.buf[1:]
+            yield 'echo', b
+        if not waiting:
+            self.tail_since = None
+
+
+def echo_digits(run, ref_ms, est_ms=None, max_echo=5):
+    """Скільки перших цифр run (цифри перед " ПОДІЯ") - ехо, а решта - мітка рядка МК.
+    Ехо - до max_echo цифр: число в команді (set lcd_ms 500) може встигнути відлунати
+    ціле раніше за рядок. Мітка не починається з 0 і не менша за попередню ref_ms (час
+    МК не йде назад); з кількох можливих береться найближча до очікуваного часу est_ms."""
+    ks = [k for k in range(min(len(run) - 1, max_echo) + 1)
+          if run[k] != 0x30 or k == len(run) - 1]
+    if not ks:
+        return 0
+    if ref_ms is None:
+        return ks[0]
+    later = [k for k in ks if int(run[k:]) >= ref_ms] or ks
+    target = ref_ms if est_ms is None else est_ms
+    return min(later, key=lambda k: (abs(int(run[k:]) - target), k))
+
+
+def type_line(ser, rec, text, char_timeout=ECHO_TIMEOUT, sleep=time.sleep, clock=time.monotonic):
+    """Набрати text по байту: наступний - після ехо попереднього. Без ехо за
+    char_timeout байт, можливо, загублено - решта все одно йде, а що вийшло,
+    покаже відповідь. Ехо, що прийшло пізніше за тайм-аут, просто пропускається.
+    Повертає, скільки байтів так і не дали ехо вчасно."""
+    pos = rec.echo_pos()
+    missed = 0
+    for ch in text.encode():
+        ser.write(bytes([ch]))
+        deadline = clock() + char_timeout
+        while True:
+            i = rec.echo_since(pos).find(ch)
+            if i >= 0:
+                pos += i + 1
+                break
+            if clock() >= deadline:
+                missed += 1
+                break
+            rec.check()
+            sleep(0.002)
+    return missed
+
+
 def command(ser, rec, cmd, timeout=REPLY_TIMEOUT, tries=TRIES, sleep=time.sleep,
-            clock=time.monotonic):
-    """Надіслати команду і дочекатися відповіді; повторити, якщо її загублено."""
+            clock=time.monotonic, char_timeout=ECHO_TIMEOUT, done=None):
+    """Набрати команду і дочекатися відповіді; повторити, якщо її загублено.
+    done(рядки) - своя ознака успіху замість відповіді з EVT cmd_reply."""
     want = reply_events(cmd)
     for attempt in range(1, tries + 1):
         mark = rec.mark()
+        slow = min(rec.speed(), 1.0)
         if attempt == 1:
             rec.note(f'# > {cmd}')
-            ser.write((cmd + '\r').encode())
+            missed = type_line(ser, rec, cmd + '\r', char_timeout / slow, sleep, clock)
         else:
             rec.note(f'# > {cmd} {RETRY_NOTE}')
-            ser.write(('\r' + cmd + '\r').encode())
+            missed = type_line(ser, rec, '\r' + cmd + '\r', char_timeout / slow, sleep, clock)
+        if missed:
+            rec.note(f'# "{cmd}": без ехо {missed} байт')
         allowed_bad = 0 if attempt == 1 else 1      # CR попереду міг закрити побитий рядок
-        deadline = clock() + timeout / min(rec.speed(), 1.0)
+        deadline = clock() + timeout / slow
         while True:
-            ok, bad = check_reply(rec.since(mark), want, rec.is_quiet())
-            if ok:
+            lines = rec.since(mark)
+            ok, bad = check_reply(lines, want, rec.is_quiet())
+            if ok or (done is not None and done(lines)):
                 return True
             if bad > allowed_bad:
                 why = 'CLI st=BAD'
@@ -384,6 +591,7 @@ def command(ser, rec, cmd, timeout=REPLY_TIMEOUT, tries=TRIES, sleep=time.sleep,
             if clock() >= deadline:
                 why = 'немає відповіді'
                 break
+            rec.check()
             sleep(0.02)
         rec.note(f'# "{cmd}": {why}, спроба {attempt} з {tries}')
     rec.note(f'# "{cmd}" так і не виконалась')
@@ -403,6 +611,7 @@ def wait_mcu(rec, seconds, timeout_factor=TIMEOUT_FACTOR, sleep=time.sleep):
             start = cur
         elif cur is not None and cur - start >= seconds * 1000:
             return True
+        rec.check()
         sleep(0.2)
     rec.note(f'# wait_mcu {seconds} с: час МК не дійшов (немає рядків з <мс>? увімкніть log on)')
     return False
@@ -426,6 +635,7 @@ def stream(ser, rec, cmd, rate_hz, duration=None, count=None, sleep=time.sleep,
     sent, stalled = 0, False
     while count is None or sent < count:
         while period and now() < t0 + sent * period and clock() < host_end:
+            rec.check()
             sleep(0.005)
         if clock() >= host_end:
             stalled = True
@@ -441,7 +651,7 @@ def stream(ser, rec, cmd, rate_hz, duration=None, count=None, sleep=time.sleep,
 
 
 def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wait=1.0,
-        timeout=REPLY_TIMEOUT):
+        timeout=REPLY_TIMEOUT, auto=False):
     def cmd(c):
         return command(ser, rec, c, timeout=timeout, sleep=sleep)
 
@@ -452,16 +662,25 @@ def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wai
         sleep(0.1)
     if rec.git is None:
         cmd('stats')
-    if sc.get('knobs_reset', True):
+    if auto:
+        rec.note('# ручки - як після скидання: wokwi-cli щоразу стартує з нуля')
+    elif sc.get('knobs_reset', True):
         for c in KNOBS_DEFAULT:
             cmd(c)
     for c in sc.get('setup', []):
         cmd(c)
+    if auto:
+        cmd(MARK_GO)
     for st in expand(sc['steps']):
         if 'send' in st:
             cmd(st['send'])
             if 'wait' in st:
                 sleep(st['wait'])
+        elif 'prompt' in st and auto:
+            rec.note(f'# ! {st["prompt"]} (робить wokwi-cli)')
+            secs = st.get('auto', st.get('wait', 0))
+            if secs:
+                wait_mcu(rec, secs, sleep=sleep)
         elif 'prompt' in st:
             rec.note(f'# ! {st["prompt"]}')
             if 'wait' in st:
@@ -481,6 +700,14 @@ def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wai
             rec.note(f'# {st["comment"]}')
     for c in sc.get('final', DEFAULT_FINAL):
         cmd(c)
+    if auto:
+        # wokwi-cli зупиняє симуляцію одразу після рядка SET name=end, EVT уже не буде
+        rec.closing = True
+        try:
+            command(ser, rec, MARK_END, timeout=timeout, sleep=sleep,
+                    done=lambda lines: any('SET name=end' in s for s in lines))
+        except Exception as e:                  # з'єднання закрите: wokwi-cli уже завершився
+            rec.note(f'# з\'єднання закрите після {MARK_END}: {e}')
     # дочекатися рядків, що йдуть уже після останньої відповіді
     last, t_end = -1, time.monotonic() + final_wait
     while time.monotonic() < t_end and rec.lines != last:
@@ -488,9 +715,10 @@ def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wai
         sleep(0.5)
 
 
-def connect(url, wait_s, sleep=time.sleep):
+def connect(url, wait_s, sleep=time.sleep, alive=None):
     """RFC2217-сервер Wokwi з'являється лише з запуском симуляції: чекаємо до wait_s с.
-    Для сценарію старту (6.2.7) скрипт запускають раніше за симуляцію."""
+    Для сценарію старту (6.2.7) скрипт запускають раніше за симуляцію. alive() - чи
+    живий ще wokwi-cli, який має підняти сервер: якщо ні, чекати далі нема чого."""
     import serial
     t_end = time.monotonic() + wait_s
     told = False
@@ -498,11 +726,14 @@ def connect(url, wait_s, sleep=time.sleep):
         try:
             return serial.serial_for_url(url, baudrate=115200, timeout=0.2)
         except (serial.SerialException, OSError) as e:
+            if alive is not None and not alive():
+                raise LinkLost(f'{url}: wokwi-cli завершився, так і не піднявши RFC2217-сервер')
             if time.monotonic() >= t_end:
-                sys.exit(f'{url}: немає з\'єднання ({e}). Симуляція запущена? '
-                         'У wokwi.toml є rfc2217ServerPort = 4000?')
+                hint = ('wokwi-cli ще стартує? Можна збільшити --wait-connect.' if alive is not None
+                        else 'Симуляція запущена? У wokwi.toml є rfc2217ServerPort = 4000?')
+                raise LinkLost(f"{url}: немає з'єднання ({e}). {hint}")
             if not told:
-                print(f'чекаю на {url} - запусти симуляцію у VS Code ...', flush=True)
+                print(f'чекаю на {url} (симуляцію у VS Code або wokwi-cli) ...', flush=True)
                 told = True
             sleep(0.5)
 
@@ -510,7 +741,7 @@ def connect(url, wait_s, sleep=time.sleep):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument('scenario')
-    ap.add_argument('--port', default='rfc2217://localhost:4000')
+    ap.add_argument('--port', help='rfc2217://localhost:4000 (з --wokwi - 4001)')
     ap.add_argument('--out', default='docs/metrics')
     ap.add_argument('--build', default='firmware/build', help='звідки build.cfg і git.cfg')
     ap.add_argument('--hash-wait', type=float, default=3.0)
@@ -518,24 +749,89 @@ def main(argv=None):
                     help='скільки секунд чекати на RFC2217-сервер Wokwi (60)')
     ap.add_argument('--reply-timeout', type=float, default=REPLY_TIMEOUT,
                     help=f'скільки секунд чекати на відповідь команди ({REPLY_TIMEOUT:g})')
+    ap.add_argument('--wokwi', metavar='ДІЇ.yaml',
+                    help='прогін без вікна: wokwi-cli з цим сценарієм дій (tools/wokwi/<S>.yaml)')
+    ap.add_argument('--vcd', action='store_true',
+                    help='з --wokwi: запис аналізатора в docs/captures/<назва логу>.vcd')
+    ap.add_argument('--sim-limit', type=float, default=900,
+                    help='з --wokwi: межа часу симуляції, с (900)')
     args = ap.parse_args(argv)
+    if args.vcd and not args.wokwi:
+        ap.error('--vcd - лише з --wokwi: у VS Code запис пише сам Wokwi (wokwi.vcd після Stop)')
 
     sc = load_scenario(args.scenario)
-    ser = connect(args.port, args.wait_connect)
+    port = args.port or (CLI_PORT if args.wokwi else 'rfc2217://localhost:4000')
     now = datetime.datetime.now()
     path = log_path(args.out, sc['name'], now)
-    rec = Recorder(ser, path, {'scenario': sc['name'], 'build': read_cfg(args.build, 'build.cfg'),
-                               'port': args.port, 'host_start': f'{now:%Y-%m-%dT%H:%M:%S}'})
-    rec.start()
+    vcd = None
+    if args.vcd:
+        vcd = os.path.join('docs', 'captures', os.path.basename(path)[:-4] + '.vcd')
+    cli = start_cli(args.wokwi, args.sim_limit, vcd) if args.wokwi else None
+    alive = (lambda: cli.poll() is None) if cli is not None else None
     try:
-        run(sc, ser, rec, hash_wait=args.hash_wait, timeout=args.reply_timeout)
+        ser = connect(port, args.wait_connect, alive=alive)
+    except (LinkLost, KeyboardInterrupt) as e:
+        if cli is not None:
+            finish_cli(cli, wait_s=0)
+        sys.exit(str(e) or 'перервано вручну (Ctrl+C)')
+    rec = Recorder(ser, path, {'scenario': sc['name'], 'build': read_cfg(args.build, 'build.cfg'),
+                               'port': port, 'host_start': f'{now:%Y-%m-%dT%H:%M:%S}'})
+    rec.alive = alive
+    rec.start()
+    done = False
+    try:
+        run(sc, ser, rec, hash_wait=args.hash_wait, timeout=args.reply_timeout, auto=cli is not None)
+        done = True
     except KeyboardInterrupt:
         rec.note('# перервано вручну (Ctrl+C)')
+    except LinkLost as e:
+        rec.note(f'# прогін зупинено: {e}')
     finally:
         rec.finish(read_cfg(args.build, 'git.cfg'))
-        ser.close()
-    print(f'лог: {path} ({rec.lines} рядків від МК)')
+        try:
+            ser.close()
+        except Exception:
+            pass
+        if cli is not None:
+            # прогін не дійшов до set end 0 - wokwi-cli чекав би на нього до --sim-limit
+            finish_cli(cli, wait_s=300 if done else 0)
+    have_vcd = vcd is not None and os.path.exists(vcd)
+    print(f'лог: {path} ({rec.lines} рядків від МК)' + (f', VCD: {vcd}' if have_vcd else ''))
     return path
+
+
+def start_cli(actions, sim_limit, vcd):
+    """wokwi-cli у фоні: проєкт tools/wokwi (та сама прошивка і diagram.json)."""
+    import subprocess
+    with open(os.path.join(CLI_DIR, '..', '..', 'diagram.json'), encoding='utf-8') as f:
+        diagram = json.load(f)
+    diagram['connections'] = [c for c in diagram['connections'] if not CLI_DROP & set(c[:2])]
+    with open(os.path.join(CLI_DIR, CLI_DIAGRAM), 'w', encoding='utf-8') as f:
+        json.dump(diagram, f, indent=2)
+    cmd = ['wokwi-cli', '--quiet', '--diagram-file', CLI_DIAGRAM,
+           '--scenario', os.path.abspath(actions), '--timeout', str(int(sim_limit * 1000))]
+    if vcd:
+        os.makedirs(os.path.dirname(vcd), exist_ok=True)
+        cmd += ['--vcd-file', os.path.abspath(vcd)]
+    proc = subprocess.Popen(cmd + [CLI_DIR], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    proc.tail = collections.deque(maxlen=30)
+
+    def drain():
+        for line in proc.stdout:
+            proc.tail.append(line.decode('utf-8', 'replace').rstrip())
+    threading.Thread(target=drain, daemon=True).start()
+    return proc
+
+
+def finish_cli(proc, wait_s=300):
+    """Дочекатися, поки wokwi-cli допише VCD і вийде; wait_s=0 - зупинити одразу."""
+    try:
+        code = proc.wait(timeout=wait_s)
+    except Exception:
+        proc.terminate()
+        code = proc.wait()
+    if code != 0:
+        print(f'wokwi-cli завершився з кодом {code}:', *proc.tail, sep='\n', file=sys.stderr)
 
 
 if __name__ == '__main__':

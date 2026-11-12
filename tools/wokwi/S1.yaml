@@ -1,0 +1,9 @@
+# Дії для tools/run_scenario.py --wokwi (wokwi-cli, час симуляції).
+# Старт - на рядку SET name=go (скрипт шле set go 0 після setup), кінець - SET name=end.
+# S1: руками нічого, лише дочекатися кінця.
+
+name: "S1 простій"
+version: 1
+steps:
+  - wait-serial: "SET name=go st=BAD\r\n"
+  - wait-serial: "SET name=end st=BAD\r\n"

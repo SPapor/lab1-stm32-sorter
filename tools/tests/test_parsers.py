@@ -161,6 +161,18 @@ class StatsTableTest(unittest.TestCase):
         self.assertIn('lcd_ms=100', t[3])
         self.assertIn('43 %', t[3])
         self.assertIn('59,30 мс*', t[3])                   # 5 + 31,7 + 2,6 (розрахунок) + 20
+        self.assertNotIn('без stats reset', st.blocks_table(run))
+
+    def test_blocks_table_marks_block_before_reset(self):
+        log = ('# > stats\n' + block(t=9000, gjit=184000) +       # git-хеш на початку: МК не скинуто
+               '# > stats reset\n' + block(lcd=500, gjit=35000))
+        t = st.blocks_table(st.parse_lines(log.splitlines(True))).splitlines()
+        self.assertIn('log=2 (без stats reset) |', t[2])
+        self.assertNotIn('без stats reset', t[3])
+        self.assertIn('накопичені з попереднього скидання', t[-1])
+        # МК стартував у цьому лозі (6.2.7, прогони wokwi-cli): блок чистий і без stats reset
+        log = '2 BOOT fw=lab3-superloop git=0a44968f perf=1\n# > stats\n' + block(t=9000)
+        self.assertNotIn('без stats reset', st.blocks_table(st.parse_lines(log.splitlines(True))))
 
 
 def write_vcd(path, changes, names=('D2', 'D4', 'D5', 'D6', 'D7')):
@@ -226,6 +238,10 @@ class VcdTimingTest(unittest.TestCase):
         d5 = [(0, 1), (100000, 0), (100300, 1), (100600, 0), (180000, 1), (180200, 0), (180400, 1),
               (300000, 0)]
         self.assertEqual(vt.press_starts(d5), [100000, 300000])
+        # після скидання D5 = 0, доки не ввімкнулася підтяжка: це не натискання
+        self.assertEqual(vt.press_starts([(0, 0), (1200, 1), (500000, 0)]), [500000])
+        # вікно (vcd_window.py) вирізано посеред брязкоту: спад через 100 мкс після початку - не натискання
+        self.assertEqual(vt.press_starts([(0, 1), (100, 0), (400, 1), (200000, 0)]), [200000])
 
 
 if __name__ == '__main__':

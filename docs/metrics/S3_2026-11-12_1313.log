@@ -1,0 +1,2351 @@
+# git=3c1a2135 (з BOOT) scenario=S3 build="LAB2_CAP=0 TEST_I2C_FAULT=0 PERF=1" perf=1 port=rfc2217://localhost:4001 host_start=2026-11-12T13:13:54
+# сценарій S3: Найгірший: LCD + потік stats + посилки + E-STOP
+2 BOOT fw=lab3-superloop git=3c1a2135 perf=1
+7 EVT t_us=7047 name=boot
+10 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+16 PERF cpu_hz=48000000 now_cyc=440 pair_cyc=1153
+28 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+35 EVT t_us=35225 name=i2c_fail
+40 EVT t_us=39409 name=i2c_ok
+49 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+56 EVT t_us=56220 name=i2c_fail
+61 EVT t_us=60411 name=i2c_ok
+70 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+# ручки - як після скидання: wokwi-cli щоразу стартує з нуля
+# > stats reset
+77 EVT t_us=77229 name=i2c_fail
+82 EVT t_us=81418 name=i2c_ok
+85 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+161 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+166 SELFTEST dev=ldr_gate status=OK raw=1001
+171 SELFTEST dev=ldr_class status=OK raw=1001
+176 SELFTEST dev=servo status=OK pulse_us=1500
+181 SELFTEST_END ok=4 warn=1 fail=0
+221 STATE state=READY
+224 STACK used=824 reserved=1024 free=200 overflow=0
+230 HEAP arena=436 used=436 free=0
+s235 EVT t_us=171460 name=ready_gate
+240 EVT t_us=176347 name=ready_class
+244 EVT t_us=235264 name=ready_imu
+ta759 EVT t_us=759228 name=ready_lcd
+t1259 LOAD pct=19 pm=192 win_cyc=49216115 busy_cyc=9446976 windows=1
+s r2259 LOAD pct=19 pm=194 win_cyc=48001693 busy_cyc=9319187 windows=2
+eset3259 LOAD pct=19 pm=194 win_cyc=48000168 busy_cyc=9327251 windows=3
+
+3366 STATS reset=1
+3368 EVT t_us=3366003 name=cmd_rx
+3373 EVT t_us=3368270 name=cmd_reply
+# > log on
+log4260 LOAD pct=21 pm=205 win_cyc=48062731 busy_cyc=9864660 windows=4
+ on5260 LOAD pct=20 pm=195 win_cyc=48000552 busy_cyc=9374143 windows=5
+
+5466 LOG on=1
+5468 EVT t_us=5465990 name=cmd_rx
+5472 EVT t_us=5467750 name=cmd_reply
+# > set go 0
+s6260 LOAD pct=20 pm=205 win_cyc=48002159 busy_cyc=9839518 windows=6
+e6766 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+t 7260 LOAD pct=22 pm=224 win_cyc=48000505 busy_cyc=10735089 windows=7
+go 8260 LOAD pct=20 pm=195 win_cyc=48002136 busy_cyc=9373361 windows=8
+0
+8700 SET name=go st=BAD
+8703 EVT t_us=8700419 name=cmd_rx
+8708 EVT t_us=8703117 name=cmd_reply
+# ! Наступні 60 с скрипт шле stats двічі на секунду. Весь цей час роби посилки раз на 3-5 с (gate 10 лк -> 500 лк) і 5-10 разів тисни B1 у випадкові моменти. Enter - старт (робить wokwi-cli)
+# >> потік "stats" rate_hz=2 duration=60 (час МК)
+ts
+9070 CLI st=BAD
+9073 EVT t_us=9070609 name=cmd_rx
+9077 EVT t_us=9072470 name=cmd_reply
+9261 LOAD pct=22 pm=217 win_cyc=48051389 busy_cyc=10407840 windows=9
+stats
+9404 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+9410 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+9415 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+9425 STAT name=uart_rx n=18 min_us=62 avg_us=2593 max_us=11972 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9436 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9447 STAT name=gate n=1102 min_us=114 avg_us=115 max_us=115 period_us=5000 jit_min_us=-803 jit_max_us=69693 miss=15
+9459 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9469 STAT name=imu n=561 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-674 jit_max_us=63871 miss=12
+9482 STAT name=lcd n=12 min_us=38133 avg_us=40924 max_us=71450 period_us=500000 jit_min_us=-247 jit_max_us=1139 miss=0
+9495 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9506 STAT name=loop n=84341 min_us=37 avg_us=56 max_us=71580 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9517 STAT name=i2c_xfer n=2754 min_us=244 avg_us=356 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9529 STAT name=uart_line n=30 min_us=1697 avg_us=6823 max_us=12389 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9542 STAT name=lcd_update n=12 min_us=37899 avg_us=40690 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9553 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9564 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9575 UART rx=25 ore=0
+9578 EVT t_us=9403982 name=cmd_rx
+9582 EVT t_us=9577985 name=cmd_reply
+9708 PARCEL_IN gate=3413
+9711 SORT n=1 class=A raw=1001 impact=0 route=A angle=0 lat_ms=3
+9718 EVT t_us=9708416 name=parcel_in
+9723 EVT t_us=9711386 name=servo_set
+stats
+9837 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+9843 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+9849 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+9858 STAT name=uart_rx n=19 min_us=62 avg_us=12127 max_us=183748 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9870 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9880 STAT name=gate n=1141 min_us=114 avg_us=117 max_us=2928 period_us=5000 jit_min_us=-803 jit_max_us=183033 miss=17
+9893 STAT name=sort n=1 min_us=16418 avg_us=16418 max_us=16418 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9905 STAT name=imu n=582 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-674 jit_max_us=177266 miss=15
+9918 STAT name=lcd n=13 min_us=38133 avg_us=40711 max_us=71450 period_us=500000 jit_min_us=-247 jit_max_us=6629 miss=0
+9931 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9941 STAT name=loop n=87286 min_us=37 avg_us=58 max_us=185124 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9953 STAT name=i2c_xfer n=2932 min_us=244 avg_us=353 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9965 STAT name=uart_line n=53 min_us=1697 avg_us=7556 max_us=12402 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9978 STAT name=lcd_update n=13 min_us=37899 avg_us=40476 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9989 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10001 STAT name=parcel_latency n=1 min_us=2970 avg_us=2970 max_us=2970 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10013 UART rx=31 ore=0
+10016 EVT t_us=9837324 name=cmd_rx
+10020 EVT t_us=10015808 name=cmd_reply
+10266 LOAD pct=54 pm=536 win_cyc=48217212 busy_cyc=25834325 windows=10
+stats
+10637 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+10644 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+10649 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+10659 STAT name=uart_rx n=21 min_us=60 avg_us=19952 max_us=188510 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10670 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10681 STAT name=gate n=1255 min_us=114 avg_us=117 max_us=2928 period_us=5000 jit_min_us=-803 jit_max_us=188148 miss=19
+10694 STAT name=sort n=1 min_us=16418 avg_us=16418 max_us=16418 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10706 STAT name=imu n=640 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-674 jit_max_us=188180 miss=17
+10719 STAT name=lcd n=14 min_us=38133 avg_us=40528 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=6629 miss=0
+10731 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10742 STAT name=loop n=96035 min_us=37 avg_us=60 max_us=189885 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10754 STAT name=i2c_xfer n=3184 min_us=244 avg_us=353 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10767 STAT name=uart_line n=73 min_us=1697 avg_us=8065 max_us=12498 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10779 STAT name=lcd_update n=14 min_us=37899 avg_us=40293 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10791 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10802 STAT name=parcel_latency n=1 min_us=2970 avg_us=2970 max_us=2970 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10814 UART rx=37 ore=0
+10817 EVT t_us=10637352 name=cmd_rx
+10822 EVT t_us=10817288 name=cmd_reply
+stats
+10870 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+10877 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+10882 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+10892 STAT name=uart_rx n=22 min_us=60 avg_us=27680 max_us=189975 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10904 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10914 STAT name=gate n=1257 min_us=114 avg_us=117 max_us=2928 period_us=5000 jit_min_us=-803 jit_max_us=188148 miss=21
+10927 STAT name=sort n=1 min_us=16418 avg_us=16418 max_us=16418 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10939 STAT name=imu n=642 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-674 jit_max_us=188180 miss=19
+10952 STAT name=lcd n=15 min_us=38133 avg_us=40369 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=100048 miss=0
+10965 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10976 STAT name=loop n=96079 min_us=37 avg_us=62 max_us=229581 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10988 STAT name=i2c_xfer n=3324 min_us=244 avg_us=349 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11000 STAT name=uart_line n=92 min_us=1697 avg_us=8370 max_us=12723 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11012 STAT name=lcd_update n=15 min_us=37899 avg_us=40135 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11024 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11036 STAT name=parcel_latency n=1 min_us=2970 avg_us=2970 max_us=2970 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11048 UART rx=43 ore=0
+11051 EVT t_us=10870685 name=cmd_rx
+11056 EVT t_us=11050845 name=cmd_reply
+11060 PARCEL_OUT gate=1001 state=READY
+11266 LOAD pct=50 pm=498 win_cyc=48000971 busy_cyc=23921867 windows=11
+stats
+11304 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+11310 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+11316 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+11325 STAT name=uart_rx n=23 min_us=60 avg_us=34751 max_us=190296 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11337 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11348 STAT name=gate n=1305 min_us=114 avg_us=120 max_us=4296 period_us=5000 jit_min_us=-867 jit_max_us=188965 miss=22
+11361 STAT name=sort n=1 min_us=16418 avg_us=16418 max_us=16418 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11373 STAT name=imu n=666 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-692 jit_max_us=188180 miss=20
+11386 STAT name=lcd n=15 min_us=38133 avg_us=40369 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=100048 miss=0
+11398 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11409 STAT name=loop n=99643 min_us=37 avg_us=64 max_us=229581 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11421 STAT name=i2c_xfer n=3372 min_us=244 avg_us=351 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11433 STAT name=uart_line n=113 min_us=1697 avg_us=8523 max_us=12723 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11446 STAT name=lcd_update n=15 min_us=37899 avg_us=40135 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11458 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11469 STAT name=parcel_latency n=1 min_us=2970 avg_us=2970 max_us=2970 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+11481 UART rx=49 ore=0
+11484 EVT t_us=11304024 name=cmd_rx
+11489 EVT t_us=11484336 name=cmd_reply
+
+12266 LOAD pct=36 pm=362 win_cyc=48001200 busy_cyc=17359220 windows=12
+
+
+13266 LOAD pct=20 pm=195 win_cyc=48000936 busy_cyc=9373905 windows=13
+stats
+13404 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+13410 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+13416 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+13425 STAT name=uart_rx n=27 min_us=60 avg_us=36673 max_us=190448 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13438 STAT name=estop n=1 min_us=64 avg_us=64 max_us=64 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13449 STAT name=gate n=1656 min_us=114 avg_us=119 max_us=4296 period_us=5000 jit_min_us=-867 jit_max_us=188965 miss=28
+13462 STAT name=sort n=1 min_us=16418 avg_us=16418 max_us=16418 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13473 STAT name=imu n=845 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-692 jit_max_us=190112 miss=25
+13487 STAT name=lcd n=19 min_us=38133 avg_us=39903 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+13499 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13510 STAT name=loop n=126566 min_us=37 avg_us=64 max_us=230133 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13522 STAT name=i2c_xfer n=4274 min_us=242 avg_us=349 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13535 STAT name=uart_line n=134 min_us=1697 avg_us=8658 max_us=12727 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13547 STAT name=lcd_update n=19 min_us=37899 avg_us=39668 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13559 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13570 STAT name=parcel_latency n=1 min_us=2970 avg_us=2970 max_us=2970 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13582 UART rx=58 ore=0
+13586 EVT t_us=13404073 name=cmd_rx
+13590 EVT t_us=13585409 name=cmd_reply
+13704 PARCEL_IN gate=3413
+13707 SORT n=2 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=3
+13716 EVT t_us=13704224 name=parcel_in
+13721 EVT t_us=13707317 name=servo_set
+stats
+13737 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+13744 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+13749 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+13759 STAT name=uart_rx n=29 min_us=60 avg_us=40749 max_us=191479 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13771 STAT name=estop n=1 min_us=64 avg_us=64 max_us=64 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13782 STAT name=gate n=1675 min_us=114 avg_us=121 max_us=4296 period_us=5000 jit_min_us=-867 jit_max_us=189860 miss=31
+13795 STAT name=sort n=2 min_us=16418 avg_us=17315 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13807 STAT name=imu n=855 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-692 jit_max_us=191075 miss=28
+13820 STAT name=lcd n=20 min_us=38133 avg_us=39815 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+13833 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13844 STAT name=loop n=127803 min_us=37 avg_us=65 max_us=231083 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13856 STAT name=i2c_xfer n=4430 min_us=242 avg_us=347 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13868 STAT name=uart_line n=157 min_us=1697 avg_us=8673 max_us=12727 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13880 STAT name=lcd_update n=20 min_us=37899 avg_us=39581 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13892 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13904 STAT name=parcel_latency n=2 min_us=2970 avg_us=3032 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+13916 UART rx=64 ore=0
+13919 EVT t_us=13737422 name=cmd_rx
+13923 EVT t_us=13918780 name=cmd_reply
+14266 LOAD pct=55 pm=549 win_cyc=48000660 busy_cyc=26333595 windows=14
+
+stats
+14904 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+14910 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+14916 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+14925 STAT name=uart_rx n=31 min_us=60 avg_us=44299 max_us=191479 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14938 STAT name=estop n=1 min_us=64 avg_us=64 max_us=64 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14949 STAT name=gate n=1855 min_us=114 avg_us=120 max_us=4296 period_us=5000 jit_min_us=-867 jit_max_us=189860 miss=34
+14962 STAT name=sort n=2 min_us=16418 avg_us=17315 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14974 STAT name=imu n=946 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-692 jit_max_us=191075 miss=31
+14987 STAT name=lcd n=22 min_us=38132 avg_us=39664 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+14999 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+15010 STAT name=loop n=141590 min_us=37 avg_us=66 max_us=231083 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+15022 STAT name=i2c_xfer n=4884 min_us=242 avg_us=346 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+15035 STAT name=uart_line n=177 min_us=1697 avg_us=8764 max_us=12737 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+15047 STAT name=lcd_update n=22 min_us=37898 avg_us=39429 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+15059 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+15070 STAT name=parcel_latency n=2 min_us=2970 avg_us=3032 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+15082 UART rx=71 ore=0
+15086 EVT t_us=14904084 name=cmd_rx
+15090 EVT t_us=15085459 name=cmd_reply
+15095 PARCEL_OUT gate=1001 state=READY
+15266 LOAD pct=37 pm=366 win_cyc=48000312 busy_cyc=17554751 windows=15
+ats
+15570 CLI st=BAD
+15573 EVT t_us=15570767 name=cmd_rx
+15577 EVT t_us=15572735 name=cmd_reply
+stats
+15970 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+15977 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+15982 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+15992 STAT name=uart_rx n=33 min_us=60 avg_us=47779 max_us=191518 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+16004 STAT name=estop n=1 min_us=64 avg_us=64 max_us=64 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+16015 STAT name=gate n=2013 min_us=111 avg_us=122 max_us=4299 period_us=5000 jit_min_us=-867 jit_max_us=189900 miss=39
+16028 STAT name=sort n=2 min_us=16418 avg_us=17315 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+16040 STAT name=imu n=1026 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-692 jit_max_us=195297 miss=34
+16053 STAT name=lcd n=24 min_us=38132 avg_us=39537 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+16066 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+16077 STAT name=loop n=153562 min_us=37 avg_us=66 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+16089 STAT name=i2c_xfer n=5316 min_us=242 avg_us=345 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+16101 STAT name=uart_line n=201 min_us=1697 avg_us=8733 max_us=12737 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+16114 STAT name=lcd_update n=24 min_us=37898 avg_us=39303 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+16126 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+16137 STAT name=parcel_latency n=2 min_us=2970 avg_us=3032 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+16149 UART rx=81 ore=0
+16152 EVT t_us=15970781 name=cmd_rx
+16157 EVT t_us=16152286 name=cmd_reply
+
+16266 LOAD pct=37 pm=374 win_cyc=48002100 busy_cyc=17931104 windows=16
+stats
+17220 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+17227 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+17232 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+17242 STAT name=uart_rx n=35 min_us=60 avg_us=50532 max_us=191839 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17254 STAT name=estop n=2 min_us=64 avg_us=66 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17265 STAT name=gate n=2202 min_us=111 avg_us=121 max_us=4299 period_us=5000 jit_min_us=-867 jit_max_us=189900 miss=44
+17278 STAT name=sort n=2 min_us=16418 avg_us=17315 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17290 STAT name=imu n=1122 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-692 jit_max_us=195297 miss=38
+17304 STAT name=lcd n=27 min_us=38132 avg_us=39385 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+17316 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17327 STAT name=loop n=168037 min_us=37 avg_us=67 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17339 STAT name=i2c_xfer n=5916 min_us=242 avg_us=343 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17351 STAT name=uart_line n=221 min_us=1697 avg_us=8801 max_us=12737 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17364 STAT name=lcd_update n=27 min_us=37898 avg_us=39150 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17376 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17387 STAT name=parcel_latency n=2 min_us=2970 avg_us=3032 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17399 UART rx=88 ore=0
+17402 EVT t_us=17220835 name=cmd_rx
+17407 EVT t_us=17402387 name=cmd_reply
+
+17413 LOAD pct=33 pm=332 win_cyc=55054679 busy_cyc=18276873 windows=17
+stats
+17704 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+17710 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+17716 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+17726 STAT name=uart_rx n=37 min_us=60 avg_us=52986 max_us=191839 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17738 STAT name=estop n=2 min_us=64 avg_us=66 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17749 STAT name=gate n=2253 min_us=111 avg_us=121 max_us=4299 period_us=5000 jit_min_us=-867 jit_max_us=191024 miss=46
+17762 STAT name=sort n=2 min_us=16418 avg_us=17315 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17774 STAT name=imu n=1149 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-692 jit_max_us=195297 miss=40
+17787 STAT name=lcd n=28 min_us=38132 avg_us=39341 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+17800 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17811 STAT name=loop n=171791 min_us=37 avg_us=68 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17823 STAT name=i2c_xfer n=6106 min_us=242 avg_us=342 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17835 STAT name=uart_line n=241 min_us=1697 avg_us=8858 max_us=12737 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17847 STAT name=lcd_update n=28 min_us=37898 avg_us=39107 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17859 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17871 STAT name=parcel_latency n=2 min_us=2970 avg_us=3032 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+17883 UART rx=95 ore=0
+17886 EVT t_us=17704160 name=cmd_rx
+17890 EVT t_us=17885741 name=cmd_reply
+17895 PARCEL_IN gate=3413
+17898 SORT n=3 class=B raw=3413 impact=0 route=B angle=90 lat_ms=3
+17906 EVT t_us=17895450 name=parcel_in
+17911 EVT t_us=17898542 name=servo_set
+18413 LOAD pct=38 pm=380 win_cyc=48000121 busy_cyc=18258230 windows=18
+stats
+18637 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+18644 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+18649 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+18659 STAT name=uart_rx n=38 min_us=60 avg_us=56635 max_us=191839 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18671 STAT name=estop n=2 min_us=64 avg_us=66 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18682 STAT name=gate n=2390 min_us=111 avg_us=122 max_us=4299 period_us=5000 jit_min_us=-867 jit_max_us=191024 miss=49
+18695 STAT name=sort n=3 min_us=16418 avg_us=17247 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18707 STAT name=imu n=1218 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-692 jit_max_us=203874 miss=42
+18720 STAT name=lcd n=29 min_us=38132 avg_us=39300 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+18733 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18744 STAT name=loop n=182246 min_us=37 avg_us=68 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18756 STAT name=i2c_xfer n=6380 min_us=242 avg_us=343 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18768 STAT name=uart_line n=265 min_us=1697 avg_us=8842 max_us=12737 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18781 STAT name=lcd_update n=29 min_us=37898 avg_us=39066 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18793 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18804 STAT name=parcel_latency n=3 min_us=2970 avg_us=3052 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18816 UART rx=101 ore=0
+18819 EVT t_us=18637499 name=cmd_rx
+18824 EVT t_us=18819185 name=cmd_reply
+stats
+18904 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+18910 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+18916 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+18926 STAT name=uart_rx n=40 min_us=60 avg_us=58601 max_us=191851 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18938 STAT name=estop n=2 min_us=64 avg_us=66 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18949 STAT name=gate n=2399 min_us=111 avg_us=122 max_us=4299 period_us=5000 jit_min_us=-867 jit_max_us=191489 miss=51
+18962 STAT name=sort n=3 min_us=16418 avg_us=17247 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+18974 STAT name=imu n=1223 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-692 jit_max_us=203874 miss=44
+18987 STAT name=lcd n=30 min_us=38132 avg_us=39262 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+19000 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19011 STAT name=loop n=182781 min_us=37 avg_us=69 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19023 STAT name=i2c_xfer n=6526 min_us=242 avg_us=342 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19035 STAT name=uart_line n=284 min_us=1697 avg_us=8892 max_us=12737 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19047 STAT name=lcd_update n=30 min_us=37898 avg_us=39028 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19059 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19071 STAT name=parcel_latency n=3 min_us=2970 avg_us=3052 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19083 UART rx=107 ore=0
+19086 EVT t_us=18904197 name=cmd_rx
+19091 EVT t_us=19085956 name=cmd_reply
+19095 PARCEL_OUT gate=1001 state=READY
+19413 LOAD pct=53 pm=535 win_cyc=48002369 busy_cyc=25675316 windows=19
+stats
+19537 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+19544 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+19549 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+19559 STAT name=uart_rx n=42 min_us=60 avg_us=60379 max_us=191851 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19571 STAT name=estop n=2 min_us=64 avg_us=66 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19582 STAT name=gate n=2479 min_us=111 avg_us=123 max_us=4303 period_us=5000 jit_min_us=-867 jit_max_us=191489 miss=53
+19595 STAT name=sort n=3 min_us=16418 avg_us=17247 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19607 STAT name=imu n=1264 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=46
+19620 STAT name=lcd n=31 min_us=38132 avg_us=39227 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+19633 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19644 STAT name=loop n=188812 min_us=37 avg_us=70 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19656 STAT name=i2c_xfer n=6744 min_us=242 avg_us=341 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19668 STAT name=uart_line n=305 min_us=1697 avg_us=8916 max_us=12737 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19681 STAT name=lcd_update n=31 min_us=37898 avg_us=38992 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19693 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19704 STAT name=parcel_latency n=3 min_us=2970 avg_us=3052 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19716 UART rx=113 ore=0
+19719 EVT t_us=19537547 name=cmd_rx
+19724 EVT t_us=19719206 name=cmd_reply
+stats
+19937 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+19944 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+19949 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+19959 STAT name=uart_rx n=44 min_us=60 avg_us=61994 max_us=191851 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19971 STAT name=estop n=2 min_us=64 avg_us=66 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+19982 STAT name=gate n=2514 min_us=111 avg_us=123 max_us=4303 period_us=5000 jit_min_us=-867 jit_max_us=191500 miss=55
+19995 STAT name=sort n=3 min_us=16418 avg_us=17247 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20007 STAT name=imu n=1282 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=48
+20020 STAT name=lcd n=32 min_us=38132 avg_us=39193 max_us=71450 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+20033 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20044 STAT name=loop n=191427 min_us=37 avg_us=71 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20056 STAT name=i2c_xfer n=6916 min_us=242 avg_us=340 max_us=33574 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20068 STAT name=uart_line n=324 min_us=1697 avg_us=8955 max_us=12739 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20081 STAT name=lcd_update n=32 min_us=37898 avg_us=38959 max_us=71215 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20093 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20104 STAT name=parcel_latency n=3 min_us=2970 avg_us=3052 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20116 UART rx=119 ore=0
+20119 EVT t_us=19937554 name=cmd_rx
+20124 EVT t_us=20119307 name=cmd_reply
+20357 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+20413 LOAD pct=56 pm=560 win_cyc=48001365 busy_cyc=26888353 windows=20
+stats
+20537 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+20544 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+20549 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+20559 STAT name=uart_rx n=46 min_us=60 avg_us=63470 max_us=191851 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20571 STAT name=estop n=2 min_us=64 avg_us=66 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20582 STAT name=gate n=2582 min_us=111 avg_us=123 max_us=4303 period_us=5000 jit_min_us=-897 jit_max_us=191500 miss=58
+20595 STAT name=sort n=3 min_us=16418 avg_us=17247 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20607 STAT name=imu n=1317 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=50
+20620 STAT name=lcd n=33 min_us=38132 avg_us=40175 max_us=71613 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+20633 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20644 STAT name=loop n=196478 min_us=37 avg_us=72 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20656 STAT name=i2c_xfer n=7122 min_us=242 avg_us=345 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20668 STAT name=uart_line n=344 min_us=1697 avg_us=8987 max_us=12739 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20681 STAT name=lcd_update n=33 min_us=37898 avg_us=39941 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20693 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20704 STAT name=parcel_latency n=3 min_us=2970 avg_us=3052 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+20716 UART rx=125 ore=0
+20719 EVT t_us=20537569 name=cmd_rx
+20724 EVT t_us=20719308 name=cmd_reply
+stats
+20970 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+20977 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+20983 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+20992 STAT name=uart_rx n=47 min_us=60 avg_us=66201 max_us=191851 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21004 STAT name=estop n=2 min_us=64 avg_us=66 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21015 STAT name=gate n=2624 min_us=111 avg_us=123 max_us=4303 period_us=5000 jit_min_us=-897 jit_max_us=191500 miss=60
+21029 STAT name=sort n=3 min_us=16418 avg_us=17247 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21040 STAT name=imu n=1339 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=52
+21054 STAT name=lcd n=34 min_us=38132 avg_us=40116 max_us=71613 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+21066 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21077 STAT name=loop n=199594 min_us=37 avg_us=72 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21089 STAT name=i2c_xfer n=7302 min_us=242 avg_us=344 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21102 STAT name=uart_line n=363 min_us=1697 avg_us=9019 max_us=12742 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21114 STAT name=lcd_update n=34 min_us=37898 avg_us=39881 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21126 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21138 STAT name=parcel_latency n=3 min_us=2970 avg_us=3052 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21149 UART rx=131 ore=0
+21153 EVT t_us=20970896 name=cmd_rx
+21157 EVT t_us=21152688 name=cmd_reply
+21363 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+stats
+21404 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+21410 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21416 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+21426 STAT name=uart_rx n=48 min_us=60 avg_us=68821 max_us=191965 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21438 STAT name=estop n=2 min_us=64 avg_us=66 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21449 STAT name=gate n=2659 min_us=111 avg_us=123 max_us=4303 period_us=5000 jit_min_us=-897 jit_max_us=191500 miss=62
+21462 STAT name=sort n=3 min_us=16418 avg_us=17247 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21474 STAT name=imu n=1357 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=54
+21487 STAT name=lcd n=35 min_us=38132 avg_us=41015 max_us=71613 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+21500 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21511 STAT name=loop n=202204 min_us=37 avg_us=73 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21523 STAT name=i2c_xfer n=7474 min_us=242 avg_us=347 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21535 STAT name=uart_line n=382 min_us=1697 avg_us=9048 max_us=12746 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21547 STAT name=lcd_update n=35 min_us=37898 avg_us=40780 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21559 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21571 STAT name=parcel_latency n=3 min_us=2970 avg_us=3052 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21583 UART rx=137 ore=0
+21586 EVT t_us=21404215 name=cmd_rx
+21591 EVT t_us=21586051 name=cmd_reply
+21597 LOAD pct=64 pm=636 win_cyc=56803556 busy_cyc=36109991 windows=21
+21704 PARCEL_IN gate=3413
+21707 SORT n=4 class=A raw=1001 impact=0 route=A angle=0 lat_ms=3
+21714 EVT t_us=21704210 name=parcel_in
+21719 EVT t_us=21707294 name=servo_set
+stats
+21737 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+21744 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21749 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+21759 STAT name=uart_rx n=49 min_us=60 avg_us=71335 max_us=192008 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21771 STAT name=estop n=2 min_us=64 avg_us=66 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21782 STAT name=gate n=2684 min_us=111 avg_us=124 max_us=4303 period_us=5000 jit_min_us=-897 jit_max_us=191500 miss=64
+21795 STAT name=sort n=4 min_us=16418 avg_us=17179 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21807 STAT name=imu n=1370 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=56
+21820 STAT name=lcd n=35 min_us=38132 avg_us=41015 max_us=71613 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+21833 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21844 STAT name=loop n=203927 min_us=37 avg_us=74 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21856 STAT name=i2c_xfer n=7500 min_us=242 avg_us=348 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21868 STAT name=uart_line n=406 min_us=1697 avg_us=9026 max_us=12746 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21881 STAT name=lcd_update n=35 min_us=37898 avg_us=40780 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21893 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21904 STAT name=parcel_latency n=4 min_us=2970 avg_us=3060 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+21916 UART rx=143 ore=0
+21919 EVT t_us=21737560 name=cmd_rx
+21924 EVT t_us=21919342 name=cmd_reply
+stats
+22537 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+22544 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+22549 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+22559 STAT name=uart_rx n=50 min_us=60 avg_us=73747 max_us=192008 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22571 STAT name=estop n=2 min_us=64 avg_us=66 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22582 STAT name=gate n=2792 min_us=111 avg_us=123 max_us=4303 period_us=5000 jit_min_us=-897 jit_max_us=191500 miss=67
+22595 STAT name=sort n=4 min_us=16418 avg_us=17179 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22607 STAT name=imu n=1425 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=59
+22620 STAT name=lcd n=37 min_us=38132 avg_us=40860 max_us=71613 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+22633 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22644 STAT name=loop n=212139 min_us=37 avg_us=75 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22656 STAT name=i2c_xfer n=7882 min_us=242 avg_us=346 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22668 STAT name=uart_line n=425 min_us=1697 avg_us=9052 max_us=12746 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22681 STAT name=lcd_update n=37 min_us=37898 avg_us=40626 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22693 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22704 STAT name=parcel_latency n=4 min_us=2970 avg_us=3060 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22716 UART rx=149 ore=0
+22719 EVT t_us=22537583 name=cmd_rx
+22724 EVT t_us=22719361 name=cmd_reply
+22730 LOAD pct=50 pm=499 win_cyc=54399886 busy_cyc=27168556 windows=22
+stats
+22804 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+22810 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+22816 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+22826 STAT name=uart_rx n=51 min_us=60 avg_us=76065 max_us=192008 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22838 STAT name=estop n=2 min_us=64 avg_us=66 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22849 STAT name=gate n=2807 min_us=111 avg_us=123 max_us=4303 period_us=5000 jit_min_us=-897 jit_max_us=191500 miss=68
+22862 STAT name=sort n=4 min_us=16418 avg_us=17179 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22874 STAT name=imu n=1433 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=60
+22887 STAT name=lcd n=37 min_us=38132 avg_us=40860 max_us=71613 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+22900 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22911 STAT name=loop n=213145 min_us=37 avg_us=75 max_us=235306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22923 STAT name=i2c_xfer n=7898 min_us=242 avg_us=347 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22935 STAT name=uart_line n=445 min_us=1697 avg_us=9072 max_us=12746 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22947 STAT name=lcd_update n=37 min_us=37898 avg_us=40626 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22959 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22971 STAT name=parcel_latency n=4 min_us=2970 avg_us=3060 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+22983 UART rx=155 ore=0
+22986 EVT t_us=22804268 name=cmd_rx
+22991 EVT t_us=22986077 name=cmd_reply
+22995 PARCEL_OUT gate=1001 state=READY
+stats
+23654 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+23661 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+23666 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+23676 STAT name=uart_rx n=53 min_us=60 avg_us=76819 max_us=192008 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23688 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23699 STAT name=gate n=2924 min_us=111 avg_us=124 max_us=4304 period_us=5000 jit_min_us=-897 jit_max_us=191500 miss=71
+23712 STAT name=sort n=4 min_us=16418 avg_us=17179 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23724 STAT name=imu n=1493 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=63
+23737 STAT name=lcd n=39 min_us=38132 avg_us=40722 max_us=71613 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+23750 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23761 STAT name=loop n=222059 min_us=37 avg_us=76 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23773 STAT name=i2c_xfer n=8290 min_us=242 avg_us=345 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23785 STAT name=uart_line n=465 min_us=1697 avg_us=9083 max_us=12746 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23797 STAT name=lcd_update n=39 min_us=37898 avg_us=40487 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23809 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23821 STAT name=parcel_latency n=4 min_us=2970 avg_us=3060 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23833 UART rx=161 ore=0
+23836 EVT t_us=23654297 name=cmd_rx
+23841 EVT t_us=23836100 name=cmd_reply
+23847 LOAD pct=49 pm=493 win_cyc=53603103 busy_cyc=26411653 windows=23
+stats
+23921 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+23927 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+23933 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+23942 STAT name=uart_rx n=55 min_us=60 avg_us=77515 max_us=192008 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23955 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23966 STAT name=gate n=2939 min_us=111 avg_us=124 max_us=4304 period_us=5000 jit_min_us=-897 jit_max_us=191500 miss=72
+23979 STAT name=sort n=4 min_us=16418 avg_us=17179 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+23990 STAT name=imu n=1501 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=64
+24004 STAT name=lcd n=39 min_us=38132 avg_us=40722 max_us=71613 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+24017 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24028 STAT name=loop n=223065 min_us=37 avg_us=76 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24039 STAT name=i2c_xfer n=8306 min_us=242 avg_us=346 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24052 STAT name=uart_line n=485 min_us=1697 avg_us=9100 max_us=12746 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24064 STAT name=lcd_update n=39 min_us=37898 avg_us=40487 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24076 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24088 STAT name=parcel_latency n=4 min_us=2970 avg_us=3060 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24100 UART rx=167 ore=0
+24103 EVT t_us=23920953 name=cmd_rx
+24107 EVT t_us=24102793 name=cmd_reply
+stats
+24554 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+24561 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+24566 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+24576 STAT name=uart_rx n=57 min_us=60 avg_us=78164 max_us=192008 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24588 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24599 STAT name=gate n=3021 min_us=111 avg_us=124 max_us=4304 period_us=5000 jit_min_us=-908 jit_max_us=191500 miss=74
+24612 STAT name=sort n=4 min_us=16418 avg_us=17179 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24624 STAT name=imu n=1543 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=66
+24637 STAT name=lcd n=40 min_us=38132 avg_us=40657 max_us=71613 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+24650 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24661 STAT name=loop n=229286 min_us=37 avg_us=77 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24673 STAT name=i2c_xfer n=8526 min_us=242 avg_us=345 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24685 STAT name=uart_line n=504 min_us=1697 avg_us=9118 max_us=12748 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24697 STAT name=lcd_update n=40 min_us=37898 avg_us=40423 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24710 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24721 STAT name=parcel_latency n=4 min_us=2970 avg_us=3060 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24733 UART rx=173 ore=0
+24736 EVT t_us=24554301 name=cmd_rx
+24741 EVT t_us=24736127 name=cmd_reply
+24847 LOAD pct=53 pm=532 win_cyc=48000176 busy_cyc=25537736 windows=24
+stats
+24921 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+24927 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+24933 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+24942 STAT name=uart_rx n=58 min_us=60 avg_us=80125 max_us=192008 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24955 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24966 STAT name=gate n=3049 min_us=111 avg_us=124 max_us=4304 period_us=5000 jit_min_us=-908 jit_max_us=191500 miss=76
+24979 STAT name=sort n=4 min_us=16418 avg_us=17179 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+24991 STAT name=imu n=1558 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=68
+25004 STAT name=lcd n=41 min_us=38132 avg_us=40596 max_us=71613 period_us=500000 jit_min_us=-743 jit_max_us=167143 miss=0
+25017 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25028 STAT name=loop n=231232 min_us=37 avg_us=77 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25040 STAT name=i2c_xfer n=8692 min_us=242 avg_us=344 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25052 STAT name=uart_line n=524 min_us=1697 avg_us=9133 max_us=12748 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25064 STAT name=lcd_update n=41 min_us=37898 avg_us=40362 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25076 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25088 STAT name=parcel_latency n=4 min_us=2970 avg_us=3060 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25100 UART rx=179 ore=0
+25103 EVT t_us=24920964 name=cmd_rx
+25108 EVT t_us=25102809 name=cmd_reply
+stats
+25404 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+25411 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+25416 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+25426 STAT name=uart_rx n=59 min_us=60 avg_us=82021 max_us=192023 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25438 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25449 STAT name=gate n=3100 min_us=111 avg_us=124 max_us=4304 period_us=5000 jit_min_us=-908 jit_max_us=191500 miss=78
+25462 STAT name=sort n=4 min_us=16418 avg_us=17179 max_us=18212 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25474 STAT name=imu n=1584 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=70
+25487 STAT name=lcd n=42 min_us=38132 avg_us=40538 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=167143 miss=0
+25500 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25511 STAT name=loop n=235147 min_us=37 avg_us=78 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25523 STAT name=i2c_xfer n=8880 min_us=242 avg_us=344 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25535 STAT name=uart_line n=543 min_us=1697 avg_us=9149 max_us=12748 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25548 STAT name=lcd_update n=42 min_us=37898 avg_us=40304 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25560 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25571 STAT name=parcel_latency n=4 min_us=2970 avg_us=3060 max_us=3093 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25583 UART rx=185 ore=0
+25586 EVT t_us=25404317 name=cmd_rx
+25591 EVT t_us=25586156 name=cmd_reply
+25706 PARCEL_IN gate=3413
+25709 SORT n=5 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=3
+25718 EVT t_us=25706393 name=parcel_in
+25723 EVT t_us=25709492 name=servo_set
+stats
+25737 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+25744 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+25749 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+25759 STAT name=uart_rx n=60 min_us=60 avg_us=83855 max_us=192034 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25771 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25782 STAT name=gate n=3125 min_us=111 avg_us=125 max_us=4304 period_us=5000 jit_min_us=-908 jit_max_us=191500 miss=80
+25795 STAT name=sort n=5 min_us=16418 avg_us=17399 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25807 STAT name=imu n=1597 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=72
+25820 STAT name=lcd n=42 min_us=38132 avg_us=40538 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=167143 miss=0
+25833 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25844 STAT name=loop n=236988 min_us=37 avg_us=79 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25856 STAT name=i2c_xfer n=8906 min_us=242 avg_us=344 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25868 STAT name=uart_line n=566 min_us=1697 avg_us=9135 max_us=12748 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25881 STAT name=lcd_update n=42 min_us=37898 avg_us=40304 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25893 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25904 STAT name=parcel_latency n=5 min_us=2970 avg_us=3067 max_us=3099 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25916 UART rx=191 ore=0
+25920 EVT t_us=25737645 name=cmd_rx
+25924 EVT t_us=25919502 name=cmd_reply
+25968 LOAD pct=65 pm=653 win_cyc=53840255 busy_cyc=35177654 windows=25
+stats
+26604 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+26611 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+26616 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+26626 STAT name=uart_rx n=62 min_us=60 avg_us=84249 max_us=192053 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26638 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26649 STAT name=gate n=3244 min_us=111 avg_us=124 max_us=4304 period_us=5000 jit_min_us=-908 jit_max_us=191500 miss=83
+26662 STAT name=sort n=5 min_us=16418 avg_us=17399 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26674 STAT name=imu n=1658 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=75
+26687 STAT name=lcd n=44 min_us=38121 avg_us=40429 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+26700 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26711 STAT name=loop n=246114 min_us=37 avg_us=79 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26723 STAT name=i2c_xfer n=9300 min_us=242 avg_us=343 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26735 STAT name=uart_line n=586 min_us=1697 avg_us=9147 max_us=12748 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26748 STAT name=lcd_update n=44 min_us=37887 avg_us=40195 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26760 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26771 STAT name=parcel_latency n=5 min_us=2970 avg_us=3067 max_us=3099 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26783 UART rx=197 ore=0
+26786 EVT t_us=26604362 name=cmd_rx
+26791 EVT t_us=26786246 name=cmd_reply
+stats
+26904 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+26911 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+26916 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+26926 STAT name=uart_rx n=64 min_us=60 avg_us=84617 max_us=192053 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26938 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26949 STAT name=gate n=3266 min_us=111 avg_us=124 max_us=4304 period_us=5000 jit_min_us=-908 jit_max_us=191595 miss=84
+26962 STAT name=sort n=5 min_us=16418 avg_us=17399 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26974 STAT name=imu n=1669 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=76
+26987 STAT name=lcd n=44 min_us=38121 avg_us=40429 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+27000 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27011 STAT name=loop n=247784 min_us=37 avg_us=79 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27023 STAT name=i2c_xfer n=9322 min_us=242 avg_us=343 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27035 STAT name=uart_line n=605 min_us=1697 avg_us=9161 max_us=12749 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27048 STAT name=lcd_update n=44 min_us=37887 avg_us=40195 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27060 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27071 STAT name=parcel_latency n=5 min_us=2970 avg_us=3067 max_us=3099 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27083 UART rx=203 ore=0
+27086 EVT t_us=26904355 name=cmd_rx
+27091 EVT t_us=27086237 name=cmd_reply
+27095 PARCEL_OUT gate=1001 state=READY
+27139 LOAD pct=47 pm=474 win_cyc=56203062 busy_cyc=26664110 windows=26
+stats
+27504 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+27511 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+27516 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+27526 STAT name=uart_rx n=65 min_us=60 avg_us=86268 max_us=192053 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27538 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27549 STAT name=gate n=3339 min_us=111 avg_us=125 max_us=4308 period_us=5000 jit_min_us=-908 jit_max_us=191595 miss=86
+27562 STAT name=sort n=5 min_us=16418 avg_us=17399 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27574 STAT name=imu n=1706 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=78
+27587 STAT name=lcd n=45 min_us=38121 avg_us=40379 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+27600 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27611 STAT name=loop n=253309 min_us=37 avg_us=80 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27623 STAT name=i2c_xfer n=9532 min_us=242 avg_us=343 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27635 STAT name=uart_line n=626 min_us=1697 avg_us=9164 max_us=12749 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27648 STAT name=lcd_update n=45 min_us=37887 avg_us=40144 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27660 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27671 STAT name=parcel_latency n=5 min_us=2970 avg_us=3067 max_us=3099 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+27683 UART rx=209 ore=0
+27686 EVT t_us=27504352 name=cmd_rx
+27691 EVT t_us=27686254 name=cmd_reply
+stats
+27971 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+27977 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+27983 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+27992 STAT name=uart_rx n=66 min_us=60 avg_us=87872 max_us=192103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28005 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28016 STAT name=gate n=3387 min_us=111 avg_us=125 max_us=4308 period_us=5000 jit_min_us=-908 jit_max_us=191595 miss=88
+28029 STAT name=sort n=5 min_us=16418 avg_us=17399 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28041 STAT name=imu n=1731 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=80
+28054 STAT name=lcd n=46 min_us=38121 avg_us=40330 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+28067 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28078 STAT name=loop n=256949 min_us=37 avg_us=80 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28090 STAT name=i2c_xfer n=9718 min_us=242 avg_us=343 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28102 STAT name=uart_line n=645 min_us=1697 avg_us=9177 max_us=12749 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28114 STAT name=lcd_update n=46 min_us=37887 avg_us=40096 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28126 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28138 STAT name=parcel_latency n=5 min_us=2970 avg_us=3067 max_us=3099 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28150 UART rx=215 ore=0
+28153 EVT t_us=27971041 name=cmd_rx
+28158 EVT t_us=28153003 name=cmd_reply
+28164 LOAD pct=49 pm=489 win_cyc=49168198 busy_cyc=24030988 windows=27
+stats
+28504 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+28511 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+28516 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+28526 STAT name=uart_rx n=67 min_us=60 avg_us=89428 max_us=192155 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28538 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28549 STAT name=gate n=3448 min_us=111 avg_us=125 max_us=4308 period_us=5000 jit_min_us=-908 jit_max_us=191595 miss=90
+28562 STAT name=sort n=5 min_us=16418 avg_us=17399 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28574 STAT name=imu n=1762 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=82
+28587 STAT name=lcd n=47 min_us=38121 avg_us=40284 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+28600 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28611 STAT name=loop n=261496 min_us=37 avg_us=80 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28623 STAT name=i2c_xfer n=9916 min_us=242 avg_us=342 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28635 STAT name=uart_line n=665 min_us=1697 avg_us=9187 max_us=12749 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28648 STAT name=lcd_update n=47 min_us=37887 avg_us=40049 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28660 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28671 STAT name=parcel_latency n=5 min_us=2970 avg_us=3067 max_us=3099 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28683 UART rx=221 ore=0
+28686 EVT t_us=28504387 name=cmd_rx
+28691 EVT t_us=28686286 name=cmd_reply
+stats
+28937 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+28944 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+28949 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+28959 STAT name=uart_rx n=68 min_us=60 avg_us=90938 max_us=192155 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28971 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+28982 STAT name=gate n=3490 min_us=111 avg_us=125 max_us=4308 period_us=5000 jit_min_us=-908 jit_max_us=191595 miss=92
+28995 STAT name=sort n=5 min_us=16418 avg_us=17399 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29007 STAT name=imu n=1784 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=84
+29021 STAT name=lcd n=48 min_us=38121 avg_us=40239 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+29033 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29044 STAT name=loop n=264609 min_us=37 avg_us=81 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29056 STAT name=i2c_xfer n=10096 min_us=242 avg_us=342 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29069 STAT name=uart_line n=684 min_us=1697 avg_us=9199 max_us=12749 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29081 STAT name=lcd_update n=48 min_us=37887 avg_us=40005 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29093 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29105 STAT name=parcel_latency n=5 min_us=2970 avg_us=3067 max_us=3099 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29116 UART rx=227 ore=0
+29120 EVT t_us=28937738 name=cmd_rx
+29124 EVT t_us=29119743 name=cmd_reply
+29164 LOAD pct=53 pm=531 win_cyc=48002090 busy_cyc=25499716 windows=28
+stats
+29404 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+29411 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+29416 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+29426 STAT name=uart_rx n=69 min_us=60 avg_us=92406 max_us=192205 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29438 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29449 STAT name=gate n=3537 min_us=111 avg_us=125 max_us=4308 period_us=5000 jit_min_us=-908 jit_max_us=191595 miss=95
+29462 STAT name=sort n=5 min_us=16418 avg_us=17399 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29474 STAT name=imu n=1808 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=86
+29487 STAT name=lcd n=49 min_us=38121 avg_us=40197 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+29500 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29511 STAT name=loop n=268128 min_us=37 avg_us=81 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29523 STAT name=i2c_xfer n=10280 min_us=242 avg_us=341 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29535 STAT name=uart_line n=704 min_us=1697 avg_us=9208 max_us=12749 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29548 STAT name=lcd_update n=49 min_us=37887 avg_us=39963 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29560 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29571 STAT name=parcel_latency n=5 min_us=2970 avg_us=3067 max_us=3099 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29583 UART rx=233 ore=0
+29587 EVT t_us=29404401 name=cmd_rx
+29591 EVT t_us=29586433 name=cmd_reply
+29735 PARCEL_IN gate=3413
+29738 SORT n=6 class=B raw=3413 impact=0 route=B angle=90 lat_ms=3
+29746 EVT t_us=29735607 name=parcel_in
+29751 EVT t_us=29738710 name=servo_set
+stats
+29871 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+29877 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+29883 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+29893 STAT name=uart_rx n=70 min_us=60 avg_us=93832 max_us=192238 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29905 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29916 STAT name=gate n=3582 min_us=111 avg_us=125 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191595 miss=98
+29929 STAT name=sort n=6 min_us=16418 avg_us=17357 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29941 STAT name=imu n=1831 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=88
+29954 STAT name=lcd n=50 min_us=38121 avg_us=40156 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+29967 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29978 STAT name=loop n=271450 min_us=37 avg_us=82 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+29990 STAT name=i2c_xfer n=10462 min_us=242 avg_us=341 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30002 STAT name=uart_line n=727 min_us=1697 avg_us=9193 max_us=12749 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30014 STAT name=lcd_update n=50 min_us=37887 avg_us=39921 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30027 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30038 STAT name=parcel_latency n=6 min_us=2970 avg_us=3073 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30050 UART rx=239 ore=0
+30053 EVT t_us=29871085 name=cmd_rx
+30058 EVT t_us=30053143 name=cmd_reply
+30164 LOAD pct=55 pm=549 win_cyc=48000692 busy_cyc=26357181 windows=29
+stats
+30504 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+30511 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+30516 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+30526 STAT name=uart_rx n=72 min_us=60 avg_us=93897 max_us=192272 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30538 STAT name=estop n=3 min_us=64 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30549 STAT name=gate n=3663 min_us=111 avg_us=125 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191595 miss=100
+30562 STAT name=sort n=6 min_us=16418 avg_us=17357 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30574 STAT name=imu n=1872 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-848 jit_max_us=203874 miss=90
+30587 STAT name=lcd n=51 min_us=38121 avg_us=40117 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+30600 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30611 STAT name=loop n=277547 min_us=37 avg_us=82 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30623 STAT name=i2c_xfer n=10680 min_us=242 avg_us=340 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30635 STAT name=uart_line n=747 min_us=1697 avg_us=9202 max_us=12749 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30648 STAT name=lcd_update n=51 min_us=37887 avg_us=39882 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30660 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30671 STAT name=parcel_latency n=6 min_us=2970 avg_us=3073 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+30683 UART rx=245 ore=0
+30687 EVT t_us=30504441 name=cmd_rx
+30691 EVT t_us=30686563 name=cmd_reply
+
+30907 PARCEL_OUT gate=1001 state=READY
+31164 LOAD pct=37 pm=367 win_cyc=48001864 busy_cyc=17604789 windows=30
+stats
+31571 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+31577 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+31583 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+31593 STAT name=uart_rx n=74 min_us=60 avg_us=93960 max_us=192428 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31605 STAT name=estop n=4 min_us=63 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31616 STAT name=gate n=3822 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191595 miss=103
+31629 STAT name=sort n=6 min_us=16418 avg_us=17357 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31641 STAT name=imu n=1953 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=203874 miss=93
+31654 STAT name=lcd n=53 min_us=38121 avg_us=40043 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+31667 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31678 STAT name=loop n=289692 min_us=37 avg_us=82 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31690 STAT name=i2c_xfer n=11114 min_us=242 avg_us=340 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31702 STAT name=uart_line n=768 min_us=1697 avg_us=9203 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31715 STAT name=lcd_update n=53 min_us=37887 avg_us=39808 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31727 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31738 STAT name=parcel_latency n=6 min_us=2970 avg_us=3073 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31750 UART rx=252 ore=0
+31753 EVT t_us=31571120 name=cmd_rx
+31758 EVT t_us=31753239 name=cmd_reply
+stats
+31871 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+31877 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+31883 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+31893 STAT name=uart_rx n=75 min_us=60 avg_us=95270 max_us=192428 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31905 STAT name=estop n=4 min_us=63 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31916 STAT name=gate n=3837 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191617 miss=105
+31929 STAT name=sort n=6 min_us=16418 avg_us=17357 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31941 STAT name=imu n=1961 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=203874 miss=95
+31954 STAT name=lcd n=54 min_us=38121 avg_us=40008 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+31967 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31978 STAT name=loop n=290745 min_us=37 avg_us=82 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+31990 STAT name=i2c_xfer n=11266 min_us=242 avg_us=339 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32002 STAT name=uart_line n=787 min_us=1697 avg_us=9213 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32015 STAT name=lcd_update n=54 min_us=37887 avg_us=39773 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32027 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32038 STAT name=parcel_latency n=6 min_us=2970 avg_us=3073 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32050 UART rx=258 ore=0
+32053 EVT t_us=31871122 name=cmd_rx
+32058 EVT t_us=32053251 name=cmd_reply
+32164 LOAD pct=53 pm=531 win_cyc=48002484 busy_cyc=25508566 windows=31
+stats
+32571 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+32577 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+32583 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+32593 STAT name=uart_rx n=77 min_us=60 avg_us=95294 max_us=192428 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32605 STAT name=estop n=4 min_us=63 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32616 STAT name=gate n=3931 min_us=111 avg_us=125 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191617 miss=107
+32629 STAT name=sort n=6 min_us=16418 avg_us=17357 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32641 STAT name=imu n=2009 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=203874 miss=97
+32654 STAT name=lcd n=55 min_us=38121 avg_us=39974 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+32667 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32678 STAT name=loop n=297872 min_us=37 avg_us=82 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32690 STAT name=i2c_xfer n=11498 min_us=242 avg_us=340 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32702 STAT name=uart_line n=807 min_us=1697 avg_us=9221 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32715 STAT name=lcd_update n=55 min_us=37887 avg_us=39739 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32727 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32738 STAT name=parcel_latency n=6 min_us=2970 avg_us=3073 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+32750 UART rx=264 ore=0
+32753 EVT t_us=32571138 name=cmd_rx
+32758 EVT t_us=32753243 name=cmd_reply
+stats
+32971 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+32977 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+32983 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+32993 STAT name=uart_rx n=79 min_us=60 avg_us=95316 max_us=192428 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33005 STAT name=estop n=4 min_us=63 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33016 STAT name=gate n=3966 min_us=111 avg_us=125 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191617 miss=109
+33029 STAT name=sort n=6 min_us=16418 avg_us=17357 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33041 STAT name=imu n=2027 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=203874 miss=99
+33054 STAT name=lcd n=56 min_us=38121 avg_us=39941 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+33067 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33078 STAT name=loop n=300479 min_us=37 avg_us=83 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33090 STAT name=i2c_xfer n=11670 min_us=242 avg_us=339 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33102 STAT name=uart_line n=826 min_us=1697 avg_us=9230 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33115 STAT name=lcd_update n=56 min_us=37887 avg_us=39707 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33127 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33138 STAT name=parcel_latency n=6 min_us=2970 avg_us=3073 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33150 UART rx=270 ore=0
+33153 EVT t_us=32971165 name=cmd_rx
+33158 EVT t_us=33153271 name=cmd_reply
+33164 LOAD pct=53 pm=531 win_cyc=48006580 busy_cyc=25510325 windows=32
+stats
+33404 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+33411 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+33416 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+33426 STAT name=uart_rx n=80 min_us=60 avg_us=96527 max_us=192428 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33438 STAT name=estop n=4 min_us=63 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33449 STAT name=gate n=4007 min_us=111 avg_us=125 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191617 miss=111
+33462 STAT name=sort n=6 min_us=16418 avg_us=17357 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33474 STAT name=imu n=2049 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=203874 miss=101
+33488 STAT name=lcd n=57 min_us=38121 avg_us=39910 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+33500 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33511 STAT name=loop n=303448 min_us=37 avg_us=83 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33523 STAT name=i2c_xfer n=11850 min_us=242 avg_us=338 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33536 STAT name=uart_line n=846 min_us=1697 avg_us=9237 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33548 STAT name=lcd_update n=57 min_us=37887 avg_us=39675 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33560 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33572 STAT name=parcel_latency n=6 min_us=2970 avg_us=3073 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33583 UART rx=276 ore=0
+33587 EVT t_us=33404467 name=cmd_rx
+33591 EVT t_us=33586660 name=cmd_reply
+stats
+33704 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+33711 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+33716 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+33726 STAT name=uart_rx n=82 min_us=60 avg_us=96519 max_us=192428 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33738 STAT name=estop n=4 min_us=63 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33749 STAT name=gate n=4029 min_us=111 avg_us=125 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191617 miss=112
+33762 STAT name=sort n=6 min_us=16418 avg_us=17357 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33774 STAT name=imu n=2060 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=203874 miss=102
+33788 STAT name=lcd n=57 min_us=38121 avg_us=39910 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+33800 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33811 STAT name=loop n=305113 min_us=37 avg_us=84 max_us=235871 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33823 STAT name=i2c_xfer n=11872 min_us=242 avg_us=339 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33836 STAT name=uart_line n=865 min_us=1697 avg_us=9245 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33848 STAT name=lcd_update n=57 min_us=37887 avg_us=39675 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33860 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33872 STAT name=parcel_latency n=6 min_us=2970 avg_us=3073 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+33883 UART rx=282 ore=0
+33887 EVT t_us=33704505 name=cmd_rx
+33891 EVT t_us=33886703 name=cmd_reply
+33896 PARCEL_IN gate=3413
+33899 SORT n=7 class=A raw=1001 impact=0 route=A angle=0 lat_ms=3
+33907 EVT t_us=33896452 name=parcel_in
+33912 EVT t_us=33899533 name=servo_set
+34164 LOAD pct=55 pm=549 win_cyc=48001424 busy_cyc=26355928 windows=33
+stats
+34771 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+34777 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+34783 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+34793 STAT name=uart_rx n=83 min_us=60 avg_us=97674 max_us=192428 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+34805 STAT name=estop n=4 min_us=63 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+34816 STAT name=gate n=4184 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191617 miss=116
+34829 STAT name=sort n=7 min_us=16418 avg_us=17305 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+34841 STAT name=imu n=2139 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=210399 miss=105
+34854 STAT name=lcd n=59 min_us=38121 avg_us=39850 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+34867 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+34878 STAT name=loop n=317028 min_us=37 avg_us=83 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+34890 STAT name=i2c_xfer n=12302 min_us=242 avg_us=339 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+34902 STAT name=uart_line n=889 min_us=1697 avg_us=9231 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+34915 STAT name=lcd_update n=59 min_us=37887 avg_us=39615 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+34927 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+34938 STAT name=parcel_latency n=7 min_us=2970 avg_us=3075 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+34950 UART rx=288 ore=0
+34954 EVT t_us=34771171 name=cmd_rx
+34958 EVT t_us=34953406 name=cmd_reply
+
+34963 PARCEL_OUT gate=1001 state=READY
+35164 LOAD pct=37 pm=367 win_cyc=48001176 busy_cyc=17597184 windows=34
+stats
+35604 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+35611 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+35616 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+35626 STAT name=uart_rx n=84 min_us=60 avg_us=98804 max_us=192612 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35638 STAT name=estop n=4 min_us=63 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35649 STAT name=gate n=4296 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191923 miss=120
+35662 STAT name=sort n=7 min_us=16418 avg_us=17305 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35674 STAT name=imu n=2196 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=210399 miss=108
+35688 STAT name=lcd n=61 min_us=38121 avg_us=39794 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+35700 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35711 STAT name=loop n=325564 min_us=37 avg_us=83 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35723 STAT name=i2c_xfer n=12688 min_us=242 avg_us=338 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35736 STAT name=uart_line n=910 min_us=1697 avg_us=9231 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35748 STAT name=lcd_update n=61 min_us=37887 avg_us=39560 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35760 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35772 STAT name=parcel_latency n=7 min_us=2970 avg_us=3075 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35783 UART rx=295 ore=0
+35787 EVT t_us=35604529 name=cmd_rx
+35791 EVT t_us=35786749 name=cmd_reply
+stats
+35871 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+35877 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+35883 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+35893 STAT name=uart_rx n=86 min_us=60 avg_us=98744 max_us=192612 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35905 STAT name=estop n=4 min_us=63 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35916 STAT name=gate n=4311 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191923 miss=121
+35929 STAT name=sort n=7 min_us=16418 avg_us=17305 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35941 STAT name=imu n=2204 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=210399 miss=109
+35954 STAT name=lcd n=61 min_us=38121 avg_us=39794 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+35967 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35978 STAT name=loop n=326705 min_us=37 avg_us=84 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+35990 STAT name=i2c_xfer n=12704 min_us=242 avg_us=338 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+36002 STAT name=uart_line n=929 min_us=1697 avg_us=9239 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+36015 STAT name=lcd_update n=61 min_us=37887 avg_us=39560 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+36027 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+36038 STAT name=parcel_latency n=7 min_us=2970 avg_us=3075 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+36050 UART rx=301 ore=0
+36054 EVT t_us=35871220 name=cmd_rx
+36058 EVT t_us=36053424 name=cmd_reply
+36164 LOAD pct=53 pm=532 win_cyc=48000456 busy_cyc=25516439 windows=35
+
+37164 LOAD pct=20 pm=195 win_cyc=48000996 busy_cyc=9370055 windows=36
+
+stats
+37404 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+37411 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+37416 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+37426 STAT name=uart_rx n=89 min_us=60 avg_us=97580 max_us=192612 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37438 STAT name=estop n=4 min_us=63 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37449 STAT name=gate n=4557 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191923 miss=127
+37462 STAT name=sort n=7 min_us=16418 avg_us=17305 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37474 STAT name=imu n=2330 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=210399 miss=113
+37488 STAT name=lcd n=64 min_us=38121 avg_us=39717 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+37500 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37511 STAT name=loop n=345389 min_us=37 avg_us=83 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37523 STAT name=i2c_xfer n=13364 min_us=242 avg_us=338 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37536 STAT name=uart_line n=950 min_us=1697 avg_us=9243 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37548 STAT name=lcd_update n=64 min_us=37886 avg_us=39482 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37560 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37572 STAT name=parcel_latency n=7 min_us=2970 avg_us=3075 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37584 UART rx=309 ore=0
+37587 EVT t_us=37404553 name=cmd_rx
+37592 EVT t_us=37586780 name=cmd_reply
+stats
+37704 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+37711 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+37716 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+37726 STAT name=uart_rx n=90 min_us=60 avg_us=98634 max_us=192612 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37738 STAT name=estop n=4 min_us=63 avg_us=65 max_us=67 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37749 STAT name=gate n=4572 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191923 miss=129
+37762 STAT name=sort n=7 min_us=16418 avg_us=17305 max_us=18277 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37774 STAT name=imu n=2338 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=210399 miss=115
+37788 STAT name=lcd n=65 min_us=38121 avg_us=39693 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+37800 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37811 STAT name=loop n=346440 min_us=37 avg_us=83 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37823 STAT name=i2c_xfer n=13516 min_us=242 avg_us=337 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37836 STAT name=uart_line n=969 min_us=1697 avg_us=9251 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37848 STAT name=lcd_update n=65 min_us=37886 avg_us=39458 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37860 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37872 STAT name=parcel_latency n=7 min_us=2970 avg_us=3075 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+37883 UART rx=315 ore=0
+37887 EVT t_us=37704564 name=cmd_rx
+37891 EVT t_us=37886748 name=cmd_reply
+37896 PARCEL_IN gate=3413
+37899 SORT n=8 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=3
+37908 EVT t_us=37896503 name=parcel_in
+37913 EVT t_us=37899605 name=servo_set
+38164 LOAD pct=55 pm=551 win_cyc=48001884 busy_cyc=26430376 windows=37
+38223 ESTOP n=1 state=ESTOP
+38227 EVT t_us=38203823 name=estop_irq
+38232 EVT t_us=38223441 name=estop_react
+stats
+38271 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+38277 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+38283 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+38293 STAT name=uart_rx n=91 min_us=60 avg_us=99665 max_us=192612 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38305 STAT name=estop n=5 min_us=63 avg_us=2696 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38316 STAT name=gate n=4633 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=191923 miss=134
+38330 STAT name=sort n=8 min_us=16418 avg_us=17428 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38342 STAT name=imu n=2370 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=117
+38355 STAT name=lcd n=66 min_us=38121 avg_us=39669 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+38368 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38379 STAT name=loop n=350929 min_us=37 avg_us=84 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38391 STAT name=i2c_xfer n=13716 min_us=242 avg_us=337 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38403 STAT name=uart_line n=996 min_us=1697 avg_us=9224 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38415 STAT name=lcd_update n=66 min_us=37886 avg_us=39435 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38428 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38441 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38453 UART rx=321 ore=0
+38456 EVT t_us=38271235 name=cmd_rx
+38461 EVT t_us=38456024 name=cmd_reply
+stats
+38904 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+38911 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+38916 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+38926 STAT name=uart_rx n=92 min_us=60 avg_us=100701 max_us=194985 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38938 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38950 STAT name=gate n=4714 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=136
+38963 STAT name=sort n=8 min_us=16418 avg_us=17428 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38975 STAT name=imu n=2411 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=119
+38988 STAT name=lcd n=67 min_us=38121 avg_us=39647 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+39001 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39012 STAT name=loop n=357118 min_us=37 avg_us=84 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39024 STAT name=i2c_xfer n=13934 min_us=242 avg_us=337 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39036 STAT name=uart_line n=1015 min_us=1697 avg_us=9233 max_us=12751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39049 STAT name=lcd_update n=67 min_us=37886 avg_us=39412 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39062 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39074 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39086 UART rx=327 ore=0
+39090 EVT t_us=38904602 name=cmd_rx
+39094 EVT t_us=39089525 name=cmd_reply
+39099 PARCEL_OUT gate=1001 state=ESTOP
+39164 LOAD pct=55 pm=553 win_cyc=48002524 busy_cyc=26546103 windows=38
+stats
+39538 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+39544 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+39550 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+39559 STAT name=uart_rx n=93 min_us=60 avg_us=101716 max_us=195135 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39572 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39583 STAT name=gate n=4794 min_us=111 avg_us=127 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=139
+39596 STAT name=sort n=8 min_us=16418 avg_us=17428 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39608 STAT name=imu n=2452 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=121
+39622 STAT name=lcd n=68 min_us=38121 avg_us=39625 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+39634 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39645 STAT name=loop n=363090 min_us=37 avg_us=84 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39657 STAT name=i2c_xfer n=14152 min_us=242 avg_us=337 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39670 STAT name=uart_line n=1036 min_us=1697 avg_us=9236 max_us=12755 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39682 STAT name=lcd_update n=68 min_us=37886 avg_us=39390 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39695 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39708 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39720 UART rx=333 ore=0
+39723 EVT t_us=39537963 name=cmd_rx
+39728 EVT t_us=39722938 name=cmd_reply
+stats
+39871 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+39878 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+39883 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+39893 STAT name=uart_rx n=95 min_us=60 avg_us=101630 max_us=195176 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39905 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39917 STAT name=gate n=4815 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=141
+39930 STAT name=sort n=8 min_us=16418 avg_us=17428 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39942 STAT name=imu n=2463 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=123
+39955 STAT name=lcd n=69 min_us=38121 avg_us=39604 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+39968 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39979 STAT name=loop n=364618 min_us=37 avg_us=84 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+39991 STAT name=i2c_xfer n=14310 min_us=242 avg_us=337 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40003 STAT name=uart_line n=1055 min_us=1697 avg_us=9244 max_us=12755 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40016 STAT name=lcd_update n=69 min_us=37886 avg_us=39369 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40028 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40041 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40053 UART rx=339 ore=0
+40056 EVT t_us=39871306 name=cmd_rx
+40061 EVT t_us=40056270 name=cmd_reply
+40164 LOAD pct=50 pm=502 win_cyc=48001616 busy_cyc=24089289 windows=39
+stats
+40604 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+40611 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+40616 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+40626 STAT name=uart_rx n=97 min_us=60 avg_us=101546 max_us=195176 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40638 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40650 STAT name=gate n=4914 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=144
+40663 STAT name=sort n=8 min_us=16418 avg_us=17428 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40675 STAT name=imu n=2514 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=125
+40688 STAT name=lcd n=70 min_us=38121 avg_us=39583 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+40701 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40712 STAT name=loop n=372223 min_us=37 avg_us=84 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40724 STAT name=i2c_xfer n=14548 min_us=242 avg_us=337 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40736 STAT name=uart_line n=1075 min_us=1697 avg_us=9252 max_us=12755 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40749 STAT name=lcd_update n=70 min_us=37886 avg_us=39348 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40762 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40774 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40786 UART rx=345 ore=0
+40790 EVT t_us=40604655 name=cmd_rx
+40794 EVT t_us=40789631 name=cmd_reply
+stats
+40871 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+40878 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+40883 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+40893 STAT name=uart_rx n=98 min_us=60 avg_us=102501 max_us=195176 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40905 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40917 STAT name=gate n=4922 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=146
+40930 STAT name=sort n=8 min_us=16418 avg_us=17428 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40942 STAT name=imu n=2519 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=127
+40955 STAT name=lcd n=71 min_us=38121 avg_us=39562 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+40968 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40979 STAT name=loop n=372700 min_us=37 avg_us=85 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+40991 STAT name=i2c_xfer n=14694 min_us=242 avg_us=336 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41003 STAT name=uart_line n=1094 min_us=1697 avg_us=9260 max_us=12755 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41016 STAT name=lcd_update n=71 min_us=37886 avg_us=39328 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41028 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41041 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41053 UART rx=351 ore=0
+41056 EVT t_us=40871302 name=cmd_rx
+41061 EVT t_us=41056293 name=cmd_reply
+41164 LOAD pct=54 pm=537 win_cyc=48001044 busy_cyc=25778492 windows=40
+stats
+41404 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+41411 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+41416 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+41426 STAT name=uart_rx n=100 min_us=60 avg_us=102403 max_us=195200 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41438 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41450 STAT name=gate n=4982 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=149
+41463 STAT name=sort n=8 min_us=16418 avg_us=17428 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41475 STAT name=imu n=2549 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=129
+41488 STAT name=lcd n=72 min_us=38121 avg_us=39543 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+41501 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41512 STAT name=loop n=377215 min_us=37 avg_us=85 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41524 STAT name=i2c_xfer n=14890 min_us=242 avg_us=336 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41537 STAT name=uart_line n=1114 min_us=1697 avg_us=9267 max_us=12755 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41549 STAT name=lcd_update n=72 min_us=37886 avg_us=39308 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41562 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41575 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41587 UART rx=357 ore=0
+41590 EVT t_us=41404664 name=cmd_rx
+41595 EVT t_us=41589782 name=cmd_reply
+stats
+41704 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+41711 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+41716 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+41726 STAT name=uart_rx n=102 min_us=60 avg_us=102310 max_us=195246 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41738 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41750 STAT name=gate n=5003 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=150
+41763 STAT name=sort n=8 min_us=16418 avg_us=17428 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41775 STAT name=imu n=2560 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=130
+41788 STAT name=lcd n=72 min_us=38121 avg_us=39543 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+41801 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41812 STAT name=loop n=378829 min_us=37 avg_us=85 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41824 STAT name=i2c_xfer n=14912 min_us=242 avg_us=336 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41837 STAT name=uart_line n=1133 min_us=1697 avg_us=9274 max_us=12755 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41849 STAT name=lcd_update n=72 min_us=37886 avg_us=39308 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41862 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41875 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+41886 UART rx=363 ore=0
+41890 EVT t_us=41704661 name=cmd_rx
+41894 EVT t_us=41889752 name=cmd_reply
+41899 PARCEL_IN gate=3413
+41902 SORT_SKIP state=ESTOP class=B
+41907 EVT t_us=41899514 name=parcel_in
+42164 LOAD pct=55 pm=547 win_cyc=48002160 busy_cyc=26251904 windows=41
+stats
+42538 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+42544 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+42550 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+42559 STAT name=uart_rx n=103 min_us=60 avg_us=103212 max_us=195246 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42572 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42583 STAT name=gate n=5113 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=154
+42597 STAT name=sort n=9 min_us=8974 avg_us=16488 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42608 STAT name=imu n=2616 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=133
+42622 STAT name=lcd n=74 min_us=38121 avg_us=39505 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+42635 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42646 STAT name=loop n=387201 min_us=37 avg_us=85 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42658 STAT name=i2c_xfer n=15296 min_us=242 avg_us=336 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42670 STAT name=uart_line n=1156 min_us=1697 avg_us=9266 max_us=12757 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42682 STAT name=lcd_update n=74 min_us=37886 avg_us=39271 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42695 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42708 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42720 UART rx=369 ore=0
+42723 EVT t_us=42538008 name=cmd_rx
+42728 EVT t_us=42723020 name=cmd_reply
+stats
+42871 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+42878 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+42883 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+42893 STAT name=uart_rx n=105 min_us=60 avg_us=103106 max_us=195246 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42905 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42917 STAT name=gate n=5141 min_us=111 avg_us=126 max_us=4308 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=155
+42930 STAT name=sort n=9 min_us=8974 avg_us=16488 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42942 STAT name=imu n=2630 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=134
+42955 STAT name=lcd n=74 min_us=38121 avg_us=39505 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+42968 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42979 STAT name=loop n=389341 min_us=37 avg_us=86 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+42991 STAT name=i2c_xfer n=15324 min_us=242 avg_us=336 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43003 STAT name=uart_line n=1175 min_us=1697 avg_us=9274 max_us=12757 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43016 STAT name=lcd_update n=74 min_us=37886 avg_us=39271 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43028 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43041 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43053 UART rx=375 ore=0
+43056 EVT t_us=42871364 name=cmd_rx
+43061 EVT t_us=43056386 name=cmd_reply
+43066 PARCEL_OUT gate=1001 state=ESTOP
+43164 LOAD pct=54 pm=539 win_cyc=48001548 busy_cyc=25880598 windows=42
+stats
+43571 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+43578 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+43583 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+43593 STAT name=uart_rx n=106 min_us=60 avg_us=103975 max_us=195246 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43605 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43617 STAT name=gate n=5233 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=158
+43630 STAT name=sort n=9 min_us=8974 avg_us=16488 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43642 STAT name=imu n=2677 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=136
+43655 STAT name=lcd n=75 min_us=38121 avg_us=39487 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=184359 miss=0
+43668 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43679 STAT name=loop n=396364 min_us=37 avg_us=86 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43691 STAT name=i2c_xfer n=15554 min_us=242 avg_us=336 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43703 STAT name=uart_line n=1196 min_us=1697 avg_us=9275 max_us=12757 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43716 STAT name=lcd_update n=75 min_us=37886 avg_us=39253 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43728 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43741 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43753 UART rx=381 ore=0
+43756 EVT t_us=43571353 name=cmd_rx
+43761 EVT t_us=43756358 name=cmd_reply
+stats
+43838 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+43844 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+43850 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+43860 STAT name=uart_rx n=108 min_us=60 avg_us=103857 max_us=195246 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43872 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43883 STAT name=gate n=5241 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=160
+43897 STAT name=sort n=9 min_us=8974 avg_us=16488 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43908 STAT name=imu n=2682 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=138
+43922 STAT name=lcd n=76 min_us=38121 avg_us=39469 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+43935 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43946 STAT name=loop n=396842 min_us=37 avg_us=86 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43958 STAT name=i2c_xfer n=15700 min_us=242 avg_us=335 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43970 STAT name=uart_line n=1215 min_us=1697 avg_us=9282 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43982 STAT name=lcd_update n=76 min_us=37886 avg_us=39235 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+43995 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44008 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44020 UART rx=387 ore=0
+44023 EVT t_us=43838058 name=cmd_rx
+44028 EVT t_us=44023076 name=cmd_reply
+44164 LOAD pct=50 pm=503 win_cyc=48000204 busy_cyc=24142629 windows=43
+stats
+44538 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+44544 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+44550 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+44560 STAT name=uart_rx n=109 min_us=60 avg_us=104695 max_us=195246 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44572 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44583 STAT name=gate n=5334 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=162
+44597 STAT name=sort n=9 min_us=8974 avg_us=16488 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44608 STAT name=imu n=2730 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=140
+44622 STAT name=lcd n=77 min_us=38121 avg_us=39452 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+44635 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44646 STAT name=loop n=403918 min_us=37 avg_us=86 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44658 STAT name=i2c_xfer n=15932 min_us=242 avg_us=336 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44670 STAT name=uart_line n=1235 min_us=1697 avg_us=9288 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44682 STAT name=lcd_update n=77 min_us=37886 avg_us=39218 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44695 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44708 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44720 UART rx=393 ore=0
+44723 EVT t_us=44538050 name=cmd_rx
+44728 EVT t_us=44723093 name=cmd_reply
+stats
+44904 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+44911 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+44916 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+44926 STAT name=uart_rx n=110 min_us=60 avg_us=105518 max_us=195274 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44939 STAT name=estop n=6 min_us=63 avg_us=2257 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44950 STAT name=gate n=5361 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=164
+44963 STAT name=sort n=9 min_us=8974 avg_us=16488 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44975 STAT name=imu n=2744 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=142
+44988 STAT name=lcd n=78 min_us=38121 avg_us=39436 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+45001 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45012 STAT name=loop n=405970 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45024 STAT name=i2c_xfer n=16096 min_us=242 avg_us=335 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45037 STAT name=uart_line n=1254 min_us=1697 avg_us=9295 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45049 STAT name=lcd_update n=78 min_us=37886 avg_us=39201 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45062 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45075 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45086 UART rx=399 ore=0
+45090 EVT t_us=44904715 name=cmd_rx
+45094 EVT t_us=45089727 name=cmd_reply
+45164 LOAD pct=54 pm=536 win_cyc=48000689 busy_cyc=25739525 windows=44
+stats
+45404 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+45411 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+45416 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+45426 STAT name=uart_rx n=111 min_us=60 avg_us=106326 max_us=195274 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45439 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45450 STAT name=gate n=5414 min_us=111 avg_us=126 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=166
+45463 STAT name=sort n=9 min_us=8974 avg_us=16488 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45475 STAT name=imu n=2771 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=144
+45488 STAT name=lcd n=79 min_us=38121 avg_us=39419 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+45501 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45512 STAT name=loop n=409959 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45524 STAT name=i2c_xfer n=16286 min_us=242 avg_us=335 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45537 STAT name=uart_line n=1274 min_us=1697 avg_us=9300 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45549 STAT name=lcd_update n=79 min_us=37886 avg_us=39185 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45562 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45575 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+45587 UART rx=405 ore=0
+45590 EVT t_us=45404737 name=cmd_rx
+45594 EVT t_us=45589758 name=cmd_reply
+45705 PARCEL_IN gate=3413
+45708 SORT_SKIP state=ESTOP class=A
+45712 EVT t_us=45705218 name=parcel_in
+stats
+45971 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+45978 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+45983 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+45993 STAT name=uart_rx n=112 min_us=60 avg_us=107120 max_us=195274 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46005 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46017 STAT name=gate n=5479 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194633 miss=169
+46030 STAT name=sort n=10 min_us=8966 avg_us=15736 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46042 STAT name=imu n=2804 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=146
+46055 STAT name=lcd n=80 min_us=38121 avg_us=39403 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+46068 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46079 STAT name=loop n=414928 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46091 STAT name=i2c_xfer n=16488 min_us=242 avg_us=335 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46103 STAT name=uart_line n=1296 min_us=1697 avg_us=9293 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46116 STAT name=lcd_update n=80 min_us=37886 avg_us=39169 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46129 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46141 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46153 UART rx=411 ore=0
+46157 EVT t_us=45971416 name=cmd_rx
+46161 EVT t_us=46156520 name=cmd_reply
+46167 LOAD pct=55 pm=545 win_cyc=48141426 busy_cyc=26251198 windows=45
+stats
+46404 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+46411 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+46416 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+46426 STAT name=uart_rx n=113 min_us=60 avg_us=107901 max_us=195331 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46439 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46450 STAT name=gate n=5519 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194914 miss=171
+46463 STAT name=sort n=10 min_us=8966 avg_us=15736 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46475 STAT name=imu n=2825 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=148
+46489 STAT name=lcd n=81 min_us=38121 avg_us=39388 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+46501 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46512 STAT name=loop n=417866 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46524 STAT name=i2c_xfer n=16666 min_us=242 avg_us=334 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46537 STAT name=uart_line n=1316 min_us=1697 avg_us=9299 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46549 STAT name=lcd_update n=81 min_us=37886 avg_us=39154 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46562 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46575 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46587 UART rx=417 ore=0
+46590 EVT t_us=46404748 name=cmd_rx
+46595 EVT t_us=46589850 name=cmd_reply
+stats
+46904 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+46911 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+46916 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+46926 STAT name=uart_rx n=115 min_us=60 avg_us=107724 max_us=195331 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46939 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46950 STAT name=gate n=5573 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194914 miss=173
+46963 STAT name=sort n=10 min_us=8966 avg_us=15736 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+46975 STAT name=imu n=2852 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=150
+46989 STAT name=lcd n=82 min_us=38121 avg_us=39373 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+47001 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47012 STAT name=loop n=421994 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47024 STAT name=i2c_xfer n=16856 min_us=242 avg_us=334 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47037 STAT name=uart_line n=1335 min_us=1697 avg_us=9305 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47049 STAT name=lcd_update n=82 min_us=37886 avg_us=39139 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47062 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47075 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47087 UART rx=423 ore=0
+47090 EVT t_us=46904769 name=cmd_rx
+47095 EVT t_us=47089898 name=cmd_reply
+47099 PARCEL_OUT gate=1001 state=ESTOP
+47167 LOAD pct=54 pm=540 win_cyc=48001657 busy_cyc=25897471 windows=46
+stats
+47671 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+47678 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+47683 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+47693 STAT name=uart_rx n=116 min_us=60 avg_us=108478 max_us=195331 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47705 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47717 STAT name=gate n=5679 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194914 miss=176
+47730 STAT name=sort n=10 min_us=8966 avg_us=15736 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47742 STAT name=imu n=2906 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=152
+47755 STAT name=lcd n=83 min_us=38121 avg_us=39358 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+47768 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47779 STAT name=loop n=430041 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47791 STAT name=i2c_xfer n=17100 min_us=242 avg_us=334 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47803 STAT name=uart_line n=1356 min_us=1697 avg_us=9306 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47816 STAT name=lcd_update n=83 min_us=37886 avg_us=39124 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47829 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47841 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47853 UART rx=429 ore=0
+47857 EVT t_us=47671438 name=cmd_rx
+47861 EVT t_us=47856612 name=cmd_reply
+stats
+47938 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+47944 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+47950 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+47960 STAT name=uart_rx n=118 min_us=60 avg_us=108296 max_us=195407 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47972 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+47984 STAT name=gate n=5687 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194990 miss=178
+47997 STAT name=sort n=10 min_us=8966 avg_us=15736 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48009 STAT name=imu n=2911 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=154
+48022 STAT name=lcd n=84 min_us=38121 avg_us=39344 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+48035 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48046 STAT name=loop n=430515 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48058 STAT name=i2c_xfer n=17246 min_us=242 avg_us=334 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48070 STAT name=uart_line n=1375 min_us=1697 avg_us=9312 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48083 STAT name=lcd_update n=84 min_us=37886 avg_us=39109 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48095 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48108 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48120 UART rx=435 ore=0
+48123 EVT t_us=47938120 name=cmd_rx
+48128 EVT t_us=48123294 name=cmd_reply
+48167 LOAD pct=54 pm=538 win_cyc=48002057 busy_cyc=25804101 windows=47
+stats
+48438 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+48444 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+48450 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+48460 STAT name=uart_rx n=119 min_us=60 avg_us=109027 max_us=195407 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48472 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48484 STAT name=gate n=5741 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194990 miss=180
+48497 STAT name=sort n=10 min_us=8966 avg_us=15736 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48509 STAT name=imu n=2939 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=156
+48522 STAT name=lcd n=85 min_us=38121 avg_us=39330 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+48535 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48546 STAT name=loop n=434479 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48558 STAT name=i2c_xfer n=17438 min_us=242 avg_us=334 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48570 STAT name=uart_line n=1395 min_us=1697 avg_us=9317 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48583 STAT name=lcd_update n=85 min_us=37886 avg_us=39095 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48595 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48608 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48620 UART rx=441 ore=0
+48623 EVT t_us=48438133 name=cmd_rx
+48628 EVT t_us=48623321 name=cmd_reply
+stats
+48938 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+48944 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+48950 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+48960 STAT name=uart_rx n=120 min_us=60 avg_us=109747 max_us=195424 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48972 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+48984 STAT name=gate n=5795 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194990 miss=182
+48997 STAT name=sort n=10 min_us=8966 avg_us=15736 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+49009 STAT name=imu n=2967 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=158
+49022 STAT name=lcd n=86 min_us=38121 avg_us=39316 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+49035 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+49046 STAT name=loop n=438585 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+49058 STAT name=i2c_xfer n=17630 min_us=242 avg_us=334 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+49070 STAT name=uart_line n=1414 min_us=1697 avg_us=9322 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+49083 STAT name=lcd_update n=86 min_us=37886 avg_us=39082 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+49095 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+49108 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+49120 UART rx=447 ore=0
+49123 EVT t_us=48938129 name=cmd_rx
+49128 EVT t_us=49123302 name=cmd_reply
+49167 LOAD pct=54 pm=538 win_cyc=48000624 busy_cyc=25806679 windows=48
+
+49706 PARCEL_IN gate=3413
+49709 SORT_SKIP state=ESTOP class=UNKNOWN
+49714 EVT t_us=49706411 name=parcel_in
+
+50167 LOAD pct=21 pm=207 win_cyc=48001855 busy_cyc=9916659 windows=49
+stats
+50704 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+50711 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+50717 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+50726 STAT name=uart_rx n=124 min_us=60 avg_us=107786 max_us=195424 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+50739 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+50750 STAT name=gate n=6085 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194990 miss=187
+50763 STAT name=sort n=11 min_us=8966 avg_us=15172 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+50775 STAT name=imu n=3114 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=162
+50789 STAT name=lcd n=89 min_us=38121 avg_us=39277 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+50802 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+50813 STAT name=loop n=460667 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+50825 STAT name=i2c_xfer n=18332 min_us=242 avg_us=334 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+50837 STAT name=uart_line n=1438 min_us=1697 avg_us=9314 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+50849 STAT name=lcd_update n=89 min_us=37886 avg_us=39042 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+50862 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+50875 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+50887 UART rx=455 ore=0
+50890 EVT t_us=50704858 name=cmd_rx
+50895 EVT t_us=50890065 name=cmd_reply
+
+50939 PARCEL_OUT gate=1001 state=ESTOP
+51167 LOAD pct=37 pm=370 win_cyc=48000864 busy_cyc=17740838 windows=50
+stats
+51538 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+51544 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+51550 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+51560 STAT name=uart_rx n=127 min_us=60 avg_us=106779 max_us=195424 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+51572 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+51584 STAT name=gate n=6197 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194990 miss=191
+51597 STAT name=sort n=11 min_us=8966 avg_us=15172 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+51609 STAT name=imu n=3171 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=165
+51622 STAT name=lcd n=91 min_us=38096 avg_us=39251 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+51635 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+51646 STAT name=loop n=469149 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+51658 STAT name=i2c_xfer n=18718 min_us=242 avg_us=334 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+51670 STAT name=uart_line n=1459 min_us=1697 avg_us=9315 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+51683 STAT name=lcd_update n=91 min_us=37862 avg_us=39017 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+51695 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+51708 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+51720 UART rx=462 ore=0
+51723 EVT t_us=51538195 name=cmd_rx
+51728 EVT t_us=51723305 name=cmd_reply
+
+52167 LOAD pct=36 pm=364 win_cyc=48001848 busy_cyc=17479191 windows=51
+stats
+52538 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+52544 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+52550 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+52560 STAT name=uart_rx n=129 min_us=60 avg_us=106639 max_us=195424 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52572 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52584 STAT name=gate n=6342 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194990 miss=195
+52597 STAT name=sort n=11 min_us=8966 avg_us=15172 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52609 STAT name=imu n=3244 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=168
+52622 STAT name=lcd n=93 min_us=38096 avg_us=39227 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+52635 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52646 STAT name=loop n=480313 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52658 STAT name=i2c_xfer n=19136 min_us=242 avg_us=334 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52670 STAT name=uart_line n=1479 min_us=1697 avg_us=9319 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52683 STAT name=lcd_update n=93 min_us=37862 avg_us=38993 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52695 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52708 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52720 UART rx=469 ore=0
+52723 EVT t_us=52538222 name=cmd_rx
+52728 EVT t_us=52723365 name=cmd_reply
+stats
+52838 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+52844 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+52850 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+52860 STAT name=uart_rx n=131 min_us=60 avg_us=106502 max_us=195424 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52872 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52884 STAT name=gate n=6364 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194990 miss=196
+52897 STAT name=sort n=11 min_us=8966 avg_us=15172 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52909 STAT name=imu n=3255 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=169
+52922 STAT name=lcd n=93 min_us=38096 avg_us=39227 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+52935 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52946 STAT name=loop n=481924 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52958 STAT name=i2c_xfer n=19158 min_us=242 avg_us=334 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52970 STAT name=uart_line n=1498 min_us=1697 avg_us=9325 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52983 STAT name=lcd_update n=93 min_us=37862 avg_us=38993 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+52995 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53008 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53020 UART rx=475 ore=0
+53023 EVT t_us=52838245 name=cmd_rx
+53028 EVT t_us=53023357 name=cmd_reply
+53167 LOAD pct=54 pm=536 win_cyc=48002112 busy_cyc=25742012 windows=52
+stats
+53404 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+53411 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+53417 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+53426 STAT name=uart_rx n=132 min_us=60 avg_us=107174 max_us=195424 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53439 STAT name=estop n=7 min_us=63 avg_us=1944 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53450 STAT name=gate n=6430 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194990 miss=199
+53463 STAT name=sort n=11 min_us=8966 avg_us=15172 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53475 STAT name=imu n=3289 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=171
+53489 STAT name=lcd n=94 min_us=38096 avg_us=39216 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+53502 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53513 STAT name=loop n=486943 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53525 STAT name=i2c_xfer n=19362 min_us=242 avg_us=334 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53537 STAT name=uart_line n=1518 min_us=1697 avg_us=9329 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53549 STAT name=lcd_update n=94 min_us=37862 avg_us=38981 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53562 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53575 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53587 UART rx=481 ore=0
+53590 EVT t_us=53404906 name=cmd_rx
+53595 EVT t_us=53590074 name=cmd_reply
+53704 PARCEL_IN gate=3413
+53707 SORT_SKIP state=ESTOP class=B
+53711 EVT t_us=53704240 name=parcel_in
+stats
+53738 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+53744 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+53750 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+53760 STAT name=uart_rx n=134 min_us=60 avg_us=107033 max_us=195424 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53772 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53784 STAT name=gate n=6450 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194990 miss=202
+53797 STAT name=sort n=12 min_us=8966 avg_us=14655 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53809 STAT name=imu n=3300 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=173
+53822 STAT name=lcd n=95 min_us=38096 avg_us=39205 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+53835 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53846 STAT name=loop n=488251 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53858 STAT name=i2c_xfer n=19520 min_us=242 avg_us=333 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53870 STAT name=uart_line n=1540 min_us=1697 avg_us=9323 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53883 STAT name=lcd_update n=95 min_us=37862 avg_us=38970 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53895 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53908 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+53920 UART rx=487 ore=0
+53923 EVT t_us=53738254 name=cmd_rx
+53928 EVT t_us=53923356 name=cmd_reply
+54167 LOAD pct=55 pm=547 win_cyc=48002124 busy_cyc=26263820 windows=53
+stats
+54571 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+54578 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+54583 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+54593 STAT name=uart_rx n=136 min_us=60 avg_us=106895 max_us=195424 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54605 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54617 STAT name=gate n=6569 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=194990 miss=205
+54630 STAT name=sort n=12 min_us=8966 avg_us=14655 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54642 STAT name=imu n=3360 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=175
+54655 STAT name=lcd n=96 min_us=38096 avg_us=39194 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+54668 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54679 STAT name=loop n=497427 min_us=37 avg_us=87 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54691 STAT name=i2c_xfer n=19776 min_us=242 avg_us=334 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54704 STAT name=uart_line n=1560 min_us=1697 avg_us=9327 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54716 STAT name=lcd_update n=96 min_us=37862 avg_us=38959 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54729 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54742 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54753 UART rx=493 ore=0
+54757 EVT t_us=54571601 name=cmd_rx
+54761 EVT t_us=54756732 name=cmd_reply
+stats
+54838 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+54844 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+54850 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+54860 STAT name=uart_rx n=137 min_us=60 avg_us=107540 max_us=195424 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54872 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54884 STAT name=gate n=6577 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=195089 miss=207
+54897 STAT name=sort n=12 min_us=8966 avg_us=14655 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54909 STAT name=imu n=3365 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=177
+54922 STAT name=lcd n=97 min_us=38096 avg_us=39183 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+54935 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54946 STAT name=loop n=497901 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54958 STAT name=i2c_xfer n=19922 min_us=242 avg_us=333 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54970 STAT name=uart_line n=1579 min_us=1697 avg_us=9332 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54983 STAT name=lcd_update n=97 min_us=37862 avg_us=38948 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+54995 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+55008 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+55020 UART rx=499 ore=0
+55024 EVT t_us=54838265 name=cmd_rx
+55028 EVT t_us=55023410 name=cmd_reply
+55033 PARCEL_OUT gate=1001 state=ESTOP
+55168 LOAD pct=51 pm=507 win_cyc=48021124 busy_cyc=24354865 windows=54
+stats
+55471 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+55478 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+55483 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+55493 STAT name=uart_rx n=139 min_us=60 avg_us=107399 max_us=195424 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+55505 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+55517 STAT name=gate n=6656 min_us=111 avg_us=128 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=195089 miss=210
+55530 STAT name=sort n=12 min_us=8966 avg_us=14655 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+55542 STAT name=imu n=3406 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=179
+55555 STAT name=lcd n=98 min_us=38096 avg_us=39172 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+55568 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+55579 STAT name=loop n=503872 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+55591 STAT name=i2c_xfer n=20140 min_us=242 avg_us=333 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+55604 STAT name=uart_line n=1600 min_us=1697 avg_us=9332 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+55616 STAT name=lcd_update n=98 min_us=37862 avg_us=38938 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+55629 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+55642 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+55654 UART rx=505 ore=0
+55657 EVT t_us=55471627 name=cmd_rx
+55662 EVT t_us=55656792 name=cmd_reply
+stats
+56005 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+56011 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+56017 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+56026 STAT name=uart_rx n=140 min_us=60 avg_us=108027 max_us=195424 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56039 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56050 STAT name=gate n=6717 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=195089 miss=212
+56064 STAT name=sort n=12 min_us=8966 avg_us=14655 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56075 STAT name=imu n=3437 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=181
+56089 STAT name=lcd n=99 min_us=38096 avg_us=39162 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+56102 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56113 STAT name=loop n=508502 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56125 STAT name=i2c_xfer n=20338 min_us=242 avg_us=333 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56137 STAT name=uart_line n=1619 min_us=1697 avg_us=9337 max_us=12760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56150 STAT name=lcd_update n=99 min_us=37862 avg_us=38927 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56162 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56175 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56187 UART rx=511 ore=0
+56190 EVT t_us=56004965 name=cmd_rx
+56195 EVT t_us=56190132 name=cmd_reply
+56201 LOAD pct=52 pm=524 win_cyc=49579208 busy_cyc=25985702 windows=55
+stats
+56505 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+56511 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+56517 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+56526 STAT name=uart_rx n=142 min_us=60 avg_us=107882 max_us=195424 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56539 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56550 STAT name=gate n=6771 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=195089 miss=214
+56564 STAT name=sort n=12 min_us=8966 avg_us=14655 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56575 STAT name=imu n=3464 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=183
+56589 STAT name=lcd n=100 min_us=38096 avg_us=39152 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+56602 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56613 STAT name=loop n=512487 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56625 STAT name=i2c_xfer n=20528 min_us=242 avg_us=333 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56637 STAT name=uart_line n=1639 min_us=1697 avg_us=9341 max_us=12847 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56650 STAT name=lcd_update n=100 min_us=37862 avg_us=38917 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56662 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56675 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56687 UART rx=517 ore=0
+56690 EVT t_us=56504975 name=cmd_rx
+56695 EVT t_us=56690316 name=cmd_reply
+stats
+56905 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+56911 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+56917 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+56926 STAT name=uart_rx n=144 min_us=60 avg_us=107741 max_us=195469 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56939 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56950 STAT name=gate n=6805 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-953 jit_max_us=195089 miss=216
+56964 STAT name=sort n=12 min_us=8966 avg_us=14655 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+56975 STAT name=imu n=3481 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=185
+56989 STAT name=lcd n=101 min_us=38096 avg_us=39142 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+57002 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57013 STAT name=loop n=515058 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57025 STAT name=i2c_xfer n=20698 min_us=242 avg_us=333 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57037 STAT name=uart_line n=1658 min_us=1697 avg_us=9346 max_us=12848 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57050 STAT name=lcd_update n=101 min_us=37862 avg_us=38908 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57062 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57075 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57087 UART rx=523 ore=0
+57090 EVT t_us=56904997 name=cmd_rx
+57095 EVT t_us=57090347 name=cmd_reply
+57201 LOAD pct=54 pm=536 win_cyc=48004462 busy_cyc=25719521 windows=56
+stats
+57405 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+57411 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+57417 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+57426 STAT name=uart_rx n=145 min_us=60 avg_us=108346 max_us=195481 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57439 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57450 STAT name=gate n=6859 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=218
+57464 STAT name=sort n=12 min_us=8966 avg_us=14655 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57475 STAT name=imu n=3508 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=187
+57489 STAT name=lcd n=102 min_us=38096 avg_us=39132 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+57502 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57513 STAT name=loop n=519039 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57525 STAT name=i2c_xfer n=20888 min_us=242 avg_us=333 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57537 STAT name=uart_line n=1678 min_us=1697 avg_us=9349 max_us=12849 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57550 STAT name=lcd_update n=102 min_us=37862 avg_us=38897 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57562 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57575 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57587 UART rx=529 ore=0
+57590 EVT t_us=57404974 name=cmd_rx
+57595 EVT t_us=57590362 name=cmd_reply
+57709 PARCEL_IN gate=3413
+57712 SORT_SKIP state=ESTOP class=A
+57716 EVT t_us=57709232 name=parcel_in
+stats
+57838 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+57845 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+57850 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+57860 STAT name=uart_rx n=146 min_us=60 avg_us=108944 max_us=195617 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57872 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57884 STAT name=gate n=6899 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=221
+57897 STAT name=sort n=13 min_us=8961 avg_us=14217 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57909 STAT name=imu n=3528 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=190
+57922 STAT name=lcd n=103 min_us=38096 avg_us=39122 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+57935 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57946 STAT name=loop n=521918 min_us=37 avg_us=89 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57958 STAT name=i2c_xfer n=21064 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57970 STAT name=uart_line n=1700 min_us=1697 avg_us=9344 max_us=12849 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57983 STAT name=lcd_update n=103 min_us=37862 avg_us=38888 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+57996 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+58008 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+58020 UART rx=535 ore=0
+58024 EVT t_us=57838318 name=cmd_rx
+58028 EVT t_us=58023640 name=cmd_reply
+58201 LOAD pct=55 pm=547 win_cyc=48000794 busy_cyc=26238219 windows=57
+stats
+58605 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+58611 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+58617 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+58626 STAT name=uart_rx n=147 min_us=60 avg_us=109533 max_us=195617 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+58639 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+58650 STAT name=gate n=7005 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=223
+58664 STAT name=sort n=13 min_us=8961 avg_us=14217 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+58675 STAT name=imu n=3581 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=192
+58689 STAT name=lcd n=104 min_us=38096 avg_us=39113 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+58702 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+58713 STAT name=loop n=530059 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+58725 STAT name=i2c_xfer n=21306 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+58737 STAT name=uart_line n=1720 min_us=1697 avg_us=9347 max_us=12850 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+58750 STAT name=lcd_update n=104 min_us=37862 avg_us=38879 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+58762 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+58775 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+58787 UART rx=541 ore=0
+58790 EVT t_us=58605012 name=cmd_rx
+58795 EVT t_us=58790377 name=cmd_reply
+
+58909 PARCEL_OUT gate=1001 state=ESTOP
+59201 LOAD pct=37 pm=369 win_cyc=48002136 busy_cyc=17702031 windows=58
+stats
+59605 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+59611 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+59617 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+59627 STAT name=uart_rx n=150 min_us=60 avg_us=108648 max_us=195617 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59639 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59650 STAT name=gate n=7151 min_us=111 avg_us=128 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=227
+59664 STAT name=sort n=13 min_us=8961 avg_us=14217 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59676 STAT name=imu n=3655 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=195
+59689 STAT name=lcd n=106 min_us=38096 avg_us=39095 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+59702 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59713 STAT name=loop n=541117 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59725 STAT name=i2c_xfer n=21726 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59737 STAT name=uart_line n=1741 min_us=1697 avg_us=9348 max_us=12856 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59750 STAT name=lcd_update n=106 min_us=37862 avg_us=38860 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59762 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59775 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59787 UART rx=548 ore=0
+59791 EVT t_us=59605040 name=cmd_rx
+59795 EVT t_us=59790409 name=cmd_reply
+stats
+59905 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+59911 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+59917 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+59927 STAT name=uart_rx n=152 min_us=60 avg_us=108505 max_us=195617 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59939 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59950 STAT name=gate n=7165 min_us=111 avg_us=128 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=229
+59964 STAT name=sort n=13 min_us=8961 avg_us=14217 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+59976 STAT name=imu n=3663 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=197
+59989 STAT name=lcd n=107 min_us=38096 avg_us=39086 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+60002 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60013 STAT name=loop n=542114 min_us=37 avg_us=89 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60025 STAT name=i2c_xfer n=21878 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60037 STAT name=uart_line n=1760 min_us=1697 avg_us=9352 max_us=12856 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60050 STAT name=lcd_update n=107 min_us=37862 avg_us=38852 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60062 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60075 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60087 UART rx=554 ore=0
+60091 EVT t_us=59905057 name=cmd_rx
+60095 EVT t_us=60090421 name=cmd_reply
+60201 LOAD pct=54 pm=538 win_cyc=48009452 busy_cyc=25816117 windows=59
+stats
+60571 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+60578 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+60583 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+60593 STAT name=uart_rx n=154 min_us=60 avg_us=108366 max_us=195617 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60606 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60617 STAT name=gate n=7252 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=231
+60630 STAT name=sort n=13 min_us=8961 avg_us=14217 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60642 STAT name=imu n=3708 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=199
+60656 STAT name=lcd n=108 min_us=38096 avg_us=39078 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+60668 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60679 STAT name=loop n=548657 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60691 STAT name=i2c_xfer n=22104 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60704 STAT name=uart_line n=1780 min_us=1697 avg_us=9355 max_us=12856 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60716 STAT name=lcd_update n=108 min_us=37862 avg_us=38843 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60729 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60742 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+60754 UART rx=560 ore=0
+60757 EVT t_us=60571739 name=cmd_rx
+60762 EVT t_us=60757105 name=cmd_reply
+
+61201 LOAD pct=37 pm=367 win_cyc=48002224 busy_cyc=17597351 windows=60
+stats
+61405 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+61411 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+61417 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+61427 STAT name=uart_rx n=156 min_us=60 avg_us=108231 max_us=195617 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61439 STAT name=estop n=8 min_us=63 avg_us=1709 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61451 STAT name=gate n=7365 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=234
+61464 STAT name=sort n=13 min_us=8961 avg_us=14217 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61476 STAT name=imu n=3766 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=202
+61489 STAT name=lcd n=110 min_us=38096 avg_us=39061 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+61502 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61513 STAT name=loop n=557187 min_us=37 avg_us=88 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61525 STAT name=i2c_xfer n=22492 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61537 STAT name=uart_line n=1800 min_us=1697 avg_us=9359 max_us=12856 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61550 STAT name=lcd_update n=110 min_us=37862 avg_us=38826 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61562 STAT name=estop_latency n=1 min_us=19618 avg_us=19618 max_us=19618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61575 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61587 UART rx=567 ore=0
+61591 EVT t_us=61405074 name=cmd_rx
+61595 EVT t_us=61590440 name=cmd_reply
+61624 ESTOP n=2 state=READY
+61627 EVT t_us=61604295 name=estop_irq
+61632 EVT t_us=61624042 name=estop_react
+stats
+61705 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+61711 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+61717 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+61727 STAT name=uart_rx n=157 min_us=60 avg_us=108787 max_us=195617 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61739 STAT name=estop n=9 min_us=63 avg_us=2987 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61750 STAT name=gate n=7384 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=236
+61764 STAT name=sort n=13 min_us=8961 avg_us=14217 max_us=18285 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61776 STAT name=imu n=3776 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=211713 miss=203
+61789 STAT name=lcd n=110 min_us=38096 avg_us=39061 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+61802 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61813 STAT name=loop n=558569 min_us=37 avg_us=89 max_us=251841 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61825 STAT name=i2c_xfer n=22512 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61837 STAT name=uart_line n=1822 min_us=1697 avg_us=9354 max_us=12856 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61850 STAT name=lcd_update n=110 min_us=37862 avg_us=38826 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61862 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61875 STAT name=parcel_latency n=8 min_us=2970 avg_us=3078 max_us=3103 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+61887 UART rx=573 ore=0
+61891 EVT t_us=61705059 name=cmd_rx
+61895 EVT t_us=61890433 name=cmd_reply
+61900 PARCEL_IN gate=3413
+61903 SORT n=9 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=3
+61912 EVT t_us=61900286 name=parcel_in
+61917 EVT t_us=61903394 name=servo_set
+62202 LOAD pct=57 pm=568 win_cyc=48035176 busy_cyc=27296247 windows=61
+stats
+62388 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+62395 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+62400 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+62410 STAT name=uart_rx n=158 min_us=60 avg_us=109337 max_us=195617 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+62422 STAT name=estop n=10 min_us=57 avg_us=2694 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+62434 STAT name=gate n=7469 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=239
+62447 STAT name=sort n=14 min_us=8961 avg_us=14511 max_us=18330 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+62459 STAT name=imu n=3820 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=214545 miss=205
+62472 STAT name=lcd n=111 min_us=38096 avg_us=39053 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+62485 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+62496 STAT name=loop n=565053 min_us=37 avg_us=89 max_us=256601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+62508 STAT name=i2c_xfer n=22736 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+62521 STAT name=uart_line n=1846 min_us=1697 avg_us=9347 max_us=12856 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+62533 STAT name=lcd_update n=111 min_us=37862 avg_us=38818 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+62546 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+62559 STAT name=parcel_latency n=9 min_us=2970 avg_us=3081 max_us=3108 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+62571 UART rx=579 ore=0
+62574 EVT t_us=62388420 name=cmd_rx
+62579 EVT t_us=62573867 name=cmd_reply
+62904 PARCEL_OUT gate=1001 state=READY
+
+63203 LOAD pct=37 pm=370 win_cyc=48048528 busy_cyc=17800620 windows=62
+stats
+63438 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+63445 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+63450 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+63460 STAT name=uart_rx n=161 min_us=60 avg_us=108516 max_us=195682 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63472 STAT name=estop n=10 min_us=57 avg_us=2694 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63484 STAT name=gate n=7624 min_us=111 avg_us=128 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=243
+63497 STAT name=sort n=14 min_us=8961 avg_us=14511 max_us=18330 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63509 STAT name=imu n=3900 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=214545 miss=208
+63522 STAT name=lcd n=113 min_us=38096 avg_us=39037 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+63535 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63546 STAT name=loop n=576868 min_us=37 avg_us=88 max_us=256601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63558 STAT name=i2c_xfer n=23168 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63571 STAT name=uart_line n=1867 min_us=1697 avg_us=9348 max_us=12856 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63583 STAT name=lcd_update n=113 min_us=37862 avg_us=38802 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63596 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63609 STAT name=parcel_latency n=9 min_us=2970 avg_us=3081 max_us=3108 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63621 UART rx=586 ore=0
+63624 EVT t_us=63438453 name=cmd_rx
+63629 EVT t_us=63623962 name=cmd_reply
+stats
+63905 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+63911 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+63917 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+63927 STAT name=uart_rx n=163 min_us=60 avg_us=108385 max_us=195682 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63939 STAT name=estop n=10 min_us=57 avg_us=2694 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63951 STAT name=gate n=7672 min_us=111 avg_us=128 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=245
+63964 STAT name=sort n=14 min_us=8961 avg_us=14511 max_us=18330 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+63976 STAT name=imu n=3925 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=214545 miss=210
+63989 STAT name=lcd n=114 min_us=38096 avg_us=39029 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+64002 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64013 STAT name=loop n=580442 min_us=37 avg_us=89 max_us=256601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64025 STAT name=i2c_xfer n=23354 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64037 STAT name=uart_line n=1886 min_us=1697 avg_us=9352 max_us=12858 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64050 STAT name=lcd_update n=114 min_us=37862 avg_us=38794 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64063 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64075 STAT name=parcel_latency n=9 min_us=2970 avg_us=3081 max_us=3108 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64087 UART rx=592 ore=0
+64091 EVT t_us=63905130 name=cmd_rx
+64095 EVT t_us=64090621 name=cmd_reply
+64203 LOAD pct=54 pm=538 win_cyc=48009266 busy_cyc=25833897 windows=63
+stats
+64538 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+64545 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+64550 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+64560 STAT name=uart_rx n=165 min_us=60 avg_us=108257 max_us=195682 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64572 STAT name=estop n=10 min_us=57 avg_us=2694 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64584 STAT name=gate n=7752 min_us=111 avg_us=128 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=247
+64597 STAT name=sort n=14 min_us=8961 avg_us=14511 max_us=18330 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64609 STAT name=imu n=3966 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=214545 miss=212
+64622 STAT name=lcd n=115 min_us=38096 avg_us=39021 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+64635 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64646 STAT name=loop n=586480 min_us=37 avg_us=89 max_us=256601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64658 STAT name=i2c_xfer n=23572 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64671 STAT name=uart_line n=1906 min_us=1697 avg_us=9355 max_us=12858 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64683 STAT name=lcd_update n=115 min_us=37862 avg_us=38787 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64696 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64709 STAT name=parcel_latency n=9 min_us=2970 avg_us=3081 max_us=3108 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64721 UART rx=598 ore=0
+64724 EVT t_us=64538483 name=cmd_rx
+64729 EVT t_us=64723914 name=cmd_reply
+stats
+64938 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+64945 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+64950 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+64960 STAT name=uart_rx n=166 min_us=60 avg_us=108783 max_us=195682 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64972 STAT name=estop n=10 min_us=57 avg_us=2694 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+64984 STAT name=gate n=7786 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=249
+64997 STAT name=sort n=14 min_us=8961 avg_us=14511 max_us=18330 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65009 STAT name=imu n=3984 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=214545 miss=214
+65022 STAT name=lcd n=116 min_us=38096 avg_us=39014 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+65035 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65046 STAT name=loop n=589029 min_us=37 avg_us=89 max_us=256601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65058 STAT name=i2c_xfer n=23744 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65071 STAT name=uart_line n=1925 min_us=1697 avg_us=9359 max_us=12858 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65083 STAT name=lcd_update n=116 min_us=37862 avg_us=38779 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65096 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65109 STAT name=parcel_latency n=9 min_us=2970 avg_us=3081 max_us=3108 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65121 UART rx=604 ore=0
+65124 EVT t_us=64938490 name=cmd_rx
+65129 EVT t_us=65123957 name=cmd_reply
+65204 LOAD pct=50 pm=503 win_cyc=48037782 busy_cyc=24180635 windows=64
+stats
+65405 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+65411 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+65417 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+65427 STAT name=uart_rx n=168 min_us=60 avg_us=108653 max_us=195697 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65439 STAT name=estop n=10 min_us=57 avg_us=2694 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65451 STAT name=gate n=7832 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=252
+65464 STAT name=sort n=14 min_us=8961 avg_us=14511 max_us=18330 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65476 STAT name=imu n=4009 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=214545 miss=216
+65489 STAT name=lcd n=117 min_us=38096 avg_us=39007 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+65502 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65513 STAT name=loop n=592467 min_us=37 avg_us=89 max_us=256601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65525 STAT name=i2c_xfer n=23930 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65537 STAT name=uart_line n=1945 min_us=1697 avg_us=9362 max_us=12858 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65550 STAT name=lcd_update n=117 min_us=37862 avg_us=38772 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65563 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65575 STAT name=parcel_latency n=9 min_us=2970 avg_us=3081 max_us=3108 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65587 UART rx=610 ore=0
+65591 EVT t_us=65405164 name=cmd_rx
+65595 EVT t_us=65590641 name=cmd_reply
+65706 PARCEL_IN gate=3413
+65709 SORT n=10 class=B raw=3413 impact=0 route=B angle=90 lat_ms=3
+65717 EVT t_us=65706213 name=parcel_in
+65722 EVT t_us=65709323 name=servo_set
+stats
+65871 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+65878 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+65883 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+65893 STAT name=uart_rx n=169 min_us=60 avg_us=109168 max_us=195697 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65906 STAT name=estop n=10 min_us=57 avg_us=2694 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65917 STAT name=gate n=7876 min_us=111 avg_us=128 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=255
+65930 STAT name=sort n=15 min_us=8961 avg_us=14695 max_us=18330 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65942 STAT name=imu n=4031 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=214545 miss=219
+65956 STAT name=lcd n=118 min_us=38096 avg_us=38999 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+65969 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65980 STAT name=loop n=595746 min_us=37 avg_us=89 max_us=256601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+65992 STAT name=i2c_xfer n=24110 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66004 STAT name=uart_line n=1968 min_us=1697 avg_us=9356 max_us=12858 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66017 STAT name=lcd_update n=118 min_us=37862 avg_us=38765 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66029 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66042 STAT name=parcel_latency n=10 min_us=2970 avg_us=3084 max_us=3110 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66054 UART rx=616 ore=0
+66057 EVT t_us=65871809 name=cmd_rx
+66062 EVT t_us=66057382 name=cmd_reply
+66204 LOAD pct=55 pm=555 win_cyc=48000192 busy_cyc=26638902 windows=65
+stats
+66471 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+66478 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+66483 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+66493 STAT name=uart_rx n=170 min_us=60 avg_us=109678 max_us=195803 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66506 STAT name=estop n=10 min_us=57 avg_us=2694 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66517 STAT name=gate n=7949 min_us=111 avg_us=128 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=258
+66531 STAT name=sort n=15 min_us=8961 avg_us=14695 max_us=18330 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66542 STAT name=imu n=4068 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=214545 miss=221
+66556 STAT name=lcd n=119 min_us=38096 avg_us=38992 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+66569 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66580 STAT name=loop n=601279 min_us=37 avg_us=89 max_us=256601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66592 STAT name=i2c_xfer n=24320 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66604 STAT name=uart_line n=1988 min_us=1697 avg_us=9360 max_us=12858 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66617 STAT name=lcd_update n=119 min_us=37862 avg_us=38758 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66629 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66642 STAT name=parcel_latency n=10 min_us=2970 avg_us=3084 max_us=3110 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66654 UART rx=622 ore=0
+66658 EVT t_us=66471826 name=cmd_rx
+66662 EVT t_us=66657409 name=cmd_reply
+stats
+66905 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+66911 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+66917 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+66927 STAT name=uart_rx n=172 min_us=60 avg_us=109541 max_us=195821 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66939 STAT name=estop n=10 min_us=57 avg_us=2694 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66951 STAT name=gate n=7990 min_us=111 avg_us=128 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=260
+66964 STAT name=sort n=15 min_us=8961 avg_us=14695 max_us=18330 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+66976 STAT name=imu n=4089 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=214545 miss=223
+66989 STAT name=lcd n=120 min_us=38096 avg_us=38985 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+67002 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67013 STAT name=loop n=604348 min_us=37 avg_us=89 max_us=256601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67025 STAT name=i2c_xfer n=24498 min_us=242 avg_us=331 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67037 STAT name=uart_line n=2007 min_us=1697 avg_us=9363 max_us=12858 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67050 STAT name=lcd_update n=120 min_us=37862 avg_us=38751 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67063 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67075 STAT name=parcel_latency n=10 min_us=2970 avg_us=3084 max_us=3110 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67088 UART rx=628 ore=0
+67091 EVT t_us=66905183 name=cmd_rx
+67096 EVT t_us=67090766 name=cmd_reply
+67100 PARCEL_OUT gate=1001 state=READY
+67205 LOAD pct=54 pm=541 win_cyc=48047020 busy_cyc=25993090 windows=66
+stats
+67638 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+67645 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+67650 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+67660 STAT name=uart_rx n=174 min_us=60 avg_us=109407 max_us=195821 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67672 STAT name=estop n=10 min_us=57 avg_us=2694 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67684 STAT name=gate n=8089 min_us=111 avg_us=128 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=263
+67697 STAT name=sort n=15 min_us=8961 avg_us=14695 max_us=18330 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67709 STAT name=imu n=4140 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=214545 miss=225
+67722 STAT name=lcd n=121 min_us=38096 avg_us=38979 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+67735 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67746 STAT name=loop n=611864 min_us=37 avg_us=89 max_us=256601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67758 STAT name=i2c_xfer n=24736 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67771 STAT name=uart_line n=2028 min_us=1697 avg_us=9364 max_us=12858 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67783 STAT name=lcd_update n=121 min_us=37862 avg_us=38744 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67796 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67809 STAT name=parcel_latency n=10 min_us=2970 avg_us=3084 max_us=3110 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+67821 UART rx=634 ore=0
+67824 EVT t_us=67638531 name=cmd_rx
+67829 EVT t_us=67824112 name=cmd_reply
+
+68205 LOAD pct=37 pm=367 win_cyc=48002036 busy_cyc=17607356 windows=67
+stats
+68538 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+68545 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+68550 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+68560 STAT name=uart_rx n=176 min_us=60 avg_us=109277 max_us=195821 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+68572 STAT name=estop n=10 min_us=57 avg_us=2694 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+68584 STAT name=gate n=8215 min_us=111 avg_us=128 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=266
+68597 STAT name=sort n=15 min_us=8961 avg_us=14695 max_us=18330 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+68609 STAT name=imu n=4205 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=214545 miss=228
+68623 STAT name=lcd n=123 min_us=38096 avg_us=38965 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+68635 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+68646 STAT name=loop n=621420 min_us=37 avg_us=89 max_us=256601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+68658 STAT name=i2c_xfer n=25138 min_us=242 avg_us=331 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+68671 STAT name=uart_line n=2048 min_us=1697 avg_us=9367 max_us=12858 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+68683 STAT name=lcd_update n=123 min_us=37862 avg_us=38730 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+# >> потік завершено: надіслано 120 команд, 720 байтів
+68696 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+68709 STAT name=parcel_latency n=10 min_us=2970 avg_us=3084 max_us=3110 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+68721 UART rx=641 ore=0
+68724 EVT t_us=68538545 name=cmd_rx
+68729 EVT t_us=68724144 name=cmd_reply
+69205 LOAD pct=37 pm=367 win_cyc=48001476 busy_cyc=17605409 windows=68
+70205 LOAD pct=20 pm=195 win_cyc=48001172 busy_cyc=9365471 windows=69
+71205 LOAD pct=20 pm=195 win_cyc=48000628 busy_cyc=9366624 windows=70
+# > stats
+st72205 LOAD pct=20 pm=195 win_cyc=48002308 busy_cyc=9371870 windows=71
+ats
+72971 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+72978 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+72983 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235264 lcd_us=759228
+72993 STAT name=uart_rx n=182 min_us=60 avg_us=106752 max_us=195834 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+73005 STAT name=estop n=10 min_us=57 avg_us=2694 max_us=13220 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+73017 STAT name=gate n=8996 min_us=111 avg_us=127 max_us=4318 period_us=5000 jit_min_us=-960 jit_max_us=195089 miss=276
+73030 STAT name=sort n=15 min_us=8961 avg_us=14695 max_us=18330 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+73042 STAT name=imu n=4602 min_us=1026 avg_us=1038 max_us=1041 period_us=10000 jit_min_us=-989 jit_max_us=214545 miss=238
+73055 STAT name=lcd n=132 min_us=38096 avg_us=38911 max_us=71613 period_us=500000 jit_min_us=-958 jit_max_us=195766 miss=0
+73068 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+73079 STAT name=loop n=681151 min_us=37 avg_us=86 max_us=256601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+73091 STAT name=i2c_xfer n=27156 min_us=242 avg_us=332 max_us=33681 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+73104 STAT name=uart_line n=2071 min_us=1697 avg_us=9367 max_us=12858 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+73116 STAT name=lcd_update n=132 min_us=37862 avg_us=38675 max_us=71379 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+73129 STAT name=estop_latency n=2 min_us=19618 avg_us=19682 max_us=19747 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+73142 STAT name=parcel_latency n=10 min_us=2970 avg_us=3084 max_us=3110 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+73154 UART rx=647 ore=0
+73157 EVT t_us=72971498 name=cmd_rx
+73162 EVT t_us=73157080 name=cmd_reply
+# > load
+73205 LOAD pct=37 pm=365 win_cyc=48001636 busy_cyc=17540598 windows=72
+load74205 LOAD pct=20 pm=195 win_cyc=48000604 busy_cyc=9378965 windows=73
+
+74504 LOAD pct=20 pm=195 win_cyc=48000604 busy_cyc=9378965 windows=73
+74513 EVT t_us=74504863 name=cmd_rx
+74517 EVT t_us=74512494 name=cmd_reply
+# > stack
+s75205 LOAD pct=21 pm=211 win_cyc=48000520 busy_cyc=10138785 windows=74
+tack76205 LOAD pct=20 pm=195 win_cyc=48002440 busy_cyc=9378109 windows=75
+
+76538 STACK used=904 reserved=1024 free=120 overflow=0
+76544 EVT t_us=76538262 name=cmd_rx
+76549 EVT t_us=76544196 name=cmd_reply
+# > heap
+he77205 LOAD pct=21 pm=210 win_cyc=48001348 busy_cyc=10062134 windows=76
+ap
+77971 HEAP arena=436 used=436 free=0
+77976 EVT t_us=77971627 name=cmd_rx
+77980 EVT t_us=77975757 name=cmd_reply
+# > hist gate
+h78206 LOAD pct=21 pm=208 win_cyc=48035539 busy_cyc=9977898 windows=77
+ist79206 LOAD pct=19 pm=194 win_cyc=48002141 busy_cyc=9324782 windows=78
+ ga80206 LOAD pct=20 pm=195 win_cyc=48000540 busy_cyc=9374313 windows=79
+te
+81005 HIST name=gate period_us=5000 n=10434 step_us=100
+81011 HIST name=gate lo_us=-1000 hi_us=-900 n=12
+81016 HIST name=gate lo_us=-900 hi_us=-800 n=21
+81021 HIST name=gate lo_us=-800 hi_us=-700 n=17
+81026 HIST name=gate lo_us=-700 hi_us=-600 n=17
+81031 HIST name=gate lo_us=-600 hi_us=-500 n=8
+81036 HIST name=gate lo_us=-500 hi_us=-400 n=38
+81042 HIST name=gate lo_us=-400 hi_us=-300 n=62
+81047 HIST name=gate lo_us=-300 hi_us=-200 n=689
+81052 HIST name=gate lo_us=-200 hi_us=-100 n=2430
+81057 HIST name=gate lo_us=-100 hi_us=0 n=1213
+81063 HIST name=gate lo_us=0 hi_us=100 n=2409
+81068 HIST name=gate lo_us=100 hi_us=200 n=2937
+81073 HIST name=gate lo_us=200 hi_us=300 n=55
+81078 HIST name=gate lo_us=300 hi_us=400 n=2
+81083 HIST name=gate lo_us=500 hi_us=600 n=7
+81088 HIST name=gate lo_us=1100 hi_us=1200 n=175
+81093 HIST name=gate lo_us=2000 hi_us=inf n=342
+81099 EVT t_us=81005094 name=cmd_rx
+81103 EVT t_us=81098521 name=cmd_reply
+# > hist imu
+81206 LOAD pct=29 pm=286 win_cyc=48001836 busy_cyc=13719170 windows=80
+his82206 LOAD pct=20 pm=195 win_cyc=48002196 busy_cyc=9369446 windows=81
+t i83206 LOAD pct=20 pm=195 win_cyc=48000576 busy_cyc=9369684 windows=82
+mu
+84105 HIST name=imu period_us=10000 n=5615 step_us=100
+84111 HIST name=imu lo_us=-1000 hi_us=-900 n=1
+84116 HIST name=imu lo_us=-900 hi_us=-800 n=5
+84121 HIST name=imu lo_us=-800 hi_us=-700 n=15
+84126 HIST name=imu lo_us=-700 hi_us=-600 n=16
+84131 HIST name=imu lo_us=-600 hi_us=-500 n=9
+84136 HIST name=imu lo_us=-500 hi_us=-400 n=61
+84141 HIST name=imu lo_us=-400 hi_us=-300 n=13
+84146 HIST name=imu lo_us=-300 hi_us=-200 n=244
+84151 HIST name=imu lo_us=-200 hi_us=-100 n=30
+84156 HIST name=imu lo_us=-100 hi_us=0 n=3336
+84161 HIST name=imu lo_us=0 hi_us=100 n=1563
+84166 HIST name=imu lo_us=100 hi_us=200 n=5
+84171 HIST name=imu lo_us=200 hi_us=300 n=2
+84176 HIST name=imu lo_us=300 hi_us=400 n=5
+84180 HIST name=imu lo_us=400 hi_us=500 n=4
+84185 HIST name=imu lo_us=1100 hi_us=1200 n=2
+84190 HIST name=imu lo_us=1200 hi_us=1300 n=3
+84195 HIST name=imu lo_us=1300 hi_us=1400 n=1
+84200 HIST name=imu lo_us=1400 hi_us=1500 n=1
+84205 HIST name=imu lo_us=2000 hi_us=inf n=299
+84211 EVT t_us=84105138 name=cmd_rx
+84216 EVT t_us=84210812 name=cmd_reply
+84221 LOAD pct=29 pm=295 win_cyc=48739093 busy_cyc=14355560 windows=83
+# > hist lcd
+hi85221 LOAD pct=19 pm=194 win_cyc=48000827 busy_cyc=9322749 windows=84
+st 86221 LOAD pct=19 pm=194 win_cyc=48002088 busy_cyc=9321415 windows=85
+lcd87221 LOAD pct=19 pm=194 win_cyc=48000000 busy_cyc=9323408 windows=86
+
+87271 HIST name=lcd period_us=500000 n=159 step_us=100
+87277 HIST name=lcd lo_us=-1000 hi_us=-900 n=2
+87282 HIST name=lcd lo_us=-900 hi_us=-800 n=1
+87287 HIST name=lcd lo_us=-800 hi_us=-700 n=2
+87292 HIST name=lcd lo_us=-700 hi_us=-600 n=4
+87297 HIST name=lcd lo_us=-600 hi_us=-500 n=2
+87302 HIST name=lcd lo_us=-500 hi_us=-400 n=3
+87307 HIST name=lcd lo_us=-400 hi_us=-300 n=2
+87312 HIST name=lcd lo_us=-300 hi_us=-200 n=4
+87317 HIST name=lcd lo_us=-200 hi_us=-100 n=26
+87322 HIST name=lcd lo_us=-100 hi_us=0 n=28
+87327 HIST name=lcd lo_us=0 hi_us=100 n=27
+87332 HIST name=lcd lo_us=100 hi_us=200 n=14
+87337 HIST name=lcd lo_us=200 hi_us=300 n=3
+87341 HIST name=lcd lo_us=400 hi_us=500 n=1
+87346 HIST name=lcd lo_us=500 hi_us=600 n=1
+87351 HIST name=lcd lo_us=700 hi_us=800 n=1
+87356 HIST name=lcd lo_us=1100 hi_us=1200 n=2
+87361 HIST name=lcd lo_us=2000 hi_us=inf n=36
+87366 EVT t_us=87271877 name=cmd_rx
+87371 EVT t_us=87366333 name=cmd_reply
+# > set end 0
+s87910 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+e88221 LOAD pct=32 pm=316 win_cyc=48001344 busy_cyc=15181321 windows=87
+t 89222 LOAD pct=19 pm=194 win_cyc=48001949 busy_cyc=9321921 windows=88
+end90222 LOAD pct=19 pm=194 win_cyc=48002040 busy_cyc=9324655 windows=89
+ 0
+90938 SET name=end st=BAD

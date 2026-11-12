@@ -1,0 +1,670 @@
+# git=3c1a2135 (з PERF) scenario=6.2.6 build="LAB2_CAP=0 TEST_I2C_FAULT=0 PERF=1" perf=1 port=rfc2217://localhost:4000 host_start=2026-11-12T15:09:18
+# сценарій 6.2.6: Тривала робота 60 хв часу МК - посилки наприкінці
+4149516 LOAD pct=20 pm=195 win_cyc=48002592 busy_cyc=9360899 windows=4149
+4150516 LOAD pct=19 pm=195 win_cyc=48002544 busy_cyc=9360121 windows=4150
+4151516 LOAD pct=19 pm=195 win_cyc=48001956 busy_cyc=9360075 windows=4151
+# > stats
+stat4152516 LOAD pct=20 pm=195 win_cyc=48002112 busy_cyc=9372145 windows=4152
+s
+4152895 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+4152902 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+4152908 STARTUP boot_us=7047 gate_us=171360 class_us=176139 imu_us=234947 lcd_us=759175
+4152918 STAT name=uart_rx n=723 min_us=62 avg_us=3606 max_us=197571 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4152929 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4152940 STAT name=gate n=751333 min_us=112 avg_us=115 max_us=4422 period_us=5000 jit_min_us=-970 jit_max_us=194796 miss=11583
+4152954 STAT name=sort n=3 min_us=17496 avg_us=17516 max_us=17537 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4152966 STAT name=imu n=382788 min_us=996 avg_us=1039 max_us=34735 period_us=10000 jit_min_us=-989 jit_max_us=188977 miss=8248
+4152980 STAT name=lcd n=8166 min_us=38109 avg_us=38666 max_us=71874 period_us=500000 jit_min_us=-840 jit_max_us=60116 miss=0
+4152994 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4153005 STAT name=loop n=57736205 min_us=37 avg_us=55 max_us=237188 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4153017 STAT name=i2c_xfer n=1876152 min_us=62 avg_us=346 max_us=34396 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4153030 STAT name=uart_line n=4574 min_us=1822 avg_us=7683 max_us=13296 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4153043 STAT name=lcd_update n=8166 min_us=37874 avg_us=38432 max_us=71640 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4153055 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4153067 STAT name=parcel_latency n=3 min_us=3189 avg_us=3194 max_us=3198 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4153079 UART rx=723 ore=0
+4153083 EVT t_us=4152895418 name=cmd_rx
+4153088 EVT t_us=4153082716 name=cmd_reply
+# продовження тієї самої симуляції після 6.2.6_2026-11-12_1401.log без скидання МК і без stats reset: там скрипт пройшов останню підказку без Enter людини, посилок наприкінці не було
+# ! Ще 3-5 посилок наприкінці, потім Enter
+4153516 LOAD pct=33 pm=335 win_cyc=48001692 busy_cyc=16070314 windows=4153
+4154516 LOAD pct=20 pm=195 win_cyc=48000720 busy_cyc=9363696 windows=4154
+4155516 LOAD pct=20 pm=195 win_cyc=48001080 busy_cyc=9360723 windows=4155
+4156516 LOAD pct=19 pm=195 win_cyc=48001692 busy_cyc=9358958 windows=4156
+4157516 LOAD pct=19 pm=195 win_cyc=48001404 busy_cyc=9358452 windows=4157
+4158516 LOAD pct=20 pm=195 win_cyc=48000120 busy_cyc=9364141 windows=4158
+4159516 LOAD pct=20 pm=195 win_cyc=48001428 busy_cyc=9364481 windows=4159
+4160516 LOAD pct=20 pm=195 win_cyc=48000084 busy_cyc=9360134 windows=4160
+4161516 LOAD pct=20 pm=195 win_cyc=48001104 busy_cyc=9363357 windows=4161
+4162516 LOAD pct=20 pm=195 win_cyc=48002580 busy_cyc=9364505 windows=4162
+4163516 LOAD pct=19 pm=195 win_cyc=48000756 busy_cyc=9358394 windows=4163
+4164516 LOAD pct=20 pm=195 win_cyc=48000036 busy_cyc=9364173 windows=4164
+4165516 LOAD pct=20 pm=195 win_cyc=48002424 busy_cyc=9364425 windows=4165
+4166516 LOAD pct=20 pm=195 win_cyc=48001332 busy_cyc=9365240 windows=4166
+4167516 LOAD pct=19 pm=195 win_cyc=48001476 busy_cyc=9359005 windows=4167
+4168516 LOAD pct=19 pm=195 win_cyc=48002424 busy_cyc=9359546 windows=4168
+4169516 LOAD pct=20 pm=195 win_cyc=48001392 busy_cyc=9365763 windows=4169
+4170516 LOAD pct=20 pm=195 win_cyc=48000816 busy_cyc=9364589 windows=4170
+4171516 LOAD pct=20 pm=195 win_cyc=48001536 busy_cyc=9365730 windows=4171
+4172516 LOAD pct=20 pm=195 win_cyc=48000456 busy_cyc=9365765 windows=4172
+4173516 LOAD pct=20 pm=195 win_cyc=48001164 busy_cyc=9365728 windows=4173
+4174516 LOAD pct=20 pm=195 win_cyc=48001608 busy_cyc=9366227 windows=4174
+4175516 LOAD pct=20 pm=195 win_cyc=48001296 busy_cyc=9365030 windows=4175
+4176517 LOAD pct=20 pm=195 win_cyc=48001476 busy_cyc=9363943 windows=4176
+4177517 LOAD pct=19 pm=195 win_cyc=48000672 busy_cyc=9358898 windows=4177
+4178517 LOAD pct=19 pm=195 win_cyc=48001800 busy_cyc=9359518 windows=4178
+4179517 LOAD pct=19 pm=195 win_cyc=48001752 busy_cyc=9359395 windows=4179
+4180517 LOAD pct=20 pm=195 win_cyc=48001584 busy_cyc=9364179 windows=4180
+4181517 LOAD pct=20 pm=195 win_cyc=48000372 busy_cyc=9360076 windows=4181
+4182517 LOAD pct=19 pm=195 win_cyc=48001572 busy_cyc=9359271 windows=4182
+4183517 LOAD pct=19 pm=195 win_cyc=48000288 busy_cyc=9359342 windows=4183
+4184517 LOAD pct=19 pm=195 win_cyc=48002232 busy_cyc=9360001 windows=4184
+4185517 LOAD pct=20 pm=195 win_cyc=48001308 busy_cyc=9361435 windows=4185
+4186517 LOAD pct=19 pm=195 win_cyc=48001908 busy_cyc=9359513 windows=4186
+4187517 LOAD pct=20 pm=195 win_cyc=48000432 busy_cyc=9360168 windows=4187
+4188517 LOAD pct=20 pm=195 win_cyc=48000228 busy_cyc=9360112 windows=4188
+4189517 LOAD pct=20 pm=195 win_cyc=48000120 busy_cyc=9360146 windows=4189
+4190517 LOAD pct=20 pm=195 win_cyc=48000840 busy_cyc=9360686 windows=4190
+4191517 LOAD pct=20 pm=195 win_cyc=48001644 busy_cyc=9360712 windows=4191
+4192517 LOAD pct=19 pm=195 win_cyc=48001560 busy_cyc=9358968 windows=4192
+4193517 LOAD pct=19 pm=195 win_cyc=48002316 busy_cyc=9360109 windows=4193
+4194517 LOAD pct=20 pm=195 win_cyc=48001596 busy_cyc=9365052 windows=4194
+4195517 LOAD pct=19 pm=195 win_cyc=48001320 busy_cyc=9358399 windows=4195
+4196517 LOAD pct=20 pm=195 win_cyc=48001152 busy_cyc=9364984 windows=4196
+4197517 LOAD pct=20 pm=195 win_cyc=48002580 busy_cyc=9363913 windows=4197
+4198517 LOAD pct=19 pm=195 win_cyc=48002304 busy_cyc=9360170 windows=4198
+4199517 LOAD pct=19 pm=195 win_cyc=48001632 busy_cyc=9359762 windows=4199
+4200517 LOAD pct=20 pm=195 win_cyc=48000264 busy_cyc=9360846 windows=4200
+4201517 LOAD pct=19 pm=195 win_cyc=48001956 busy_cyc=9359896 windows=4201
+4202517 LOAD pct=19 pm=195 win_cyc=48001800 busy_cyc=9359605 windows=4202
+4203517 LOAD pct=19 pm=195 win_cyc=48001548 busy_cyc=9358997 windows=4203
+4204517 LOAD pct=20 pm=195 win_cyc=48001032 busy_cyc=9365040 windows=4204
+4205517 LOAD pct=20 pm=195 win_cyc=48002304 busy_cyc=9366493 windows=4205
+4206517 LOAD pct=20 pm=195 win_cyc=48001008 busy_cyc=9365151 windows=4206
+4207517 LOAD pct=20 pm=195 win_cyc=48002424 busy_cyc=9366281 windows=4207
+4208517 LOAD pct=20 pm=195 win_cyc=48001752 busy_cyc=9366373 windows=4208
+4209517 LOAD pct=20 pm=195 win_cyc=48000372 busy_cyc=9364487 windows=4209
+4210517 LOAD pct=19 pm=195 win_cyc=48000924 busy_cyc=9359008 windows=4210
+4211518 LOAD pct=20 pm=195 win_cyc=48002568 busy_cyc=9363893 windows=4211
+4212518 LOAD pct=19 pm=195 win_cyc=48001536 busy_cyc=9358967 windows=4212
+4213518 LOAD pct=20 pm=195 win_cyc=48001128 busy_cyc=9365044 windows=4213
+4214518 LOAD pct=20 pm=195 win_cyc=48002688 busy_cyc=9363875 windows=4214
+4215518 LOAD pct=20 pm=195 win_cyc=48000312 busy_cyc=9364487 windows=4215
+4216518 LOAD pct=20 pm=195 win_cyc=48001584 busy_cyc=9363862 windows=4216
+4217518 LOAD pct=20 pm=195 win_cyc=48000060 busy_cyc=9360155 windows=4217
+4218518 LOAD pct=20 pm=195 win_cyc=48001212 busy_cyc=9361454 windows=4218
+4219518 LOAD pct=19 pm=195 win_cyc=48001344 busy_cyc=9358956 windows=4219
+4220518 LOAD pct=19 pm=195 win_cyc=48000528 busy_cyc=9358631 windows=4220
+4221518 LOAD pct=20 pm=195 win_cyc=48000504 busy_cyc=9360098 windows=4221
+4222518 LOAD pct=19 pm=195 win_cyc=48001548 busy_cyc=9358930 windows=4222
+4223518 LOAD pct=19 pm=195 win_cyc=48002496 busy_cyc=9360164 windows=4223
+4224518 LOAD pct=20 pm=195 win_cyc=48001584 busy_cyc=9365052 windows=4224
+4225518 LOAD pct=19 pm=195 win_cyc=48001692 busy_cyc=9359511 windows=4225
+4226518 LOAD pct=19 pm=195 win_cyc=48001272 busy_cyc=9359514 windows=4226
+4227518 LOAD pct=20 pm=195 win_cyc=48000852 busy_cyc=9360198 windows=4227
+4228518 LOAD pct=19 pm=195 win_cyc=48002244 busy_cyc=9359512 windows=4228
+4229518 LOAD pct=19 pm=195 win_cyc=48001128 busy_cyc=9358192 windows=4229
+4230518 LOAD pct=20 pm=195 win_cyc=48002256 busy_cyc=9363890 windows=4230
+4231518 LOAD pct=20 pm=195 win_cyc=48001704 busy_cyc=9363625 windows=4231
+4232518 LOAD pct=20 pm=195 win_cyc=48001200 busy_cyc=9365025 windows=4232
+4233518 LOAD pct=19 pm=195 win_cyc=48002328 busy_cyc=9360049 windows=4233
+4234518 LOAD pct=20 pm=195 win_cyc=48000072 busy_cyc=9360285 windows=4234
+4235518 LOAD pct=20 pm=195 win_cyc=48000216 busy_cyc=9360264 windows=4235
+4236518 LOAD pct=19 pm=195 win_cyc=48002376 busy_cyc=9360303 windows=4236
+4237518 LOAD pct=20 pm=195 win_cyc=48000552 busy_cyc=9360736 windows=4237
+4238518 LOAD pct=19 pm=195 win_cyc=48001824 busy_cyc=9359031 windows=4238
+4239518 LOAD pct=19 pm=194 win_cyc=48000240 busy_cyc=9314758 windows=4239
+4240518 LOAD pct=20 pm=195 win_cyc=48001392 busy_cyc=9365362 windows=4240
+4241518 LOAD pct=20 pm=195 win_cyc=48001044 busy_cyc=9365153 windows=4241
+4242518 LOAD pct=20 pm=195 win_cyc=48000984 busy_cyc=9365714 windows=4242
+4243518 LOAD pct=20 pm=195 win_cyc=48001668 busy_cyc=9365689 windows=4243
+4244518 LOAD pct=20 pm=195 win_cyc=48000876 busy_cyc=9365258 windows=4244
+4245131 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4245518 LOAD pct=22 pm=224 win_cyc=48000432 busy_cyc=10744971 windows=4245
+4246518 LOAD pct=19 pm=195 win_cyc=48001380 busy_cyc=9359460 windows=4246
+4247518 LOAD pct=20 pm=195 win_cyc=48000660 busy_cyc=9365074 windows=4247
+4248518 LOAD pct=19 pm=195 win_cyc=48000504 busy_cyc=9360093 windows=4248
+4249519 LOAD pct=20 pm=195 win_cyc=48002268 busy_cyc=9363850 windows=4249
+4250519 LOAD pct=20 pm=195 win_cyc=48000132 busy_cyc=9363873 windows=4250
+4251519 LOAD pct=20 pm=195 win_cyc=48000036 busy_cyc=9364524 windows=4251
+4252519 LOAD pct=20 pm=195 win_cyc=48001020 busy_cyc=9364816 windows=4252
+4253519 LOAD pct=20 pm=195 win_cyc=48000600 busy_cyc=9360241 windows=4253
+4254519 LOAD pct=20 pm=195 win_cyc=48000708 busy_cyc=9360712 windows=4254
+4255519 LOAD pct=19 pm=195 win_cyc=48002388 busy_cyc=9359571 windows=4255
+4256519 LOAD pct=20 pm=195 win_cyc=48000456 busy_cyc=9360166 windows=4256
+4257519 LOAD pct=19 pm=195 win_cyc=48001980 busy_cyc=9358984 windows=4257
+4258519 LOAD pct=20 pm=195 win_cyc=48000864 busy_cyc=9364483 windows=4258
+4259519 LOAD pct=20 pm=195 win_cyc=48001476 busy_cyc=9365098 windows=4259
+4260519 LOAD pct=20 pm=195 win_cyc=48000528 busy_cyc=9364480 windows=4260
+4261519 LOAD pct=19 pm=195 win_cyc=48000048 busy_cyc=9359774 windows=4261
+4262519 LOAD pct=20 pm=195 win_cyc=48000516 busy_cyc=9365044 windows=4262
+4263519 LOAD pct=20 pm=195 win_cyc=48000192 busy_cyc=9360124 windows=4263
+4264519 LOAD pct=19 pm=195 win_cyc=48001908 busy_cyc=9359822 windows=4264
+4265519 LOAD pct=19 pm=195 win_cyc=48000192 busy_cyc=9359618 windows=4265
+4266519 LOAD pct=20 pm=195 win_cyc=48000336 busy_cyc=9360341 windows=4266
+4267519 LOAD pct=19 pm=195 win_cyc=48002412 busy_cyc=9359762 windows=4267
+4267630 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4268519 LOAD pct=22 pm=224 win_cyc=48000528 busy_cyc=10738310 windows=4268
+4269519 LOAD pct=20 pm=195 win_cyc=48002220 busy_cyc=9363348 windows=4269
+4270519 LOAD pct=20 pm=195 win_cyc=48000552 busy_cyc=9364458 windows=4270
+4271519 LOAD pct=19 pm=195 win_cyc=48001416 busy_cyc=9360198 windows=4271
+4272519 LOAD pct=19 pm=195 win_cyc=48001680 busy_cyc=9359188 windows=4272
+4273519 LOAD pct=19 pm=195 win_cyc=48000996 busy_cyc=9358371 windows=4273
+4274519 LOAD pct=19 pm=195 win_cyc=48002184 busy_cyc=9359549 windows=4274
+4275519 LOAD pct=19 pm=195 win_cyc=48000936 busy_cyc=9358823 windows=4275
+4276519 LOAD pct=20 pm=195 win_cyc=48001212 busy_cyc=9364243 windows=4276
+4277519 LOAD pct=19 pm=195 win_cyc=48001896 busy_cyc=9358243 windows=4277
+4278519 LOAD pct=19 pm=195 win_cyc=48001260 busy_cyc=9359315 windows=4278
+4279519 LOAD pct=19 pm=195 win_cyc=48001920 busy_cyc=9359435 windows=4279
+4280519 LOAD pct=19 pm=195 win_cyc=48000000 busy_cyc=9359987 windows=4280
+4281519 LOAD pct=19 pm=195 win_cyc=48001668 busy_cyc=9359496 windows=4281
+4282519 LOAD pct=20 pm=195 win_cyc=48000192 busy_cyc=9360682 windows=4282
+4283519 LOAD pct=19 pm=195 win_cyc=48001560 busy_cyc=9359734 windows=4283
+4284519 LOAD pct=20 pm=195 win_cyc=48000972 busy_cyc=9365270 windows=4284
+4285519 LOAD pct=20 pm=195 win_cyc=48001584 busy_cyc=9366343 windows=4285
+4286519 LOAD pct=20 pm=195 win_cyc=48001584 busy_cyc=9365240 windows=4286
+4287519 LOAD pct=20 pm=195 win_cyc=48000000 busy_cyc=9366539 windows=4287
+4288519 LOAD pct=20 pm=195 win_cyc=48001068 busy_cyc=9365352 windows=4288
+4289519 LOAD pct=20 pm=195 win_cyc=48001848 busy_cyc=9365974 windows=4289
+4290519 LOAD pct=20 pm=195 win_cyc=48001332 busy_cyc=9365650 windows=4290
+4291519 LOAD pct=20 pm=195 win_cyc=48002604 busy_cyc=9364445 windows=4291
+4292520 LOAD pct=19 pm=195 win_cyc=48000576 busy_cyc=9359492 windows=4292
+4293520 LOAD pct=20 pm=195 win_cyc=48000420 busy_cyc=9365055 windows=4293
+4294520 LOAD pct=20 pm=195 win_cyc=48001056 busy_cyc=9364416 windows=4294
+4295520 LOAD pct=19 pm=195 win_cyc=48002244 busy_cyc=9359035 windows=4295
+4296520 LOAD pct=20 pm=195 win_cyc=48001104 busy_cyc=9360526 windows=4296
+4297520 LOAD pct=20 pm=195 win_cyc=48001344 busy_cyc=9361312 windows=4297
+4298520 LOAD pct=20 pm=195 win_cyc=48001776 busy_cyc=9365065 windows=4298
+4299520 LOAD pct=20 pm=195 win_cyc=48000600 busy_cyc=9360904 windows=4299
+4300520 LOAD pct=20 pm=195 win_cyc=48000024 busy_cyc=9363852 windows=4300
+4301520 LOAD pct=20 pm=195 win_cyc=48001836 busy_cyc=9363971 windows=4301
+4302520 LOAD pct=20 pm=195 win_cyc=48000420 busy_cyc=9360352 windows=4302
+4303520 LOAD pct=19 pm=195 win_cyc=48000360 busy_cyc=9359585 windows=4303
+4304520 LOAD pct=19 pm=195 win_cyc=48001764 busy_cyc=9358958 windows=4304
+4305520 LOAD pct=20 pm=195 win_cyc=48000864 busy_cyc=9365094 windows=4305
+4306520 LOAD pct=20 pm=195 win_cyc=48000048 busy_cyc=9360134 windows=4306
+4307520 LOAD pct=19 pm=195 win_cyc=48000084 busy_cyc=9359760 windows=4307
+4308520 LOAD pct=19 pm=195 win_cyc=48002436 busy_cyc=9359508 windows=4308
+4309520 LOAD pct=19 pm=195 win_cyc=48001836 busy_cyc=9359589 windows=4309
+4310520 LOAD pct=20 pm=195 win_cyc=48000948 busy_cyc=9364497 windows=4310
+4311520 LOAD pct=20 pm=195 win_cyc=48000588 busy_cyc=9364424 windows=4311
+4312520 LOAD pct=20 pm=195 win_cyc=48001896 busy_cyc=9365185 windows=4312
+4313520 LOAD pct=19 pm=195 win_cyc=48001872 busy_cyc=9358383 windows=4313
+4314520 LOAD pct=19 pm=195 win_cyc=48002580 busy_cyc=9358958 windows=4314
+4315520 LOAD pct=19 pm=195 win_cyc=48001668 busy_cyc=9358970 windows=4315
+4316520 LOAD pct=19 pm=195 win_cyc=48001692 busy_cyc=9359522 windows=4316
+4317520 LOAD pct=19 pm=195 win_cyc=48000048 busy_cyc=9358334 windows=4317
+4318520 LOAD pct=19 pm=195 win_cyc=48001212 busy_cyc=9359192 windows=4318
+4319520 LOAD pct=19 pm=195 win_cyc=48002556 busy_cyc=9360261 windows=4319
+4320520 LOAD pct=20 pm=195 win_cyc=48000816 busy_cyc=9364449 windows=4320
+4321520 LOAD pct=19 pm=195 win_cyc=48002160 busy_cyc=9359472 windows=4321
+4322520 LOAD pct=19 pm=194 win_cyc=48001608 busy_cyc=9315126 windows=4322
+4323520 LOAD pct=20 pm=195 win_cyc=48001512 busy_cyc=9366408 windows=4323
+4324520 LOAD pct=20 pm=195 win_cyc=48000192 busy_cyc=9365251 windows=4324
+4325520 LOAD pct=20 pm=195 win_cyc=48000636 busy_cyc=9365075 windows=4325
+4326520 LOAD pct=20 pm=195 win_cyc=48001848 busy_cyc=9366214 windows=4326
+4327520 LOAD pct=20 pm=195 win_cyc=48000252 busy_cyc=9365050 windows=4327
+4328520 LOAD pct=20 pm=195 win_cyc=48000792 busy_cyc=9365509 windows=4328
+4329520 LOAD pct=20 pm=195 win_cyc=48000156 busy_cyc=9364390 windows=4329
+4330520 LOAD pct=20 pm=195 win_cyc=48001932 busy_cyc=9364466 windows=4330
+4331521 LOAD pct=19 pm=195 win_cyc=48002472 busy_cyc=9359515 windows=4331
+4332521 LOAD pct=20 pm=195 win_cyc=48000408 busy_cyc=9364447 windows=4332
+4333521 LOAD pct=19 pm=195 win_cyc=48000948 busy_cyc=9357856 windows=4333
+4334521 LOAD pct=20 pm=195 win_cyc=48000036 busy_cyc=9364529 windows=4334
+4335521 LOAD pct=19 pm=195 win_cyc=48000060 busy_cyc=9359515 windows=4335
+4336521 LOAD pct=19 pm=195 win_cyc=48001584 busy_cyc=9358972 windows=4336
+4337521 LOAD pct=19 pm=195 win_cyc=48000312 busy_cyc=9359489 windows=4337
+4338128 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4338521 LOAD pct=22 pm=224 win_cyc=48001380 busy_cyc=10738866 windows=4338
+4339521 LOAD pct=19 pm=195 win_cyc=48002472 busy_cyc=9360052 windows=4339
+4340521 LOAD pct=19 pm=195 win_cyc=48001116 busy_cyc=9358926 windows=4340
+4341521 LOAD pct=20 pm=195 win_cyc=48000480 busy_cyc=9360710 windows=4341
+4342521 LOAD pct=19 pm=195 win_cyc=48001728 busy_cyc=9359753 windows=4342
+4343521 LOAD pct=19 pm=195 win_cyc=48001692 busy_cyc=9359533 windows=4343
+4344521 LOAD pct=19 pm=195 win_cyc=48001812 busy_cyc=9358949 windows=4344
+4345521 LOAD pct=19 pm=195 win_cyc=48001728 busy_cyc=9359614 windows=4345
+4346521 LOAD pct=19 pm=195 win_cyc=48001680 busy_cyc=9359007 windows=4346
+4347521 LOAD pct=19 pm=195 win_cyc=48001116 busy_cyc=9358966 windows=4347
+4348521 LOAD pct=19 pm=195 win_cyc=48000960 busy_cyc=9358991 windows=4348
+4349521 LOAD pct=20 pm=195 win_cyc=48002016 busy_cyc=9363917 windows=4349
+4350521 LOAD pct=19 pm=195 win_cyc=48000168 busy_cyc=9359737 windows=4350
+4351521 LOAD pct=19 pm=195 win_cyc=48000432 busy_cyc=9358370 windows=4351
+4351632 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4352521 LOAD pct=22 pm=224 win_cyc=48001440 busy_cyc=10739067 windows=4352
+4353521 LOAD pct=20 pm=195 win_cyc=48000972 busy_cyc=9364511 windows=4353
+4354521 LOAD pct=19 pm=195 win_cyc=48000972 busy_cyc=9358960 windows=4354
+4355521 LOAD pct=19 pm=195 win_cyc=48001656 busy_cyc=9358934 windows=4355
+4356521 LOAD pct=20 pm=195 win_cyc=48002604 busy_cyc=9363903 windows=4356
+4357521 LOAD pct=20 pm=195 win_cyc=48000132 busy_cyc=9360110 windows=4357
+4358521 LOAD pct=19 pm=195 win_cyc=48002496 busy_cyc=9360158 windows=4358
+4359521 LOAD pct=19 pm=195 win_cyc=48002424 busy_cyc=9359677 windows=4359
+4360521 LOAD pct=19 pm=195 win_cyc=48002340 busy_cyc=9360195 windows=4360
+4361521 LOAD pct=19 pm=194 win_cyc=48002196 busy_cyc=9315938 windows=4361
+4362521 LOAD pct=20 pm=195 win_cyc=48001848 busy_cyc=9364465 windows=4362
+4363521 LOAD pct=20 pm=195 win_cyc=48000048 busy_cyc=9365057 windows=4363
+4364521 LOAD pct=20 pm=195 win_cyc=48002280 busy_cyc=9365058 windows=4364
+4365521 LOAD pct=20 pm=195 win_cyc=48000876 busy_cyc=9364921 windows=4365
+4366521 LOAD pct=20 pm=195 win_cyc=48001752 busy_cyc=9364405 windows=4366
+4367522 LOAD pct=20 pm=195 win_cyc=48001968 busy_cyc=9365195 windows=4367
+4368522 LOAD pct=20 pm=195 win_cyc=48002604 busy_cyc=9364575 windows=4368
+4369522 LOAD pct=19 pm=195 win_cyc=48000936 busy_cyc=9357995 windows=4369
+4370522 LOAD pct=20 pm=195 win_cyc=48001692 busy_cyc=9365171 windows=4370
+4371522 LOAD pct=20 pm=195 win_cyc=48001584 busy_cyc=9360566 windows=4371
+4372522 LOAD pct=19 pm=195 win_cyc=48001764 busy_cyc=9358856 windows=4372
+4373522 LOAD pct=19 pm=195 win_cyc=48000216 busy_cyc=9359983 windows=4373
+4374522 LOAD pct=19 pm=195 win_cyc=48002484 busy_cyc=9360015 windows=4374
+4375522 LOAD pct=19 pm=195 win_cyc=48002472 busy_cyc=9359925 windows=4375
+4376522 LOAD pct=20 pm=195 win_cyc=48001152 busy_cyc=9360606 windows=4376
+4377522 LOAD pct=20 pm=195 win_cyc=48001800 busy_cyc=9364997 windows=4377
+4378522 LOAD pct=20 pm=195 win_cyc=48002496 busy_cyc=9363820 windows=4378
+4379522 LOAD pct=20 pm=195 win_cyc=48001032 busy_cyc=9365062 windows=4379
+4380522 LOAD pct=19 pm=195 win_cyc=48000036 busy_cyc=9359678 windows=4380
+4381522 LOAD pct=19 pm=195 win_cyc=48001356 busy_cyc=9359013 windows=4381
+4382522 LOAD pct=20 pm=195 win_cyc=48000408 busy_cyc=9364504 windows=4382
+4383522 LOAD pct=19 pm=195 win_cyc=48002316 busy_cyc=9358952 windows=4383
+4384522 LOAD pct=19 pm=195 win_cyc=48002412 busy_cyc=9359562 windows=4384
+4385522 LOAD pct=19 pm=195 win_cyc=48001716 busy_cyc=9359201 windows=4385
+4386522 LOAD pct=19 pm=195 win_cyc=48000456 busy_cyc=9358371 windows=4386
+4387522 LOAD pct=20 pm=195 win_cyc=48002328 busy_cyc=9363873 windows=4387
+4388522 LOAD pct=20 pm=195 win_cyc=48000816 busy_cyc=9364610 windows=4388
+4389522 LOAD pct=19 pm=195 win_cyc=48000120 busy_cyc=9359615 windows=4389
+4390522 LOAD pct=20 pm=195 win_cyc=48000084 busy_cyc=9360270 windows=4390
+4391522 LOAD pct=19 pm=195 win_cyc=48002364 busy_cyc=9360445 windows=4391
+4392522 LOAD pct=19 pm=195 win_cyc=48000288 busy_cyc=9359752 windows=4392
+4393522 LOAD pct=20 pm=195 win_cyc=48000312 busy_cyc=9360366 windows=4393
+4394522 LOAD pct=20 pm=195 win_cyc=48001728 busy_cyc=9363912 windows=4394
+4395522 LOAD pct=20 pm=195 win_cyc=48000384 busy_cyc=9365114 windows=4395
+4396522 LOAD pct=20 pm=195 win_cyc=48002052 busy_cyc=9366259 windows=4396
+4397522 LOAD pct=20 pm=195 win_cyc=48000540 busy_cyc=9365118 windows=4397
+4398522 LOAD pct=20 pm=195 win_cyc=48002268 busy_cyc=9365657 windows=4398
+4399522 LOAD pct=20 pm=195 win_cyc=48001080 busy_cyc=9365038 windows=4399
+4400522 LOAD pct=20 pm=195 win_cyc=48000984 busy_cyc=9364993 windows=4400
+4401522 LOAD pct=20 pm=195 win_cyc=48001860 busy_cyc=9365552 windows=4401
+4401629 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4402522 LOAD pct=22 pm=224 win_cyc=48000636 busy_cyc=10738249 windows=4402
+4403523 LOAD pct=19 pm=195 win_cyc=48002124 busy_cyc=9358938 windows=4403
+4404523 LOAD pct=20 pm=195 win_cyc=48000912 busy_cyc=9364572 windows=4404
+4405523 LOAD pct=19 pm=195 win_cyc=48000144 busy_cyc=9359485 windows=4405
+4406523 LOAD pct=20 pm=195 win_cyc=48000708 busy_cyc=9360290 windows=4406
+4407523 LOAD pct=20 pm=195 win_cyc=48000804 busy_cyc=9360606 windows=4407
+4408523 LOAD pct=19 pm=195 win_cyc=48001764 busy_cyc=9358946 windows=4408
+4409523 LOAD pct=19 pm=195 win_cyc=48000876 busy_cyc=9360085 windows=4409
+4409634 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4410523 LOAD pct=22 pm=224 win_cyc=48000096 busy_cyc=10739874 windows=4410
+4411523 LOAD pct=20 pm=195 win_cyc=48002184 busy_cyc=9363768 windows=4411
+4412523 LOAD pct=19 pm=195 win_cyc=48002196 busy_cyc=9358887 windows=4412
+4413523 LOAD pct=20 pm=195 win_cyc=48000072 busy_cyc=9360193 windows=4413
+4414523 LOAD pct=20 pm=195 win_cyc=48002244 busy_cyc=9364443 windows=4414
+4415523 LOAD pct=20 pm=195 win_cyc=48001032 busy_cyc=9360300 windows=4415
+4416523 LOAD pct=19 pm=195 win_cyc=48001848 busy_cyc=9359424 windows=4416
+4417523 LOAD pct=19 pm=195 win_cyc=48000960 busy_cyc=9358876 windows=4417
+4418523 LOAD pct=19 pm=195 win_cyc=48001740 busy_cyc=9359481 windows=4418
+4419523 LOAD pct=20 pm=195 win_cyc=48001188 busy_cyc=9365183 windows=4419
+4420523 LOAD pct=19 pm=195 win_cyc=48001380 busy_cyc=9358876 windows=4420
+4421523 LOAD pct=19 pm=195 win_cyc=48000744 busy_cyc=9358480 windows=4421
+4422523 LOAD pct=19 pm=195 win_cyc=48001860 busy_cyc=9358831 windows=4422
+4423523 LOAD pct=19 pm=195 win_cyc=48001968 busy_cyc=9358998 windows=4423
+4424523 LOAD pct=19 pm=195 win_cyc=48001404 busy_cyc=9358297 windows=4424
+4425523 LOAD pct=19 pm=195 win_cyc=48002544 busy_cyc=9360019 windows=4425
+4426523 LOAD pct=19 pm=195 win_cyc=48002184 busy_cyc=9359641 windows=4426
+4427523 LOAD pct=19 pm=195 win_cyc=48002028 busy_cyc=9360247 windows=4427
+4428523 LOAD pct=19 pm=195 win_cyc=48001572 busy_cyc=9358993 windows=4428
+4429523 LOAD pct=20 pm=195 win_cyc=48002304 busy_cyc=9364425 windows=4429
+4430523 LOAD pct=20 pm=195 win_cyc=48002496 busy_cyc=9367013 windows=4430
+4431523 LOAD pct=20 pm=195 win_cyc=48001092 busy_cyc=9365317 windows=4431
+4432523 LOAD pct=20 pm=195 win_cyc=48002172 busy_cyc=9365067 windows=4432
+4433523 LOAD pct=20 pm=195 win_cyc=48000276 busy_cyc=9364952 windows=4433
+4434523 LOAD pct=20 pm=195 win_cyc=48000360 busy_cyc=9364957 windows=4434
+4435523 LOAD pct=20 pm=195 win_cyc=48001116 busy_cyc=9365184 windows=4435
+4436523 LOAD pct=20 pm=195 win_cyc=48000216 busy_cyc=9365746 windows=4436
+4437523 LOAD pct=19 pm=195 win_cyc=48000000 busy_cyc=9358880 windows=4437
+4438523 LOAD pct=20 pm=195 win_cyc=48000540 busy_cyc=9364443 windows=4438
+4439524 LOAD pct=20 pm=195 win_cyc=48002592 busy_cyc=9363848 windows=4439
+4440524 LOAD pct=19 pm=195 win_cyc=48001776 busy_cyc=9359546 windows=4440
+4441524 LOAD pct=19 pm=195 win_cyc=48002568 busy_cyc=9359733 windows=4441
+4442524 LOAD pct=20 pm=195 win_cyc=48000984 busy_cyc=9364467 windows=4442
+4443524 LOAD pct=19 pm=195 win_cyc=48000168 busy_cyc=9359483 windows=4443
+4444524 LOAD pct=20 pm=195 win_cyc=48000096 busy_cyc=9360050 windows=4444
+4445524 LOAD pct=19 pm=195 win_cyc=48002112 busy_cyc=9359448 windows=4445
+4446524 LOAD pct=19 pm=195 win_cyc=48000528 busy_cyc=9360072 windows=4446
+4447524 LOAD pct=19 pm=195 win_cyc=48002292 busy_cyc=9359545 windows=4447
+4448524 LOAD pct=19 pm=195 win_cyc=48000468 busy_cyc=9359728 windows=4448
+4449524 LOAD pct=20 pm=195 win_cyc=48000888 busy_cyc=9364982 windows=4449
+4450524 LOAD pct=19 pm=195 win_cyc=48002172 busy_cyc=9359580 windows=4450
+4451524 LOAD pct=19 pm=195 win_cyc=48002004 busy_cyc=9358886 windows=4451
+4452524 LOAD pct=19 pm=195 win_cyc=48002376 busy_cyc=9359496 windows=4452
+4453524 LOAD pct=19 pm=195 win_cyc=48002556 busy_cyc=9359502 windows=4453
+4454524 LOAD pct=19 pm=195 win_cyc=48000300 busy_cyc=9359474 windows=4454
+4455524 LOAD pct=19 pm=195 win_cyc=48002376 busy_cyc=9359691 windows=4455
+4456524 LOAD pct=19 pm=195 win_cyc=48001104 busy_cyc=9358587 windows=4456
+4457524 LOAD pct=19 pm=195 win_cyc=48001752 busy_cyc=9359693 windows=4457
+4458524 LOAD pct=19 pm=195 win_cyc=48000372 busy_cyc=9358289 windows=4458
+4459524 LOAD pct=19 pm=195 win_cyc=48001500 busy_cyc=9359505 windows=4459
+4460524 LOAD pct=20 pm=195 win_cyc=48001272 busy_cyc=9364979 windows=4460
+4461524 LOAD pct=19 pm=195 win_cyc=48000420 busy_cyc=9359471 windows=4461
+4462524 LOAD pct=20 pm=195 win_cyc=48000408 busy_cyc=9360084 windows=4462
+4463524 LOAD pct=20 pm=195 win_cyc=48000708 busy_cyc=9360215 windows=4463
+4464524 LOAD pct=19 pm=195 win_cyc=48002280 busy_cyc=9360333 windows=4464
+4465524 LOAD pct=19 pm=195 win_cyc=48000816 busy_cyc=9360013 windows=4465
+4466524 LOAD pct=19 pm=195 win_cyc=48001836 busy_cyc=9360020 windows=4466
+4467524 LOAD pct=20 pm=195 win_cyc=48001824 busy_cyc=9364502 windows=4467
+4468524 LOAD pct=20 pm=195 win_cyc=48000948 busy_cyc=9365187 windows=4468
+4469524 LOAD pct=20 pm=195 win_cyc=48001656 busy_cyc=9365171 windows=4469
+4470524 LOAD pct=20 pm=195 win_cyc=48002040 busy_cyc=9366552 windows=4470
+4471524 LOAD pct=20 pm=195 win_cyc=48001392 busy_cyc=9365666 windows=4471
+4472524 LOAD pct=20 pm=195 win_cyc=48001560 busy_cyc=9366183 windows=4472
+4473524 LOAD pct=19 pm=195 win_cyc=48001032 busy_cyc=9359766 windows=4473
+4474524 LOAD pct=19 pm=195 win_cyc=48000456 busy_cyc=9359682 windows=4474
+4475137 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4475176 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4475525 LOAD pct=25 pm=254 win_cyc=48000576 busy_cyc=12169485 windows=4475
+4476525 LOAD pct=19 pm=195 win_cyc=48001584 busy_cyc=9359503 windows=4476
+4477525 LOAD pct=19 pm=195 win_cyc=48002148 busy_cyc=9359074 windows=4477
+4478525 LOAD pct=20 pm=195 win_cyc=48001116 busy_cyc=9360620 windows=4478
+4479525 LOAD pct=19 pm=195 win_cyc=48000828 busy_cyc=9359472 windows=4479
+4480525 LOAD pct=20 pm=195 win_cyc=48000396 busy_cyc=9360065 windows=4480
+4481525 LOAD pct=19 pm=195 win_cyc=48002568 busy_cyc=9360062 windows=4481
+4482525 LOAD pct=19 pm=195 win_cyc=48001416 busy_cyc=9359460 windows=4482
+4483525 LOAD pct=19 pm=195 win_cyc=48000156 busy_cyc=9359639 windows=4483
+4484525 LOAD pct=19 pm=195 win_cyc=48001164 busy_cyc=9358909 windows=4484
+4485525 LOAD pct=20 pm=195 win_cyc=48002472 busy_cyc=9362135 windows=4485
+4486525 LOAD pct=19 pm=195 win_cyc=48001908 busy_cyc=9359484 windows=4486
+4487525 LOAD pct=20 pm=195 win_cyc=48001320 busy_cyc=9364972 windows=4487
+4488525 LOAD pct=19 pm=195 win_cyc=48002112 busy_cyc=9359500 windows=4488
+4489525 LOAD pct=19 pm=195 win_cyc=48002448 busy_cyc=9360137 windows=4489
+4490525 LOAD pct=19 pm=195 win_cyc=48002412 busy_cyc=9359513 windows=4490
+4491525 LOAD pct=19 pm=195 win_cyc=48001512 busy_cyc=9359523 windows=4491
+4492525 LOAD pct=20 pm=195 win_cyc=48001068 busy_cyc=9363867 windows=4492
+4493525 LOAD pct=20 pm=195 win_cyc=48000312 busy_cyc=9364578 windows=4493
+4494525 LOAD pct=20 pm=195 win_cyc=48000132 busy_cyc=9364336 windows=4494
+4495525 LOAD pct=19 pm=195 win_cyc=48002232 busy_cyc=9359462 windows=4495
+4496525 LOAD pct=19 pm=195 win_cyc=48001896 busy_cyc=9359729 windows=4496
+4497525 LOAD pct=19 pm=195 win_cyc=48001644 busy_cyc=9359037 windows=4497
+4498525 LOAD pct=20 pm=195 win_cyc=48001884 busy_cyc=9363878 windows=4498
+4499525 LOAD pct=19 pm=195 win_cyc=48002544 busy_cyc=9360062 windows=4499
+4500525 LOAD pct=20 pm=195 win_cyc=48000900 busy_cyc=9365216 windows=4500
+4501525 LOAD pct=20 pm=195 win_cyc=48001476 busy_cyc=9366360 windows=4501
+4502525 LOAD pct=20 pm=195 win_cyc=48000444 busy_cyc=9365163 windows=4502
+4503525 LOAD pct=20 pm=195 win_cyc=48000660 busy_cyc=9365766 windows=4503
+4504525 LOAD pct=20 pm=195 win_cyc=48000744 busy_cyc=9365237 windows=4504
+4505525 LOAD pct=20 pm=195 win_cyc=48000768 busy_cyc=9365201 windows=4505
+4506525 LOAD pct=20 pm=195 win_cyc=48001152 busy_cyc=9365665 windows=4506
+4507525 LOAD pct=20 pm=195 win_cyc=48001044 busy_cyc=9365665 windows=4507
+4508525 LOAD pct=20 pm=195 win_cyc=48000420 busy_cyc=9365857 windows=4508
+4509525 LOAD pct=20 pm=195 win_cyc=48001176 busy_cyc=9365689 windows=4509
+4510526 LOAD pct=20 pm=195 win_cyc=48001824 busy_cyc=9363946 windows=4510
+4511526 LOAD pct=19 pm=195 win_cyc=48000684 busy_cyc=9360095 windows=4511
+4512526 LOAD pct=19 pm=195 win_cyc=48000912 busy_cyc=9360109 windows=4512
+4513526 LOAD pct=19 pm=195 win_cyc=48001164 busy_cyc=9359027 windows=4513
+4514526 LOAD pct=20 pm=195 win_cyc=48000540 busy_cyc=9360098 windows=4514
+4515526 LOAD pct=20 pm=195 win_cyc=48001032 busy_cyc=9360698 windows=4515
+4516526 LOAD pct=20 pm=195 win_cyc=48001128 busy_cyc=9364473 windows=4516
+4517526 LOAD pct=19 pm=195 win_cyc=48002508 busy_cyc=9359558 windows=4517
+4518526 LOAD pct=20 pm=195 win_cyc=48000060 busy_cyc=9364458 windows=4518
+4519526 LOAD pct=20 pm=195 win_cyc=48000864 busy_cyc=9364431 windows=4519
+4520526 LOAD pct=20 pm=195 win_cyc=48001752 busy_cyc=9365097 windows=4520
+4521526 LOAD pct=20 pm=195 win_cyc=48001380 busy_cyc=9360684 windows=4521
+4522526 LOAD pct=19 pm=195 win_cyc=48002160 busy_cyc=9358953 windows=4522
+4523526 LOAD pct=20 pm=195 win_cyc=48001908 busy_cyc=9365050 windows=4523
+4524526 LOAD pct=19 pm=195 win_cyc=48002088 busy_cyc=9359515 windows=4524
+4525526 LOAD pct=19 pm=195 win_cyc=48002568 busy_cyc=9359530 windows=4525
+4526526 LOAD pct=19 pm=195 win_cyc=48001884 busy_cyc=9358951 windows=4526
+4527526 LOAD pct=19 pm=195 win_cyc=48001740 busy_cyc=9358311 windows=4527
+4528526 LOAD pct=20 pm=195 win_cyc=48002172 busy_cyc=9363773 windows=4528
+4529526 LOAD pct=19 pm=195 win_cyc=48000720 busy_cyc=9358335 windows=4529
+4530526 LOAD pct=19 pm=195 win_cyc=48002328 busy_cyc=9360258 windows=4530
+4531526 LOAD pct=19 pm=195 win_cyc=48001908 busy_cyc=9360076 windows=4531
+4532526 LOAD pct=19 pm=195 win_cyc=48002436 busy_cyc=9359637 windows=4532
+4533526 LOAD pct=19 pm=195 win_cyc=48002088 busy_cyc=9359503 windows=4533
+4534526 LOAD pct=20 pm=195 win_cyc=48002280 busy_cyc=9366228 windows=4534
+4535139 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4535526 LOAD pct=22 pm=224 win_cyc=48001764 busy_cyc=10745919 windows=4535
+4536526 LOAD pct=19 pm=195 win_cyc=48001020 busy_cyc=9359043 windows=4536
+4537526 LOAD pct=20 pm=195 win_cyc=48001704 busy_cyc=9366342 windows=4537
+4538139 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4538526 LOAD pct=22 pm=224 win_cyc=48001104 busy_cyc=10745941 windows=4538
+4539526 LOAD pct=20 pm=195 win_cyc=48002292 busy_cyc=9360759 windows=4539
+4540526 LOAD pct=20 pm=195 win_cyc=48000888 busy_cyc=9364730 windows=4540
+4541527 LOAD pct=19 pm=195 win_cyc=48000924 busy_cyc=9360172 windows=4541
+4542527 LOAD pct=20 pm=195 win_cyc=48000540 busy_cyc=9364478 windows=4542
+4543527 LOAD pct=19 pm=195 win_cyc=48002064 busy_cyc=9358970 windows=4543
+4544527 LOAD pct=20 pm=195 win_cyc=48000672 busy_cyc=9360208 windows=4544
+4545527 LOAD pct=19 pm=195 win_cyc=48001584 busy_cyc=9359665 windows=4545
+4546527 LOAD pct=19 pm=195 win_cyc=48001824 busy_cyc=9358996 windows=4546
+4547527 LOAD pct=19 pm=195 win_cyc=48001476 busy_cyc=9359030 windows=4547
+4548527 LOAD pct=20 pm=195 win_cyc=48000600 busy_cyc=9360723 windows=4548
+4549527 LOAD pct=20 pm=195 win_cyc=48001368 busy_cyc=9361286 windows=4549
+4550527 LOAD pct=20 pm=195 win_cyc=48000216 busy_cyc=9360121 windows=4550
+4551527 LOAD pct=19 pm=195 win_cyc=48001512 busy_cyc=9359545 windows=4551
+4552527 LOAD pct=19 pm=195 win_cyc=48002124 busy_cyc=9358991 windows=4552
+4553527 LOAD pct=19 pm=195 win_cyc=48002508 busy_cyc=9359544 windows=4553
+4554527 LOAD pct=19 pm=195 win_cyc=48001944 busy_cyc=9359613 windows=4554
+4555527 LOAD pct=20 pm=195 win_cyc=48000780 busy_cyc=9360320 windows=4555
+4556527 LOAD pct=19 pm=195 win_cyc=48001428 busy_cyc=9359157 windows=4556
+4557527 LOAD pct=20 pm=195 win_cyc=48001692 busy_cyc=9363288 windows=4557
+4558527 LOAD pct=20 pm=195 win_cyc=48002604 busy_cyc=9363960 windows=4558
+4559527 LOAD pct=19 pm=195 win_cyc=48001956 busy_cyc=9359558 windows=4559
+4560527 LOAD pct=19 pm=195 win_cyc=48001572 busy_cyc=9359186 windows=4560
+4561527 LOAD pct=19 pm=195 win_cyc=48001272 busy_cyc=9358988 windows=4561
+4562527 LOAD pct=19 pm=195 win_cyc=48002460 busy_cyc=9360146 windows=4562
+4563527 LOAD pct=20 pm=195 win_cyc=48000012 busy_cyc=9360255 windows=4563
+4564527 LOAD pct=20 pm=195 win_cyc=48000168 busy_cyc=9360288 windows=4564
+4565527 LOAD pct=19 pm=195 win_cyc=48001752 busy_cyc=9359907 windows=4565
+4566527 LOAD pct=19 pm=195 win_cyc=48001296 busy_cyc=9359600 windows=4566
+4567527 LOAD pct=19 pm=195 win_cyc=48002100 busy_cyc=9359046 windows=4567
+4568527 LOAD pct=20 pm=195 win_cyc=48002376 busy_cyc=9364598 windows=4568
+4569527 LOAD pct=20 pm=195 win_cyc=48000660 busy_cyc=9365152 windows=4569
+4570527 LOAD pct=20 pm=195 win_cyc=48001212 busy_cyc=9365716 windows=4570
+4571527 LOAD pct=20 pm=195 win_cyc=48001236 busy_cyc=9365726 windows=4571
+4572527 LOAD pct=20 pm=195 win_cyc=48000264 busy_cyc=9364463 windows=4572
+4573527 LOAD pct=20 pm=195 win_cyc=48001800 busy_cyc=9366421 windows=4573
+4574527 LOAD pct=20 pm=195 win_cyc=48000300 busy_cyc=9364523 windows=4574
+4575527 LOAD pct=20 pm=195 win_cyc=48000936 busy_cyc=9360361 windows=4575
+4576528 LOAD pct=19 pm=195 win_cyc=48002400 busy_cyc=9359623 windows=4576
+4577528 LOAD pct=20 pm=195 win_cyc=48002400 busy_cyc=9363984 windows=4577
+4578528 LOAD pct=20 pm=195 win_cyc=48001908 busy_cyc=9364713 windows=4578
+4579528 LOAD pct=19 pm=195 win_cyc=48001212 busy_cyc=9359836 windows=4579
+4580528 LOAD pct=20 pm=195 win_cyc=48000396 busy_cyc=9364493 windows=4580
+4581528 LOAD pct=19 pm=195 win_cyc=48000912 busy_cyc=9359132 windows=4581
+4582528 LOAD pct=20 pm=195 win_cyc=48000504 busy_cyc=9360340 windows=4582
+4583528 LOAD pct=20 pm=195 win_cyc=48002412 busy_cyc=9364482 windows=4583
+4584528 LOAD pct=20 pm=195 win_cyc=48000696 busy_cyc=9360289 windows=4584
+4585528 LOAD pct=20 pm=195 win_cyc=48002040 busy_cyc=9363876 windows=4585
+4586528 LOAD pct=19 pm=195 win_cyc=48002376 busy_cyc=9359560 windows=4586
+4587528 LOAD pct=19 pm=195 win_cyc=48001476 busy_cyc=9358970 windows=4587
+4588528 LOAD pct=19 pm=195 win_cyc=48002112 busy_cyc=9358949 windows=4588
+4589528 LOAD pct=19 pm=195 win_cyc=48002112 busy_cyc=9359624 windows=4589
+4590528 LOAD pct=19 pm=195 win_cyc=48001488 busy_cyc=9359547 windows=4590
+4591528 LOAD pct=19 pm=195 win_cyc=48001572 busy_cyc=9358393 windows=4591
+4592528 LOAD pct=20 pm=195 win_cyc=48000024 busy_cyc=9360698 windows=4592
+4593528 LOAD pct=20 pm=195 win_cyc=48000060 busy_cyc=9363925 windows=4593
+4594528 LOAD pct=19 pm=195 win_cyc=48001944 busy_cyc=9358970 windows=4594
+4595528 LOAD pct=19 pm=195 win_cyc=48001536 busy_cyc=9358406 windows=4595
+4596528 LOAD pct=19 pm=195 win_cyc=48001512 busy_cyc=9358946 windows=4596
+4597528 LOAD pct=19 pm=195 win_cyc=48000756 busy_cyc=9358358 windows=4597
+4598528 LOAD pct=19 pm=195 win_cyc=48001548 busy_cyc=9359062 windows=4598
+4599528 LOAD pct=20 pm=195 win_cyc=48002424 busy_cyc=9364579 windows=4599
+4600528 LOAD pct=20 pm=195 win_cyc=48000708 busy_cyc=9360137 windows=4600
+4601528 LOAD pct=19 pm=195 win_cyc=48001656 busy_cyc=9359536 windows=4601
+4602528 LOAD pct=19 pm=194 win_cyc=48002496 busy_cyc=9314626 windows=4602
+4603528 LOAD pct=19 pm=194 win_cyc=48001140 busy_cyc=9314721 windows=4603
+4603640 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4604528 LOAD pct=22 pm=224 win_cyc=48000660 busy_cyc=10745396 windows=4604
+4605528 LOAD pct=20 pm=195 win_cyc=48001836 busy_cyc=9364584 windows=4605
+4606528 LOAD pct=20 pm=195 win_cyc=48002340 busy_cyc=9366193 windows=4606
+4607528 LOAD pct=19 pm=195 win_cyc=48000432 busy_cyc=9360060 windows=4607
+4608528 LOAD pct=19 pm=195 win_cyc=48002232 busy_cyc=9360143 windows=4608
+4609528 LOAD pct=19 pm=195 win_cyc=48000096 busy_cyc=9359522 windows=4609
+4610529 LOAD pct=20 pm=195 win_cyc=48001248 busy_cyc=9365027 windows=4610
+4611529 LOAD pct=19 pm=195 win_cyc=48001608 busy_cyc=9358955 windows=4611
+4612529 LOAD pct=20 pm=195 win_cyc=48001368 busy_cyc=9365043 windows=4612
+4612635 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4613529 LOAD pct=22 pm=224 win_cyc=48002088 busy_cyc=10739770 windows=4613
+4614529 LOAD pct=19 pm=195 win_cyc=48001644 busy_cyc=9359775 windows=4614
+4615529 LOAD pct=20 pm=195 win_cyc=48001056 busy_cyc=9365017 windows=4615
+4616529 LOAD pct=20 pm=195 win_cyc=48001356 busy_cyc=9365066 windows=4616
+4617529 LOAD pct=19 pm=195 win_cyc=48002400 busy_cyc=9358949 windows=4617
+4618529 LOAD pct=19 pm=195 win_cyc=48001968 busy_cyc=9359007 windows=4618
+4619529 LOAD pct=19 pm=195 win_cyc=48001596 busy_cyc=9358933 windows=4619
+4620529 LOAD pct=20 pm=195 win_cyc=48000504 busy_cyc=9360518 windows=4620
+4621529 LOAD pct=19 pm=195 win_cyc=48002580 busy_cyc=9359592 windows=4621
+4622529 LOAD pct=19 pm=195 win_cyc=48001968 busy_cyc=9359521 windows=4622
+4623529 LOAD pct=19 pm=195 win_cyc=48001752 busy_cyc=9358996 windows=4623
+4624529 LOAD pct=20 pm=195 win_cyc=48000432 busy_cyc=9360134 windows=4624
+4625529 LOAD pct=20 pm=195 win_cyc=48001056 busy_cyc=9364533 windows=4625
+4626529 LOAD pct=19 pm=195 win_cyc=48001788 busy_cyc=9359713 windows=4626
+4627529 LOAD pct=20 pm=195 win_cyc=48000912 busy_cyc=9364404 windows=4627
+4628529 LOAD pct=19 pm=195 win_cyc=48001860 busy_cyc=9358971 windows=4628
+4629529 LOAD pct=19 pm=195 win_cyc=48001440 busy_cyc=9358933 windows=4629
+4630529 LOAD pct=19 pm=195 win_cyc=48002328 busy_cyc=9359760 windows=4630
+4631529 LOAD pct=19 pm=195 win_cyc=48001704 busy_cyc=9358976 windows=4631
+4632529 LOAD pct=20 pm=195 win_cyc=48000972 busy_cyc=9365249 windows=4632
+4633529 LOAD pct=19 pm=195 win_cyc=48002268 busy_cyc=9358980 windows=4633
+4634529 LOAD pct=20 pm=195 win_cyc=48000348 busy_cyc=9366312 windows=4634
+4635529 LOAD pct=20 pm=195 win_cyc=48001980 busy_cyc=9365714 windows=4635
+4636529 LOAD pct=20 pm=195 win_cyc=48001212 busy_cyc=9365165 windows=4636
+4637529 LOAD pct=20 pm=195 win_cyc=48001488 busy_cyc=9365753 windows=4637
+4638529 LOAD pct=20 pm=195 win_cyc=48001092 busy_cyc=9364953 windows=4638
+4639529 LOAD pct=20 pm=195 win_cyc=48001524 busy_cyc=9365004 windows=4639
+4640529 LOAD pct=19 pm=195 win_cyc=48000888 busy_cyc=9360095 windows=4640
+4641530 LOAD pct=19 pm=195 win_cyc=48002592 busy_cyc=9359495 windows=4641
+4642530 LOAD pct=20 pm=195 win_cyc=48000564 busy_cyc=9363851 windows=4642
+4643530 LOAD pct=19 pm=195 win_cyc=48001500 busy_cyc=9357781 windows=4643
+4644530 LOAD pct=20 pm=195 win_cyc=48000384 busy_cyc=9360074 windows=4644
+4645530 LOAD pct=19 pm=195 win_cyc=48000108 busy_cyc=9359701 windows=4645
+4646530 LOAD pct=19 pm=195 win_cyc=48002316 busy_cyc=9359556 windows=4646
+4647530 LOAD pct=19 pm=195 win_cyc=48000708 busy_cyc=9359474 windows=4647
+4648530 LOAD pct=20 pm=195 win_cyc=48000756 busy_cyc=9364379 windows=4648
+4649530 LOAD pct=20 pm=195 win_cyc=48001728 busy_cyc=9364979 windows=4649
+4650530 LOAD pct=19 pm=195 win_cyc=48002532 busy_cyc=9359495 windows=4650
+4651530 LOAD pct=19 pm=195 win_cyc=48000972 busy_cyc=9360089 windows=4651
+4652530 LOAD pct=19 pm=195 win_cyc=48001572 busy_cyc=9358970 windows=4652
+4653530 LOAD pct=19 pm=195 win_cyc=48000180 busy_cyc=9359557 windows=4653
+4654530 LOAD pct=20 pm=195 win_cyc=48000636 busy_cyc=9360701 windows=4654
+4655530 LOAD pct=19 pm=195 win_cyc=48002388 busy_cyc=9358973 windows=4655
+4656530 LOAD pct=19 pm=195 win_cyc=48001848 busy_cyc=9359015 windows=4656
+4657530 LOAD pct=19 pm=195 win_cyc=48000264 busy_cyc=9359525 windows=4657
+4658530 LOAD pct=19 pm=195 win_cyc=48002520 busy_cyc=9360121 windows=4658
+4659530 LOAD pct=19 pm=195 win_cyc=48001740 busy_cyc=9359027 windows=4659
+4660530 LOAD pct=20 pm=195 win_cyc=48000996 busy_cyc=9365125 windows=4660
+4661530 LOAD pct=19 pm=195 win_cyc=48002052 busy_cyc=9359789 windows=4661
+4662530 LOAD pct=19 pm=195 win_cyc=48002184 busy_cyc=9359760 windows=4662
+4663530 LOAD pct=19 pm=195 win_cyc=48000648 busy_cyc=9358964 windows=4663
+4664530 LOAD pct=19 pm=195 win_cyc=48001740 busy_cyc=9358347 windows=4664
+4665530 LOAD pct=19 pm=195 win_cyc=48001500 busy_cyc=9359063 windows=4665
+4666530 LOAD pct=20 pm=195 win_cyc=48000840 busy_cyc=9364712 windows=4666
+4667458 PARCEL_IN gate=2531
+4667461 SORT n=4 class=A raw=999 impact=0 route=A angle=0 lat_ms=3
+4667469 EVT t_us=4667458395 name=parcel_in
+4667475 EVT t_us=4667461733 name=servo_set
+4667530 LOAD pct=22 pm=215 win_cyc=48000340 busy_cyc=10328359 windows=4667
+4668530 LOAD pct=20 pm=195 win_cyc=48000056 busy_cyc=9367914 windows=4668
+4669530 LOAD pct=20 pm=195 win_cyc=48002592 busy_cyc=9366442 windows=4669
+4670530 LOAD pct=20 pm=195 win_cyc=48000816 busy_cyc=9367578 windows=4670
+4671530 LOAD pct=20 pm=195 win_cyc=48000768 busy_cyc=9367657 windows=4671
+4672530 LOAD pct=20 pm=195 win_cyc=48000372 busy_cyc=9367236 windows=4672
+4672648 PARCEL_OUT gate=1560 state=READY
+4673530 LOAD pct=20 pm=199 win_cyc=48000324 busy_cyc=9529490 windows=4673
+4674530 LOAD pct=20 pm=195 win_cyc=48000840 busy_cyc=9365189 windows=4674
+4675530 LOAD pct=20 pm=195 win_cyc=48000648 busy_cyc=9364565 windows=4675
+4676530 LOAD pct=20 pm=195 win_cyc=48001320 busy_cyc=9365716 windows=4676
+4677530 LOAD pct=20 pm=195 win_cyc=48001272 busy_cyc=9365126 windows=4677
+4678530 LOAD pct=20 pm=195 win_cyc=48001020 busy_cyc=9365614 windows=4678
+4679530 LOAD pct=20 pm=195 win_cyc=48002292 busy_cyc=9366193 windows=4679
+4680530 LOAD pct=19 pm=195 win_cyc=48000060 busy_cyc=9358920 windows=4680
+4681531 LOAD pct=20 pm=195 win_cyc=48001944 busy_cyc=9365001 windows=4681
+4682049 PARCEL_IN gate=2436
+4682052 SORT n=5 class=A raw=999 impact=0 route=A angle=0 lat_ms=3
+4682060 EVT t_us=4682049392 name=parcel_in
+4682066 EVT t_us=4682052730 name=servo_set
+4682531 LOAD pct=22 pm=215 win_cyc=48001700 busy_cyc=10324442 windows=4682
+4683531 LOAD pct=20 pm=195 win_cyc=48000336 busy_cyc=9366637 windows=4683
+4684531 LOAD pct=20 pm=195 win_cyc=48000660 busy_cyc=9366882 windows=4684
+4685531 LOAD pct=20 pm=195 win_cyc=48000564 busy_cyc=9366140 windows=4685
+4686531 LOAD pct=20 pm=195 win_cyc=48000768 busy_cyc=9366683 windows=4686
+4687531 LOAD pct=20 pm=195 win_cyc=48000372 busy_cyc=9366681 windows=4687
+4688531 LOAD pct=20 pm=195 win_cyc=48000408 busy_cyc=9366111 windows=4688
+4689460 PARCEL_OUT gate=1560 state=READY
+4689531 LOAD pct=20 pm=200 win_cyc=48002332 busy_cyc=9580753 windows=4689
+4690531 LOAD pct=20 pm=195 win_cyc=48002220 busy_cyc=9365127 windows=4690
+4691531 LOAD pct=20 pm=195 win_cyc=48001884 busy_cyc=9365353 windows=4691
+4692531 LOAD pct=20 pm=195 win_cyc=48000108 busy_cyc=9363972 windows=4692
+4693531 LOAD pct=20 pm=195 win_cyc=48002100 busy_cyc=9365091 windows=4693
+4694531 LOAD pct=20 pm=195 win_cyc=48001140 busy_cyc=9364503 windows=4694
+4695531 LOAD pct=20 pm=195 win_cyc=48002364 busy_cyc=9365644 windows=4695
+4696531 LOAD pct=20 pm=195 win_cyc=48000204 busy_cyc=9364735 windows=4696
+4697415 PARCEL_IN gate=2404
+4697418 SORT n=6 class=A raw=999 impact=0 route=A angle=0 lat_ms=3
+4697426 EVT t_us=4697415217 name=parcel_in
+4697431 EVT t_us=4697418554 name=servo_set
+4697531 LOAD pct=21 pm=214 win_cyc=48001800 busy_cyc=10276382 windows=4697
+4698531 LOAD pct=20 pm=195 win_cyc=48000864 busy_cyc=9364935 windows=4698
+4699531 LOAD pct=20 pm=195 win_cyc=48000612 busy_cyc=9367179 windows=4699
+4700531 LOAD pct=20 pm=195 win_cyc=48001620 busy_cyc=9366604 windows=4700
+4701531 LOAD pct=20 pm=195 win_cyc=48001188 busy_cyc=9366664 windows=4701
+4702531 LOAD pct=20 pm=195 win_cyc=48002160 busy_cyc=9365163 windows=4702
+4703531 LOAD pct=20 pm=195 win_cyc=48000780 busy_cyc=9366838 windows=4703
+4704169 PARCEL_OUT gate=1591 state=READY
+4704531 LOAD pct=20 pm=199 win_cyc=48001980 busy_cyc=9530686 windows=4704
+4705531 LOAD pct=20 pm=195 win_cyc=48002604 busy_cyc=9364110 windows=4705
+4706531 LOAD pct=20 pm=195 win_cyc=48002196 busy_cyc=9366041 windows=4706
+4707531 LOAD pct=20 pm=195 win_cyc=48001488 busy_cyc=9364824 windows=4707
+4708531 LOAD pct=20 pm=195 win_cyc=48001080 busy_cyc=9364911 windows=4708
+4709531 LOAD pct=20 pm=195 win_cyc=48001932 busy_cyc=9364959 windows=4709
+4710531 LOAD pct=20 pm=195 win_cyc=48002160 busy_cyc=9366358 windows=4710
+4711531 LOAD pct=20 pm=195 win_cyc=48001032 busy_cyc=9365119 windows=4711
+4712531 LOAD pct=20 pm=195 win_cyc=48000036 busy_cyc=9365140 windows=4712
+4713531 LOAD pct=20 pm=195 win_cyc=48001980 busy_cyc=9366308 windows=4713
+4714531 LOAD pct=20 pm=195 win_cyc=48001524 busy_cyc=9365531 windows=4714
+4715531 LOAD pct=20 pm=195 win_cyc=48000744 busy_cyc=9365444 windows=4715
+4716531 LOAD pct=20 pm=195 win_cyc=48000552 busy_cyc=9364966 windows=4716
+4717532 LOAD pct=19 pm=195 win_cyc=48002448 busy_cyc=9359331 windows=4717
+4718532 LOAD pct=19 pm=195 win_cyc=48000156 busy_cyc=9359928 windows=4718
+4719532 LOAD pct=20 pm=195 win_cyc=48000552 busy_cyc=9360721 windows=4719
+4720532 LOAD pct=19 pm=195 win_cyc=48002556 busy_cyc=9358829 windows=4720
+4721532 LOAD pct=20 pm=195 win_cyc=48001536 busy_cyc=9364937 windows=4721
+4722144 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+4722532 LOAD pct=22 pm=224 win_cyc=48001500 busy_cyc=10739094 windows=4722
+4723532 LOAD pct=19 pm=195 win_cyc=48001824 busy_cyc=9359512 windows=4723
+# > stats
+s4724532 LOAD pct=20 pm=195 win_cyc=48001500 busy_cyc=9363117 windows=4724
+tats
+4725346 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+4725353 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+4725359 STARTUP boot_us=7047 gate_us=171360 class_us=176139 imu_us=234947 lcd_us=759175
+4725369 STAT name=uart_rx n=729 min_us=62 avg_us=3849 max_us=198173 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4725380 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4725391 STAT name=gate n=856768 min_us=112 avg_us=115 max_us=4568 period_us=5000 jit_min_us=-970 jit_max_us=198388 miss=13062
+4725405 STAT name=sort n=6 min_us=17496 avg_us=17939 max_us=18370 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4725418 STAT name=imu n=436515 min_us=996 avg_us=1039 max_us=34735 period_us=10000 jit_min_us=-989 jit_max_us=189563 miss=9397
+4725432 STAT name=lcd n=9311 min_us=38109 avg_us=38650 max_us=105570 period_us=500000 jit_min_us=-840 jit_max_us=149724 miss=0
+4725445 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4725456 STAT name=loop n=65832151 min_us=37 avg_us=55 max_us=237792 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4725469 STAT name=i2c_xfer n=2139326 min_us=62 avg_us=346 max_us=34396 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4725481 STAT name=uart_line n=5180 min_us=1822 avg_us=7723 max_us=13323 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4725494 STAT name=lcd_update n=9311 min_us=37874 avg_us=38416 max_us=105335 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4725507 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4725519 STAT name=parcel_latency n=6 min_us=3189 avg_us=3266 max_us=3338 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4725531 UART rx=729 ore=0
+4725534 EVT t_us=4725346539 name=cmd_rx
+4725540 EVT t_us=4725534214 name=cmd_reply
+4725546 LOAD pct=37 pm=366 win_cyc=48683622 busy_cyc=17809826 windows=4725
+# > load
+load4726546 LOAD pct=19 pm=194 win_cyc=48002346 busy_cyc=9328620 windows=4726
+
+4726556 LOAD pct=19 pm=194 win_cyc=48002346 busy_cyc=9328620 windows=4726
+4726564 EVT t_us=4726556108 name=cmd_rx
+4726570 EVT t_us=4726564207 name=cmd_reply
+# > stack
+stac4727546 LOAD pct=21 pm=212 win_cyc=48000180 busy_cyc=10176034 windows=4727
+k
+4727757 STACK used=944 reserved=1024 free=80 overflow=0
+4727764 EVT t_us=4727757631 name=cmd_rx
+4727769 EVT t_us=4727763701 name=cmd_reply
+# > heap
+hea4728546 LOAD pct=21 pm=209 win_cyc=48002388 busy_cyc=10027401 windows=4728
+p
+4728765 HEAP arena=436 used=436 free=0
+4728770 EVT t_us=4728765084 name=cmd_rx
+4728775 EVT t_us=4728769458 name=cmd_reply
+4729546 LOAD pct=21 pm=208 win_cyc=48000252 busy_cyc=9983357 windows=4729

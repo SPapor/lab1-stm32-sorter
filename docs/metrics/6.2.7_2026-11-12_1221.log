@@ -1,0 +1,60 @@
+# git=3c1a2135 (з BOOT) scenario=6.2.7 build="LAB2_CAP=0 TEST_I2C_FAULT=0 PERF=1" perf=1 port=rfc2217://localhost:4000 host_start=2026-11-12T12:21:34
+# сценарій 6.2.7: Старт: BOOT -> ready_gate/class/imu/lcd
+22261 LOAD pct=20 pm=195 win_cyc=48000180 busy_cyc=9366929 windows=22
+23261 LOAD pct=20 pm=195 win_cyc=48000780 busy_cyc=9364666 windows=23
+24261 LOAD pct=20 pm=195 win_cyc=48001704 busy_cyc=9365558 windows=24
+2 BOOT fw=lab3-superloop git=3c1a2135 perf=1
+7 EVT t_us=7047 name=boot
+10 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+16 PERF cpu_hz=48000000 now_cyc=440 pair_cyc=1153
+# чекаю 5 с часу МК після старту
+28 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+35 EVT t_us=35225 name=i2c_fail
+40 EVT t_us=39409 name=i2c_ok
+49 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+56 EVT t_us=56220 name=i2c_fail
+61 EVT t_us=60411 name=i2c_ok
+70 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+77 EVT t_us=77229 name=i2c_fail
+82 EVT t_us=81418 name=i2c_ok
+85 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+161 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+166 SELFTEST dev=ldr_gate status=OK raw=1001
+171 SELFTEST dev=ldr_class status=OK raw=1001
+176 SELFTEST dev=servo status=OK pulse_us=1500
+181 SELFTEST_END ok=4 warn=1 fail=0
+221 STATE state=READY
+224 STACK used=824 reserved=1024 free=200 overflow=0
+230 HEAP arena=436 used=436 free=0
+235 EVT t_us=171460 name=ready_gate
+240 EVT t_us=176347 name=ready_class
+244 EVT t_us=235171 name=ready_imu
+759 EVT t_us=759177 name=ready_lcd
+1259 LOAD pct=19 pm=192 win_cyc=49217832 busy_cyc=9433618 windows=1
+2259 LOAD pct=19 pm=194 win_cyc=48000120 busy_cyc=9310319 windows=2
+3259 LOAD pct=19 pm=194 win_cyc=48000036 busy_cyc=9311636 windows=3
+4260 LOAD pct=19 pm=195 win_cyc=48064041 busy_cyc=9364936 windows=4
+5260 LOAD pct=20 pm=195 win_cyc=48001606 busy_cyc=9365153 windows=5
+# > stats
+stat6260 LOAD pct=20 pm=195 win_cyc=48002066 busy_cyc=9377661 windows=6
+s
+6472 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+6478 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+6484 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235171 lcd_us=759177
+6493 STAT name=uart_rx n=5 min_us=62 avg_us=62 max_us=62 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+6504 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+6514 STAT name=gate n=1152 min_us=114 avg_us=115 max_us=116 period_us=5000 jit_min_us=-747 jit_max_us=42748 miss=13
+6526 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+6537 STAT name=imu n=584 min_us=1038 avg_us=1038 max_us=1069 period_us=10000 jit_min_us=-876 jit_max_us=43948 miss=12
+6550 STAT name=lcd n=12 min_us=38145 avg_us=38158 max_us=38174 period_us=500000 jit_min_us=-33 jit_max_us=30 miss=0
+6562 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+6573 STAT name=loop n=86958 min_us=37 avg_us=56 max_us=42668 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+6584 STAT name=i2c_xfer n=2974 min_us=59 avg_us=353 max_us=12592 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+6596 STAT name=uart_line n=35 min_us=2434 avg_us=6556 max_us=12200 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+6609 STAT name=lcd_update n=12 min_us=37899 avg_us=37921 max_us=37939 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+6620 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+6631 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+6642 UART rx=6 ore=0
+6645 EVT t_us=6472144 name=cmd_rx
+6649 EVT t_us=6644843 name=cmd_reply
+7260 LOAD pct=35 pm=354 win_cyc=48001738 busy_cyc=17007019 windows=7
