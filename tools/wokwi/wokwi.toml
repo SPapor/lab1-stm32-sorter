@@ -1,0 +1,7 @@
+# Проєкт для wokwi-cli (прогони без вікна VS Code): та сама прошивка і схема,
+# але RFC2217 на порту 4001, щоб не заважати симуляції у VS Code (4000).
+[wokwi]
+version = 1
+firmware = '../../firmware/build/firmware.elf'
+elf = '../../firmware/build/firmware.elf'
+rfc2217ServerPort = 4001

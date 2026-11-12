@@ -295,6 +295,22 @@ class RunTest(unittest.TestCase):
         self.assertIn('# >> потік "load" rate_hz=0 count=3 (час МК)', log)
         self.assertIn('# >> потік завершено: надіслано 3 команд, 15 байтів', log)
 
+    def test_auto_markers_and_prompts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ser = FakeMcu(b'1 BOOT fw=x git=abc perf=1\r\n')
+            rec = recorder(tmp, ser)
+            rec.start()
+            sc = {'name': 'T', 'knobs_reset': False, 'setup': ['stats reset'],
+                  'steps': [{'prompt': 'натисни B1'}], 'final': ['stats']}
+            asked = []
+            rs.run(sc, ser, rec, input_fn=asked.append, sleep=short_sleep, hash_wait=0.5,
+                   final_wait=0, auto=True)
+            rec.finish('x')
+            log = read_log(rec)
+        self.assertEqual(ser.written, b'stats reset\r#GO\rstats\r#END\r')
+        self.assertEqual(asked, [])                  # Enter не чекаємо
+        self.assertIn('# ! натисни B1 (робить wokwi-cli)', log)
+
     def test_knobs_reset_off(self):
         with tempfile.TemporaryDirectory() as tmp:
             ser = FakeMcu(b'1 BOOT fw=x git=abc perf=1\r\n')

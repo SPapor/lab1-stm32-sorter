@@ -1,0 +1,13 @@
+# Дії для tools/run_scenario.py --wokwi (wokwi-cli, час симуляції).
+# Старт - за маркером #GO (його набирає скрипт після setup), кінець - #END.
+# 6.2.4 (збірка TEST_I2C_FAULT=1): через 20,5 с SDA на GND (кнопка sda_gnd) на 2 с.
+
+name: "6.2.4 SDA на GND"
+version: 1
+steps:
+  - wait-serial: "#GO"
+  - delay: 20500ms
+  - set-control: {part-id: sda_gnd, control: pressed, value: 1}
+  - delay: 2000ms
+  - set-control: {part-id: sda_gnd, control: pressed, value: 0}
+  - wait-serial: "#END"

@@ -3,6 +3,16 @@
 
     tools/run_scenario.py tools/scenarios/S1.yaml [--port rfc2217://localhost:4000]
                           [--out docs/metrics] [--build firmware/build]
+    tools/run_scenario.py tools/scenarios/S2.yaml --wokwi tools/wokwi/S2.yaml [--vcd]
+
+Без --wokwi скрипт підключається до симуляції у VS Code, а руками діє людина.
+З --wokwi він сам запускає wokwi-cli (проєкт tools/wokwi/, RFC2217 на 4001) зі
+сценарієм дій: LDR, кнопки (set-control) за часом симуляції. Обидва сценарії
+синхронізуються маркерами в UART: після setup скрипт набирає #GO (з нього
+починаються дії), після final - #END (на ньому wokwi-cli закінчує і пише VCD).
+Підказки людині в цьому режимі - лише позначки в лозі, а замість Enter скрипт
+чекає auto секунд часу МК (поле кроку prompt; без нього - wait, без нього - 0).
+Потрібен WOKWI_CLI_TOKEN у середовищі.
 
 У wokwi.toml має бути rfc2217ServerPort = 4000, симуляція запущена, а вкладка
 симулятора у VS Code - видима (інакше Wokwi ставить симуляцію на паузу).
@@ -40,6 +50,7 @@
       - wait_mcu: 60                  # пауза за часом МК (по мітках <мс>)
       - prompt: "Натисни B1"          # підказка людині; без wait - чекати Enter
         wait: 30                      #   з wait - просто почекати
+        auto: 5                       #   з --wokwi - чекати 5 с часу МК
       - stream: {cmd: stats, rate_hz: 2, duration: 10}   # потік за часом МК; rate_hz 0 - без пауз
       - repeat: {times: 5, steps: [{send: status}, {wait: 1}]}
       - comment: "довільна позначка в лозі"
@@ -66,7 +77,7 @@ LINE_START = re.compile(rb'\d+ [A-Z]')
 DIGITS = re.compile(rb'\d+')
 # Дозволені набори ключів кроку
 STEP_FORMS = [{'send'}, {'send', 'wait'}, {'wait'}, {'wait_mcu'}, {'prompt'}, {'prompt', 'wait'},
-              {'stream'}, {'repeat'}, {'comment'}]
+              {'prompt', 'auto'}, {'prompt', 'wait', 'auto'}, {'stream'}, {'repeat'}, {'comment'}]
 DEFAULT_FINAL = ['stats', 'load', 'stack', 'heap']
 KNOBS_DEFAULT = ['set log 2', 'set lcd_ms 500', 'set lcd_chars 0', 'set imu_ms 10']
 # За яким рядком видно, що виконалась саме ця команда (перший збіг за початком)
@@ -82,6 +93,9 @@ SPEED_WINDOW_S = 20.0        # за скільки останніх секунд
 EXTRAP_MS = 1500             # далі останньої мітки час МК не екстраполюється (пауза симуляції)
 ECHO_TIMEOUT = 2.0           # с хоста на ехо одного байта (цикл може стояти на I2C до 3 × 100 мс)
 RAW_KEEP = 1 << 20           # скільки останніх сирих байтів UART тримати для пошуку ехо
+CLI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'wokwi')
+CLI_PORT = 'rfc2217://localhost:4001'
+MARK_GO, MARK_END = '#GO', '#END'
 
 
 # ---- сценарій ----------------------------------------------------------------
@@ -122,6 +136,8 @@ def validate_steps(steps, where='steps'):
             _num(st['wait'], f'{w}.wait')
         if 'wait_mcu' in st:
             _num(st['wait_mcu'], f'{w}.wait_mcu')
+        if 'auto' in st:
+            _num(st['auto'], f'{w}.auto')
         if 'prompt' in st and not isinstance(st['prompt'], str):
             raise ValueError(f'{w}: prompt - текст підказки')
         if 'stream' in st:
@@ -470,6 +486,13 @@ def command(ser, rec, cmd, timeout=REPLY_TIMEOUT, tries=TRIES, sleep=time.sleep,
     return False
 
 
+def marker(ser, rec, text, sleep=time.sleep):
+    """Маркер для сценарію дій wokwi-cli (wait-serial ловить його ехо). Прошивка
+    відповість CLI st=BAD, і це нормально: відповіді тут не чекаємо."""
+    rec.note(f'# > {text}')
+    type_line(ser, rec, text + '\r', sleep=sleep)
+
+
 # ---- кроки -------------------------------------------------------------------
 
 def wait_mcu(rec, seconds, timeout_factor=TIMEOUT_FACTOR, sleep=time.sleep):
@@ -521,7 +544,7 @@ def stream(ser, rec, cmd, rate_hz, duration=None, count=None, sleep=time.sleep,
 
 
 def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wait=1.0,
-        timeout=REPLY_TIMEOUT):
+        timeout=REPLY_TIMEOUT, auto=False):
     def cmd(c):
         return command(ser, rec, c, timeout=timeout, sleep=sleep)
 
@@ -537,11 +560,18 @@ def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wai
             cmd(c)
     for c in sc.get('setup', []):
         cmd(c)
+    if auto:
+        marker(ser, rec, MARK_GO, sleep)
     for st in expand(sc['steps']):
         if 'send' in st:
             cmd(st['send'])
             if 'wait' in st:
                 sleep(st['wait'])
+        elif 'prompt' in st and auto:
+            rec.note(f'# ! {st["prompt"]} (робить wokwi-cli)')
+            secs = st.get('auto', st.get('wait', 0))
+            if secs:
+                wait_mcu(rec, secs, sleep=sleep)
         elif 'prompt' in st:
             rec.note(f'# ! {st["prompt"]}')
             if 'wait' in st:
@@ -561,6 +591,8 @@ def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wai
             rec.note(f'# {st["comment"]}')
     for c in sc.get('final', DEFAULT_FINAL):
         cmd(c)
+    if auto:
+        marker(ser, rec, MARK_END, sleep)
     # дочекатися рядків, що йдуть уже після останньої відповіді
     last, t_end = -1, time.monotonic() + final_wait
     while time.monotonic() < t_end and rec.lines != last:
@@ -590,7 +622,7 @@ def connect(url, wait_s, sleep=time.sleep):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument('scenario')
-    ap.add_argument('--port', default='rfc2217://localhost:4000')
+    ap.add_argument('--port', help='rfc2217://localhost:4000 (з --wokwi - 4001)')
     ap.add_argument('--out', default='docs/metrics')
     ap.add_argument('--build', default='firmware/build', help='звідки build.cfg і git.cfg')
     ap.add_argument('--hash-wait', type=float, default=3.0)
@@ -598,24 +630,66 @@ def main(argv=None):
                     help='скільки секунд чекати на RFC2217-сервер Wokwi (60)')
     ap.add_argument('--reply-timeout', type=float, default=REPLY_TIMEOUT,
                     help=f'скільки секунд чекати на відповідь команди ({REPLY_TIMEOUT:g})')
+    ap.add_argument('--wokwi', metavar='ДІЇ.yaml',
+                    help='прогін без вікна: wokwi-cli з цим сценарієм дій (tools/wokwi/<S>.yaml)')
+    ap.add_argument('--vcd', action='store_true',
+                    help='з --wokwi: запис аналізатора в docs/captures/<назва логу>.vcd')
+    ap.add_argument('--sim-limit', type=float, default=900,
+                    help='з --wokwi: межа часу симуляції, с (900)')
     args = ap.parse_args(argv)
 
     sc = load_scenario(args.scenario)
-    ser = connect(args.port, args.wait_connect)
+    port = args.port or (CLI_PORT if args.wokwi else 'rfc2217://localhost:4000')
     now = datetime.datetime.now()
     path = log_path(args.out, sc['name'], now)
+    vcd = None
+    if args.vcd:
+        vcd = os.path.join('docs', 'captures', os.path.basename(path)[:-4] + '.vcd')
+    cli = start_cli(args.wokwi, args.sim_limit, vcd) if args.wokwi else None
+    ser = connect(port, args.wait_connect)
     rec = Recorder(ser, path, {'scenario': sc['name'], 'build': read_cfg(args.build, 'build.cfg'),
-                               'port': args.port, 'host_start': f'{now:%Y-%m-%dT%H:%M:%S}'})
+                               'port': port, 'host_start': f'{now:%Y-%m-%dT%H:%M:%S}'})
     rec.start()
     try:
-        run(sc, ser, rec, hash_wait=args.hash_wait, timeout=args.reply_timeout)
+        run(sc, ser, rec, hash_wait=args.hash_wait, timeout=args.reply_timeout, auto=cli is not None)
     except KeyboardInterrupt:
         rec.note('# перервано вручну (Ctrl+C)')
     finally:
         rec.finish(read_cfg(args.build, 'git.cfg'))
         ser.close()
-    print(f'лог: {path} ({rec.lines} рядків від МК)')
+        if cli is not None:
+            finish_cli(cli)
+    print(f'лог: {path} ({rec.lines} рядків від МК)' + (f', VCD: {vcd}' if vcd else ''))
     return path
+
+
+def start_cli(actions, sim_limit, vcd):
+    """wokwi-cli у фоні: проєкт tools/wokwi (та сама прошивка і diagram.json)."""
+    import subprocess
+    cmd = ['wokwi-cli', '--quiet', '--diagram-file', '../../diagram.json',
+           '--scenario', os.path.abspath(actions), '--timeout', str(int(sim_limit * 1000))]
+    if vcd:
+        os.makedirs(os.path.dirname(vcd), exist_ok=True)
+        cmd += ['--vcd-file', os.path.abspath(vcd)]
+    proc = subprocess.Popen(cmd + [CLI_DIR], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    proc.tail = collections.deque(maxlen=30)
+
+    def drain():
+        for line in proc.stdout:
+            proc.tail.append(line.decode('utf-8', 'replace').rstrip())
+    threading.Thread(target=drain, daemon=True).start()
+    return proc
+
+
+def finish_cli(proc, wait_s=300):
+    """Дочекатися, поки wokwi-cli допише VCD і вийде."""
+    try:
+        code = proc.wait(timeout=wait_s)
+    except Exception:
+        proc.terminate()
+        code = proc.wait()
+    if code != 0:
+        print(f'wokwi-cli завершився з кодом {code}:', *proc.tail, sep='\n', file=sys.stderr)
 
 
 if __name__ == '__main__':

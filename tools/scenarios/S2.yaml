@@ -9,6 +9,7 @@ steps:
       times: 10
       steps:
         - prompt: "Посилка: gate 10 лк ~1 с -> 500 лк. Між посилками міняй class по колу 500 / 100 / 10 лк. Enter після посилки"
+          auto: 3
         - send: status
           wait: 2
   - wait_mcu: 5

@@ -8,5 +8,6 @@ steps:
   - comment: "20 с з TEST_I2C_FAULT: I2C_RECOVER try=n/3, EVT i2c_fail/i2c_ok"
   - wait_mcu: 20
   - prompt: "Затисни жовту кнопку sda_gnd (SDA на GND) приблизно на 2 с і відпусти. Enter після цього"
+    auto: 4
   - wait_mcu: 10
 final: [stats, hist imu, hist gate]
