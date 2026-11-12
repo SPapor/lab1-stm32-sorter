@@ -33,13 +33,16 @@ void perf_stat_reset(perf_stat_t *s)
     s->sum = 0;
 }
 
+/* Старший біт num щокроку виштовхується зсувом на 1: зсув на змінну кількість
+ * бітів (num >> i) тягнув би з libgcc ще й __aeabi_llsr */
 uint32_t perf_udiv64(uint64_t num, uint32_t den, uint32_t *rem)
 {
     uint64_t r = 0;
     uint64_t q = 0;
 
-    for (int i = 63; i >= 0; i--) {
-        r = (r << 1) | ((num >> i) & 1u);
+    for (int i = 0; i < 64; i++) {
+        r = (r << 1) | (uint32_t)(num >> 63);
+        num <<= 1;
         q <<= 1;
         if (r >= den) {
             r -= den;

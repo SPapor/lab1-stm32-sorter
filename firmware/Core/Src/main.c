@@ -28,6 +28,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 #include "board.h"
 #include "platform.h"
 #include "adc_hal.h"
@@ -43,13 +44,13 @@
 #include "impact.h"
 #include "sorter.h"
 #include "health.h"
+#include "lcdfmt.h"
 #if PERF
 #include "perf.h"
 #include "perf_hal.h"
 #include "memmark.h"
 #include "mem_hal.h"
 #include <malloc.h>
-#include <string.h>
 #endif
 /* USER CODE END Includes */
 
@@ -60,6 +61,9 @@ typedef struct {
   unsigned ok, warn, fail;
 } selftest_counts_t;
 
+/* Сенсори для сценарію старту (методичка 6.2.7, docs/scenarios.md) */
+enum { RDY_GATE = 0, RDY_CLASS, RDY_IMU, RDY_LCD, RDY_COUNT };
+
 /* Номери задач super loop для вимірювань (docs/perf.md) */
 enum {
   PT_UART = 0,
@@ -68,6 +72,7 @@ enum {
   PT_SORT,
   PT_IMU,
   PT_LCD,
+  PT_LCD_PART,      /* дописування змінених символів LCD між періодами (set lcd_chars) */
 #ifdef LAB2_CAP
   PT_TELEMETRY,
 #endif
@@ -85,6 +90,7 @@ enum {
 #define ESTOP_DEBOUNCE_MS   20u     /* estop_task: EXTI кнопки вимкнено на цей час після першого фронту */
 
 #define PERF_WIN_MS         1000u   /* вікно завантаження CPU, docs/perf.md */
+#define IMU_READY_MG        500     /* |a| від 0,5 g — MPU справді міряє (у SLEEP на залізі дає нулі) */
 
 #define FW_NAME             "lab3-superloop"
 #ifndef GIT_HASH
@@ -115,6 +121,17 @@ _Static_assert(CLI_SERVO_MAX_DEG == SERVO_HAL_MAX_DEG, "межа cap servo у cl
 /* Обгортка роботи задачі (методичка 5.1, приклад 1): такти до й після, джитер
  * старту періодичної задачі, завантаження. Викликається лише тоді, коли задача
  * справді працює, а не тільки перевіряє свій час. PERF=0 — просто виклик. */
+/* Перший коректний вимір сенсора після скидання (методичка 6.2.7). Без PERF
+ * умова READY_IF не обчислюється */
+#if PERF
+#define READY(what) ready_mark(what)
+#define READY_IF(cond, what) \
+  do { if (ready_us[what] == 0u && (cond)) ready_mark(what); } while (0)
+#else
+#define READY(what) ((void)0)
+#define READY_IF(cond, what) ((void)0)
+#endif
+
 #if PERF
 #define TASK_RUN(id, call) \
   do { uint32_t t0_ = perf_begin(id); call; perf_end((id), t0_); } while (0)
@@ -134,26 +151,29 @@ static uint32_t perf_pair_cyc;   /* t0 = perf_now(); perf_add(&s, perf_now() - t
 static uint32_t cyc_per_us;
 static perf_load_t load;         /* LOAD раз на PERF_WIN_MS */
 
-/* STAT для кожної задачі — лише запуски з роботою */
-static perf_stat_t st_task[PT_COUNT] = {
-  [PT_UART]  = { .name = "uart_rx" },
-  [PT_ESTOP] = { .name = "estop" },
-  [PT_GATE]  = { .name = "gate" },
-  [PT_SORT]  = { .name = "sort" },
-  [PT_IMU]   = { .name = "imu" },
-  [PT_LCD]   = { .name = "lcd" },
+/* STAT для кожної задачі — лише запуски з роботою. Назви ставить perf_setup:
+ * з ініціалізатором уся статистика лягла б у .data і мала б копію у флеші */
+static perf_stat_t st_task[PT_COUNT];
+static const char *const task_name[PT_COUNT] = {
+  [PT_UART] = "uart_rx", [PT_ESTOP] = "estop", [PT_GATE] = "gate",
+  [PT_SORT] = "sort", [PT_IMU] = "imu", [PT_LCD] = "lcd", [PT_LCD_PART] = "lcd_part",
 #ifdef LAB2_CAP
-  [PT_TELEMETRY] = { .name = "telemetry" },
+  [PT_TELEMETRY] = "telemetry",
 #endif
 };
-static perf_stat_t st_loop = { .name = "loop" };              /* повний прохід циклу */
-static perf_stat_t st_i2c = { .name = "i2c_xfer" };           /* виклик шини, з повторами FR-09 */
-static perf_stat_t st_uart_line = { .name = "uart_line" };    /* один рядок журналу в UART */
-static perf_stat_t st_lcd_update = { .name = "lcd_update" };  /* обидва рядки LCD */
+static perf_stat_t st_loop;          /* loop: повний прохід циклу */
+static perf_stat_t st_i2c;           /* i2c_xfer: виклик шини, з повторами FR-09 */
+static perf_stat_t st_uart_line;     /* uart_line: один рядок журналу в UART */
+static perf_stat_t st_lcd_update;    /* lcd_update: обидва рядки LCD */
 
 /* Затримки реакції (методичка 5.1, приклад 2) */
-static perf_stat_t st_estop_lat = { .name = "estop_latency" };   /* фронт PC13 → реакція */
-static perf_stat_t st_parcel_lat = { .name = "parcel_latency" }; /* PARCEL_IN → запис CCR, FR-03 */
+static perf_stat_t st_estop_lat;     /* estop_latency: фронт PC13 → реакція */
+static perf_stat_t st_parcel_lat;    /* parcel_latency: PARCEL_IN → запис CCR, FR-03 */
+
+/* Старт: мкс від скидання (uwTick = 0 у HAL_Init) до BOOT і до першого
+ * коректного виміру кожного сенсора; 0 — ще не було */
+static uint32_t boot_us;
+static uint32_t ready_us[RDY_COUNT];
 static volatile uint32_t estop_irq_cyc;   /* perf_now() у EXTI-колбеку */
 static uint32_t parcel_cyc;               /* perf_now() у момент PARCEL_IN */
 static uint8_t i2c_failed;                /* остання транзакція впала: наступна вдала — EVT i2c_ok */
@@ -185,7 +205,15 @@ static gate_t gate;
 static sorter_t sorter;
 static const char *fault_reason;      /* FR-08: перша причина FAULT — ключ reason= у журналі */
 static const char *fault_text = "";   /*   і текст для LCD */
-static uint8_t log_on = 1;            /* команда log on|off: рядки подій FR-10 */
+/* Ручки для пошуку точки зламу (команда set, docs/scenarios.md, 6.2.5) */
+static uint16_t lcd_period_ms = LCD_PERIOD_MS;
+static uint16_t imu_period_ms = IMU_PERIOD_MS;
+static uint8_t lcd_chars;             /* 0 — повна перемальовка; N — лише змінені, ≤ N символів за прохід */
+static uint8_t log_level = 2;         /* 0 — нічого, 1 — події продукту, 2 — ще EVT і LOAD (log on|off = 2|0) */
+
+static char lcd_want[2][LCD1602_COLS + 1];   /* що має бути на LCD */
+static char lcd_shown[2][LCD1602_COLS];      /* що там зараз (для lcd_chars > 0; 0 — невідомо) */
+static uint8_t lcd_pending;                  /* lcd_chars > 0: ще є незаписані зміни */
 
 /* Момент останнього запуску періодичних задач (HAL_GetTick) */
 static uint32_t t_gate, t_imu, t_lcd;
@@ -212,6 +240,7 @@ static const char *const help_lines[] = {
   "load                CPU load, 1 s",
   "stack | heap        memory",
   "hist gate|imu|lcd   jitter histogram",
+  "set <knob> <n>      lcd_ms lcd_chars imu_ms log",
 #endif
 #ifdef LAB2_CAP
   "stream on|off       periodic 'accel' line (default on)",
@@ -243,18 +272,20 @@ static void led_mark(uint8_t on);
 static selftest_counts_t selftest_run(void);
 static void selftest_report(selftest_counts_t *cnt, const char *dev, health_t h,
                             const char *fmt, ...) __attribute__((format(printf, 4, 5)));
-static void selftest_ldr(selftest_counts_t *cnt, const char *dev, uint32_t channel);
+static health_t selftest_ldr(selftest_counts_t *cnt, const char *dev, uint32_t channel);
 static void fault_note(const char *reason, const char *text);
 static const char *mpu_err_name(mpu6050_status_t st);
 static void lcd_show_selftest(const selftest_counts_t *cnt);
 static void console_echo(char ch);
 static void cmd_run(const cli_cmd_t *cmd);
+static void con_write(const char *s, int n);
 static void uart_rx_run(int ch);
 static void estop_run(void);
 static void gate_run(void);
 static void sort_run(void);
 static void imu_run(void);
-static void lcd_run(void);
+static void lcd_run(uint8_t due);
+static lcd_status_t lcd_write_changed(void);
 #if PERF
 static void perf_calibrate(void);
 static void perf_setup(void);
@@ -271,6 +302,10 @@ static void stats_reset(void);
 static void load_line(void (*out)(const char *, const char *, ...));
 static void load_report(void);
 static void hist_report(const char *name);
+static void knobs_line(void);
+static void set_knob(const char *name, int32_t v);
+static void ready_mark(unsigned what);
+static void ready_flush(void);
 #endif
 #if defined(LAB2_CAP) || defined(TEST_I2C_FAULT)
 static const char *bus_st_name(bus_status_t st);
@@ -306,6 +341,13 @@ int _write(int fd, char *p, int n)
   (void)fd;
   HAL_UART_Transmit(BOARD_UART, (uint8_t *)p, n, HAL_MAX_DELAY);
   return n;
+}
+
+/* Сирі байти в UART повз stdio. printf("\r\n") GCC сам перетворює на puts, а
+ * putchar — ще один модуль newlib; stdout без буфера, тож порядок виводу той самий */
+static void con_write(const char *s, int n)
+{
+  (void)_write(1, (char *)s, n);
 }
 /* USER CODE END 0 */
 
@@ -354,6 +396,12 @@ int main(void)
 #endif
   ev_log("BOOT", "fw=%s git=%s perf=%u", FW_NAME, GIT_HASH, (unsigned)PERF);
 #if PERF
+  {
+    uint64_t t = perf_now_us64();
+    boot_us = (uint32_t)t;
+    evt("boot", t);
+  }
+  knobs_line();
   perf_calibrate();
 #endif
   HAL_ADCEx_Calibration_Start(BOARD_ADC);
@@ -406,7 +454,7 @@ int main(void)
      * керування. Блокувальні виклики всередині задач — docs/tasks.md. */
 #if PERF
     uint32_t t_loop = perf_now();
-    if (perf_load_poll(&load, t_loop))
+    if (perf_load_poll(&load, t_loop) && log_level >= 2)
       load_line(ev_log);
 #endif
     uart_rx_task();
@@ -419,6 +467,7 @@ int main(void)
     telemetry_task();
 #endif
 #if PERF
+    ready_flush();
     perf_add(&st_loop, perf_now() - t_loop);
 #endif
   }
@@ -474,7 +523,7 @@ static void ev_vprint(const char *event, const char *fmt, va_list ap)
 #endif
   printf("%lu %s ", (unsigned long)HAL_GetTick(), event);
   vprintf(fmt, ap);
-  printf("\r\n");
+  con_write("\r\n", 2);
 #if PERF
   perf_add(&st_uart_line, perf_now() - t0);
 #endif
@@ -485,7 +534,7 @@ static void ev_log(const char *event, const char *fmt, ...)
 {
   va_list ap;
 
-  if (!log_on)
+  if (log_level == 0)
     return;
   va_start(ap, fmt);
   ev_vprint(event, fmt, ap);
@@ -540,7 +589,7 @@ static void uart_rx_run(int ch)
       uint64_t us_rx = perf_now_us64();   /* цикл дійшов до кінця рядка команди */
 #endif
       if (ch != '\r' && ch != '\n')
-        printf("\r\n");   /* переповнення: команда завершилась посеред рядка */
+        con_write("\r\n", 2);   /* переповнення: команда завершилась посеред рядка */
       cmd_run(&cmd);
 #if PERF
       uint64_t us_reply = perf_now_us64();
@@ -618,6 +667,7 @@ static void gate_task(void)
 static void gate_run(void)
 {
   uint16_t raw = adc_hal_read(BOARD_ADC_CH_GATE);
+  READY_IF(health_ldr(raw, ADC_HAL_MAX_RAW) == HEALTH_OK, RDY_GATE);
   switch (gate_update(&gate, raw)) {
   case GATE_EV_IN:
 #if PERF
@@ -654,6 +704,7 @@ static void sort_run(void)
   parcel_pending = 0;
 
   uint16_t raw = adc_hal_read(BOARD_ADC_CH_CLASS);
+  READY_IF(health_ldr(raw, ADC_HAL_MAX_RAW) == HEALTH_OK, RDY_CLASS);
   parcel_class_t cls = classify(raw);
   int accepted = sorter_parcel_in(&sorter, cls, &d);
   if (accepted)
@@ -687,7 +738,7 @@ static void sort_run(void)
  * посилки, що зараз їде до gate (FR-04). Рядок IMPACT — один на посилку. */
 static void imu_task(void)
 {
-  if (!imu_ready || !period_due(&t_imu, HAL_GetTick(), IMU_PERIOD_MS))
+  if (!imu_ready || !period_due(&t_imu, HAL_GetTick(), imu_period_ms))
     return;
   TASK_RUN(PT_IMU, imu_run());
 }
@@ -710,6 +761,7 @@ static void imu_run(void)
   int32_t y = mpu6050_raw_to_mg(a.y);
   int32_t z = mpu6050_raw_to_mg(a.z);
   uint32_t m2 = impact_mag2(x, y, z);
+  READY_IF(m2 >= (uint32_t)IMU_READY_MG * IMU_READY_MG, RDY_IMU);
   if (impact_over(m2) && sorter_impact(&sorter))
     ev_log("IMPACT", "amag_mg=%lu x_mg=%ld y_mg=%ld z_mg=%ld",
            (unsigned long)impact_isqrt(m2), (long)x, (long)y, (long)z);
@@ -720,48 +772,110 @@ static void imu_run(void)
  * 34 байти HD44780 по ≈ 926 мкс — ≈ 31,5 мс блокування за запуск. */
 static void lcd_task(void)
 {
-  if (!lcd_ready || !period_due(&t_lcd, HAL_GetTick(), LCD_PERIOD_MS))
+  uint8_t due;
+
+  if (!lcd_ready)
+    return;
+  due = (uint8_t)period_due(&t_lcd, HAL_GetTick(), lcd_period_ms);
+  if (!due && !lcd_pending)
     return;
 #if PERF
   BOARD_PROBE_ON(BOARD_PROBE_LCD_PIN);    /* D7: головний блокувальник циклу */
 #endif
-  TASK_RUN(PT_LCD, lcd_run());
+  if (due)
+    TASK_RUN(PT_LCD, lcd_run(1));
+  else
+    TASK_RUN(PT_LCD_PART, lcd_run(0));    /* лише при lcd_chars > 0 */
 #if PERF
   BOARD_PROBE_OFF(BOARD_PROBE_LCD_PIN);
 #endif
 }
 
-static void lcd_run(void)
+/* due = 1 — настав період: новий текст рядків. lcd_chars = 0 — обидва рядки
+ * повністю (34 записи HD44780, ~31,5 мс); N > 0 — лише символи, що змінилися,
+ * не більше N за прохід, решта — на наступних проходах циклу (STAT lcd_part) */
+static void lcd_run(uint8_t due)
 {
-  char row0[LCD1602_COLS + 1];
-  char row1[LCD1602_COLS + 1];
+  char *row0 = lcd_want[0];
+  char *row1 = lcd_want[1];
+  const size_t cap = sizeof lcd_want[0];
+  lcd_status_t st;
 
+  if (due) {
+  /* Той самий текст, що давали "%-16s", "%-8s n=%-5lu" і "A%-4lu B%-4lu R%-3lu" */
   if (sorter.state == SORTER_FAULT) {
-    snprintf(row0, sizeof row0, "%-16s", "FAULT:");
-    snprintf(row1, sizeof row1, "%-16s", fault_text);
+    lcdfmt_str(row0, 0, cap, "FAULT:", LCD1602_COLS);
+    lcdfmt_str(row1, 0, cap, fault_text, LCD1602_COLS);
   } else {
-    snprintf(row0, sizeof row0, "%-8s n=%-5lu", sorter_state_name(sorter.state),
-             (unsigned long)sorter_total(&sorter));
-    snprintf(row1, sizeof row1, "A%-4lu B%-4lu R%-3lu",
-             (unsigned long)sorter.count[BIN_A], (unsigned long)sorter.count[BIN_B],
-             (unsigned long)sorter.count[BIN_REJECT]);
+    size_t n = lcdfmt_str(row0, 0, cap, sorter_state_name(sorter.state), 8);
+    n = lcdfmt_str(row0, n, cap, " n=", 0);
+    lcdfmt_u32(row0, n, cap, sorter_total(&sorter), 5);
+    n = lcdfmt_str(row1, 0, cap, "A", 0);
+    n = lcdfmt_u32(row1, n, cap, sorter.count[BIN_A], 4);
+    n = lcdfmt_str(row1, n, cap, " B", 0);
+    n = lcdfmt_u32(row1, n, cap, sorter.count[BIN_B], 4);
+    n = lcdfmt_str(row1, n, cap, " R", 0);
+    lcdfmt_u32(row1, n, cap, sorter.count[BIN_REJECT], 3);
+  }
   }
 
 #if PERF
   uint32_t t0 = perf_now();
 #endif
-  lcd_status_t st = lcd1602_set_cursor(&lcd, 0, 0);
-  if (st == LCD_OK)
-    st = lcd1602_print(&lcd, row0);
-  if (st == LCD_OK)
-    st = lcd1602_set_cursor(&lcd, 0, 1);
-  if (st == LCD_OK)
-    st = lcd1602_print(&lcd, row1);
+  if (lcd_chars == 0u) {
+    st = lcd1602_set_cursor(&lcd, 0, 0);
+    if (st == LCD_OK)
+      st = lcd1602_print(&lcd, row0);
+    if (st == LCD_OK)
+      st = lcd1602_set_cursor(&lcd, 0, 1);
+    if (st == LCD_OK)
+      st = lcd1602_print(&lcd, row1);
+  } else {
+    st = lcd_write_changed();
+  }
 #if PERF
   perf_add(&st_lcd_update, perf_now() - t0);
 #endif
-  if (st != LCD_OK)
+  READY_IF(st == LCD_OK, RDY_LCD);
+  if (st != LCD_OK) {
+    memset(lcd_shown, 0, sizeof lcd_shown);   /* що на екрані — невідомо: наступний період перепише все */
+    lcd_pending = 0;
     ev_log("LCD_ERR", "isr=0x%08lX", (unsigned long)i2c1_ctx.last_isr);
+  }
+}
+
+/* lcd_chars > 0: не більше lcd_chars символів, що відрізняються від показаних.
+ * Курсор ставиться лише перед «стрибком»: після запису символу HD44780 сам
+ * переходить на наступну позицію (крім кінця рядка). Команда курсора — ще
+ * ~0,93 мс, у ліміт символів вона не входить. */
+static lcd_status_t lcd_write_changed(void)
+{
+  unsigned left = lcd_chars;
+  int cur = -1;                 /* позиція курсора HD44780 після останнього запису */
+  lcd_status_t st = LCD_OK;
+
+  lcd_pending = 0;
+  for (unsigned i = 0; i < 2u * LCD1602_COLS; i++) {
+    unsigned r = i / LCD1602_COLS, c = i % LCD1602_COLS;
+    char ch[2] = { lcd_want[r][c], '\0' };
+
+    if (lcd_shown[r][c] == ch[0])
+      continue;
+    if (left == 0u) {
+      lcd_pending = 1;          /* решта — на наступному проході циклу */
+      break;
+    }
+    if (cur != (int)i)
+      st = lcd1602_set_cursor(&lcd, (uint8_t)c, (uint8_t)r);
+    if (st == LCD_OK)
+      st = lcd1602_print(&lcd, ch);
+    if (st != LCD_OK)
+      break;
+    lcd_shown[r][c] = ch[0];
+    cur = (c == LCD1602_COLS - 1u) ? -1 : (int)i + 1;
+    left--;
+  }
+  return st;
 }
 
 #if PERF
@@ -798,6 +912,14 @@ static void perf_calibrate(void)
 
 static void perf_setup(void)
 {
+  for (unsigned i = 0; i < PT_COUNT; i++)
+    st_task[i].name = task_name[i];
+  st_loop.name = "loop";
+  st_i2c.name = "i2c_xfer";
+  st_uart_line.name = "uart_line";
+  st_lcd_update.name = "lcd_update";
+  st_estop_lat.name = "estop_latency";
+  st_parcel_lat.name = "parcel_latency";
   cyc_per_us = perf_hal_cpu_hz() / 1000000u;
   perf_load_init(&load, perf_hal_cpu_hz() / 1000u * PERF_WIN_MS);   /* 1 с = SystemCoreClock тактів */
   perf_period_init(&per_gate, GATE_PERIOD_MS * 1000u);
@@ -882,7 +1004,9 @@ static void stack_report(void)
  * забрано в sbrk (не зменшується, тож це пік), used / free — усередині арени */
 static void heap_report(void)
 {
-  struct mallinfo mi = mallinfo();
+  /* _mallinfo_r — те саме ядро, що в mallinfo(), але без mstats.o: той тягне
+   * malloc_stats, fprintf і strlen (~450 Б флешу), які тут не потрібні */
+  struct mallinfo mi = _mallinfo_r(_REENT);
 
   cli_reply("HEAP", "arena=%u used=%u free=%u",
             (unsigned)mi.arena, (unsigned)mi.uordblks, (unsigned)mi.fordblks);
@@ -893,17 +1017,13 @@ static void heap_report(void)
  * Джитер старту знаковий, miss — інтервал між стартами понад 2 періоди */
 static void stat_line(const perf_stat_t *s, const perf_period_t *p)
 {
-  static const perf_period_t none;
-
-  if (p == NULL)
-    p = &none;
   cli_reply("STAT", "name=%s n=%lu min_us=%lu avg_us=%lu max_us=%lu period_us=%lu "
             "jit_min_us=%ld jit_max_us=%ld miss=%lu", s->name, (unsigned long)s->count,
             (unsigned long)perf_cyc_to_us(s->min, cyc_per_us),
             (unsigned long)perf_cyc_to_us(perf_avg(s), cyc_per_us),
             (unsigned long)perf_cyc_to_us(s->max, cyc_per_us),
-            (unsigned long)p->period_us, (long)p->jit_min_us, (long)p->jit_max_us,
-            (unsigned long)p->missed);
+            (unsigned long)(p ? p->period_us : 0u), (long)(p ? p->jit_min_us : 0),
+            (long)(p ? p->jit_max_us : 0), (unsigned long)(p ? p->missed : 0u));
 }
 
 /* Команда stats: шапка з версією і похибкою методу, далі всі STAT і лічильники UART */
@@ -916,6 +1036,11 @@ static void stats_report(void)
 
   cli_reply("PERF", "git=%s now_cyc=%lu pair_cyc=%lu cyc_per_us=%lu", GIT_HASH,
             (unsigned long)perf_now_cyc, (unsigned long)perf_pair_cyc, (unsigned long)cyc_per_us);
+  knobs_line();
+  cli_reply("STARTUP", "boot_us=%lu gate_us=%lu class_us=%lu imu_us=%lu lcd_us=%lu",
+            (unsigned long)boot_us, (unsigned long)ready_us[RDY_GATE],
+            (unsigned long)ready_us[RDY_CLASS], (unsigned long)ready_us[RDY_IMU],
+            (unsigned long)ready_us[RDY_LCD]);
   for (unsigned i = 0; i < PT_COUNT; i++)
     stat_line(&st_task[i], task_period[i]);
   for (size_t i = 0; i < sizeof other / sizeof other[0]; i++)
@@ -989,13 +1114,80 @@ static void hist_report(const char *name)
   }
 }
 
+/* Перший коректний вимір сенсора (лише раз): мітка часу для рядка STARTUP у
+ * stats і EVT ready_<сенсор>. STARTUP не загубиться, навіть якщо скрипт підключився до
+ * UART уже після старту. 32 біти мкс вистачає на 71 хв від скидання */
+static void ready_mark(unsigned what)
+{
+  uint32_t t;
+
+  if (ready_us[what] != 0u)
+    return;
+  t = (uint32_t)perf_now_us64();
+  ready_us[what] = t ? t : 1u;
+}
+
+/* EVT ready_<сенсор> друкується наприкінці проходу циклу, поза задачами: рядок
+ * (~3,5 мс) не потрапляє ні в час задачі, ні в шлях PARCEL_IN -> CCR */
+static void ready_flush(void)
+{
+  static const char *const name[RDY_COUNT] = {
+    [RDY_GATE] = "ready_gate", [RDY_CLASS] = "ready_class",
+    [RDY_IMU] = "ready_imu", [RDY_LCD] = "ready_lcd",
+  };
+  static uint8_t printed;
+
+  if (printed == (1u << RDY_COUNT) - 1u)
+    return;
+  for (unsigned i = 0; i < RDY_COUNT; i++) {
+    if (ready_us[i] != 0u && !(printed & (1u << i))) {
+      printed |= (uint8_t)(1u << i);
+      evt(name[i], ready_us[i]);
+    }
+  }
+}
+
+/* Поточні значення ручок: після BOOT, у stats і у відповідь на set */
+static void knobs_line(void)
+{
+  cli_reply("KNOBS", "lcd_ms=%u lcd_chars=%u imu_ms=%u log=%u", (unsigned)lcd_period_ms,
+            (unsigned)lcd_chars, (unsigned)imu_period_ms, (unsigned)log_level);
+}
+
+/* Команда set (docs/scenarios.md, 6.2.5). Зміна періоду обнуляє джитер задачі:
+ * старий номінальний період уже не той. lcd_chars — що на екрані, вже невідомо,
+ * тож наступний період перепише всі символи (порціями по lcd_chars) */
+static void set_knob(const char *name, int32_t v)
+{
+  if (strcmp(name, "lcd_ms") == 0 && v >= 10) {
+    lcd_period_ms = (uint16_t)v;
+    perf_period_init(&per_lcd, (uint32_t)v * 1000u);
+  } else if (strcmp(name, "imu_ms") == 0 && v >= 1 && v <= 1000) {
+    imu_period_ms = (uint16_t)v;
+    perf_period_init(&per_imu, (uint32_t)v * 1000u);
+  } else if (strcmp(name, "lcd_chars") == 0 && v <= (int32_t)(2u * LCD1602_COLS)) {
+    lcd_chars = (uint8_t)v;
+    memset(lcd_shown, 0, sizeof lcd_shown);
+    lcd_pending = 0;
+  } else if (strcmp(name, "log") == 0 && v <= 2) {
+    log_level = (uint8_t)v;
+  } else {
+    cli_reply("SET", "name=%s st=BAD", name);
+    return;
+  }
+  knobs_line();
+}
+
 /* Журнал подій (методичка 5.2): "<мс> EVT t_us=<64-біт мкс> name=<подія>".
  * printf з newlib-nano не вміє %llu, тому 64 біти — двома частинами по 10^9.
  * Як і решта подій, вимикається командою log off. */
 static void evt(const char *name, uint64_t t_us)
 {
-  uint32_t lo;
-  uint32_t hi = perf_udiv64(t_us, 1000000000u, &lo);
+  uint32_t lo, hi;
+
+  if (log_level < 2)
+    return;
+  hi = perf_udiv64(t_us, 1000000000u, &lo);
 
   if (hi != 0u)
     ev_log("EVT", "t_us=%lu%09lu name=%s", (unsigned long)hi, (unsigned long)lo, name);
@@ -1035,7 +1227,7 @@ static void selftest_report(selftest_counts_t *cnt, const char *dev, health_t h,
   va_start(ap, fmt);
   vprintf(fmt, ap);
   va_end(ap);
-  printf("\r\n");
+  con_write("\r\n", 2);
 
   if (h == HEALTH_OK)
     cnt->ok++;
@@ -1054,11 +1246,13 @@ static void fault_note(const char *reason, const char *text)
   }
 }
 
-static void selftest_ldr(selftest_counts_t *cnt, const char *dev, uint32_t channel)
+static health_t selftest_ldr(selftest_counts_t *cnt, const char *dev, uint32_t channel)
 {
   uint16_t raw = adc_hal_read(channel);
+  health_t h = health_ldr(raw, ADC_HAL_MAX_RAW);
 
-  selftest_report(cnt, dev, health_ldr(raw, ADC_HAL_MAX_RAW), "raw=%u", (unsigned)raw);
+  selftest_report(cnt, dev, h, "raw=%u", (unsigned)raw);
+  return h;
 }
 
 static const char *mpu_err_name(mpu6050_status_t st)
@@ -1105,8 +1299,10 @@ static selftest_counts_t selftest_run(void)
     fault_note("LCD_NOT_FOUND", "LCD not found");
   }
 
-  selftest_ldr(&cnt, "ldr_gate", BOARD_ADC_CH_GATE);
-  selftest_ldr(&cnt, "ldr_class", BOARD_ADC_CH_CLASS);
+  if (selftest_ldr(&cnt, "ldr_gate", BOARD_ADC_CH_GATE) == HEALTH_OK)
+    READY(RDY_GATE);
+  if (selftest_ldr(&cnt, "ldr_class", BOARD_ADC_CH_CLASS) == HEALTH_OK)
+    READY(RDY_CLASS);
 
   /* Серво: ставимо 90° і читаємо CCR назад */
   servo_hal_set_angle(SERVO_SELFTEST_DEG);
@@ -1127,7 +1323,12 @@ static void lcd_show_selftest(const selftest_counts_t *cnt)
 
   if (!lcd_ready)
     return;
-  snprintf(line, sizeof line, "ST ok=%u w=%u f=%u", cnt->ok, cnt->warn, cnt->fail);
+  size_t n = lcdfmt_str(line, 0, sizeof line, "ST ok=", 0);   /* "ST ok=%u w=%u f=%u" */
+  n = lcdfmt_u32(line, n, sizeof line, cnt->ok, 0);
+  n = lcdfmt_str(line, n, sizeof line, " w=", 0);
+  n = lcdfmt_u32(line, n, sizeof line, cnt->warn, 0);
+  n = lcdfmt_str(line, n, sizeof line, " f=", 0);
+  lcdfmt_u32(line, n, sizeof line, cnt->fail, 0);
   (void)lcd1602_set_cursor(&lcd, 0, 0);
   (void)lcd1602_print(&lcd, "Warehouse Sorter");
   (void)lcd1602_set_cursor(&lcd, 0, 1);
@@ -1145,11 +1346,11 @@ static void console_echo(char ch)
 
   if (ch == '\r' || ch == '\n') {
     if (!(ch == '\n' && prev == '\r'))
-      printf("\r\n");
+      con_write("\r\n", 2);
   } else if (ch == 0x08 || ch == 0x7F) {
     printf("\b \b");
   } else {
-    putchar(ch);
+    con_write(&ch, 1);
   }
   prev = ch;
 }
@@ -1166,7 +1367,7 @@ static void cmd_run(const cli_cmd_t *cmd)
               sorter_state_name(sorter.state),
               (unsigned long)sorter.count[BIN_A], (unsigned long)sorter.count[BIN_B],
               (unsigned long)sorter.count[BIN_REJECT], (unsigned long)sorter_total(&sorter),
-              (unsigned)sorter.impact, (unsigned)log_on,
+              (unsigned)sorter.impact, (unsigned)(log_level != 0u),
               fault_reason != NULL ? fault_reason : "NONE");
     break;
   case CLI_RESET:
@@ -1174,8 +1375,8 @@ static void cmd_run(const cli_cmd_t *cmd)
     cli_reply("RESET", "total=%lu", (unsigned long)sorter_total(&sorter));
     break;
   case CLI_LOG:
-    log_on = (uint8_t)cmd->arg;
-    cli_reply("LOG", "on=%u", (unsigned)log_on);
+    log_level = cmd->arg ? 2u : 0u;
+    cli_reply("LOG", "on=%u", (unsigned)(log_level != 0u));
     break;
 #if PERF
   case CLI_STATS:       stats_report(); break;
@@ -1184,6 +1385,7 @@ static void cmd_run(const cli_cmd_t *cmd)
   case CLI_STACK:       stack_report(); break;
   case CLI_HEAP:        heap_report(); break;
   case CLI_HIST:        hist_report(cmd->name); break;
+  case CLI_SET:         set_knob(cmd->name, cmd->arg); break;
 #endif
 #ifdef LAB2_CAP
   case CLI_STREAM:
@@ -1277,7 +1479,7 @@ static void cap_report(const char *name, const char *st, const char *fmt, ...)
   va_start(ap, fmt);
   vprintf(fmt, ap);
   va_end(ap);
-  printf("\r\n");
+  con_write("\r\n", 2);
 }
 
 /* Невдала транзакція: ISR зафіксовано в i2c_hal до відновлення шини */
@@ -1400,7 +1602,7 @@ static void cap_uart(void)
   cap_begin();
   HAL_StatusTypeDef s = HAL_UART_Transmit(BOARD_UART, msg, sizeof msg - 1, HAL_MAX_DELAY);
   cap_end();
-  printf("\r\n");
+  con_write("\r\n", 2);
   cap_report("uart", s == HAL_OK ? "OK" : "ERR", "bytes=%u", (unsigned)(sizeof msg - 1));
 }
 #endif /* LAB2_CAP */

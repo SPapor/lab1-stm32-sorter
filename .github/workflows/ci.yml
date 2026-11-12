@@ -16,6 +16,11 @@ jobs:
       - name: Layer dependencies
         run: make check-deps
 
+      - name: Host tools tests
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq python3-yaml
+          make tools-test
+
       - name: Firmware build (LAB2_CAP harness, without PERF)
         run: make build LAB2_CAP=1
 

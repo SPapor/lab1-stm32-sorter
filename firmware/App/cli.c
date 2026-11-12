@@ -50,7 +50,7 @@ static unsigned split(char *s, char *w[], unsigned max)
     }
 }
 
-#ifdef LAB2_CAP
+#if PERF || defined(LAB2_CAP)
 /* Десяткове число без знака 0..max; 0 — успіх, -1 — не число або поза межами. */
 static int parse_uint(const char *s, int32_t max, int32_t *out)
 {
@@ -109,14 +109,17 @@ static cli_cmd_id_t parse_words(char *w[], unsigned n, cli_cmd_t *out)
     if (n == 2u && strcmp(w[0], "stats") == 0)
         return strcmp(w[1], "reset") == 0 ? CLI_STATS_RESET : CLI_CMD_BAD;
 
-    /* Назву задачі лише копіюємо: які задачі мають гістограму, знає main.c */
-    if (n == 2u && strcmp(w[0], "hist") == 0) {
+    /* Назву задачі чи ручки лише копіюємо: які вони бувають і які межі
+     * значень, знає main.c */
+    if ((n == 2u && strcmp(w[0], "hist") == 0) || (n == 3u && strcmp(w[0], "set") == 0)) {
         size_t len = strlen(w[1]);
 
         if (len >= CLI_NAME_LEN)
             return CLI_CMD_BAD;
+        if (n == 3u && parse_uint(w[2], CLI_SET_MAX, arg) != 0)
+            return CLI_CMD_BAD;
         memcpy(out->name, w[1], len + 1u);
-        return CLI_HIST;
+        return n == 2u ? CLI_HIST : CLI_SET;
     }
 #endif
 

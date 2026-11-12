@@ -10,6 +10,7 @@
     { "type": "wokwi-photoresistor-sensor", "id": "ldr_class", "top": 120, "left": 460, "attrs": {} },
     { "type": "wokwi-servo", "id": "gate", "top": 420, "left": -60, "attrs": {} },
     { "type": "wokwi-pushbutton", "id": "estop", "top": 420, "left": 400, "attrs": { "color": "red" } },
+    { "type": "wokwi-pushbutton", "id": "sda_gnd", "top": 520, "left": 400, "attrs": { "color": "yellow" } },
     { "type": "wokwi-logic-analyzer", "id": "logic", "top": 0, "left": -480, "attrs": {} }
   ],
   "connections": [
@@ -28,6 +29,9 @@
 
     [ "estop:1.l", "nucleo:PC13", "magenta", [] ],
     [ "estop:2.l", "nucleo:GND.1", "black", [] ],
+
+    [ "sda_gnd:1.l", "nucleo:PA10", "blue", [] ],
+    [ "sda_gnd:2.l", "nucleo:GND.7", "black", [] ],
 
     [ "logic:D0", "nucleo:PA9", "green", [] ],
     [ "logic:D1", "nucleo:PA10", "blue", [] ],

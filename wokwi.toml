@@ -2,3 +2,6 @@
 version = 1
 firmware = 'firmware/build/firmware.elf'
 elf = 'firmware/build/firmware.elf'
+# UART симулятора як RFC2217-сервер для tools/run_scenario.py (docs.wokwi.com/vscode/project-config,
+# «Serial port forwarding»); вкладка симулятора у VS Code має бути видимою, інакше симуляція на паузі
+rfc2217ServerPort = 4000

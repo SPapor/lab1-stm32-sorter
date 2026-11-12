@@ -152,7 +152,8 @@ def main():
         print(f'{m:<16} {f:>9} {100 * f / tf:>5.1f}% {r:>8} {100 * r / tr if tr else 0:>5.1f}%')
     print(f'{"разом":<16} {tf:>9} {"":>6} {tr:>8}')
     print(f'{"підсумок ld":<16} {ld_flash:>9} {"":>6} {ld_ram:>8}'
-          '   (= FLASH / RAM з --print-memory-usage)')
+          '   (порівняти з --print-memory-usage; RAM може бути на кілька байтів меншою'
+          ' через вирівнювання між секціями)')
 
     symbols.sort(key=lambda s: -s[0])
     print(f'\nНайбільші символи (топ {args.n}):')

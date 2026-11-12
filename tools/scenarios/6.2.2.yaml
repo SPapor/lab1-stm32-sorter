@@ -1,0 +1,9 @@
+# 6.2.2 - подія під час довгої операції: 30-50 натискань E-STOP, частина - під
+# час оновлення LCD. docs/scenarios.md, 6.2.2.
+name: "6.2.2"
+title: "E-STOP під час довгої операції, 40 натискань"
+setup: [stats reset, log on, set lcd_ms 100]
+steps:
+  - prompt: "Натисни B1 40 разів з різними паузами (0,3-2 с). Кожне натискання - або в ESTOP, або назад у READY, рахуються всі. Аналізатор пише D5 (кнопка), D6, D7. Enter, коли закінчиш"
+  - wait_mcu: 2
+final: [stats, load, hist lcd, set lcd_ms 500]

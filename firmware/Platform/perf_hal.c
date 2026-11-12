@@ -53,12 +53,15 @@ uint32_t perf_now(void)
     return tick * cyc_per_tick + in_tick;
 }
 
+/* tick * 1000 двома 32-бітними множеннями по 16 біт: 64-бітне множення
+ * тягнуло б з libgcc __aeabi_lmul (92 Б) */
 uint64_t perf_now_us64(void)
 {
     uint32_t in_tick;
     uint32_t tick = read_tick(&in_tick);
+    uint64_t ms_us = ((uint64_t)((tick >> 16) * 1000u) << 16) + (tick & 0xFFFFu) * 1000u;
 
-    return (uint64_t)tick * 1000u + in_tick / cyc_per_us;
+    return ms_us + in_tick / cyc_per_us;
 }
 
 uint32_t perf_hal_cpu_hz(void)

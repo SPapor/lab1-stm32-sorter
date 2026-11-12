@@ -1,0 +1,9 @@
+# S1 - простій (методичка 6.1): продукт увімкнено, подій немає, працюють лише
+# періодичні задачі gate (5 мс), imu (10 мс), lcd (500 мс). docs/scenarios.md, S1.
+name: S1
+title: "Простій: лише періодичні задачі"
+setup: [stats reset, log on]
+steps:
+  - comment: "нічого не чіпаю 60 с часу МК (Wokwi може йти повільніше за реальний час)"
+  - wait_mcu: 60
+final: [stats, load, stack, heap, hist gate, hist imu, hist lcd]
