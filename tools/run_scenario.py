@@ -32,7 +32,9 @@ wokwi-cli закінчує і пише VCD). Маркер - саме рядок 
 Команди. Прошивка приймає UART опитуванням без FIFO: тримає один прийнятий байт,
 а поки друкує відповідь, перемальовує LCD (~40 мс) чи читає MPU (~1 мс), наступні
 губляться. Тому команди з setup, send і final скрипт набирає по байту, як людина
-в терміналі: наступний байт - лише після ехо попереднього. Потім чекає на відповідь:
+в терміналі: наступний байт - лише після ехо попереднього. Ехо скрипт відділяє від
+рядків МК розбором потоку (StreamSplitter): рядок FR-10 прошивка друкує цілим, а ехо
+буває лише між рядками. Потім чекає на відповідь:
 рядок відповіді саме цієї команди і EVT cmd_reply після нього. Якщо відповіді немає
 або прийшло CLI st=BAD (наприклад, у буфері CLI лишився чужий байт), команда йде ще
 раз з CR попереду, до TRIES спроб. У лозі це "# > cmd (повтор ...)".
@@ -79,8 +81,7 @@ BOOT_PERF = re.compile(r'^\d+ BOOT\b.*\bperf=(\d)')
 PERF_GIT = re.compile(r'^\d+ PERF\b.*\bgit=(\S+)')
 KNOBS_LOG = re.compile(r'^\d+ KNOBS\b.*\blog=(\d)')
 LOG_ON = re.compile(r'^\d+ LOG on=(\d)')
-LINE_START = re.compile(rb'\d+ [A-Z]')
-DIGITS = re.compile(rb'\d+')
+LINE_HEAD = re.compile(rb'(\d+)(?:( )([A-Z])?)?')   # початок рядка FR-10: "<мс> ПОДІЯ"
 # Дозволені набори ключів кроку
 STEP_FORMS = [{'send'}, {'send', 'wait'}, {'wait'}, {'wait_mcu'}, {'prompt'}, {'prompt', 'wait'},
               {'prompt', 'auto'}, {'prompt', 'wait', 'auto'}, {'stream'}, {'repeat'}, {'comment'}]
@@ -97,8 +98,9 @@ TRIES = 4
 TIMEOUT_FACTOR = 20.0        # у скільки разів Wokwi може бути повільнішим за реальний час
 SPEED_WINDOW_S = 20.0        # за скільки останніх секунд хоста оцінюється швидкість симуляції
 EXTRAP_MS = 1500             # далі останньої мітки час МК не екстраполюється (пауза симуляції)
-ECHO_TIMEOUT = 2.0           # с хоста на ехо одного байта (цикл може стояти на I2C до 3 × 100 мс)
-RAW_KEEP = 1 << 20           # скільки останніх сирих байтів UART тримати для пошуку ехо
+ECHO_TIMEOUT = 2.0           # с хоста на ехо одного байта (цикл стоїть до ~0,2 с: відповідь stats)
+ECHO_HOLD = 0.1              # с хоста: цифри в кінці потоку - ехо, якщо за цей час не стали рядком МК
+ECHO_KEEP = 1 << 16          # скільки останніх байтів ехо тримати
 CLI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'wokwi')
 CLI_PORT = 'rfc2217://localhost:4001'
 CLI_DIAGRAM = '.diagram.json'                      # у tools/wokwi, будується з diagram.json
@@ -227,8 +229,10 @@ class Recorder:
         self.stamps = collections.deque(maxlen=512)   # (час хоста, мітка МК)
         self.rx = []                      # усі рядки МК - для пошуку відповідей
         self.closing = False              # після маркера кінця wokwi-cli закриває з'єднання
-        self.raw = bytearray()            # сирі байти - для пошуку ехо
-        self.raw_base = 0                 # номер першого байта raw від підключення
+        self.split = StreamSplitter()
+        self.echo = bytearray()           # байти ехо, відділені від рядків МК
+        self.echo_base = 0                # номер першого байта echo від підключення
+        self.back = 0                     # скільки міток поспіль пішли назад
         self.lines = 0
         self.lock = threading.Lock()
         self.stop = threading.Event()
@@ -248,7 +252,8 @@ class Recorder:
                 break
             if not chunk:
                 continue
-            self.feed_raw(chunk)
+            with self.lock:
+                self._split(chunk)
             buf += chunk
             while True:
                 i = buf.find(b'\n')
@@ -256,55 +261,84 @@ class Recorder:
                     break
                 line = buf[:i].rstrip(b'\r').decode('utf-8', 'replace')
                 buf = buf[i + 1:]
-                self.feed(line)
+                self.log_line(line)
         if buf:
-            self.feed(buf.decode('utf-8', 'replace'))
+            self.log_line(buf.decode('utf-8', 'replace'))
 
     def feed(self, line):
-        """Один рядок від МК."""
+        """Один рядок від МК (без ехо): розібрати і записати в лог."""
         with self.lock:
-            m = FR10.match(line)
-            if m:
-                self.last_ms = int(m.group(1))
-                self.stamps.append((self.clock(), self.last_ms))
-            if self.git is None:
-                g = BOOT_GIT.match(line) or PERF_GIT.match(line)
-                if g:
-                    self.git = g.group(1)
-                    self.git_from = 'BOOT' if line.split()[1:2] == ['BOOT'] else 'PERF'
-            p = BOOT_PERF.match(line)
-            if p:
-                self.perf = p.group(1)
-            elif self.perf is None and PERF_GIT.match(line):
-                self.perf = '1'
-            k = KNOBS_LOG.match(line)
-            if k:
-                self.log_level = int(k.group(1))
-            else:
-                k = LOG_ON.match(line)
-                if k:
-                    self.log_level = 2 if k.group(1) == '1' else 0
-            self.rx.append(line)
+            self._parse(line)
             self.lines += 1
             self._write(line)
 
-    def feed_raw(self, chunk):
+    def log_line(self, line):
+        """Сирий рядок потоку - у лог як є, разом з ехо, що до нього приліпилося."""
         with self.lock:
-            self.raw += chunk
-            if len(self.raw) > RAW_KEEP:
-                drop = len(self.raw) - RAW_KEEP // 2
-                del self.raw[:drop]
-                self.raw_base += drop
+            self.lines += 1
+            self._write(line)
 
-    def raw_pos(self):
-        with self.lock:
-            return self.raw_base + len(self.raw)
+    def _split(self, chunk):
+        for kind, v in self.split.feed(chunk, self.clock(), self._echo_digits):
+            if kind == 'echo':
+                self.echo.append(v)
+            else:
+                self._parse(v.decode('utf-8', 'replace'))
+        if len(self.echo) > ECHO_KEEP:
+            drop = len(self.echo) - ECHO_KEEP // 2
+            del self.echo[:drop]
+            self.echo_base += drop
 
-    def raw_since(self, pos):
-        """(байт перед pos або None, байти від pos)."""
+    def _echo_digits(self, run):
+        est = None
+        if self.stamps:
+            h1, m1 = self.stamps[-1]
+            est = m1 + (self.clock() - h1) * 1000.0 * self._speed()
+        return echo_digits(run, self.last_ms, est)
+
+    def _parse(self, line):
+        m = FR10.match(line)
+        if m:
+            ms = int(m.group(1))
+            if m.group(2) == 'BOOT':              # МК скинуто: час почався знову
+                self.last_ms = None
+                self.stamps.clear()
+            if self.last_ms is None or ms >= self.last_ms or self.back >= 2:
+                if self.back >= 2:                # три мітки поспіль назад - назад пішов сам час
+                    self.stamps.clear()
+                self.last_ms, self.back = ms, 0
+                self.stamps.append((self.clock(), ms))
+            else:
+                self.back += 1
+        if self.git is None:
+            g = BOOT_GIT.match(line) or PERF_GIT.match(line)
+            if g:
+                self.git = g.group(1)
+                self.git_from = 'BOOT' if line.split()[1:2] == ['BOOT'] else 'PERF'
+        p = BOOT_PERF.match(line)
+        if p:
+            self.perf = p.group(1)
+        elif self.perf is None and PERF_GIT.match(line):
+            self.perf = '1'
+        k = KNOBS_LOG.match(line)
+        if k:
+            self.log_level = int(k.group(1))
+        else:
+            k = LOG_ON.match(line)
+            if k:
+                self.log_level = 2 if k.group(1) == '1' else 0
+        self.rx.append(line)
+
+    def echo_pos(self):
         with self.lock:
-            i = max(pos - self.raw_base, 0)
-            return (self.raw[i - 1] if i > 0 else None), bytes(self.raw[i:])
+            return self.echo_base + len(self.echo)
+
+    def echo_since(self, pos):
+        """Байти ехо від pos. Цифри, що чекали ECHO_HOLD, дозрівають і тут, а не лише
+        з новими байтами: з log off нових рядків може не бути довго."""
+        with self.lock:
+            self._split(b'')
+            return bytes(self.echo[max(pos - self.echo_base, 0):])
 
     def note(self, text):
         """Рядок від скрипта (починається з '#')."""
@@ -412,52 +446,99 @@ def check_reply(lines, want, quiet=False):
     return False, bad
 
 
-def find_echo(before, data, ch, at_start, ref_ms=None):
-    """Індекс ехо байта ch у data або -1. Ехо прошивка друкує між рядками, тож
-    байт рахується ехо, лише якщо перед ним кінець рядка або попереднє ехо
-    (at_start - data починається одразу після нього). Так літера всередині
-    чужого рядка (LOAD, EVT) не сприймається як ехо. Цифра перед "<мс> ПОДІЯ"
-    може бути і ехо, і першою цифрою мітки: що з двох чисел (з нею чи без неї)
-    ближче до ref_ms - останньої мітки МК, - те й мітка."""
-    for i, b in enumerate(data):
-        if b != ch:
-            continue
-        prev = data[i - 1] if i > 0 else before
-        if not ((i == 0 and at_start) or prev == 0x0A):
-            continue
-        if LINE_START.match(data, i) and not echo_before_line(data, i, ref_ms):
-            continue
-        return i
-    return -1
+class StreamSplitter:
+    """Ділить сирий потік UART на рядки МК і байти ехо.
+
+    Прошивка друкує рядок FR-10 ("<мс> ПОДІЯ ...", CR LF) цілим, а ехо набраного байта -
+    лише між рядками. Тож на межі рядків цифри, пробіл і велика літера - початок рядка
+    МК, а будь-що інше - ехо (CR прошивка відлунює як CR LF, LF пропускаємо). Ехо-цифра
+    впритул до рядка ("5" + "59123 LOAD") злипається з міткою, і скільки перших цифр -
+    ехо, вирішує choose(цифри). Цифри в самому кінці потоку можуть бути ще недочитаною
+    міткою, тож вони чекають до hold с, поки не стане ясно. Рядки не у форматі FR-10
+    (help, вивід LAB2_CAP) розбираються як ехо."""
+
+    def __init__(self, hold=ECHO_HOLD):
+        self.buf = b''
+        self.in_line = False
+        self.hold = hold
+        self.tail_since = None
+
+    def feed(self, chunk, now, choose):
+        """Видає ('line', bytes) і ('echo', байт) у порядку потоку. Це генератор: рядок
+        треба розібрати до того, як choose вирішуватиме про наступний, - choose дивиться
+        на останню мітку."""
+        self.buf += chunk
+        start = len(self.buf)
+        waiting = False
+        while self.buf:
+            if self.in_line:
+                i = self.buf.find(b'\n')
+                if i < 0:
+                    break
+                line, self.buf, self.in_line = self.buf[:i].rstrip(b'\r'), self.buf[i + 1:], False
+                yield 'line', line
+                continue
+            b = self.buf[0]
+            if b == 0x0A:
+                self.buf = self.buf[1:]
+                continue
+            m = LINE_HEAD.match(self.buf)
+            if m is None:
+                self.buf = self.buf[1:]
+                yield 'echo', b
+                continue
+            if m.group(3):
+                run = m.group(1)
+                k = choose(run)
+                self.buf, self.in_line = self.buf[k:], True
+                for c in run[:k]:
+                    yield 'echo', c
+                continue
+            if m.end() == len(self.buf):          # кінець потоку: мітка чи ехо - ще не видно
+                if self.tail_since is None or len(self.buf) < start:
+                    self.tail_since = now         # чекаємо з моменту, коли цей хвіст став початком
+                if now - self.tail_since < self.hold:
+                    waiting = True
+                    break
+            self.buf = self.buf[1:]
+            yield 'echo', b
+        if not waiting:
+            self.tail_since = None
 
 
-def echo_before_line(data, i, ref_ms):
-    run = DIGITS.match(data, i).group()
-    if ref_ms is None or len(run) < 2:
-        return False
-    return abs(int(run[1:]) - ref_ms) <= abs(int(run) - ref_ms)   # мітка МК не починається з 0
+def echo_digits(run, ref_ms, est_ms=None, max_echo=5):
+    """Скільки перших цифр run (цифри перед " ПОДІЯ") - ехо, а решта - мітка рядка МК.
+    Ехо - до max_echo цифр: число в команді (set lcd_ms 500) може встигнути відлунати
+    ціле раніше за рядок. Мітка не починається з 0 і не менша за попередню ref_ms (час
+    МК не йде назад); з кількох можливих береться найближча до очікуваного часу est_ms."""
+    ks = [k for k in range(min(len(run) - 1, max_echo) + 1)
+          if run[k] != 0x30 or k == len(run) - 1]
+    if not ks:
+        return 0
+    if ref_ms is None:
+        return ks[0]
+    later = [k for k in ks if int(run[k:]) >= ref_ms] or ks
+    target = ref_ms if est_ms is None else est_ms
+    return min(later, key=lambda k: (abs(int(run[k:]) - target), k))
 
 
 def type_line(ser, rec, text, char_timeout=ECHO_TIMEOUT, sleep=time.sleep, clock=time.monotonic):
     """Набрати text по байту: наступний - після ехо попереднього. Без ехо за
     char_timeout байт, можливо, загублено - решта все одно йде, а що вийшло,
-    покаже відповідь. Повертає, скільки байтів так і не дали ехо."""
-    pos = rec.raw_pos()
-    before, _ = rec.raw_since(pos)
-    at_start = before in (None, 0x0A)
+    покаже відповідь. Ехо, що прийшло пізніше за тайм-аут, просто пропускається.
+    Повертає, скільки байтів так і не дали ехо вчасно."""
+    pos = rec.echo_pos()
     missed = 0
     for ch in text.encode():
         ser.write(bytes([ch]))
         deadline = clock() + char_timeout
         while True:
-            before, data = rec.raw_since(pos)
-            i = find_echo(before, data, ch, at_start, rec.last_ms)
+            i = rec.echo_since(pos).find(ch)
             if i >= 0:
                 pos += i + 1
-                at_start = True
                 break
             if clock() >= deadline:
-                missed += 1                     # ехо наступного - знову одразу за pos
+                missed += 1
                 break
             sleep(0.002)
     return missed

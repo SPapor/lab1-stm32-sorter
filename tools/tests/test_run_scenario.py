@@ -172,6 +172,34 @@ class RecorderTest(unittest.TestCase):
         self.assertTrue(log[0].startswith('# git=deadbeef-dirty (з build/git.cfg)'))
         self.assertIn('perf=?', log[0])
 
+    def test_reader_separates_echo_digit_from_stamp(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ser = FakeSerial(b'500 LOAD pct=1\r\n')
+            rec = recorder(tmp, ser)
+            rec.git = 'abc'
+            rec.start()
+            time.sleep(0.1)
+            ser.push(b'5501 LOAD pct=2\r\n')       # ехо '5' впритул до рядка "501 LOAD"
+            time.sleep(0.1)
+            rec.finish('x')
+            log = read_log(rec)
+        self.assertEqual(rec.last_ms, 501)
+        self.assertEqual(rec.rx[-1], '501 LOAD pct=2')
+        self.assertEqual(rec.echo_since(0), b'5')
+        self.assertEqual(log[-1], '5501 LOAD pct=2')          # у лозі - як прийшло
+
+    def test_stamps_skip_one_step_back_but_follow_reset(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = recorder(tmp, FakeSerial())
+            rec.feed('90000 LOAD pct=1')
+            rec.feed('9001 LOAD pct=1')                   # неправильно розібрана мітка
+            self.assertEqual(rec.last_ms, 90000)
+            rec.feed('90010 LOAD pct=1')
+            self.assertEqual(rec.last_ms, 90010)
+            rec.feed('2 BOOT fw=x git=abc perf=1')        # МК скинуто
+            self.assertEqual(rec.last_ms, 2)
+            rec.finish('x')
+
     def test_reader_splits_crlf_chunks(self):
         with tempfile.TemporaryDirectory() as tmp:
             ser = FakeSerial(b'12 BOOT fw=x git=abc perf=0\r\n13 STA' + b'TE state=READY\r\n')
@@ -232,21 +260,66 @@ class CommandTest(unittest.TestCase):
         self.assertIn('# "stats": CLI st=BAD, спроба 1 з 4', log)
         self.assertIn('# > stats ' + rs.RETRY_NOTE, log)
 
-    def test_find_echo_skips_letters_inside_lines(self):
-        # 's' з "busy_cyc" не ехо; ехо - 's' після кінця рядка
-        data = b'12 LOAD pct=1 busy_cyc=5\r\ns'
-        self.assertEqual(rs.find_echo(None, data, ord('s'), False), len(data) - 1)
-        self.assertEqual(rs.find_echo(ord('x'), b'st', ord('s'), True), 0)
-        self.assertEqual(rs.find_echo(ord('x'), b'st', ord('s'), False), -1)
-        # '1' з мітки "102407 LOAD" - не ехо; ехо - '1' після кінця рядка
-        data = b'102407 LOAD pct=20\r\n1'
-        self.assertEqual(rs.find_echo(ord(' '), data, ord('1'), True), len(data) - 1)
-        # ехо '0' впритул до рядка "298268 LOAD": остання мітка МК 297268
-        data = b'0298268 LOAD pct=20\r\n'
-        self.assertEqual(rs.find_echo(ord('0'), data, ord('0'), True, 297268), 0)
-        # справжній рядок "298268 LOAD", а чекаємо '2': не ехо
-        data = b'298268 LOAD pct=20\r\n'
-        self.assertEqual(rs.find_echo(ord(' '), data, ord('2'), True, 297268), -1)
+    def test_splitter_lines_and_echo(self):
+        sp = rs.StreamSplitter(hold=0.1)
+        no_echo = lambda run: 0                             # noqa: E731
+        # 's' з "busy_cyc" - частина рядка; ехо - 's' після кінця рядка
+        out = list(sp.feed(b'12 LOAD pct=1 busy_cyc=5\r\ns', 0.0, no_echo))
+        self.assertEqual(out, [('line', b'12 LOAD pct=1 busy_cyc=5'), ('echo', ord('s'))])
+        # ехо літер впритул до рядка, потім ехо CR (CR LF)
+        out = list(sp.feed(b'ta55262 LOAD pct=20\r\n\r\n', 0.0, no_echo))
+        self.assertEqual(out, [('echo', ord('t')), ('echo', ord('a')),
+                               ('line', b'55262 LOAD pct=20'), ('echo', 0x0D)])
+
+    def test_splitter_waits_for_partial_stamp(self):
+        sp = rs.StreamSplitter(hold=0.1)
+        choose = lambda run: rs.echo_digits(run, 59000)     # noqa: E731
+        # шматок закінчився посеред мітки: це ще не ехо
+        self.assertEqual(list(sp.feed(b'5', 0.0, choose)), [])
+        self.assertEqual(list(sp.feed(b'9123 ', 0.05, choose)), [])
+        self.assertEqual(list(sp.feed(b'LOAD x\r\n', 0.06, choose)), [('line', b'59123 LOAD x')])
+        # цифра, після якої за hold нічого не прийшло, - ехо
+        self.assertEqual(list(sp.feed(b'5', 1.0, choose)), [])
+        self.assertEqual(list(sp.feed(b'', 1.2, choose)), [('echo', ord('5'))])
+
+    def test_echo_digits(self):
+        # ехо '0' впритул до "298268 LOAD": мітка з 0 не починається
+        self.assertEqual(rs.echo_digits(b'0298268', 297268), 1)
+        # справжній рядок "298268 LOAD", ехо немає
+        self.assertEqual(rs.echo_digits(b'298268', 297268, 297300), 0)
+        # ехо '5' + "59123": 59123 ближче до очікуваного часу МК, ніж 559123
+        self.assertEqual(rs.echo_digits(b'559123', 59000, 59100), 1)
+        # остання мітка давня (log off 60 с): "160000 STATUS" - рядок, а не ехо '1' + 60000
+        self.assertEqual(rs.echo_digits(b'160000', 100000), 0)
+        self.assertEqual(rs.echo_digits(b'1160000', 100000, 160010), 1)
+        # ціле число з команди відлунало раніше за рядок: "100" + "261516"
+        self.assertEqual(rs.echo_digits(b'100261516', 261510, 261516), 3)
+        # міток ще не було - ехо немає
+        self.assertEqual(rs.echo_digits(b'559123', None), 0)
+
+    def test_late_echo_does_not_block_next_bytes(self):
+        class LateEcho(FakeSerial):
+            """Ехо першого байта приходить лише разом з ехо другого."""
+            held = b''
+
+            def write(self, b):
+                super().write(b)
+                self.held += b
+                if len(self.written) >= 2:
+                    self.push(self.held)
+                    self.held = b''
+
+        with tempfile.TemporaryDirectory() as tmp:
+            ser = LateEcho()
+            rec = recorder(tmp, ser)
+            rec.git = 'abc'
+            rec.start()
+            t0 = time.monotonic()
+            missed = rs.type_line(ser, rec, 'stats', char_timeout=0.3, sleep=short_sleep)
+            took = time.monotonic() - t0
+            rec.finish('x')
+        self.assertEqual(missed, 1)
+        self.assertLess(took, 0.6)                   # один тайм-аут, а не по одному на кожен байт
 
     def test_bad_reply_is_repeated_at_once(self):
         ser = FakeMcu(bad=1)
