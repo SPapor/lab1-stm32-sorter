@@ -2,6 +2,7 @@
 
     python3 -m unittest discover -s tools/tests
 """
+import inspect
 import os
 import sys
 import tempfile
@@ -452,6 +453,14 @@ class RunTest(unittest.TestCase):
             rec.finish('x')
 
 
+
+class PromptTest(unittest.TestCase):
+    def test_ask_enter_drops_typeahead_first(self):
+        calls = []
+        rs.ask_enter('>>> ', flush=lambda: calls.append('flush'),
+                     read=lambda text: calls.append(('read', text)))
+        self.assertEqual(calls, ['flush', ('read', '>>> ')])
+        self.assertIs(inspect.signature(rs.run).parameters['input_fn'].default, rs.ask_enter)
 
 class CliTest(unittest.TestCase):
     """wokwi-cli, що впав, видно одразу, а не після довгих тайм-аутів."""

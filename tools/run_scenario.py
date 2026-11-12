@@ -650,7 +650,23 @@ def stream(ser, rec, cmd, rate_hz, duration=None, count=None, sleep=time.sleep,
     return sent
 
 
-def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wait=1.0,
+def drop_typeahead():
+    """Викинути з термінала те, що набрано до підказки."""
+    try:
+        import termios
+        termios.tcflush(sys.stdin, termios.TCIFLUSH)
+    except Exception:                           # не термінал (stdin з файлу чи pipe) або не POSIX
+        pass
+
+
+def ask_enter(text, flush=drop_typeahead, read=input):
+    """Підказка, що чекає Enter. Набране до неї спершу викидається: Enter, натиснутий
+    під час години 6.2.6, інакше одразу відповість на наступну підказку."""
+    flush()
+    return read(text)
+
+
+def run(sc, ser, rec, input_fn=ask_enter, sleep=time.sleep, hash_wait=3.0, final_wait=1.0,
         timeout=REPLY_TIMEOUT, auto=False):
     def cmd(c):
         return command(ser, rec, c, timeout=timeout, sleep=sleep)
