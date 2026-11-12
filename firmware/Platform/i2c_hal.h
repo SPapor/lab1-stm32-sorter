@@ -28,7 +28,8 @@ typedef struct {
  * FR-09: після помилки транзакції периферія переініціалізується (HAL_I2C_DeInit +
  * reinit), у UART іде рядок "<мс> I2C_RECOVER try=n/N ...", і транзакція
  * повторюється — усього до max_tries спроб; далі помилка повертається драйверу.
- * Кожна спроба блокує до I2C_HAL_TIMEOUT_MS. */
+ * Кожна спроба блокує до I2C_HAL_TIMEOUT_MS, а після NACK HAL ще генерує STOP і
+ * чекає STOPF до I2C_TIMEOUT_STOPF (25 мс, константа HAL) - у Wokwi це ~34 мс на спробу. */
 void i2c_hal_bus_init(i2c_bus_t *bus, i2c_hal_ctx_t *ctx, I2C_HandleTypeDef *h, void (*reinit)(void));
 
 /* Кількість спроб на транзакцію (0 вважається 1). Команди cap … ставлять 1:
