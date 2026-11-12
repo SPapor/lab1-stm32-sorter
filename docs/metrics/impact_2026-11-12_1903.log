@@ -1,0 +1,153 @@
+# git=3c1a2135 (з BOOT) scenario=impact build="LAB2_CAP=0 TEST_I2C_FAULT=0 PERF=1" perf=1 port=rfc2217://localhost:4001 host_start=2026-11-12T19:03:02
+# сценарій impact: Удар: 6 посилок класу A, перед 1-ю, 3-ю і 5-ю |a| = 2,24 g
+2 BOOT fw=lab3-superloop git=3c1a2135 perf=1
+7 EVT t_us=7047 name=boot
+10 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+16 PERF cpu_hz=48000000 now_cyc=440 pair_cyc=1153
+28 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+# ручки - як після скидання: wokwi-cli щоразу стартує з нуля
+# > stats reset
+35 EVT t_us=35225 name=i2c_fail
+40 EVT t_us=39409 name=i2c_ok
+49 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+56 EVT t_us=56220 name=i2c_fail
+61 EVT t_us=60411 name=i2c_ok
+70 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+77 EVT t_us=77229 name=i2c_fail
+82 EVT t_us=81418 name=i2c_ok
+85 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+161 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+166 SELFTEST dev=ldr_gate status=OK raw=1001
+171 SELFTEST dev=ldr_class status=OK raw=1001
+176 SELFTEST dev=servo status=OK pulse_us=1500
+181 SELFTEST_END ok=4 warn=1 fail=0
+221 STATE state=READY
+224 STACK used=824 reserved=1024 free=200 overflow=0
+230 HEAP arena=436 used=436 free=0
+s235 EVT t_us=171460 name=ready_gate
+240 EVT t_us=176347 name=ready_class
+244 EVT t_us=235275 name=ready_imu
+ta759 EVT t_us=759228 name=ready_lcd
+ts1259 LOAD pct=19 pm=192 win_cyc=49217286 busy_cyc=9451124 windows=1
+ re2259 LOAD pct=19 pm=194 win_cyc=48001020 busy_cyc=9318754 windows=2
+set3260 LOAD pct=20 pm=195 win_cyc=48063873 busy_cyc=9373854 windows=3
+
+3461 STATS reset=1
+3463 EVT t_us=3460998 name=cmd_rx
+3468 EVT t_us=3463282 name=cmd_reply
+# > log on
+lo4260 LOAD pct=21 pm=205 win_cyc=48000024 busy_cyc=9863876 windows=4
+g 5260 LOAD pct=20 pm=195 win_cyc=48001920 busy_cyc=9371485 windows=5
+on
+6010 LOG on=1
+6012 EVT t_us=6010396 name=cmd_rx
+6017 EVT t_us=6012151 name=cmd_reply
+# > set go 0
+6261 LOAD pct=21 pm=206 win_cyc=48052611 busy_cyc=9884328 windows=6
+se7261 LOAD pct=20 pm=195 win_cyc=48001521 busy_cyc=9371121 windows=7
+t go8255 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+8293 LOAD pct=22 pm=221 win_cyc=49525996 busy_cyc=10921570 windows=8
+ 09293 LOAD pct=20 pm=195 win_cyc=48002482 busy_cyc=9365221 windows=9
+
+9352 SET name=go st=BAD
+9355 EVT t_us=9352430 name=cmd_rx
+9360 EVT t_us=9355132 name=cmd_reply
+# ! class 500 лк (A). 6 посилок раз на 4 с; перед 1-ю, 3-ю і 5-ю на ~0,3 с акселерометр X = 2 g, Z = 1 g, потім X = 0. Enter - старт (робить wokwi-cli)
+10061 IMPACT amag_mg=2235 x_mg=1999 y_mg=0 z_mg=1000
+10293 LOAD pct=21 pm=211 win_cyc=48001248 busy_cyc=10145763 windows=10
+10856 PARCEL_IN gate=3413
+10859 SORT n=1 class=A raw=1001 impact=1 route=REJECT angle=180 lat_ms=3
+10867 EVT t_us=10856212 name=parcel_in
+10872 EVT t_us=10859302 name=servo_set
+11293 LOAD pct=21 pm=213 win_cyc=48002424 busy_cyc=10230011 windows=11
+11856 PARCEL_OUT gate=1001 state=READY
+12293 LOAD pct=20 pm=199 win_cyc=48002484 busy_cyc=9560244 windows=12
+13293 LOAD pct=19 pm=195 win_cyc=48000708 busy_cyc=9358889 windows=13
+14293 LOAD pct=19 pm=195 win_cyc=48001032 busy_cyc=9359103 windows=14
+14856 PARCEL_IN gate=3413
+14859 SORT n=2 class=A raw=1001 impact=0 route=A angle=0 lat_ms=3
+14866 EVT t_us=14856215 name=parcel_in
+14871 EVT t_us=14859288 name=servo_set
+15293 LOAD pct=21 pm=212 win_cyc=48000852 busy_cyc=10195973 windows=15
+15749 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+15858 PARCEL_OUT gate=1001 state=READY
+16293 LOAD pct=23 pm=228 win_cyc=48000636 busy_cyc=10928672 windows=16
+17294 LOAD pct=19 pm=195 win_cyc=48001896 busy_cyc=9359527 windows=17
+18061 IMPACT amag_mg=2235 x_mg=1999 y_mg=0 z_mg=1000
+18294 LOAD pct=20 pm=201 win_cyc=48001992 busy_cyc=9630810 windows=18
+18856 PARCEL_IN gate=3413
+18859 SORT n=3 class=A raw=1001 impact=1 route=REJECT angle=180 lat_ms=3
+18867 EVT t_us=18856237 name=parcel_in
+18872 EVT t_us=18859333 name=servo_set
+19294 LOAD pct=21 pm=213 win_cyc=48000864 busy_cyc=10231489 windows=19
+19856 PARCEL_OUT gate=1001 state=READY
+20294 LOAD pct=20 pm=199 win_cyc=48002472 busy_cyc=9561678 windows=20
+21294 LOAD pct=19 pm=195 win_cyc=48000036 busy_cyc=9359724 windows=21
+22294 LOAD pct=20 pm=195 win_cyc=48000108 busy_cyc=9360278 windows=22
+22856 PARCEL_IN gate=3413
+22859 SORT n=4 class=A raw=1001 impact=0 route=A angle=0 lat_ms=3
+22866 EVT t_us=22856236 name=parcel_in
+22871 EVT t_us=22859318 name=servo_set
+23294 LOAD pct=21 pm=212 win_cyc=48000696 busy_cyc=10198844 windows=23
+23856 PARCEL_OUT gate=1001 state=READY
+24294 LOAD pct=20 pm=199 win_cyc=48000996 busy_cyc=9567675 windows=24
+25294 LOAD pct=20 pm=195 win_cyc=48001944 busy_cyc=9365843 windows=25
+26062 IMPACT amag_mg=2235 x_mg=1999 y_mg=0 z_mg=1000
+26294 LOAD pct=20 pm=201 win_cyc=48000564 busy_cyc=9637249 windows=26
+26857 PARCEL_IN gate=3413
+26860 SORT n=5 class=A raw=1001 impact=1 route=REJECT angle=180 lat_ms=3
+26868 EVT t_us=26857237 name=parcel_in
+26873 EVT t_us=26860342 name=servo_set
+27294 LOAD pct=21 pm=213 win_cyc=48001800 busy_cyc=10237676 windows=27
+27857 PARCEL_OUT gate=1001 state=READY
+28294 LOAD pct=20 pm=199 win_cyc=48002556 busy_cyc=9568892 windows=28
+29294 LOAD pct=20 pm=195 win_cyc=48001668 busy_cyc=9364365 windows=29
+30294 LOAD pct=20 pm=195 win_cyc=48000984 busy_cyc=9366118 windows=30
+30857 PARCEL_IN gate=3413
+30860 SORT n=6 class=A raw=1001 impact=0 route=A angle=0 lat_ms=3
+30867 EVT t_us=30857242 name=parcel_in
+30872 EVT t_us=30860329 name=servo_set
+31294 LOAD pct=21 pm=213 win_cyc=48000144 busy_cyc=10205901 windows=31
+31857 PARCEL_OUT gate=1001 state=READY
+32294 LOAD pct=20 pm=199 win_cyc=48000876 busy_cyc=9562847 windows=32
+33294 LOAD pct=20 pm=195 win_cyc=48000672 busy_cyc=9366016 windows=33
+34294 LOAD pct=20 pm=195 win_cyc=48001800 busy_cyc=9364882 windows=34
+35294 LOAD pct=20 pm=195 win_cyc=48000900 busy_cyc=9360433 windows=35
+36294 LOAD pct=19 pm=195 win_cyc=48002436 busy_cyc=9359330 windows=36
+# > stats
+st37294 LOAD pct=20 pm=195 win_cyc=48002316 busy_cyc=9364439 windows=37
+at38294 LOAD pct=20 pm=195 win_cyc=48002004 busy_cyc=9365431 windows=38
+s
+38775 PERF git=3c1a2135 now_cyc=440 pair_cyc=1153 cyc_per_us=48
+38781 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+38787 STARTUP boot_us=7047 gate_us=171460 class_us=176347 imu_us=235275 lcd_us=759228
+38797 STAT name=uart_rx n=22 min_us=62 avg_us=1623 max_us=11967 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38808 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38819 STAT name=gate n=6466 min_us=112 avg_us=121 max_us=4314 period_us=5000 jit_min_us=-987 jit_max_us=74997 miss=106
+38832 STAT name=sort n=6 min_us=16925 avg_us=17317 max_us=17714 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38844 STAT name=imu n=3296 min_us=1026 avg_us=1044 max_us=6760 period_us=10000 jit_min_us=-902 jit_max_us=71368 miss=77
+38857 STAT name=lcd n=71 min_us=38132 avg_us=39095 max_us=71608 period_us=500000 jit_min_us=-156 jit_max_us=1131 miss=0
+38869 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38880 STAT name=loop n=495978 min_us=37 avg_us=55 max_us=72860 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38892 STAT name=i2c_xfer n=16248 min_us=244 avg_us=348 max_us=33676 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38904 STAT name=uart_line n=89 min_us=1698 avg_us=6436 max_us=12497 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38917 STAT name=lcd_update n=71 min_us=37899 avg_us=38860 max_us=71374 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38929 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38940 STAT name=parcel_latency n=6 min_us=3073 avg_us=3089 max_us=3105 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+38952 UART rx=22 ore=0
+38955 EVT t_us=38775135 name=cmd_rx
+38960 EVT t_us=38955262 name=cmd_reply
+# > status
+39294 LOAD pct=36 pm=361 win_cyc=48002160 busy_cyc=17321068 windows=39
+statu40294 LOAD pct=20 pm=195 win_cyc=48001812 busy_cyc=9374171 windows=40
+s
+40930 STATUS state=READY a=3 b=0 reject=3 total=6 impact=0 log=1 fault=NONE
+40939 EVT t_us=40930892 name=cmd_rx
+40944 EVT t_us=40938934 name=cmd_reply
+# > set end 0
+s41294 LOAD pct=21 pm=210 win_cyc=48001644 busy_cyc=10098283 windows=41
+et42294 LOAD pct=20 pm=195 win_cyc=48002268 busy_cyc=9365355 windows=42
+ en43294 LOAD pct=20 pm=195 win_cyc=48002604 busy_cyc=9369480 windows=43
+d 44294 LOAD pct=20 pm=195 win_cyc=48000252 busy_cyc=9365881 windows=44
+0
+44716 SET name=end st=BAD
