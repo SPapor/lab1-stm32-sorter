@@ -307,7 +307,7 @@ class RunTest(unittest.TestCase):
                    final_wait=0, auto=True)
             rec.finish('x')
             log = read_log(rec)
-        self.assertEqual(ser.written, b'stats reset\r#GO\rstats\r#END\r')
+        self.assertEqual(ser.written, b'stats reset\rset go 0\rstats\rset end 0\r')
         self.assertEqual(asked, [])                  # Enter не чекаємо
         self.assertIn('# ! натисни B1 (робить wokwi-cli)', log)
 

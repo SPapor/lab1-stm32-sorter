@@ -1,11 +1,11 @@
 # Дії для tools/run_scenario.py --wokwi (wokwi-cli, час симуляції).
-# Старт - за маркером #GO (його набирає скрипт після setup), кінець - #END.
+# Старт - на рядку SET name=go (скрипт шле set go 0 після setup), кінець - SET name=end.
 # S3: 60 с - посилка кожні 4 с (gate 10 лк на 1,2 с, class по колу), B1 8 разів по 150 мс.
 
 name: "S3 найгірший"
 version: 1
 steps:
-  - wait-serial: "#GO"
+  - wait-serial: "SET name=go"
   - delay: 700ms
   - set-control: {part-id: ldr_class, control: lux, value: 500}
   - delay: 300ms
@@ -129,4 +129,4 @@ steps:
   - set-control: {part-id: ldr_gate, control: lux, value: 500}
   - delay: 1800ms
   - set-control: {part-id: ldr_class, control: lux, value: 500}
-  - wait-serial: "#END"
+  - wait-serial: "SET name=end"

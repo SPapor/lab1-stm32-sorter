@@ -8,8 +8,11 @@
 Без --wokwi скрипт підключається до симуляції у VS Code, а руками діє людина.
 З --wokwi він сам запускає wokwi-cli (проєкт tools/wokwi/, RFC2217 на 4001) зі
 сценарієм дій: LDR, кнопки (set-control) за часом симуляції. Обидва сценарії
-синхронізуються маркерами в UART: після setup скрипт набирає #GO (з нього
-починаються дії), після final - #END (на ньому wokwi-cli закінчує і пише VCD).
+синхронізуються маркерами в UART: після setup скрипт шле set go 0 (на рядку
+відповіді SET name=go починаються дії), після final - set end 0 (на SET name=end
+wokwi-cli закінчує і пише VCD). Маркер - саме рядок відповіді: прошивка друкує
+його цілим, а ехо набраної команди може перемежовуватися іншими рядками.
+Безкоштовний тариф Wokwi обриває сеанс wokwi-cli через 5 хв.
 Підказки людині в цьому режимі - лише позначки в лозі, а замість Enter скрипт
 чекає auto секунд часу МК (поле кроку prompt; без нього - wait, без нього - 0).
 Потрібен WOKWI_CLI_TOKEN у середовищі.
@@ -95,7 +98,7 @@ ECHO_TIMEOUT = 2.0           # с хоста на ехо одного байта
 RAW_KEEP = 1 << 20           # скільки останніх сирих байтів UART тримати для пошуку ехо
 CLI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'wokwi')
 CLI_PORT = 'rfc2217://localhost:4001'
-MARK_GO, MARK_END = '#GO', '#END'
+MARK_GO, MARK_END = 'set go 0', 'set end 0'      # відповідь: SET name=go|end st=BAD
 
 
 # ---- сценарій ----------------------------------------------------------------
@@ -486,13 +489,6 @@ def command(ser, rec, cmd, timeout=REPLY_TIMEOUT, tries=TRIES, sleep=time.sleep,
     return False
 
 
-def marker(ser, rec, text, sleep=time.sleep):
-    """Маркер для сценарію дій wokwi-cli (wait-serial ловить його ехо). Прошивка
-    відповість CLI st=BAD, і це нормально: відповіді тут не чекаємо."""
-    rec.note(f'# > {text}')
-    type_line(ser, rec, text + '\r', sleep=sleep)
-
-
 # ---- кроки -------------------------------------------------------------------
 
 def wait_mcu(rec, seconds, timeout_factor=TIMEOUT_FACTOR, sleep=time.sleep):
@@ -561,7 +557,7 @@ def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wai
     for c in sc.get('setup', []):
         cmd(c)
     if auto:
-        marker(ser, rec, MARK_GO, sleep)
+        cmd(MARK_GO)
     for st in expand(sc['steps']):
         if 'send' in st:
             cmd(st['send'])
@@ -592,7 +588,7 @@ def run(sc, ser, rec, input_fn=input, sleep=time.sleep, hash_wait=3.0, final_wai
     for c in sc.get('final', DEFAULT_FINAL):
         cmd(c)
     if auto:
-        marker(ser, rec, MARK_END, sleep)
+        cmd(MARK_END)
     # дочекатися рядків, що йдуть уже після останньої відповіді
     last, t_end = -1, time.monotonic() + final_wait
     while time.monotonic() < t_end and rec.lines != last:
@@ -614,7 +610,7 @@ def connect(url, wait_s, sleep=time.sleep):
                 sys.exit(f'{url}: немає з\'єднання ({e}). Симуляція запущена? '
                          'У wokwi.toml є rfc2217ServerPort = 4000?')
             if not told:
-                print(f'чекаю на {url} - запусти симуляцію у VS Code ...', flush=True)
+                print(f'чекаю на {url} (симуляцію у VS Code або wokwi-cli) ...', flush=True)
                 told = True
             sleep(0.5)
 

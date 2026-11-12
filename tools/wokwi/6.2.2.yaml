@@ -1,11 +1,11 @@
 # Дії для tools/run_scenario.py --wokwi (wokwi-cli, час симуляції).
-# Старт - за маркером #GO (його набирає скрипт після setup), кінець - #END.
+# Старт - на рядку SET name=go (скрипт шле set go 0 після setup), кінець - SET name=end.
 # 6.2.2: 40 натискань B1 по 150 мс, паузи між ними 0,3-2 с (random, seed 622).
 
 name: "6.2.2 40 натискань B1"
 version: 1
 steps:
-  - wait-serial: "#GO"
+  - wait-serial: "SET name=go"
   - delay: 500ms
   - set-control: {part-id: estop, control: pressed, value: 1}
   - delay: 150ms
@@ -166,4 +166,4 @@ steps:
   - set-control: {part-id: estop, control: pressed, value: 1}
   - delay: 150ms
   - set-control: {part-id: estop, control: pressed, value: 0}
-  - wait-serial: "#END"
+  - wait-serial: "SET name=end"
