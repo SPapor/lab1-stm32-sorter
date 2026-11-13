@@ -133,7 +133,7 @@ PB13 і PB14 налаштовує `perf_hal_init` (у `.ioc` їх немає, ч
 
 RAM включає резерв купи 512 B і стека 1 024 B зі скрипту лінкера. Разом `LAB2_CAP=1 PERF=1` у 32 КБ не влазить, і `app.mk` зупиняє таку збірку зрозумілою помилкою (журнал, проблема 21). CI на кожен push збирає всі чотири варіанти, ганяє `make check-deps`, `make test`, `make coverage` і тести скриптів `tools/`.
 
-Інші цілі: `make stack-usage` (найбільші кадри з `.su`), `make map-summary` (flash і RAM за модулями з map-файла), `make tools-test`. Секції `USER CODE` і CRLF у файлах `Core/` - як у ЛР2 (журнал, проблема 12).
+Інші цілі: `make stack-usage` (найбільші кадри з `.su`), `make stack-graph` (найглибший ланцюжок викликів за дизасемблером, разом з HAL, newlib і перериваннями), `make map-summary` (flash і RAM за модулями з map-файла), `make tools-test`. Секції `USER CODE` і CRLF у файлах `Core/` - як у ЛР2 (журнал, проблема 12).
 
 ### Модулі HAL
 
@@ -147,7 +147,7 @@ RAM включає резерв купи 512 B і стека 1 024 B зі скр
 | `tools/stats_table.py` | таблиця S1-S3 і блоків 6.2.5 з рядків `STAT`, `LOAD`, `STACK`, `HEAP` |
 | `tools/evt_latency.py` | затримки за мітками `EVT t_us` (n, min, медіана, max, p99) |
 | `tools/vcd_timing.py`, `tools/vcd_window.py` | затримки і ширини імпульсів з VCD аналізатора, вирізання вікна |
-| `tools/stack_usage.py`, `tools/map_summary.py` | статичний стек і розподіл пам'яті |
+| `tools/stack_usage.py`, `tools/stack_graph.py`, `tools/map_summary.py` | статичний стек: кадри функцій з `.su` і глибина за графом викликів з дизасемблера; розподіл пам'яті |
 | `tools/wokwi/gen_actions.py` | файли дій `wokwi-cli` для сценаріїв кроку 5 |
 
 ## 8. Версії
