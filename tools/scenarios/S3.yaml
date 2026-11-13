@@ -4,7 +4,7 @@ name: S3
 title: "Найгірший: LCD + потік stats + посилки + E-STOP"
 setup: [stats reset, log on]
 steps:
-  - prompt: "Наступні 60 с скрипт шле stats двічі на секунду. Весь цей час роби посилки раз на 3-5 с (gate 10 лк -> 500 лк) і 5-10 разів тисни B1 у випадкові моменти. Enter - старт"
+  - prompt: "Наступні 60 с скрипт шле stats двічі на секунду. Весь цей час роби посилки раз на 3-5 с (gate 10 лк -> 500 лк) і ~30 разів тисни B1 у випадкові моменти: половину коротко (~150 мс), половину довго (≥ 400 мс). Enter - старт"
   - stream: {cmd: stats, rate_hz: 2, duration: 60}
   - wait_mcu: 2
 final: [stats, load, stack, heap, hist gate, hist imu, hist lcd]

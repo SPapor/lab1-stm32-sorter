@@ -1,0 +1,13 @@
+# FR-04 під навантаженням: удар лише на 20 мс перед кожною з 10 посилок, поки скрипт шле
+# stats двічі на секунду, як у S3 (цикл стоїть до ~200 мс). Скільки ударів побачить
+# imu_task - база super loop для гіпотези 6 ЛР4 (docs/limitations.md, обмеження 6).
+# Лише без вікна: --wokwi tools/wokwi/impact-20ms.yaml (файл дій - tools/wokwi/gen_actions.py).
+name: impact-20ms
+title: "Удар 20 мс під потоком stats: 10 посилок класу A"
+setup: [stats reset, log on]
+steps:
+  - prompt: "10 посилок класу A раз на 3 с; за 0,5 с до кожної удар X = 2 g, Z = 1 g на 20 мс. Скрипт тим часом шле stats двічі на секунду. Enter - старт"
+    auto: 0
+  - stream: {cmd: stats, rate_hz: 2, duration: 32}
+  - wait_mcu: 2
+final: [stats, status]

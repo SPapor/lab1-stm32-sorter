@@ -1,11 +1,11 @@
 # Дії для tools/run_scenario.py --wokwi (wokwi-cli, час симуляції).
 # Старт - на рядку SET name=go (скрипт шле set go 0 після setup), кінець - SET name=end.
-# S2: 10 посилок по 3 с - class по колу 500/100/10 лк, gate 10 лк на 1 с.
-
-name: "S2 10 посилок"
+# S2: 30 посилок по 3 с - class по колу 500/100/10 лк, gate 10 лк на 1 с (~90 с).
+name: "S2 30 посилок"
 version: 1
 steps:
   - wait-serial: "SET name=go st=BAD\r\n"
+  - delay: 500ms
   - set-control: {part-id: ldr_class, control: lux, value: 500}
   - delay: 500ms
   - set-control: {part-id: ldr_gate, control: lux, value: 10}
@@ -66,5 +66,123 @@ steps:
   - delay: 1000ms
   - set-control: {part-id: ldr_gate, control: lux, value: 500}
   - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 100}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 10}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
   - set-control: {part-id: ldr_class, control: lux, value: 500}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 100}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 10}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 500}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 100}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 10}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 500}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 100}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 10}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 500}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 100}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 10}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 500}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 100}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 10}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 500}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 100}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
+  - delay: 1500ms
+  - set-control: {part-id: ldr_class, control: lux, value: 10}
+  - delay: 500ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 10}
+  - delay: 1000ms
+  - set-control: {part-id: ldr_gate, control: lux, value: 500}
   - wait-serial: "SET name=end st=BAD\r\n"
