@@ -8,5 +8,6 @@
 | `S1_2026-11-17_1852.log` | S1 | `cc2c3a84`, rtos, `LTO=1` | до виправлення `perf_now`: `gate max_us=89477591` |
 | `S1_2026-11-17_1856.log` | S1 | `cedabba3`, super loop, `LTO=1` | smoke кроку 1, docs/rtos-design.md, розділ 5 |
 | `S1_2026-11-17_1857.log` | S1 | `cedabba3`, rtos (одна задача `app`), `LTO=1` | smoke кроку 1; 13 NACK на I²C (Wokwi) |
+| `S1_2026-11-17_1942.log` | S1 | `a84b069e`, super loop, `LTO=1` | після виправлень code review; збігається з `_1856` до 3 мкс. Пари rtos на `a84b069` ще немає: скінчилися хвилини CI Wokwi (журнал, проблема 41) |
 
 Записи аналізатора до `_1856` і `_1857` - docs/captures/.
