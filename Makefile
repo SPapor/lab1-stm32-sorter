@@ -4,13 +4,24 @@ IMAGE ?= stm32-build
 GIT_HASH := $(shell git describe --always --dirty --abbrev=8 --exclude='*' 2>/dev/null || echo unknown)
 RUN = docker run --rm -v $(PWD):/workspace -w /workspace --user $$(id -u):$$(id -g) $(IMAGE)
 
+# ARCH, LTO, TICK_HZ - лише з командного рядка: ARCH у середовищі буває чужим
+# (ARCH=arm для збірки ядра Linux), а make бере змінні середовища як свої
+$(foreach v,ARCH LTO TICK_HZ,$(if $(filter environment%,$(origin $(v))),$(eval $(v) :=)))
+
 # Варіант збірки: make build LAB2_CAP=1 (harness ЛР2), TEST_I2C_FAULT=1 (тест FR-09),
 # PERF=0 (без вимірювального модуля, docs/perf.md).
 # Архітектура (docs/rtos-design.md): ARCH=superloop (за замовчуванням) | rtos,
 # LTO=0|1, TICK_HZ=<Гц> (лише rtos, за замовчуванням 1000)
+FW_VARS = ARCH=$(ARCH) LTO=$(LTO) TICK_HZ=$(TICK_HZ) \
+	LAB2_CAP=$(LAB2_CAP) TEST_I2C_FAULT=$(TEST_I2C_FAULT) PERF=$(PERF) GIT_HASH=$(GIT_HASH)
+
 build:
-	$(RUN) make -C firmware -f app.mk all ARCH=$(ARCH) LTO=$(LTO) TICK_HZ=$(TICK_HZ) \
-		LAB2_CAP=$(LAB2_CAP) TEST_I2C_FAULT=$(TEST_I2C_FAULT) PERF=$(PERF) GIT_HASH=$(GIT_HASH)
+	$(RUN) make -C firmware -f app.mk all $(FW_VARS)
+
+# Лише компіляція з -Werror і -Wstack-usage по файлах, без лінкування: для варіантів,
+# що не лінкуються (ARCH=rtos LTO=0) або лінкуються з LTO (там ці прапорці не діють)
+compile:
+	$(RUN) make -C firmware -f app.mk objects $(FW_VARS)
 
 clean:
 	$(RUN) make -C firmware -f app.mk clean
@@ -46,4 +57,4 @@ tools-test:
 shell:
 	docker run --rm -it -v $(PWD):/workspace -w /workspace --user $$(id -u):$$(id -g) $(IMAGE) bash
 
-.PHONY: build clean test coverage check-deps stack-usage map-summary stack-graph tools-test shell
+.PHONY: build compile clean test coverage check-deps stack-usage map-summary stack-graph tools-test shell

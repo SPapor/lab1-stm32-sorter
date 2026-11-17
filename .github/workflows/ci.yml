@@ -32,6 +32,9 @@ jobs:
       - name: Firmware build (TEST_I2C_FAULT)
         run: make build TEST_I2C_FAULT=1
 
+      - name: Firmware compile (ARCH=rtos, LTO=0) - -Werror and stack frames per file
+        run: make compile ARCH=rtos
+
       - name: Firmware build (ARCH=rtos, LTO=1, TICK_HZ=100)
         run: make build ARCH=rtos LTO=1 TICK_HZ=100
 

@@ -85,7 +85,8 @@ C_DEFS += -DARCH_RTOS=$(if $(filter rtos,$(ARCH_ON)),1,0)
 # повторити й йому: без -ffunction-sections весь код ліг би в одну секцію .text, і
 # пул літералів асемблерних вставок порту (ldr r2, =pxCurrentTCB) опинився б далі
 # за 1 КБ від інструкції (docs/journal.md). Кадри стека (.su) з LTO пишуться не по
-# файлах, тож make stack-usage має сенс лише з LTO=0.
+# файлах, тож make stack-usage має сенс лише з LTO=0. І -Werror та -Wstack-usage=512
+# з CFLAGS у лінкері вже не діють: їх перевіряє ціль objects (лише компіляція, CI).
 ifeq ($(LTO_ON),1)
 CFLAGS  += -flto
 LDFLAGS += -flto $(OPT) -ffunction-sections -fdata-sections
@@ -150,5 +151,9 @@ $(BUILD_CFG): FORCE | $(BUILD_DIR)
 
 $(OBJECTS): $(BUILD_CFG)
 
-.PHONY: FORCE
+# Лише компіляція, без лінкування: -Wextra -Werror і -Wstack-usage=512 для власного
+# коду, коли образ не лінкується (ARCH=rtos LTO=0 не влазить у flash)
+objects: $(OBJECTS)
+
+.PHONY: FORCE objects
 FORCE:
