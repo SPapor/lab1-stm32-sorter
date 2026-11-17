@@ -25,6 +25,9 @@ void app_task_start(void (*pass)(void))
     BaseType_t ok;
 
     app_pass = pass;
+#if PERF
+    rtos_hal_mark_api();      /* далі до старту ядра переривання вимкнені */
+#endif
     ok = xTaskCreate(app_task, "app", APP_TASK_STACK_WORDS, NULL, APP_TASK_PRIO, NULL);
     configASSERT(ok == pdPASS);
     (void)ok;    /* без configASSERT більше ніде не потрібна */

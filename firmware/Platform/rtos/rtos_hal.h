@@ -13,6 +13,13 @@
  * переривання вимкнені. */
 void rtos_hal_start_scheduler(void) __attribute__((noreturn));
 
+/* Старт ядра для рядка STARTUP (лише PERF=1), мкс від скидання за perf_now:
+ * api_us - перед першим викликом API ядра (rtos_hal_mark_api), start_us - коли
+ * ядро запускає першу задачу (vPortSetupTimerInterrupt). Між ними переривання
+ * вимкнені (docs/rtos-design.md, розділ 3) */
+void rtos_hal_mark_api(void);
+void rtos_hal_startup_us(uint32_t *api_us, uint32_t *start_us);
+
 /* Версія ядра (tskKERNEL_VERSION_NUMBER) і configTOTAL_HEAP_SIZE для рядка BOOT */
 const char *rtos_hal_kernel_version(void);
 uint32_t rtos_hal_heap_total(void);

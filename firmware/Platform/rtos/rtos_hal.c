@@ -30,6 +30,8 @@ volatile uint32_t rtos_hal_ticks;
 static volatile uint8_t kernel_ticks;   /* 1 — ядро стартує: тіки йдуть порту */
 #if PERF
 static uint64_t runtime_base;           /* perf_now_cyc64 на старті ядра */
+static uint32_t startup_api_us;         /* перед першим викликом API ядра */
+static uint32_t startup_start_us;       /* ядро запускає першу задачу */
 #endif
 
 /* --- HAL timebase: TIM17 --------------------------------------------------
@@ -135,6 +137,9 @@ void vPortSetupTimerInterrupt(void)
         rtos_hal_ticks++;
     }
     kernel_ticks = 1;
+#if PERF
+    startup_start_us = (uint32_t)perf_now_us64();
+#endif
 }
 
 void rtos_hal_start_scheduler(void)
@@ -145,6 +150,20 @@ void rtos_hal_start_scheduler(void)
 }
 
 #if PERF
+/* Від першого виклику API ядра до старту першої задачі переривання вимкнені
+ * (ulCriticalNesting = 0xaaaaaaaa у port.c): вікно має бути коротшим за тік, бо
+ * PENDSTSET зберігає щонайбільше один тік, що настав за цей час */
+void rtos_hal_mark_api(void)
+{
+    startup_api_us = (uint32_t)perf_now_us64();
+}
+
+void rtos_hal_startup_us(uint32_t *api_us, uint32_t *start_us)
+{
+    *api_us = startup_api_us;
+    *start_us = startup_start_us;
+}
+
 /* Лічильник run-time stats: такти CPU, 64 біти (FreeRTOSConfig.h), від старту
  * ядра. perf_now_cyc64 рахує від HAL_Init, а ядро бере перший відлік за 0: без
  * бази час BOOT і самоперевірки дістався б першій задачі, що поступиться

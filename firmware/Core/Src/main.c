@@ -468,7 +468,10 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 #if ARCH_RTOS
-  /* FreeRTOS, крок 1: увесь цикл — у задачі app (Tasks/app_task.c); сюди не повертається */
+  /* FreeRTOS, крок 1: увесь цикл — у задачі app (Tasks/app_task.c); сюди не повертається.
+   * Тут перший виклик API ядра: з нього до старту ядра переривання вимкнені
+   * (ulCriticalNesting = 0xaaaaaaaa у порту), HAL_GetTick стоїть. Тому вся
+   * ініціалізація з HAL_Delay і тайм-аутами HAL (LCD, самоперевірка, I2C) — вище */
   app_task_start(loop_pass);
 #endif
   while (1)
@@ -1071,10 +1074,25 @@ static void stats_report(void)
             GIT_HASH, (unsigned long)perf_now_cyc, (unsigned long)perf_pair_cyc,
             (unsigned long)cyc_per_us, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ);
   knobs_line();
+#if ARCH_RTOS
+  {
+    uint32_t os_api_us, os_start_us;
+
+    /* ще й старт ядра: перший виклик API і запуск першої задачі */
+    rtos_hal_startup_us(&os_api_us, &os_start_us);
+    cli_reply("STARTUP", "boot_us=%lu gate_us=%lu class_us=%lu imu_us=%lu lcd_us=%lu "
+              "os_api_us=%lu os_start_us=%lu",
+              (unsigned long)boot_us, (unsigned long)ready_us[RDY_GATE],
+              (unsigned long)ready_us[RDY_CLASS], (unsigned long)ready_us[RDY_IMU],
+              (unsigned long)ready_us[RDY_LCD], (unsigned long)os_api_us,
+              (unsigned long)os_start_us);
+  }
+#else
   cli_reply("STARTUP", "boot_us=%lu gate_us=%lu class_us=%lu imu_us=%lu lcd_us=%lu",
             (unsigned long)boot_us, (unsigned long)ready_us[RDY_GATE],
             (unsigned long)ready_us[RDY_CLASS], (unsigned long)ready_us[RDY_IMU],
             (unsigned long)ready_us[RDY_LCD]);
+#endif
   for (unsigned i = 0; i < PT_COUNT; i++)
     stat_line(&st_task[i], task_period[i]);
   for (size_t i = 0; i < sizeof other / sizeof other[0]; i++)
