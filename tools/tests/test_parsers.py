@@ -9,6 +9,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import evt_latency as el  # noqa: E402
+import map_summary as ms  # noqa: E402
 import stats_table as st  # noqa: E402
 import vcd_timing as vt   # noqa: E402
 
@@ -188,6 +189,57 @@ def write_vcd(path, changes, names=('D2', 'D4', 'D5', 'D6', 'D7')):
             f.write(f'{init.get(n, 0)}{i}\n')
         for t, n, v in sorted(changes, key=lambda c: c[0]):
             f.write(f'#{int(t * 1000)}\n{v}{ids[n]}\n')
+
+
+MAP = """Linker script and memory map
+
+.text           0x08000000       0x40
+ .text.vTaskStartScheduler
+                0x08000000       0x20 build/tasks.o
+ .text.app_task
+                0x08000020        0x8 build/app_task.o
+ .text.main     0x08000028       0x10 build/main.o
+ .text          0x08000038        0x8 /tmp/ccAb12.ltrans0.ltrans.o
+.data           0x20000000        0x4 load address 0x08000040
+ .data.uwTickFreq
+                0x20000000        0x4 build/stm32c0xx_hal.o
+.bss            0x20000004      0x100
+ .bss.ucHeap    0x20000004      0x100 build/heap_4.o
+.noinit         0x20000104        0xc
+ .noinit        0x20000104        0xc build/rtos_diag.o
+"""
+
+
+class MapSummaryTest(unittest.TestCase):
+    def test_modules_prefer_own_layers(self):
+        with tempfile.TemporaryDirectory() as fw:
+            for f in ('Core/Src/main.c', 'Middlewares/FreeRTOS/examples/demo/main.c',
+                      'Middlewares/FreeRTOS/tasks.c', 'Tasks/app_task.c',
+                      'Platform/rtos/rtos_diag.c', 'Drivers/STM32C0xx_HAL_Driver/Src/stm32c0xx_hal.c'):
+                os.makedirs(os.path.dirname(os.path.join(fw, f)), exist_ok=True)
+                open(os.path.join(fw, f), 'w').close()
+            mods = ms.source_modules(fw)
+        self.assertEqual(mods['main'], 'Core')
+        self.assertEqual(mods['tasks'], 'Middlewares')
+        self.assertEqual(mods['app_task'], 'Tasks')
+        self.assertEqual(mods['rtos_diag'], 'Platform')
+
+    def test_objects_noinit_and_lto(self):
+        mods = {'main': 'Core', 'tasks': 'Middlewares', 'heap_4': 'Middlewares',
+                'app_task': 'Tasks', 'rtos_diag': 'Platform', 'stm32c0xx_hal': 'Drivers'}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, 'firmware.map')
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write(MAP)
+            flash, ram, _, (ld_flash, ld_ram), objs = ms.parse(path, mods)
+        self.assertEqual(flash['Middlewares'], 0x20)
+        self.assertEqual(ram['Middlewares'], 0x100)
+        self.assertEqual(flash['LTO'], 0x8)
+        self.assertEqual(ram['Platform'], 0xc)                  # .noinit - лише RAM
+        self.assertEqual(objs['tasks.o'][:2], [0x20, 0])
+        self.assertEqual(objs['heap_4.o'][:2], [0, 0x100])
+        self.assertEqual(objs['stm32c0xx_hal.o'][:2], [4, 4])   # .data - і flash, і RAM
+        self.assertEqual((ld_flash, ld_ram), (0x44, 0x110))
 
 
 class VcdTimingTest(unittest.TestCase):
