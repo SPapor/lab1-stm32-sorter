@@ -13,7 +13,8 @@ $(foreach v,ARCH LTO TICK_HZ,$(if $(filter environment%,$(origin $(v))),$(eval $
 # Архітектура (docs/rtos-design.md): ARCH=superloop (за замовчуванням) | rtos,
 # LTO=0|1, TICK_HZ=<Гц> (лише rtos, за замовчуванням 1000)
 FW_VARS = ARCH=$(ARCH) LTO=$(LTO) TICK_HZ=$(TICK_HZ) \
-	LAB2_CAP=$(LAB2_CAP) TEST_I2C_FAULT=$(TEST_I2C_FAULT) PERF=$(PERF) GIT_HASH=$(GIT_HASH)
+	LAB2_CAP=$(LAB2_CAP) TEST_I2C_FAULT=$(TEST_I2C_FAULT) TEST_PRIMASK=$(TEST_PRIMASK) \
+	TEST_BOOTMARK=$(TEST_BOOTMARK) PERF=$(PERF) GIT_HASH=$(GIT_HASH)
 
 build:
 	$(RUN) make -C firmware -f app.mk all $(FW_VARS)

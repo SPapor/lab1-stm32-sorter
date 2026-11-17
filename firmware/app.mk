@@ -102,8 +102,11 @@ C_DEFS += -DBUILD_LTO=$(LTO_ON)
 # Варіанти збірки (за замовчуванням — продукт з вимірювальним модулем):
 #   LAB2_CAP=1       — вимірювальний harness ЛР2: команди cap …, I2C-скан, телеметрія stream
 #   TEST_I2C_FAULT=1 — тест FR-09 з PRD: періодичне звернення до відсутньої адреси 0x69
+#   TEST_PRIMASK=1   — дослід: чи маскує PRIMASK переривання (рядок PRIMASK після READY)
+#   TEST_BOOTMARK=1  — дослід: лічильник perf у точках старту до BOOT (рядки BOOTMARK)
 #   PERF=0           — без вимірювального модуля ЛР3 (docs/perf.md); за замовчуванням 1
-BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT
+# TEST_* у продукт не входять; docs/rtos-design.md, розділи 2 і 5
+BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
 
 # PERF завжди визначений (#if PERF): 0 лише явно, порожнє значення = 1.

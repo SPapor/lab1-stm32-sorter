@@ -50,6 +50,9 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 
     /* Тік ядра і perf_now: SysTick з LOAD = SystemCoreClock / TICK_HZ - 1, як його
      * налаштував би порт (vPortSetupTimerInterrupt нижче лише перевіряє) */
+#ifdef TEST_BOOTMARK
+    perf_bootmark('i');       /* дослід: стан SysTick перед перезапуском */
+#endif
     if (SysTick_Config(SystemCoreClock / configTICK_RATE_HZ) != 0u)
         return HAL_ERROR;
 

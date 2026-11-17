@@ -56,6 +56,10 @@
 #include "rtos_hal.h"
 #include "app_task.h"
 #endif
+#if defined(TEST_PRIMASK) || defined(TEST_BOOTMARK)
+#include "perf_hal.h"
+#include "perf_tick.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -268,6 +272,14 @@ static const char *const help_lines[] = {
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 static void loop_pass(void);
+#ifdef TEST_PRIMASK
+static void primask_test(void);
+#endif
+#ifdef TEST_BOOTMARK
+#define BOOTMARK(at) perf_bootmark(at)
+#else
+#define BOOTMARK(at) ((void)0)
+#endif
 static void uart_rx_task(void);
 static void estop_task(void);
 static void gate_task(void);
@@ -381,14 +393,14 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  BOOTMARK('h');               /* дослід TEST_BOOTMARK: після HAL_Init */
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  BOOTMARK('c');               /* після перемикання тактування */
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -398,11 +410,13 @@ int main(void)
   MX_TIM3_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  BOOTMARK('m');               /* після MX_*_Init */
   setvbuf(stdout, NULL, _IONBF, 0);
 #if PERF
   perf_hal_init();
   perf_setup();
 #endif
+  BOOTMARK('b');               /* перед рядком BOOT */
 #if ARCH_RTOS
   ev_log("BOOT", "fw=%s git=%s perf=%u arch=%s lto=%u tick_hz=%u kernel=%s os_heap=%lu",
          FW_NAME, GIT_HASH, (unsigned)PERF, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ,
@@ -418,6 +432,7 @@ int main(void)
   ev_log("BOOT", "fw=%s git=%s perf=%u arch=%s lto=%u tick_hz=%u", FW_NAME, GIT_HASH,
          (unsigned)PERF, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ);
 #endif
+  BOOTMARK('e');               /* після рядка BOOT */
 #if PERF
   {
     uint64_t t = perf_now_us64();
@@ -462,6 +477,12 @@ int main(void)
 #if PERF
   stack_report();               /* глибина стека й купа після старту (методичка 5.4) */
   heap_report();
+#endif
+#ifdef TEST_BOOTMARK
+  perf_bootmark_report(cli_reply);
+#endif
+#ifdef TEST_PRIMASK
+  primask_test();
 #endif
   /* USER CODE END 2 */
 
@@ -570,6 +591,35 @@ static void led_mark(uint8_t on)
 {
   HAL_GPIO_WritePin(BOARD_LED_MARK_PORT, BOARD_LED_MARK_PIN, on ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
+
+#ifdef TEST_PRIMASK
+/* Дослід (docs/rtos-design.md, розділ 2): чи маскує PRIMASK переривання. З
+ * вимкненими перериваннями - 10 повних обертів SysTick, які рахуємо опитуванням
+ * COUNTFLAG. На залізі uwTick і лічильник тіків perf за цей час не змінюються, а
+ * тік чекає в PENDSTSET. У super loop обидва лічильники - uwTick, у rtos uwTick
+ * рахує TIM17, а тіки perf - SysTick_Handler. */
+static void primask_test(void)
+{
+  uint32_t uw0, pt0, uw1, pt1, pend, pm;
+  unsigned wraps = 0;
+
+  __disable_irq();
+  pm = __get_PRIMASK();
+  uw0 = uwTick;
+  pt0 = perf_tick_count();
+  (void)SysTick->CTRL;                 /* скинути COUNTFLAG */
+  while (wraps < 10u)
+    if (SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk)
+      wraps++;
+  uw1 = uwTick;
+  pt1 = perf_tick_count();
+  pend = (SCB->ICSR & SCB_ICSR_PENDSTSET_Msk) != 0u;
+  __enable_irq();
+  cli_reply("PRIMASK", "uwtick_delta=%lu perf_tick_delta=%lu pendst=%lu wraps=%u primask=%lu",
+            (unsigned long)(uw1 - uw0), (unsigned long)(pt1 - pt0), (unsigned long)pend,
+            wraps, (unsigned long)pm);
+}
+#endif
 
 /* ---------------------------------------------------------------------------
  * Задачі super loop (docs/tasks.md)

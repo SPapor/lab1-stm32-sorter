@@ -92,6 +92,43 @@ uint64_t perf_now_us64(void)
     return perf_tick_us64(tick, us_per_tick, in_tick, cyc_per_us);
 }
 
+#ifdef TEST_BOOTMARK
+#define BOOTMARK_MAX 12u
+
+static struct {
+    char at;
+    uint32_t tick, val, load;
+} bootmark[BOOTMARK_MAX];
+static unsigned bootmarks;
+
+/* Без perf_hal_init: лише сирі тік, VAL і LOAD - частота SysTick у цих точках
+ * різна (до і після перемикання тактування). Тік читається до і після VAL */
+void perf_bootmark(char at)
+{
+    uint32_t tick, val;
+
+    if (bootmarks >= BOOTMARK_MAX)
+        return;
+    do {
+        tick = perf_tick_count();
+        val = SysTick->VAL;
+    } while (perf_tick_count() != tick);
+    bootmark[bootmarks].at = at;
+    bootmark[bootmarks].tick = tick;
+    bootmark[bootmarks].val = val;
+    bootmark[bootmarks].load = SysTick->LOAD;
+    bootmarks++;
+}
+
+void perf_bootmark_report(void (*out)(const char *event, const char *fmt, ...))
+{
+    for (unsigned i = 0; i < bootmarks; i++)
+        out("BOOTMARK", "n=%u at=%c tick=%lu val=%lu load=%lu", i, bootmark[i].at,
+            (unsigned long)bootmark[i].tick, (unsigned long)bootmark[i].val,
+            (unsigned long)bootmark[i].load);
+}
+#endif
+
 uint32_t perf_hal_cpu_hz(void)
 {
     return SystemCoreClock;

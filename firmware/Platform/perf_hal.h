@@ -31,6 +31,13 @@ uint64_t perf_now_cyc64(void);
  * через 49,7 доби). */
 uint64_t perf_now_us64(void);
 
+#ifdef TEST_BOOTMARK
+/* Дослід TEST_BOOTMARK: сирий стан лічильника perf (номер тіку, SysTick VAL і
+ * LOAD) у точках старту; at - мітка точки. Звіт - рядки BOOTMARK через out. */
+void perf_bootmark(char at);
+void perf_bootmark_report(void (*out)(const char *event, const char *fmt, ...));
+#endif
+
 /* Тактова частота CPU, Гц (SystemCoreClock). */
 uint32_t perf_hal_cpu_hz(void);
 
