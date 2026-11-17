@@ -6,6 +6,7 @@
 
 #define CPT  48000u          /* тактів на тік 1 мс при 48 МГц */
 #define CPU  48u             /* тактів на мкс */
+#define CPT100 480000u       /* тік FreeRTOS 100 Гц (TICK_HZ=100): 10 мс */
 
 void setUp(void)
 {
@@ -18,7 +19,7 @@ void tearDown(void)
 /* Значення лічильника так, як його складає perf_now() */
 static uint32_t cyc_at(uint32_t tick_ms, uint32_t in_tick)
 {
-    return tick_ms * CPT + in_tick;
+    return perf_tick_cyc(tick_ms, CPT, in_tick);
 }
 
 static void test_elapsed_plain(void)
@@ -47,6 +48,44 @@ static void test_elapsed_ambiguous_after_89s(void)
     uint32_t end = (uint32_t)((uint64_t)start + 0x100000010ull);
 
     TEST_ASSERT_EQUAL_UINT32(16u, perf_elapsed(start, end));
+}
+
+/* Тік 100 Гц (FreeRTOS, TICK_HZ=100): той самий лічильник тактів, лише тік довший.
+ * 32 біти переповнюються на тих самих 2^32 тактах (89,5 с = 8947,8 тіку) */
+static void test_tick_100hz_cycles(void)
+{
+    uint32_t before = perf_tick_cyc(8947, CPT100, 400000u);   /* 4 294 960 000 */
+    uint32_t after = perf_tick_cyc(8947, CPT100, 410000u);    /* уже за 2^32: 2 704 */
+
+    TEST_ASSERT_EQUAL_UINT32(4800000u + 5u, perf_tick_cyc(10, CPT100, 5u));
+    TEST_ASSERT_TRUE(after < before);
+    TEST_ASSERT_EQUAL_UINT32(10000u, perf_elapsed(before, after));
+    /* 3 тіки по 10 мс і 100 тактів: різниця в тактах не залежить від частоти тіку */
+    TEST_ASSERT_EQUAL_UINT32(3u * CPT100 + 100u,
+                             perf_elapsed(perf_tick_cyc(8946, CPT100, 7u),
+                                          perf_tick_cyc(8949, CPT100, 107u)));
+}
+
+/* Мітки EVT: мкс від старту, 64 біти, при тіку 1 мс і 10 мс */
+static void test_tick_us64(void)
+{
+    TEST_ASSERT_EQUAL_UINT64(0u, perf_tick_us64(0, 1000u, 0, CPU));
+    TEST_ASSERT_EQUAL_UINT64(5000u + 2u, perf_tick_us64(5, 1000u, 2u * CPU + 47u, CPU));
+    TEST_ASSERT_EQUAL_UINT64(50000u + 1000u, perf_tick_us64(5, 10000u, 1000u * CPU, CPU));
+    /* tick на межі 16 біт і максимальний: 2^32 - 1 тіків по 1 мс = 49,7 доби */
+    TEST_ASSERT_EQUAL_UINT64(65536000u, perf_tick_us64(0x10000u, 1000u, 0, CPU));
+    TEST_ASSERT_EQUAL_UINT64(4294967295000ull + 999u,
+                             perf_tick_us64(0xFFFFFFFFu, 1000u, CPT - 1u, CPU));
+    TEST_ASSERT_EQUAL_UINT64(42949672950000ull, perf_tick_us64(0xFFFFFFFFu, 10000u, 0, CPU));
+}
+
+/* Лічильник run-time stats: такти, 64 біти, не переповнюється через 89,5 с */
+static void test_tick_cyc64(void)
+{
+    TEST_ASSERT_EQUAL_UINT64(0x100000001ull, perf_tick_cyc64(89478, CPT, 23297u));  /* 2^32 + 1 */
+    TEST_ASSERT_EQUAL_UINT64(135000ull * CPT, perf_tick_cyc64(135000, CPT, 0));   /* S2: 135 с */
+    TEST_ASSERT_EQUAL_UINT64(13500ull * CPT100 + 7u, perf_tick_cyc64(13500, CPT100, 7u));
+    TEST_ASSERT_EQUAL_UINT64(0xFFFFFFFFull * CPT100, perf_tick_cyc64(0xFFFFFFFFu, CPT100, 0));
 }
 
 static void test_cyc_to_us_rounding(void)
@@ -312,6 +351,9 @@ int main(void)
     RUN_TEST(test_elapsed_plain);
     RUN_TEST(test_elapsed_across_32bit_wrap);
     RUN_TEST(test_elapsed_ambiguous_after_89s);
+    RUN_TEST(test_tick_100hz_cycles);
+    RUN_TEST(test_tick_us64);
+    RUN_TEST(test_tick_cyc64);
     RUN_TEST(test_cyc_to_us_rounding);
     RUN_TEST(test_cyc_to_us_near_max);
     RUN_TEST(test_add_min_max_sum);

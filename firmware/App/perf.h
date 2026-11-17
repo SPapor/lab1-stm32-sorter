@@ -19,6 +19,38 @@ typedef struct {
     uint64_t sum;        /* такти; 64 біти — не переповнюється */
 } perf_stat_t;
 
+/* ---- Час від скидання з тіку і тактів у тіку (Platform/perf_hal) -----------
+ * tick — номер тіку (у super loop тік HAL 1 мс, у FreeRTOS — тік ядра, 1 або 10 мс),
+ * in_tick — такти від початку тіку (SysTick: LOAD - VAL), cyc_per_tick = LOAD + 1.
+ * static inline: perf_now викликається в кожному вимірі, зайвий виклик — зайві такти. */
+
+/* Такти, 32 біти: tick * cyc_per_tick + in_tick за модулем 2^32. Переповнення
+ * таке саме, як у апаратного 32-бітного лічильника, тож різниця end - start
+ * правильна для інтервалів, коротших за 2^32 тактів, за будь-якої частоти тіку. */
+static inline uint32_t perf_tick_cyc(uint32_t tick, uint32_t cyc_per_tick, uint32_t in_tick)
+{
+    return tick * cyc_per_tick + in_tick;
+}
+
+/* Такти, 64 біти: не переповнюються (2^64 тактів при 48 МГц — 12 тис. років).
+ * Для run-time stats FreeRTOS: S2 довший за 89,5 с, на яких переповнюються 32 біти. */
+static inline uint64_t perf_tick_cyc64(uint32_t tick, uint32_t cyc_per_tick, uint32_t in_tick)
+{
+    return (uint64_t)tick * cyc_per_tick + in_tick;
+}
+
+/* Мікросекунди, 64 біти: tick * us_per_tick двома 32-бітними множеннями по 16 біт
+ * (64-бітне множення тягнуло б з libgcc __aeabi_lmul). us_per_tick < 2^16, тобто
+ * тік не довший за 65 мс (частота від 16 Гц); cyc_per_us > 0. */
+static inline uint64_t perf_tick_us64(uint32_t tick, uint32_t us_per_tick, uint32_t in_tick,
+                                      uint32_t cyc_per_us)
+{
+    uint64_t tick_us = ((uint64_t)((tick >> 16) * us_per_tick) << 16)
+                       + (tick & 0xFFFFu) * us_per_tick;
+
+    return tick_us + in_tick / cyc_per_us;
+}
+
 /* Тактів від start до end з урахуванням переповнення 32 біт. */
 uint32_t perf_elapsed(uint32_t start, uint32_t end);
 
