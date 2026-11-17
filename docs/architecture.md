@@ -73,10 +73,16 @@ L_max = T_gate + (C_uart + C_estop + C_imu + C_lcd) + C_gate_in + C_sort_ccr + T
 |---|---|---|---|
 | Core | `firmware/Core/` | код CubeMX (`MX_*_Init`, обробники переривань) і `main.c`: задачі super loop, самоперевірка, команди CLI, друк рядків FR-10, вимірювання. Свій код - лише в секціях `USER CODE` | HAL, Platform, Devices, App |
 | Drivers | `firmware/Drivers/` | HAL, CMSIS, BSP Nucleo від ST, не редагується | - |
-| Platform | `firmware/Platform/` | `board.h` і обгортки над HAL | HAL, `Devices/i2c_bus.h` |
+| Platform | `firmware/Platform/` | `board.h` і обгортки над HAL | HAL, `Devices/i2c_bus.h`, арифметика `App/perf.h` |
+| Platform/superloop | `firmware/Platform/superloop/` | ЛР4: лише `ARCH=superloop` - обробники SVC, PendSV, SysTick (`HAL_IncTick`) і лічильник тіків для `perf_now` (`uwTick`) | HAL |
+| Platform/rtos | `firmware/Platform/rtos/` | ЛР4: лише `ARCH=rtos` - `FreeRTOSConfig.h`, база часу (SysTick - ядро, HAL - TIM17), хуки і діагностика ядра | HAL, FreeRTOS |
+| Tasks | `firmware/Tasks/` | ЛР4: задачі FreeRTOS (на кроці 1 - одна задача `app` з усім циклом) | App, Devices, Platform, FreeRTOS |
+| Middlewares | `firmware/Middlewares/FreeRTOS/` | ЛР4: ядро FreeRTOS-Kernel V11.3.3, сабмодуль, не редагується | - |
 | Devices | `firmware/Devices/` | драйвери пристроїв та інтерфейс шини | лише стандартна бібліотека C |
 | App | `firmware/App/` | логіка продукту і вимірювань без заліза | стандартна бібліотека C, Devices |
 | tests | `tests/` | хостові тести на Unity, `fake_i2c_bus` | App, Devices |
+
+У ЛР4 обидві прошивки збираються з одного дерева (`make build ARCH=superloop|rtos`, docs/rtos-design.md). Що в архітектурах різне, лежить у `Platform/<arch>/`, і `app.mk` бере з двох каталогів лише один, а `Tasks/` і ядро - лише для `rtos`.
 
 Модулі:
 
@@ -102,7 +108,7 @@ L_max = T_gate + (C_uart + C_estop + C_imu + C_lcd) + C_gate_in + C_sort_ccr + T
 
 ### Правило залежностей
 
-Як і в ЛР2: App і Devices не включають заголовки HAL, CubeMX і Platform, App може включати Devices, навпаки - ні. Platform реалізує інтерфейс `i2c_bus.h` з Devices. `main.c` знає всі шари і зшиває їх (composition root). Перевіряє це `tools/check-deps.sh` (`make check-deps`, і в CI): при забороненому `#include` він друкує `файл:рядок` і виходить з кодом 1. Нові модулі ЛР3 правило пройшли без винятків: усе, що читає такти або піни, лежить у Platform (`perf_hal`, `mem_hal`), а в App - лише арифметика над числами.
+Як і в ЛР2: App і Devices не включають заголовки HAL, CubeMX і Platform, App може включати Devices, навпаки - ні. Platform реалізує інтерфейс `i2c_bus.h` з Devices. `main.c` знає всі шари і зшиває їх (composition root). У ЛР4 додалося: App і Devices не включають ще й FreeRTOS і `Tasks/` (їх тестують на хості), Platform поза `Platform/rtos/` теж не бачить FreeRTOS, а `Tasks/` може все. `main.c` бачить лише `rtos_hal.h` і `app_task.h`, без заголовків ядра. Перевіряє це `tools/check-deps.sh` (`make check-deps`, і в CI): при забороненому `#include` він друкує `файл:рядок` і виходить з кодом 1. Нові модулі ЛР3 правило пройшли без винятків: усе, що читає такти або піни, лежить у Platform (`perf_hal`, `mem_hal`), а в App - лише арифметика над числами.
 
 Драйвер бачить шину лише як структуру з `write`, `read` і `ctx` (`Devices/i2c_bus.h`). У прошивці її заповнює `Platform/i2c_hal.c`, у тестах - `tests/fakes/fake_i2c_bus.c`. У збірці `PERF=1` `main.c` ставить між драйвером і `i2c_hal` ще одну обгортку (`meas_write`, `meas_read`), яка міряє кожну транзакцію (`STAT i2c_xfer`), - драйвери про це не знають.
 
@@ -163,7 +169,7 @@ RAM включає резерв купи 512 B і стека 1 024 B зі скр
 
 ## 9. Відмінності від структури з методички
 
-- **Немає `Middlewares/` і RTOS.** ЛР3 - bare metal (методичка, розділ 3). Що дасть і скільки коштуватиме FreeRTOS на C031 - docs/baseline-lab4.md.
+- **`Middlewares/` - лише ядро FreeRTOS і лише для `ARCH=rtos`.** ЛР3 - bare metal (методичка, розділ 3), прошивку ЛР3 збирає `make build` (`ARCH=superloop`) або тег `lab3`. Ядро - сабмодуль, а не CubeMX: для C0 у CubeMX модуля FREERTOS немає (docs/rtos-design.md, розділ 2).
 - **Інтерфейс шини в Devices/.** Інтерфейс належить споживачеві, Platform його реалізує, тому драйвери тестуються без HAL.
 - **Задачі - у `main.c`, а не окремими модулями.** Їм потрібні HAL, `printf` і піни, а абстракцій часу, журналу і маркерів для App/ я не вводив. Логіку всередині задач винесено в App/ і покрито тестами.
 - **Збірка через `app.mk`.** Проєкт можна перегенерувати з CubeMX без втрати своїх налаштувань.
