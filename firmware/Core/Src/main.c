@@ -241,18 +241,14 @@ static volatile uint32_t estop_edge_ms;     /* час першого фронт�
 static uint8_t stream_on = 1;   /* періодичний рядок accel (команда stream) */
 #endif
 
-/* Текст команди help; синтаксис розбирає App/cli.c */
+/* Текст команди help: лише синтаксис, без описів (бюджет flash ЛР4,
+ * docs/rtos-design.md, розділ 4); синтаксис розбирає App/cli.c */
 static const char *const help_lines[] = {
-  "help                this list",
-  "status              state, counters A/B/REJECT",
-  "reset               zero the counters",
-  "log on|off          event lines on UART (default on)",
+  "help | status | reset | log on|off",
 #if PERF
-  "stats [reset]       timing stats",
-  "load                CPU load, 1 s",
-  "stack | heap        memory",
-  "hist gate|imu|lcd   jitter histogram",
-  "set <knob> <n>      lcd_ms lcd_chars imu_ms log",
+  "stats [reset] | load | stack | heap",
+  "hist gate|imu|lcd",
+  "set lcd_ms|lcd_chars|imu_ms|log <n>",
 #endif
 #ifdef LAB2_CAP
   "stream on|off       periodic 'accel' line (default on)",
