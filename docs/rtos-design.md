@@ -1,0 +1,255 @@
+# Прошивка на FreeRTOS (ЛР4)
+
+Тут я описую, як продукт з ЛР3 переходить на FreeRTOS: ядро і його конфігурація, де і чому відходжу від методички, база часу, бюджет пам'яті і перші заміри. Це крок 1: ядро підключене, а весь super loop крутиться в одній задачі `app`. Розбиття на задачі, черги і м'ютекс шини I²C - крок 2, метрики ОС (`tasks`, стек по задачах, heap ОС) - крок 3.
+
+Обидві прошивки збираються з одного дерева, з тим самим кодом вимірювань:
+
+| Команда | Що збирається |
+|---|---|
+| `make build` (`ARCH=superloop`) | super loop ЛР3 |
+| `make build ARCH=rtos LTO=1` | FreeRTOS, тік 1000 Гц |
+| `make build ARCH=rtos LTO=1 TICK_HZ=100` | FreeRTOS, тік 100 Гц (методичка 7.2, п. 6) |
+| `LTO=0\|1` | `-flto` для всього образу, однаково для обох ARCH |
+
+За замовчуванням `LTO=0`, як у брифі: так `make build` дає прошивку ЛР3. Але `ARCH=rtos` без `LTO=1` у flash не влазить (розділ 4), тож rtos завжди збираю з `LTO=1`, а для порівняння - і super loop теж.
+
+`ARCH`, `LTO` і `TICK_HZ` пишуться в `firmware/build/build.cfg`, у рядки `BOOT` і `PERF` (`arch=... lto=... tick_hz=...`), а `tools/run_scenario.py` - у заголовок логу. У rtos `BOOT` ще має `kernel=V11.3.3 os_heap=5120`. Прошивка ЛР3 є й окремо - тег `lab3` (`c7a5470`).
+
+## 1. Конфігурація ядра
+
+| Що | Значення |
+|---|---|
+| Ядро | FreeRTOS-Kernel **V11.3.3** (реліз 30.10.2026), сабмодуль `firmware/Middlewares/FreeRTOS` з https://github.com/FreeRTOS/FreeRTOS-Kernel |
+| Коміт | `89592801dd8b73329a7583719b7e3567b50910e5` (тег `V11.3.3`) |
+| Порт | `portable/GCC/ARM_CM0` (`port.c`, `portasm.c`) |
+| Heap | `heap_4.c`, `configTOTAL_HEAP_SIZE` = 5 120 B (поки стартове значення) |
+| API | нативний FreeRTOS, без CMSIS-RTOS2 |
+| Тік | SysTick від ядра 48 МГц, `configTICK_RATE_HZ` = `TICK_HZ` (1000, для 7.2 п. 6 - 100) |
+| Що збирається | `tasks.c`, `queue.c`, `list.c`, `stream_buffer.c`, `heap_4.c`, `port.c`, `portasm.c`. `timers.c`, `event_groups.c`, `croutine.c` - ні, бо поки немає вимоги |
+
+`firmware/Platform/rtos/FreeRTOSConfig.h` я написав одразу з усім, що вимагає ЛР4, щоб бюджет flash був чесним. Ось що відрізняється від типових значень ядра (`include/FreeRTOS.h`) і навіщо:
+
+| Параметр | У мене | Типово | Навіщо |
+|---|---|---|---|
+| `configCPU_CLOCK_HZ` | `SystemCoreClock` (48 МГц) | немає | частота SysTick |
+| `configTICK_RATE_HZ` | `TICK_HZ` з `app.mk` (1000) | немає, у шаблоні 100 | 1 мс - роздільність затримок як у super loop; 100 Гц - для 7.2 п. 6 |
+| `configUSE_TIME_SLICING` | 1 | 1, у шаблоні 0 | задачі одного пріоритету ділять час |
+| `configMAX_PRIORITIES` | 7 | немає, у шаблоні 5 | idle і шість робочих рівнів кроку 2; кожен рівень - список у RAM |
+| `configMINIMAL_STACK_SIZE` | 48 слів | немає, у шаблоні 128 | стек idle: контекст PendSV з кадром винятку - 17 слів, 4 слова контрольного шаблону, прологи. Хука idle немає. На кроці 1 idle не виконується зовсім (`app` не блокується), тож high water mark idle поміряю на кроці 3 |
+| `configMAX_TASK_NAME_LEN` | 8 | 16 | імена до 7 символів (`estop`, `logger`, `IDLE`), -8 B на TCB |
+| `configTOTAL_HEAP_SIZE` | 5 120 B | немає | стартове; справжнє - за `xPortGetMinimumEverFreeHeapSize` після S3 |
+| `configUSE_MUTEXES` | 1 | 0 | шина I²C (imu і lcd), методичка 7.2 п. 1 |
+| `configUSE_COUNTING_SEMAPHORES` | 1 | 0 | облік кількох подій до обробки (методичка 4.4) |
+| `configUSE_EVENT_GROUPS` | 0 | 1 | не потрібні, `event_groups.c` не збирається |
+| `configUSE_TICK_HOOK` | 0 | обов'язковий | тіки для `perf_now` рахує `SysTick_Handler`, а не хук (розділ 3) |
+| `configUSE_MALLOC_FAILED_HOOK` | 1 | 0 | `FATAL malloc` і зупинка (7.2 п. 5) |
+| `configCHECK_FOR_STACK_OVERFLOW` | 2 | 0 | `FATAL stack overflow in <ім'я>` і зупинка (7.2 п. 2) |
+| `configCHECK_HANDLER_INSTALLATION` | 1 | 1 | при старті ядро перевіряє, що вектори SVC і PendSV - з порту |
+| `configGENERATE_RUN_TIME_STATS` | `PERF` (1) | 0 | завантаження за задачами (методичка 6.2) |
+| `configRUN_TIME_COUNTER_TYPE` | `uint64_t` | `uint32_t` | 32 біти тактів переповнюються за 89,5 с, а S2 триває ~135 с |
+| `configUSE_TRACE_FACILITY` | `PERF` (1) | 0 | `uxTaskGetSystemState` для команди `tasks` (крок 3) |
+| `configUSE_STATS_FORMATTING_FUNCTIONS` | 0 | 0 | `vTaskList` і `vTaskGetRunTimeStats` тягнуть `sprintf`; рядки друкуватиму сам |
+| `configASSERT` | свій, без `__FILE__` | немає | рядок і адреса виклику - у `.noinit`, `FATAL assert line=N pc=0x...`, зупинка, а після скидання - `ASSERT line=N pc=0x...` |
+| `configENABLE_BACKWARD_COMPATIBILITY` | 0 | 1 | старі імена типів не потрібні |
+| `configENABLE_MPU` | 0 | немає | порт ARM_CM0 вимагає явно |
+| `INCLUDE_xTaskDelayUntil` | 1 | 0 | періодичні задачі (gate 5 мс, imu 10 мс). У V11 це нове ім'я `INCLUDE_vTaskDelayUntil`: зі старим разом ядро не збирається |
+| `INCLUDE_uxTaskGetStackHighWaterMark` | 1 | 0 | стек кожної задачі (6.3) |
+| `INCLUDE_xTaskGetIdleTaskHandle` | 1 | 0 | run-time і стек idle |
+| `INCLUDE_xTaskGetCurrentTaskHandle` | 1 | 1 | без нього `stream_buffer.c` не збирається (`#error`) |
+| `INCLUDE_vTaskSuspend`, `INCLUDE_vTaskDelay`, `INCLUDE_vTaskDelete`, `INCLUDE_xTaskResumeFromISR` і решта | 0 | частина 1 | не потрібні. Без `INCLUDE_vTaskSuspend` очікування `portMAX_DELAY` - не «назавжди», а 2³² - 1 тіків (49,7 доби при 1 кГц) |
+
+`PERF=0` вимикає run-time stats і trace разом з вимірювальним модулем, а перевірки (`configASSERT`, стек, malloc) лишаються.
+
+Діагностика (`Platform/rtos/rtos_diag.c`). Усі три хуки пишуть рядок прямо в USART2 з опитуванням TXE, без `printf`, і зупиняють програму: LD4 блимає 2 рази на секунду. Перевірив у Wokwi тимчасовими збірками:
+- стек `app` 64 слова замість 256 - `1482 ... FATAL stack overflow in app`. Метод 2 перевіряє стек лише при перемиканні контексту, а задача `app` на кроці 1 майже не перемикається, тож до виявлення переповнення ~1,2 с псувало сусідню пам'ять (`ready_class t_us=1`). Це піде у сценарій 7.2 п. 2;
+- `configASSERT(xTaskGetTickCount() < 1000)` у циклі - `1252 FATAL assert line=21 pc=0x80038FB`, `arm-none-eabi-addr2line` за цією адресою дає `app_task.c:21`.
+
+Запис у `.noinit` має пережити скидання кнопкою, бо startup його не обнуляє, але в `wokwi-cli` це не перевірити: перезапуск симуляції обнуляє RAM. Секції `.noinit` у скрипті лінкера CubeMX немає, і ld ставить її як «сироту» з NOBITS одразу після `.bss`, перед `._user_heap_stack` (у map: `.noinit 0x20001c1c 0xc`, `_ebss = 0x20001c1c`). Окремий скрипт з `INSERT AFTER .bss` разом зі скриптом CubeMX не лінкувався (журнал, проблема 31).
+
+## 2. Відхилення від методички через Cortex-M0+ і C0
+
+| Методичка | У нас | Чому і скільки |
+|---|---|---|
+| порт `GCC/ARM_CM4F` | `GCC/ARM_CM0` | у C031 ядро Cortex-M0+ (ARMv6-M) без FPU |
+| `DWT->CYCCNT` для run-time stats | `perf_now` (SysTick + лічильник тіків), 64 біти | DWT на M0+ немає. Роздільність та сама, що в ЛР3: 1 такт, 21 нс |
+| `configMAX_SYSCALL_INTERRUPT_PRIORITY` | не визначено | на M0+ немає BASEPRI. Критична секція порту - `cpsid i`, вона маскує всі переривання, тож порт цей параметр не читає. `FromISR` можна викликати з переривання будь-якого пріоритету (контрольне питання 5) |
+| `NVIC_PRIORITYGROUP_4` | немає | на M0+ немає груп пріоритетів (немає `AIRCR.PRIGROUP`), а рівнів лише 4 (`__NVIC_PRIO_BITS` = 2: 0, 64, 128, 192) |
+| CubeMX → Middleware → FreeRTOS, CMSIS-RTOS2 | ядро сабмодулем, нативний API | у CubeMX для `STM32C031C(4-6)Tx` модуля FREERTOS немає, ST дає FreeRTOS для C0 лише пакетом X-CUBE-FREERTOS з CMSIS-RTOS2. Нативний API - на 1 788 B flash менше (замір на V10.0.1, docs/baseline-lab4.md, ризик b) |
+| HAL переводять на інший таймер | HAL на TIM17, лише в `ARCH=rtos` | TIM3 зайнятий серво, TIM14 лишаю в резерві. У super loop база часу HAL - SysTick, як у ЛР3 |
+
+**Обробники SVC, PendSV, SysTick.** Порт V11.3.3 для CM0 визначає їх одразу під іменами CMSIS (`portasm.h`, рядки 92 і 97; `port.c`, рядок 816), а CubeMX генерував у `stm32c0xx_it.c` свої порожні - разом вони не злінкувалися б. Тому в `firmware.ioc` я зняв «Generate IRQ handler» для System service call, Pendable request і System tick timer (у рядках `NVIC.SVC_IRQn`, `NVIC.PendSV_IRQn`, `NVIC.SysTick_IRQn` шосте поле `true` -> `false`) і перегенерував проєкт CubeMX 6.18.1 з командного рядка (`STM32CubeMX -q` зі скриптом `config load ... / project generate` у Xvfb). Diff перегенерованих файлів: з `stm32c0xx_it.c` і `stm32c0xx_it.h` зникли лише ці три обробники, у `Makefile` змінилася тільки дата в шапці, скрипт лінкера і `.mxproject` - без змін. Тепер:
+- `ARCH=superloop` - `Platform/superloop/irq_superloop.c`: порожні SVC і PendSV і `SysTick_Handler` -> `HAL_IncTick()`, той самий код, що генерував CubeMX. Розмір збірки на цьому коміті (`f799141`) - 31 060 B flash і 3 288 B RAM, як у тегу `lab3`;
+- `ARCH=rtos` - SVC і PendSV з порту, а SysTick - свій обробник, який передає тік порту (розділ 3).
+
+**Пріоритети переривань** (прочитав з регістрів тимчасовою збіркою в Wokwi):
+
+| Переривання | Пріоритет | Хто ставить | Примітка |
+|---|---|---|---|
+| SVC | 0 (найвищий) | порт, `SHPR2 = 0` | старт першої задачі |
+| EXTI4_15 (E-STOP, PC13) | 0 | CubeMX, `gpio.c` | на кроці 2 викликатиме `vTaskNotifyGiveFromISR` - на M0+ це можна з будь-якого рівня |
+| TIM17 (база часу HAL) | 3 | `TICK_INT_PRIORITY` | лише `HAL_IncTick`, API ядра не викликає |
+| PendSV, SysTick | 3 (найнижчий) | порт, `SHPR3` | Wokwi читає `0xFF`, бо не маскує нереалізовані біти; на залізі було б `0xC0` |
+| USART2, I2C1 | - | вимкнені | UART і I²C поки працюють опитуванням; переривання USART2 для stream buffer - крок 2 |
+
+**Wokwi не враховує PRIMASK.** Це я знайшов на цьому кроці, і це важливо для всього ЛР4. Після `__disable_irq()` (PRIMASK = 1) обробники SysTick і TIM17 у Wokwi все одно виконуються: за 3 мс очікування з PRIMASK = 1 `uwTick` виріс з 24 до 27 (super loop, без FreeRTOS), а в rtos-збірці всередині критичної секції ядра пройшло 3 тіки (журнал, проблема 35). На залізі `cpsid i` маскує всі переривання, а в Wokwi критичні секції порту ARM_CM0 від переривань не захищають. На кроці 1 це нічого не ламає: API ядра з переривань ще ніхто не викликає, а тік ядро обробляє в SysTick з тим самим пріоритетом, що й PendSV. На кроці 2 (EXTI і USART викликають `FromISR`) теоретично можливі гонки, яких на залізі не буде. Що вже зроблено:
+- `perf_now` більше не покладається на PRIMASK (розділ 3);
+- зупинка в `FATAL` вимикає не лише PRIMASK, а й усі лінії NVIC і `TICKINT` SysTick. Інакше в Wokwi тік ядра далі перемикав би задачі.
+
+## 3. База часу
+
+| Лічильник | ARCH=superloop | ARCH=rtos |
+|---|---|---|
+| SysTick | тік HAL, 1 кГц, `SysTick_Handler` -> `HAL_IncTick` | тік ядра, `TICK_HZ`; вектор - `SysTick_Handler` з `Platform/rtos/rtos_hal.c` |
+| `HAL_GetTick` (тайм-аути I²C і UART, `HAL_Delay`, `period_due`) | `uwTick` від SysTick | `uwTick` від TIM17: 1 МГц (PSC з `HAL_RCC_GetPCLK1Freq`), ARR = 999, пріоритет 3 |
+| номер тіку для `perf_now` (`perf_tick_count()`) | `uwTick` | `rtos_hal_ticks` з `SysTick_Handler` |
+
+`perf_now` однаковий в обох ARCH (`Platform/perf_hal.c`), відрізняється лише `perf_tick.h` у `Platform/<arch>/`:
+
+```
+perf_now()      = tick * (SysTick->LOAD + 1) + (SysTick->LOAD - SysTick->VAL)
+perf_now_us64() = tick * мкс_у_тіку + (LOAD - VAL) / 48
+perf_now_cyc64() - те саме, що perf_now, але 64 біти (лічильник run-time stats)
+```
+
+Тактів на тік я беру з `SysTick->LOAD + 1`, а не з `SystemCoreClock / 1000`: при `TICK_HZ=100` тік - 480 000 тактів (10 мс). Арифметика винесена в `App/perf.h` (`perf_tick_cyc`, `perf_tick_us64`, `perf_tick_cyc64`, `static inline`), і тести на хості перевіряють її і для 1 кГц, і для 100 Гц, з переповненням 32 біт (`tests/test_perf.c`).
+
+**SysTick з самого `HAL_Init`.** BOOT, самоперевірка і READY gate/class відбуваються в `main` до старту ядра, і `perf_now` потрібен уже там. Тому в rtos `HAL_InitTick` (його викликають `HAL_Init` і `HAL_RCC_ClockConfig`) налаштовує і TIM17 для HAL, і SysTick з тим LOAD, який поставив би порт. Отже `perf_now` рахує від того самого моменту, що й у super loop. Порт при старті викликає `vPortSetupTimerInterrupt` - моя версія лише перевіряє LOAD і з цього моменту передає тіки ядру. Перезапуск SysTick обнулив би VAL посеред тіку, і час стрибнув би назад.
+
+**Чому тіки рахує `SysTick_Handler`, а не хук тіку.** Бриф пропонував лічильник у `vApplicationTickHook`. Я перевірив `tasks.c` V11.3.3. Хук справді викликається і при призупиненому планувальнику (`xTaskIncrementTick`, рядки 5062-5072):
+
+```c
+    else
+    {
+        xPendedTicks += 1U;
+
+        /* The tick hook gets called at regular intervals, even if the
+         * scheduler is locked. */
+        #if ( configUSE_TICK_HOOK == 1 )
+        {
+            vApplicationTickHook();
+        }
+        #endif
+    }
+```
+
+Але при працюючому планувальнику - лише тоді, коли немає відкладених тіків (рядки 5000-5012):
+
+```c
+        #if ( configUSE_TICK_HOOK == 1 )
+        {
+            /* Guard against the tick hook being called when the pended tick
+             * count is being unwound (when the scheduler is being unlocked). */
+            if( xPendedTicks == ( TickType_t ) 0 )
+            {
+                vApplicationTickHook();
+            }
+```
+
+А `xTaskResumeAll` доганяє відкладені тіки циклом і обнуляє `xPendedTicks` лише після нього (рядки 4151-4171). Якщо справжнє переривання SysTick прийде, поки цикл іде, хук для нього не викликається, і тік для `perf_now` губиться. На залізі цикл іде в критичній секції, і тік просто чекає. У Wokwi PRIMASK не діє (розділ 2), тож тік губиться.
+
+Я на це наступив. Перша версія запускала SysTick у `HAL_InitTick` і одразу призупиняла планувальник (`vTaskSuspendAll`), щоб до старту ядра `xTaskIncrementTick` лише відкладав тіки і викликав хук. Тимчасова збірка в Wokwi показала: перед стартом `xTaskResumeAll` доганяв 233 тіки близько 2,5 мс, за цей час прийшли 3 справжні тіки (лічильник викликів `xTaskIncrementTick` 233 -> 469 замість 466, HAL 234 -> 237), а хук не побачив жодного. `perf_now` після старту відставав від `HAL_GetTick` на 2-3 мс (журнал, проблема 34). На залізі це були б 2,5 мс з вимкненими перериваннями при кожному старті.
+
+Тепер вектор SysTick - мій `SysTick_Handler`: `rtos_hal_ticks++`, а після старту ядра - `xPortSysTickHandler()`. Це обробник порту: у `port.c` його ім'я `SysTick_Handler` перейменоване макросом `-DSysTick_Handler=xPortSysTickHandler` лише для `port.o` (`app.mk`). `configCHECK_HANDLER_INSTALLATION` перевіряє лише SVC і PendSV, а SysTick методика FreeRTOS дозволяє перенаправляти (коментар у `xPortStartScheduler`). Призупинення до старту більше немає. Хук тіку не потрібен (`configUSE_TICK_HOOK 0`), а вартість тіку на кроці 3 можна міряти в цьому ж обробнику, разом з усім `xTaskIncrementTick`.
+
+**`perf_now` і довгий обробник тіку.** Перший прогін S1 на rtos (`docs/metrics/lab4/S1_2026-11-17_1852.log`) дав `STAT gate max_us=89477591`, тобто -0,9 мс як беззнакове число, і `imu min_us=36` при ~1 мс роботи. Час іноді йшов назад. Причина та сама: у Wokwi обробник SysTick виконується посеред читання пари «номер тіку + VAL». У ЛР3 це ловив guard (`PERF_RELOAD_GUARD`, 128 тактів): після короткого `HAL_IncTick` від початку тіку минало менше 128 тактів, і пара читалася ще раз. Обробник тіку FreeRTOS довший, і guard його пропускав. Тепер номер тіку читається до і після VAL, і якщо він змінився, пара читається знову, незалежно від довжини обробника (коміт `cedabba`, журнал, проблема 36). Код той самий для обох ARCH: `now_cyc` виріс з 434 до 526 тактів, і тепер вимір дорожчий на ~2 мкс в обох архітектурах однаково.
+
+**Перевірка бази часу:**
+- тимчасова збірка друкувала щосекунди `HAL_GetTick() * 1000 - perf_now_us64()`: 986, 835, 937, 911, 929 мкс за 5 с. Різниця стала (це фаза між TIM17 і SysTick), дрейф 57 мкс за 4 с;
+- у S1 за 63 вікна `LOAD` поспіль сума `win_cyc` (час за `perf_now`) і різниця міток `<мс>` (час HAL) розходяться на -0,11 мс у super loop і на -1,35 мс у rtos, тобто 0,0002 % і 0,002 % при допуску 0,1 %. Решту дає те, коли саме друкується рядок `LOAD`. Отже, TIM17 у Wokwi рахує правильно.
+
+**Обмеження бази часу:**
+- без tickless idle: SysTick має йти безперервно, інакше `perf_now` зупиниться;
+- `TICK_HZ` не нижче 16 Гц: `perf_tick_us64` вимагає `us_per_tick` < 2¹⁶ (24-бітний LOAD SysTick сам дав би межу 48 МГц / 2²⁴ ≈ 3 Гц). На практиці - 100 і 1000 Гц;
+- у Wokwi PRIMASK не діє, тож пара в `perf_now` захищена повторним читанням, а не критичною секцією;
+- `perf_now` у перериванні з вищим пріоритетом, яке прийшло в перші такти обробника SysTick, до `rtos_hal_ticks++`, може дати час на 1 тік назад - як і в ЛР3.
+
+## 4. Бюджет пам'яті
+
+Усе - `--print-memory-usage` збірок `cedabba3` (FLASH 32 768 B, RAM 12 288 B). RAM включає резерв купи newlib 512 B і стека MSP 1 024 B зі скрипту лінкера, у rtos - ще heap ОС 5 120 B (`ucHeap` у `.bss`).
+
+| Збірка | FLASH, B | Вільно flash, B | RAM, B | Вільно RAM, B |
+|---|---|---|---|---|
+| тег `lab3` (`c7a5470`) | 31 060 (94,8 %) | 1 708 | 3 288 | 9 000 |
+| `ARCH=superloop LTO=0` | 31 168 (95,1 %) | 1 600 | 3 288 | 9 000 |
+| `ARCH=superloop LTO=1` | 27 248 (83,2 %) | 5 520 | 3 288 | 9 000 |
+| `ARCH=rtos LTO=0` | 34 904 (106,5 %) | **не влазить, -2 136** | 8 744 | 3 544 |
+| `ARCH=rtos LTO=1` | **30 708 (93,7 %)** | **2 060** | 8 744 (71,2 %) | 3 544 |
+| `ARCH=rtos LTO=1 TICK_HZ=100` | 30 700 | 2 068 | 8 744 | 3 544 |
+| `ARCH=rtos LTO=1 PERF=0` | 25 156 | 7 612 | 7 784 | 4 504 |
+| `ARCH=rtos LTO=1 TEST_I2C_FAULT=1` | 30 836 | 1 932 | 8 744 | 3 544 |
+| `ARCH=superloop LTO=1 TEST_I2C_FAULT=1` | 27 384 | 5 384 | 3 288 | 9 000 |
+
+`ARCH=superloop LTO=0` більший за тег `lab3` на 108 B: 88 B - нові поля `arch= lto= tick_hz=` у `BOOT` і `PERF` (рядки форматів і аргументи в `main`), 12 B - `cyc_per_tick` з `SysTick->LOAD` і `us_per_tick` у `perf_hal_init`, 12 B - повторне читання номера тіку в `perf_now` (розділ 3). На коміті збірки (`f799141`, до цих змін) розміри збігаються з тегом `lab3` до байта: 31 060 / 3 288.
+
+**Ціна ОС зараз** (обидві з LTO): flash +3 460 B (27 248 -> 30 708), RAM +5 456 B. З RAM 5 120 B - heap ОС, з якого зайнято 1 456 B: стек `app` 1 024 B з TCB і idle 192 B з TCB (тимчасова збірка, `xPortGetFreeHeapSize` = 3 664). Решта RAM - статичні дані ядра (308 B: списки готових задач на 7 пріоритетів, затримані, поточна задача, лічильники) і Platform/rtos (17 B, разом з 12 B `.noinit`).
+
+Внесок по об'єктних файлах (`tools/map_summary.py --objects`, збірка `LTO=0`: з LTO код генерується в лінкері, і в map замість файлів - `ltrans.o`):
+
+| Об'єкт | Flash, B | RAM, B | З повним API кроків 2-3, flash |
+|---|---|---|---|
+| `tasks.o` | 1 505 | 276 | 4 345 |
+| `queue.o` | 0 (ще ніхто не викликає) | 0 | 1 808 |
+| `stream_buffer.o` | 0 | 0 | 922 |
+| `heap_4.o` | 528 | 5 148 | 552 |
+| `port.o` + `portasm.o` | 472 + 170 | 4 | 642 |
+| `list.o` | 28 | 0 | 104 |
+| **ядро разом** | **2 703** | **5 428** | **8 373** |
+| `rtos_diag.o` (assert, хуки, рядок FATAL) | 492 | 12 | 492 |
+| `rtos_hal.o` (TIM17, SysTick, старт ядра) | 370 | 5 | 370 |
+| `app_task.o` | 72 | 4 | 88 |
+| libgcc `__aeabi_lmul` (64-бітний лічильник run-time stats) | 92 | 0 | 92 |
+
+«Повний API» - тимчасовий зонд, який викликає все, що знадобиться на кроках 2-3: `xQueueCreate/Send/Receive/SendFromISR`, м'ютекс, двійковий і лічильний семафори, `vTaskNotifyGiveFromISR`, `ulTaskNotifyTake`, `xStreamBufferSendFromISR/Receive`, `xTaskDelayUntil`, `uxTaskGetStackHighWaterMark`, `uxTaskGetSystemState`, `xPortGetFreeHeapSize`, `xPortGetMinimumEverFreeHeapSize`. Без нього `--gc-sections` викидає все невикликане, і бюджет виходить занадто оптимістичним. Сам зонд - 353 B flash.
+
+Що коштує кожне з налаштувань розділу 1 (`LTO=1`, різниця з повною конфігурацією; збірка з усім тим самим, крім одного параметра):
+
+| Налаштування | Зараз, flash | З повним API, flash | RAM |
+|---|---|---|---|
+| `configCHECK_FOR_STACK_OVERFLOW 2` | 104 B | 108 B | 0 |
+| run-time stats разом (`configGENERATE_RUN_TIME_STATS`, лічильник 64 біти) | 176 B | 316 B | 24 B / 16 B |
+| - з них 64 біти тактів замість 32 | 152 B | 228 B | 16 B / 40 B (8 B на TCB) |
+| - 64 біти в мкс (`perf_now_us64`) замість 64 біт тактів | -100 B | -152 B | 0 |
+| `configUSE_TRACE_FACILITY` | ~0 B (ніхто не викликає) | у зонді без нього не збирається; `uxTaskGetSystemState` + `vTaskGetInfo` = 212 B | 8 B на TCB |
+| `configASSERT` разом з `configCHECK_HANDLER_INSTALLATION` | 480 B | 864 B | 0 |
+| - з них перевірка векторів SVC і PendSV | 44 B | 44 B | 0 |
+| `configUSE_MALLOC_FAILED_HOOK` | 32 B | 36 B | 0 |
+
+Лічильник run-time stats я лишив 64-бітним у тактах: 32 біти переповнюються за 89,5 с (S2 триває ~135 с), а такти - ті самі одиниці, що й у `perf_now` і в рядках `STAT`. Варіант у мкс дешевший на 100-152 B, але з роздільністю 1 мкс.
+
+**Висновок по бюджету.**
+- Без LTO rtos не влазить (34 904 B). Тому захід (а) - `LTO=1` для обох ARCH. Збірки для порівняння ЛР3 і ЛР4 мають бути з LTO обидві, а базу ЛР3 треба переміряти з `LTO=1` на кроці прогонів, а не брати числа ЛР3 без LTO (методичка 7.1: «переміряйте ЛР3, а не підганяйте ЛР4»). LTO змінює часи задач: у S1 gate (середнє) 115 -> 94 мкс, imu 1 038 -> 1 018 мкс, lcd (мінімум, без NACK) 38,1 -> 37,3 мс (ЛР3 `S1_2026-11-12_1306` проти `S1_2026-11-17_1856`, де ще й вимір на ~2 мкс дорожчий, розділ 3).
+- Зараз з LTO вільно 2 060 B, тобто поріг 2 КБ пройдено, і захід (б) (коротший `help`) я не застосовував. Він дав би лише ~0,3 КБ: усі рядки `help` - 347 B і 36 B вказівників.
+- Але з повним API кроків 2-3 rtos не влазить і з LTO: **35 396 B, не вистачає 2 628 B**, і це ще без коду самих задач і команд метрик. Запас 2 КБ з брифу на кроки 2-3 замалий: одне лише ядро з потрібним API - +4,7 КБ з LTO (разом із самим зондом) і +5,7 КБ без LTO. (а) + (б) цього не закривають, тож тут я зупиняюсь і віддаю рішення: свій форматер замість stdio newlib (оцінка -4...-6 КБ з 7 592 B `libc_nano`, не поміряно) або урізаний набір перевірок (`configASSERT` -864 B, перевірка стека -108 B, run-time stats у мкс -152 B).
+- RAM вистачає: 8 744 B з 12 288, вільно 3,5 КБ під heap для задач кроку 2.
+
+## 5. Smoke S1: super loop і FreeRTOS в одній задачі
+
+Прогін `python3 tools/run_scenario.py tools/scenarios/S1.yaml --wokwi tools/wokwi/S1.yaml --vcd --out docs/metrics/lab4`, обидві збірки `cedabba3` з `LTO=1`, той самий день і той самий `wokwi-cli` 0.27.1. Задача `app` (пріоритет 1, стек 1 КБ) - той самий прохід циклу, що й `while (1)` у super loop.
+
+| Метрика (S1, 60 с) | super loop | FreeRTOS, одна задача | Різниця |
+|---|---|---|---|
+| лог | `S1_2026-11-17_1856` | `S1_2026-11-17_1857` | |
+| STARTUP: boot / gate / class / imu / lcd, мкс | 9 867 / 169 909 / 174 546 / 231 613 / 755 392 | 11 680 / 171 890 / 176 532 / 234 283 / 751 709 | +1 813 / +1 981 / +1 986 / +2 670 / -3 683 |
+| `STATE state=READY`, мс (HAL) | 218 | 222 | +4 |
+| `STAT gate` min / avg / max, мкс | 93 / 94 / 100 | 93 / 95 / 111 | +0 / +1 / +11 |
+| `STAT gate` jit_max, мкс / miss | 37 571 / 154 | 102 694 / 165 | NACK, див. нижче |
+| `STAT imu` min / avg / max, мкс | 1 018 / 1 018 / 1 028 | 975 / 1 018 / 33 743 | avg той самий |
+| `STAT lcd` min / avg / max, мкс | 37 330 / 37 332 / 37 339 | 30 625 / 37 290 / 103 590 | NACK |
+| `STAT loop` min / avg / max, мкс | 31 / 46 / 38 561 | 30 / 46 / 103 714 | avg той самий |
+| `LOAD` медіана / max | 19 % / 34 % | 19 % / 34 % | 0 |
+| `PERF` now_cyc / pair_cyc | 526 / 1 298 | 525 / 1 356 | -1 / +58 |
+| `STACK` used, B (у rtos - лише MSP) | 864 | 792 | -72 |
+| `HEAP` (newlib) arena, B | 436 | 436 | 0 |
+| `UART` rx / ore | 22 / 0 | 22 / 0 | 0 |
+| `I2C_RECOVER` після старту | 0 | 13 | Wokwi |
+| D7 (lcd_task) за VCD, min / max, мс | 37,37 / 37,43 | 30,71 / 103,68 | збігається з `STAT lcd` |
+
+Що з цього видно:
+- **Ціна ОС на кроці 1 мала, бо ОС майже нічого не робить.** Задача одна і ніколи не блокується, тож PendSV не викликається зовсім, а idle не отримує процесора. Лишається тік: обробник SysTick з `xTaskIncrementTick` замість `HAL_IncTick` плюс переривання TIM17 для HAL. Це видно лише в максимумі коротких задач: gate max +11 мкс, коли тік потрапляє в задачу. Середні gate, imu і loop однакові до 1 мкс, `LOAD` однаковий. Точну вартість тіку поміряю на кроці 3.
+- **Старт пізніший на 1,8 мс, і ОС тут ні до чого.** Рядок `BOOT` у rtos довший на 18 символів (`kernel=V11.3.3 os_heap=5120` проти коротших `fw=` і `arch=`), а це 18 × 86,8 мкс = 1,56 мс друку при 115200. Ще 0,25 мс набігає до рядка `BOOT`: якщо відняти друк самого рядка (80 і 98 символів), rtos починає його на 3,17 мс, а super loop - на 2,92 мс. Звідки саме ці 0,25 мс, я ще не розбирав. Після `BOOT` зсув сталий: `i2c_fail` 36 831 -> 38 790 мкс, `ready_gate` +1 981 мкс. Тобто до старту ядра самоперевірка йде так само. `ready_imu` пізніший ще на ~0,7 мс, але він квантований по `HAL_GetTick` (перший запуск imu через 10 мс після кінця ініціалізації), а `ready_lcd` раніший, бо перша перемальовка LCD у rtos потрапила на NACK і тривала 30,7 мс. Для порівняння старту на кроці 4 рядок `BOOT` треба мати однакової довжини в обох ARCH або перенести `kernel=`/`os_heap=` в інший рядок, інакше 1,6 мс друку підуть у «ціну ОС».
+- **Максимуми в rtos зіпсовані NACK на I²C, а не ОС.** У rtos-прогоні після старту 13 відновлень I²C (`I2C_RECOVER ... err=0x24`), у super loop - 0, у S1 ЛР3 (без LTO) - 7. Це той самий артефакт Wokwi, що й у ЛР3 (журнал, проблема 15). Транзакція з NACK триває ~33 мс (`i2c_xfer max` 33 413 мкс, у ЛР3 - 33 692), звідси lcd до 103,6 мс, gate jit_max 102,7 мс і loop 103,7 мс. Симуляція детермінована, тож кількість NACK залежить від того, де саме між транзакціями I²C падають переривання, а в rtos їх більше і вони довші. На кроці 4 S1 треба повторити кілька разів або порівнювати максимуми окремо з NACK і без них.
+- `pair_cyc` +58 тактів: LTO по-різному вбудовує `perf_add` у двох різних образах. `now_cyc` однаковий.
+- `STACK` у rtos - це вже лише MSP: до старту ядра - `main` із самоперевіркою, після - тільки переривання. Стек задачі `app` команда `stack` не показує. Тимчасова збірка дала запас 58 слів з 256 через 3 с роботи (high water mark), а стек кожної задачі - крок 3.
+- Час HAL (TIM17) і `perf_now` (SysTick) за 63 с розходяться на 0,002 % (розділ 3).
+
+Перші два прогони (`S1_2026-11-17_1850` - super loop, `S1_2026-11-17_1852` - rtos) зроблені до виправлення `perf_now` (коміт `cc2c3a8`). У rtos там `gate max_us=89477591`: час ішов назад (журнал, проблема 36). Логи лишив як доказ, записи аналізатора до них не зберігав.
