@@ -73,11 +73,11 @@ PR-и ЛР3: [#13](https://github.com/SPapor/lab1-stm32-sorter/pull/13), [#14](h
 
 ![Стенд у роботі](lab_3/img/01-wokwi-stand.png)
 
-*Рисунок 2 - Стенд у Wokwi під час S3: посилки, E-STOP і потік `stats` у терміналі*
+*Рисунок 2 - Стенд у Wokwi для VS Code: після п'яти посилок (на LCD `A3 B1 R1`, серво на 180°) натиснуто B1, у терміналі - відповідь `stats`, `ESTOP n=1 state=ESTOP` і посилка, пропущена в ESTOP (`SORT_SKIP`)*
 
 ![LCD з лічильниками](lab_3/img/02-lcd-counters.png)
 
-*Рисунок 3 - LCD у роботі: стан, кількість посилок і лічильники лотків A, B, R (FR-06)*
+*Рисунок 3 - LCD у роботі: стан, кількість посилок і лічильники лотків A, B, R (FR-06, S2, знімок `wokwi-cli` на 45-й секунді)*
 
 ![LCD з FAULT](lab_3/img/03-lcd-fault.png)
 
