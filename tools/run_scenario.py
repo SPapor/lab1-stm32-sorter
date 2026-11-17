@@ -25,8 +25,9 @@ wokwi-cli закінчує і пише VCD). Маркер - саме рядок 
 
 Лог: docs/metrics/<сценарій>_<дата>_<час>.log (якщо такий уже є - з _2, _3 ...).
 Перший рядок - заголовок з git-хешем прошивки (з рядка BOOT; якщо BOOT уже
-пропущено - з PERF у відповіді на stats, а якщо й того немає - з build/git.cfg) і
-умовами прогону. Далі - рядки МК як є, без часу хоста: час подій беремо лише з
+пропущено - з PERF у відповіді на stats, а якщо й того немає - з build/git.cfg),
+архітектурою з тих самих рядків (arch, lto, tick_hz; у прошивці ЛР3 їх немає - "?")
+і умовами прогону. Далі - рядки МК як є, без часу хоста: час подій беремо лише з
 міток МК (<мс>, t_us), методичка 5.2. Рядки, що починаються з '#', пише сам скрипт.
 
 Команди. Прошивка приймає UART опитуванням без FIFO: тримає один прийнятий байт,
@@ -80,6 +81,10 @@ FR10 = re.compile(r'^(\d+) ([A-Z][A-Z0-9_]*)\b')
 BOOT_GIT = re.compile(r'^\d+ BOOT\b.*\bgit=(\S+)')
 BOOT_PERF = re.compile(r'^\d+ BOOT\b.*\bperf=(\d)')
 PERF_GIT = re.compile(r'^\d+ PERF\b.*\bgit=(\S+)')
+# Архітектура збірки (ЛР4): BOOT і PERF у відповіді на stats мають arch=, lto=, tick_hz=;
+# у прошивці ЛР3 їх немає
+BUILD_LINE = re.compile(r'^\d+ (BOOT|PERF)\b')
+BUILD_KEYS = {k: re.compile(r'\b' + k + r'=(\S+)') for k in ('arch', 'lto', 'tick_hz')}
 KNOBS_LOG = re.compile(r'^\d+ KNOBS\b.*\blog=(\d)')
 LOG_ON = re.compile(r'^\d+ LOG on=(\d)')
 LINE_HEAD = re.compile(rb'(\d+)(?:( )([A-Z])?)?')   # початок рядка FR-10: "<мс> ПОДІЯ"
@@ -232,6 +237,7 @@ class Recorder:
         self.git = None
         self.git_from = None
         self.perf = None
+        self.build = {}                   # arch, lto, tick_hz з BOOT або PERF
         self.log_level = None             # з KNOBS log= і LOG on=
         self.pending = []
         self.f = None
@@ -328,6 +334,9 @@ class Recorder:
             if g:
                 self.git = g.group(1)
                 self.git_from = 'BOOT' if line.split()[1:2] == ['BOOT'] else 'PERF'
+        b = BUILD_LINE.match(line)
+        if b and (b.group(1) == 'BOOT' or not self.build):
+            self.build = {k: m.group(1) for k, r in BUILD_KEYS.items() for m in [r.search(line)] if m}
         p = BOOT_PERF.match(line)
         if p:
             self.perf = p.group(1)
@@ -426,7 +435,8 @@ class Recorder:
         m = self.meta
         return (f'# git={self.git or "unknown"} (з {self.git_from or "-"}) '
                 f'scenario={m["scenario"]} build="{m["build"]}" perf={self.perf or "?"} '
-                f'port={m["port"]} host_start={m["host_start"]}'
+                + ''.join(f'{k}={self.build.get(k, "?")} ' for k in BUILD_KEYS)
+                + f'port={m["port"]} host_start={m["host_start"]}'
                 + (f' drop={",".join(m["drop"])}' if m.get('drop') else ''))
 
     def finish(self, fallback_git):

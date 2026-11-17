@@ -150,10 +150,33 @@ class RecorderTest(unittest.TestCase):
             log = read_log(rec)
         self.assertTrue(log[0].startswith('# git=0a44968f (з BOOT) scenario=T'))
         self.assertIn('perf=1', log[0])
+        self.assertIn(' arch=? lto=? tick_hz=? ', log[0])     # прошивка ЛР3: ключів немає
         self.assertEqual(log[1], '# сценарій T')
         self.assertEqual(log[2], '15 BOOT fw=lab3-superloop git=0a44968f perf=1')
         self.assertEqual(log[-1], '5017 LOAD pct=7 pm=72 win_cyc=48000123 busy_cyc=3456789 windows=5')
         self.assertEqual(rec.last_ms, 5017)
+
+    def test_header_arch_from_boot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = recorder(tmp, FakeSerial())
+            rec.feed('3 BOOT fw=lab4-rtos git=1a2b3c4d perf=1 arch=rtos lto=1 tick_hz=100 '
+                     'kernel=V11.3.3 os_heap=5120')
+            rec.feed('22 PERF cpu_hz=48000000 now_cyc=434 pair_cyc=823')
+            rec.feed('60000 PERF git=1a2b3c4d now_cyc=434 pair_cyc=823 cyc_per_us=48 '
+                     'arch=superloop lto=0 tick_hz=1000')
+            rec.finish('ffffffff')
+            log = read_log(rec)
+        self.assertIn(' perf=1 arch=rtos lto=1 tick_hz=100 port=', log[0])
+
+    def test_header_arch_from_perf_when_boot_missed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = recorder(tmp, FakeSerial())
+            rec.feed('90210 PERF cpu_hz=48000000 now_cyc=52 pair_cyc=131')
+            rec.feed('90300 PERF git=0a44968f now_cyc=52 pair_cyc=131 cyc_per_us=48 '
+                     'arch=superloop lto=1 tick_hz=1000')
+            rec.finish('ffffffff')
+            log = read_log(rec)
+        self.assertIn(' arch=superloop lto=1 tick_hz=1000 ', log[0])
 
     def test_git_from_perf_when_boot_missed(self):
         with tempfile.TemporaryDirectory() as tmp:
