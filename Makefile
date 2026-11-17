@@ -30,6 +30,11 @@ stack-usage:
 map-summary:
 	python3 tools/map_summary.py firmware/build/firmware.map
 
+# Статична глибина стека за дизасемблером: main і переривання разом з HAL і newlib
+stack-graph:
+	$(RUN) arm-none-eabi-objdump -d firmware/build/firmware.elf > firmware/build/firmware.dis
+	python3 tools/stack_graph.py firmware/build/firmware.dis
+
 # Тести хост-скриптів (розбір сценаріїв, логів, VCD) - без Wokwi, на хості
 tools-test:
 	python3 -m unittest discover -s tools/tests
@@ -37,4 +42,4 @@ tools-test:
 shell:
 	docker run --rm -it -v $(PWD):/workspace -w /workspace --user $$(id -u):$$(id -g) $(IMAGE) bash
 
-.PHONY: build clean test coverage check-deps stack-usage map-summary tools-test shell
+.PHONY: build clean test coverage check-deps stack-usage map-summary stack-graph tools-test shell
