@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Flash і RAM за модулями та найбільші символи з map-файлу GNU ld.
 
-    tools/map_summary.py [firmware.map] [-n N] [--objects [МОДУЛЬ]]
+    tools/map_summary.py [firmware.map] [-n N] [--objects] [--module МОДУЛЬ]
 
 За замовчуванням firmware/build/firmware.map (збірка з -Wl,-Map=...,--cref і
 -ffunction-sections -fdata-sections, як у firmware/Makefile). Модуль об'єкта
@@ -9,8 +9,8 @@
 App, Tasks, Middlewares (ядро FreeRTOS); бібліотеки - libc, libgcc тощо. .data
 рахується і у flash (початкові значення), і в RAM; ._user_heap_stack - резерв купи
 й стека зі скрипту лінкера, .noinit - RAM, яку startup не обнуляє.
---objects - ще й внесок кожного об'єктного файла (tasks.o, queue.o, ...), усіх або
-лише одного модуля. З LTO код генерується в лінкері, і в map замість файлів -
+--objects - ще й внесок кожного об'єктного файла (tasks.o, queue.o, ...), з
+--module - лише файли одного модуля (Middlewares, Platform, ...). З LTO код генерується в лінкері, і в map замість файлів -
 *.ltrans.o: по файлах можна розкласти лише збірку з LTO=0.
 Сума за модулями може бути трохи більшою за підсумок ld: у map розмір рядкових
 секцій (.str1.1) указано до того, як лінкер злив однакові рядки.
@@ -158,7 +158,6 @@ def account(out, section, size, obj, mods, flash, ram, symbols, objs):
         o[0] += size if in_flash else 0
         o[1] += size if in_ram else 0
         o[2] = mod
-    if section not in ('*fill*',):
         region = 'FLASH+RAM' if out in BOTH_OUT else ('FLASH' if in_flash else 'RAM')
         symbols.append((size, region, mod, symbol_of(section, obj)))
 
@@ -167,8 +166,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument('map', nargs='?', default='firmware/build/firmware.map')
     ap.add_argument('-n', type=int, default=15, help='скільки символів показати (15)')
-    ap.add_argument('--objects', nargs='?', const='', metavar='МОДУЛЬ',
-                    help='ще й внесок кожного .o (усіх або лише цього модуля, напр. Middlewares)')
+    ap.add_argument('--objects', action='store_true', help='ще й внесок кожного .o')
+    ap.add_argument('--module', metavar='МОДУЛЬ',
+                    help='з --objects: лише файли цього модуля (напр. Middlewares)')
     args = ap.parse_args()
 
     fw = os.path.dirname(os.path.dirname(os.path.abspath(args.map)))
@@ -185,9 +185,9 @@ def main():
           '   (порівняти з --print-memory-usage; RAM може бути на кілька байтів меншою'
           ' через вирівнювання між секціями)')
 
-    if args.objects is not None:
+    if args.objects:
         rows = sorted(((n, f, r, m) for n, (f, r, m) in objs.items()
-                       if not args.objects or m == args.objects), key=lambda x: (-x[1], -x[2]))
+                       if not args.module or m == args.module), key=lambda x: (-x[1], -x[2]))
         head = "об'єкт"
         print(f'\n{head:<28} {"модуль":<12} {"flash, B":>9} {"RAM, B":>8}')
         for n, f, r, m in rows:

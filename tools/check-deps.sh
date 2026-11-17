@@ -9,8 +9,14 @@
 
 cd "$(dirname "$0")/.." || exit 2
 
-# Заголовки ядра FreeRTOS (include/ і порт) і FreeRTOSConfig.h
-rtos='FreeRTOS\.h|FreeRTOSConfig\.h|task\.h|queue\.h|semphr\.h|stream_buffer\.h|message_buffer\.h|timers\.h|event_groups\.h|list\.h|portable\.h|portmacro\.h|atomic\.h'
+# Заголовки ядра FreeRTOS - усі, що є в include/ і в порту, плюс FreeRTOSConfig.h.
+# Якщо сабмодуль не завантажено - хоча б основні за іменами
+kernel=firmware/Middlewares/FreeRTOS
+rtos=$(for f in "$kernel"/include/*.h "$kernel"/portable/GCC/ARM_CM0/*.h; do
+    [ -e "$f" ] && basename "$f" | sed 's/\./\\./'
+done | paste -sd'|' -)
+rtos=${rtos:-'FreeRTOS\.h|task\.h|queue\.h|semphr\.h|stream_buffer\.h|message_buffer\.h|timers\.h|event_groups\.h|list\.h|portable\.h|projdefs\.h|portmacro\.h'}
+rtos="FreeRTOSConfig\\.h|$rtos"
 # Заголовки шару Tasks/ (за іменами файлів)
 tasks=$(for f in firmware/Tasks/*.h; do [ -e "$f" ] && basename "$f" | sed 's/\./\\./'; done | paste -sd'|' -)
 tasks=${tasks:-.^}

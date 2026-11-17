@@ -8,6 +8,10 @@ build_dir - каталог збірки з *.su (за замовчуванням
 static - розмір відомий точно; dynamic - залежить від даних (VLA, alloca).
 Це кадр однієї функції, а не глибина стека: повна глибина - сума кадрів
 найглибшого ланцюжка викликів плюс кадри переривань (див. STACK у docs/perf.md).
+
+Каталог збірки один на всі варіанти (ARCH, LTO, ...), тож беруться лише .su, новіші
+за build.cfg: його app.mk переписує при кожній зміні варіанта. З LTO=1 кадри по
+файлах не пишуться - тоді скрипт так і каже.
 """
 import argparse
 import glob
@@ -15,7 +19,8 @@ import os
 import re
 import sys
 
-MODULES = ('Core', 'Platform', 'Devices', 'App', 'Drivers')
+from map_summary import MODULES
+
 LOC = re.compile(r'(.+?):(\d+):(\d+):(.+)$')
 
 
@@ -27,9 +32,27 @@ def module_of(path):
     return '?'
 
 
+def current_su(build):
+    """*.su поточного варіанта: не старіші за build.cfg (без нього - усі)."""
+    files = sorted(glob.glob(os.path.join(build, '*.su')))
+    try:
+        since = os.path.getmtime(os.path.join(build, 'build.cfg'))
+    except OSError:
+        return files
+    return [f for f in files if os.path.getmtime(f) >= since]
+
+
+def build_cfg(build):
+    try:
+        with open(os.path.join(build, 'build.cfg'), encoding='utf-8') as f:
+            return f.read().split()
+    except OSError:
+        return []
+
+
 def read_su(build):
     rows = []
-    for su in sorted(glob.glob(os.path.join(build, '*.su'))):
+    for su in current_su(build):
         with open(su, encoding='utf-8') as f:
             for line in f:
                 fields = line.rstrip('\n').split('\t')
@@ -53,6 +76,9 @@ def main():
 
     rows = read_su(args.build)
     if not rows:
+        if 'LTO=1' in build_cfg(args.build):
+            sys.exit(f'{args.build}: остання збірка з LTO=1, кадрів по файлах немає - '
+                     'зберіть з LTO=0 (make build або make compile ARCH=rtos)')
         sys.exit(f'{args.build}: немає *.su - зберіть make -f app.mk (там -fstack-usage)')
     rows.sort(key=lambda r: (-r['bytes'], r['func']))
 
