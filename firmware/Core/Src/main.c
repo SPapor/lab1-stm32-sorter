@@ -52,6 +52,10 @@
 #include "mem_hal.h"
 #include <malloc.h>
 #endif
+#if ARCH_RTOS
+#include "rtos_hal.h"
+#include "app_task.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,7 +96,15 @@ enum {
 #define PERF_WIN_MS         1000u   /* вікно завантаження CPU, docs/perf.md */
 #define IMU_READY_MG        500     /* |a| від 0,5 g — MPU справді міряє (у SLEEP на залізі дає нулі) */
 
+/* Архітектура (app.mk: ARCH, LTO, TICK_HZ) — у рядках BOOT і PERF */
+#if ARCH_RTOS
+#define FW_NAME             "lab4-rtos"
+#define ARCH_NAME           "rtos"
+#else
 #define FW_NAME             "lab3-superloop"
+#define ARCH_NAME           "superloop"
+#define TICK_HZ             1000u       /* тік HAL; у rtos — тік ядра з app.mk */
+#endif
 #ifndef GIT_HASH
 #define GIT_HASH            "unknown"   /* app.mk передає -DGIT_HASH з git describe */
 #endif
@@ -259,6 +271,7 @@ static const char *const help_lines[] = {
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+static void loop_pass(void);
 static void uart_rx_task(void);
 static void estop_task(void);
 static void gate_task(void);
@@ -394,7 +407,21 @@ int main(void)
   perf_hal_init();
   perf_setup();
 #endif
-  ev_log("BOOT", "fw=%s git=%s perf=%u", FW_NAME, GIT_HASH, (unsigned)PERF);
+#if ARCH_RTOS
+  ev_log("BOOT", "fw=%s git=%s perf=%u arch=%s lto=%u tick_hz=%u kernel=%s os_heap=%lu",
+         FW_NAME, GIT_HASH, (unsigned)PERF, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ,
+         rtos_hal_kernel_version(), (unsigned long)rtos_hal_heap_total());
+  {
+    uint32_t line, pc;
+
+    /* configASSERT до скидання: рядок і адреса виклику збережені в .noinit */
+    if (rtos_hal_assert_take(&line, &pc))
+      ev_log("ASSERT", "line=%lu pc=0x%08lX", (unsigned long)line, (unsigned long)pc);
+  }
+#else
+  ev_log("BOOT", "fw=%s git=%s perf=%u arch=%s lto=%u tick_hz=%u", FW_NAME, GIT_HASH,
+         (unsigned)PERF, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ);
+#endif
 #if PERF
   {
     uint64_t t = perf_now_us64();
@@ -444,32 +471,17 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+#if ARCH_RTOS
+  /* FreeRTOS, крок 1: увесь цикл — у задачі app (Tasks/app_task.c); сюди не повертається */
+  app_task_start(loop_pass);
+#endif
   while (1)
   {
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    /* Super loop: задачі по черзі; кожна сама перевіряє свій час і повертає
-     * керування. Блокувальні виклики всередині задач — docs/tasks.md. */
-#if PERF
-    uint32_t t_loop = perf_now();
-    if (perf_load_poll(&load, t_loop) && log_level >= 2)
-      load_line(ev_log);
-#endif
-    uart_rx_task();
-    estop_task();
-    gate_task();
-    sort_task();
-    imu_task();
-    lcd_task();
-#ifdef LAB2_CAP
-    telemetry_task();
-#endif
-#if PERF
-    ready_flush();
-    perf_add(&st_loop, perf_now() - t_loop);
-#endif
+    loop_pass();
   }
   /* USER CODE END 3 */
 }
@@ -563,6 +575,31 @@ static void led_mark(uint8_t on)
 /* ---------------------------------------------------------------------------
  * Задачі super loop (docs/tasks.md)
  * ------------------------------------------------------------------------- */
+
+/* Один прохід циклу: задачі по черзі; кожна сама перевіряє свій час і повертає
+ * керування. Блокувальні виклики всередині задач — docs/tasks.md. У super loop
+ * його викликає while (1) у main, у ARCH=rtos — задача app. */
+static void loop_pass(void)
+{
+#if PERF
+  uint32_t t_loop = perf_now();
+  if (perf_load_poll(&load, t_loop) && log_level >= 2)
+    load_line(ev_log);
+#endif
+  uart_rx_task();
+  estop_task();
+  gate_task();
+  sort_task();
+  imu_task();
+  lcd_task();
+#ifdef LAB2_CAP
+  telemetry_task();
+#endif
+#if PERF
+  ready_flush();
+  perf_add(&st_loop, perf_now() - t_loop);
+#endif
+}
 
 /* Кожен прохід: усі прийняті байти → cli; завершена команда виконується тут же
  * разом з друком відповіді. USART2 без FIFO, прийом опитуванням: якщо між двома
@@ -1034,8 +1071,9 @@ static void stats_report(void)
   };
   uint32_t rx, ore;
 
-  cli_reply("PERF", "git=%s now_cyc=%lu pair_cyc=%lu cyc_per_us=%lu", GIT_HASH,
-            (unsigned long)perf_now_cyc, (unsigned long)perf_pair_cyc, (unsigned long)cyc_per_us);
+  cli_reply("PERF", "git=%s now_cyc=%lu pair_cyc=%lu cyc_per_us=%lu arch=%s lto=%u tick_hz=%u",
+            GIT_HASH, (unsigned long)perf_now_cyc, (unsigned long)perf_pair_cyc,
+            (unsigned long)cyc_per_us, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ);
   knobs_line();
   cli_reply("STARTUP", "boot_us=%lu gate_us=%lu class_us=%lu imu_us=%lu lcd_us=%lu",
             (unsigned long)boot_us, (unsigned long)ready_us[RDY_GATE],
