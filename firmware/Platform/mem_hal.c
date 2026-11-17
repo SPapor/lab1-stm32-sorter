@@ -1,7 +1,9 @@
 #include "mem_hal.h"
 #include "stm32c0xx_hal.h"
 
-extern uint32_t _estack;           /* вершина стека (кінець RAM) */
+/* Типи — як у Core/Src/sysmem.c: з LTO різні оголошення одного символу дають
+ * -Wlto-type-mismatch */
+extern uint8_t _estack;            /* вершина стека (кінець RAM) */
 extern uint32_t _Min_Stack_Size;   /* абсолютний символ: його адреса = розмір */
 
 uint32_t *mem_hal_stack_bottom(void)
@@ -11,7 +13,7 @@ uint32_t *mem_hal_stack_bottom(void)
 
 uint32_t *mem_hal_stack_top(void)
 {
-    return &_estack;
+    return (uint32_t *)(uintptr_t)&_estack;
 }
 
 uint32_t *mem_hal_sp(void)

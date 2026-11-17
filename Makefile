@@ -1,12 +1,16 @@
 IMAGE ?= stm32-build
-# git-хеш збірки (docs/perf.md): рахується на хості, у контейнер іде параметром
-GIT_HASH := $(shell git describe --always --dirty --abbrev=8 2>/dev/null || echo unknown)
+# git-хеш збірки (docs/perf.md): рахується на хості, у контейнер іде параметром.
+# Теги не беремо (--exclude): на тезі lab3 describe дав би «lab3» замість хеша
+GIT_HASH := $(shell git describe --always --dirty --abbrev=8 --exclude='*' 2>/dev/null || echo unknown)
 RUN = docker run --rm -v $(PWD):/workspace -w /workspace --user $$(id -u):$$(id -g) $(IMAGE)
 
 # Варіант збірки: make build LAB2_CAP=1 (harness ЛР2), TEST_I2C_FAULT=1 (тест FR-09),
-# PERF=0 (без вимірювального модуля, docs/perf.md)
+# PERF=0 (без вимірювального модуля, docs/perf.md).
+# Архітектура (docs/rtos-design.md): ARCH=superloop (за замовчуванням) | rtos,
+# LTO=0|1, TICK_HZ=<Гц> (лише rtos, за замовчуванням 1000)
 build:
-	$(RUN) make -C firmware -f app.mk all LAB2_CAP=$(LAB2_CAP) TEST_I2C_FAULT=$(TEST_I2C_FAULT) PERF=$(PERF) GIT_HASH=$(GIT_HASH)
+	$(RUN) make -C firmware -f app.mk all ARCH=$(ARCH) LTO=$(LTO) TICK_HZ=$(TICK_HZ) \
+		LAB2_CAP=$(LAB2_CAP) TEST_I2C_FAULT=$(TEST_I2C_FAULT) PERF=$(PERF) GIT_HASH=$(GIT_HASH)
 
 clean:
 	$(RUN) make -C firmware -f app.mk clean
