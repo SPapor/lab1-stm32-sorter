@@ -104,16 +104,20 @@ extern uint32_t SystemCoreClock;
 #define configUSE_STATS_FORMATTING_FUNCTIONS 0
 #if PERF
 #define configRUN_TIME_COUNTER_TYPE         uint64_t
+void rtos_hal_runtime_start(void);
 uint64_t rtos_hal_runtime_now(void);
-/* Лічильник уже йде: perf_hal_init викликається в main до старту ядра */
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() ((void)0)
+/* Лічильник уже йде з HAL_Init; на старті ядра запам'ятовується база, і run-time
+ * stats рахують від старту ядра, а не від скидання (Platform/rtos/rtos_hal.c) */
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() rtos_hal_runtime_start()
 #define portGET_RUN_TIME_COUNTER_VALUE()    rtos_hal_runtime_now()
 #endif
 
 /* configASSERT без імені файлу (кожен рядок __FILE__ — ще кілька десятків байтів
  * флешу на виклик): номер рядка й адреса виклику — у .noinit, далі переривання
  * вимкнено й блимає LD4. Після скидання main друкує ASSERT line=N pc=0x... */
-void rtos_hal_assert_failed(uint32_t line) __attribute__((noreturn));
+/* noinline: адреса повернення має бути місцем configASSERT, навіть якщо LTO
+ * захоче вбудувати функцію в єдиного викликача */
+void rtos_hal_assert_failed(uint32_t line) __attribute__((noreturn, noinline));
 #define configASSERT(x)                     do { if ((x) == 0) rtos_hal_assert_failed(__LINE__); } while (0)
 
 /* --- MPU немає (порт ARM_CM0 вимагає явно) ------------------------------- */

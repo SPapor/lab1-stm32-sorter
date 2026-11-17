@@ -19,18 +19,31 @@
 #include "stm32c0xx_hal.h"
 
 #define HAL_TICK_TIMER_HZ  1000000u   /* TIM17 тікає 1 МГц: ARR = 999 дає 1 кГц */
+#define START_GUARD_CYC    256u       /* vPortSetupTimerInterrupt: «до переходу через 0 мало» */
+
+/* perf_tick_us64 рахує мкс у тіку як ціле < 2^16, а 1 тік = 10^6 / TICK_HZ мкс */
+#if TICK_HZ < 16 || (1000000 % TICK_HZ) != 0
+#error "TICK_HZ: не нижче 16 Гц і має ділити 1 000 000 (perf_tick_us64, docs/rtos-design.md)"
+#endif
 
 volatile uint32_t rtos_hal_ticks;
 static volatile uint8_t kernel_ticks;   /* 1 — ядро стартує: тіки йдуть порту */
+#if PERF
+static uint64_t runtime_base;           /* perf_now_cyc64 на старті ядра */
+#endif
 
 /* --- HAL timebase: TIM17 --------------------------------------------------
  * Заміна слабких HAL_InitTick, HAL_SuspendTick, HAL_ResumeTick з stm32c0xx_hal.c.
  * HAL_InitTick викликають HAL_Init і HAL_RCC_ClockConfig (після зміни частоти). */
 HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 {
-    uint32_t tim_hz;
+    uint32_t tim_hz, arr;
 
     if (TickPriority >= (1UL << __NVIC_PRIO_BITS) || (uint32_t)uwTickFreq == 0u)
+        return HAL_ERROR;
+    /* TIM17 16-бітний: тік HAL довший за 65 мс (HAL_TICK_FREQ_10HZ) не вміщується */
+    arr = HAL_TICK_TIMER_HZ / (1000u / (uint32_t)uwTickFreq) - 1u;
+    if (arr > 0xFFFFu)
         return HAL_ERROR;
 
     /* Тік ядра і perf_now: SysTick з LOAD = SystemCoreClock / TICK_HZ - 1, як його
@@ -44,11 +57,15 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
     if ((RCC->CFGR & RCC_CFGR_PPRE) != 0u)
         tim_hz *= 2u;
 
+    /* Переривання вимкнене до UG: при другому виклику (після зміни частоти) UIE
+     * ще стоїть, і UG дав би зайвий HAL_IncTick */
     TIM17->CR1 = 0u;
+    TIM17->DIER = 0u;
     TIM17->PSC = tim_hz / HAL_TICK_TIMER_HZ - 1u;
-    TIM17->ARR = HAL_TICK_TIMER_HZ / (1000u / (uint32_t)uwTickFreq) - 1u;
+    TIM17->ARR = arr;
     TIM17->EGR = TIM_EGR_UG;          /* PSC буферизований: завантажити зараз */
     TIM17->SR = 0u;                   /* UG виставив UIF — це не тік */
+    NVIC_ClearPendingIRQ(TIM17_IRQn);
     TIM17->DIER = TIM_DIER_UIE;
     TIM17->CR1 = TIM_CR1_CEN;
 
@@ -95,13 +112,28 @@ void SysTick_Handler(void)
 
 /* Порт викликає це з xPortStartScheduler (переривання вже вимкнені), щоб
  * запустити SysTick. Він уже йде з HAL_InitTick з тим самим LOAD; перезапуск
- * обнулив би VAL посеред тіку, і perf_now стрибнув би назад. Тож лише перевірка
- * і з цього моменту — тіки ядру. */
+ * обнулив би VAL посеред тіку, і perf_now стрибнув би назад. Тож перевірка і з
+ * цього моменту — тіки ядру.
+ * Але тік, що настав, поки vTaskStartScheduler тримав переривання вимкненими,
+ * чекає, і після cpsie у vStartFirstTask обробник порту виконався б раніше, ніж
+ * svc запустить першу задачу. Якщо xTaskIncrementTick попросить перемикання
+ * (кілька задач на найвищому пріоритеті), PendSV зберіг би контекст у ще не
+ * налаштований PSP. Тому такий тік рахується тут лише для perf_now і знімається
+ * з очікування, а якщо до переходу через 0 лишилося менше START_GUARD_CYC тактів
+ * (~5 мкс), спершу дочікуємося його. Після цього до наступного тіку - майже
+ * цілий тік, а до svc - кілька десятків тактів, як у порту, що запускає SysTick
+ * саме тут. */
 void vPortSetupTimerInterrupt(void)
 {
     configASSERT(SysTick->LOAD == configCPU_CLOCK_HZ / configTICK_RATE_HZ - 1u);
     configASSERT((SysTick->CTRL & (SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk))
                  == (SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk));
+    while (SysTick->VAL < START_GUARD_CYC && (SCB->ICSR & SCB_ICSR_PENDSTSET_Msk) == 0u) {
+    }
+    if (SCB->ICSR & SCB_ICSR_PENDSTSET_Msk) {
+        SCB->ICSR = SCB_ICSR_PENDSTCLR_Msk;
+        rtos_hal_ticks++;
+    }
     kernel_ticks = 1;
 }
 
@@ -113,10 +145,18 @@ void rtos_hal_start_scheduler(void)
 }
 
 #if PERF
-/* Лічильник run-time stats: такти CPU, 64 біти (FreeRTOSConfig.h) */
+/* Лічильник run-time stats: такти CPU, 64 біти (FreeRTOSConfig.h), від старту
+ * ядра. perf_now_cyc64 рахує від HAL_Init, а ядро бере перший відлік за 0: без
+ * бази час BOOT і самоперевірки дістався б першій задачі, що поступиться
+ * процесором. Ядро викликає rtos_hal_runtime_start з vTaskStartScheduler */
+void rtos_hal_runtime_start(void)
+{
+    runtime_base = perf_now_cyc64();
+}
+
 uint64_t rtos_hal_runtime_now(void)
 {
-    return perf_now_cyc64();
+    return perf_now_cyc64() - runtime_base;
 }
 #endif
 
