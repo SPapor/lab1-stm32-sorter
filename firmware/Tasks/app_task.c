@@ -8,6 +8,9 @@
 #ifdef TEST_KSTRESS
 #include "kstress.h"
 #endif
+#ifdef TEST_CRITCOST
+#include "critcost.h"
+#endif
 
 /* Пріоритет 1: вище за idle (0), щоб idle отримувала процесор лише тоді, коли
  * app заблокована (у кроці 1 — ніколи: цикл опитує без блокування) */
@@ -22,6 +25,9 @@ static void (*app_pass)(void);
 static void app_task(void *arg)
 {
     (void)arg;
+#ifdef TEST_CRITCOST
+    critcost_run();       /* ціна критичної секції, до першого проходу циклу */
+#endif
     for (;;)
         app_pass();
 }

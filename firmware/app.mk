@@ -40,6 +40,9 @@ endif
 ifeq ($(TEST_KSTRESS)$(ARCH_ON),1superloop)
 $(error TEST_KSTRESS=1 лише для ARCH=rtos)
 endif
+ifeq ($(TEST_CRITCOST)$(ARCH_ON),1superloop)
+$(error TEST_CRITCOST=1 лише для ARCH=rtos)
+endif
 
 # Platform/<arch>/ — те, що в двох архітектурах різне: обробники SVC, PendSV,
 # SysTick, база часу HAL, лічильник тіків для perf_now (perf_tick.h)
@@ -130,9 +133,11 @@ C_DEFS += -DBUILD_LTO=$(LTO_ON)
 #   TEST_BOOTMARK=1  — дослід: лічильник perf у точках старту до BOOT (рядки BOOTMARK)
 #   TEST_APIPROBE=1  — зонд бюджету flash: посилання на все API ядра кроків 2-3 (лише rtos)
 #   TEST_KSTRESS=1   — стрес-тест ядра в Wokwi замість задачі app (лише rtos)
+#   TEST_CRITCOST=1  — ціна входу й виходу критичної секції ядра (лише rtos, PERF=1)
 #   PERF=0           — без вимірювального модуля ЛР3 (docs/perf.md); за замовчуванням 1
 # TEST_* у продукт не входять; docs/rtos-design.md, розділи 2 і 5
-BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE TEST_KSTRESS
+BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE TEST_KSTRESS \
+              TEST_CRITCOST
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
 
 # PERF завжди визначений (#if PERF): 0 лише явно, порожнє значення = 1.
@@ -147,6 +152,9 @@ else
 PERF_ON := $(if $(filter 0,$(PERF)),0,1)
 endif
 C_DEFS += -DPERF=$(PERF_ON)
+ifeq ($(TEST_CRITCOST)$(PERF_ON),10)
+$(error TEST_CRITCOST=1 міряє perf_now, потрібен PERF=1)
+endif
 
 # Об'єкти в Makefile залежать лише від .c і Makefile, тож після зміни варіанта
 # make узяв би старі .o. Варіант пишемо у файл, лише коли він змінився, і всі
