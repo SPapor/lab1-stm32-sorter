@@ -7,8 +7,8 @@
 #include <stdint.h>
 
 typedef struct {
-    uint32_t crit_task;              /* входів у taskENTER_CRITICAL */
-    uint32_t crit_isr;               /* входів у taskENTER_CRITICAL_FROM_ISR */
+    uint32_t crit_task_n;            /* входів у taskENTER_CRITICAL */
+    uint32_t crit_isr_n;             /* входів у taskENTER_CRITICAL_FROM_ISR */
     uint32_t switches;               /* перемикань задач */
     uint32_t pendsv_in_task_crit;    /* PendSV усередині критичної секції задачі */
     uint32_t switches_in_task_crit;  /* з них - зі справжнім перемиканням */

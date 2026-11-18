@@ -3,6 +3,7 @@
  * м'ютекс, коли PRIMASK не маскує переривання (docs/journal.md, проблема 35).
  *
  *   tick  P4  xTaskDelayUntil 1 мс; м'ютекс зі спільним лічильником;
+ *             на старті запам'ятовує тік ядра і тік perf (рядок KSTRESS_TICK);
  *             раз на 10 с друкує рядки KSTRESS* (на найвищому
  *             пріоритеті, щоб звіт був, навіть якщо нижчі задачі голодують;
  *             друк блокувальний, тож після нього кілька пробуджень запізнюються)
@@ -35,6 +36,10 @@
 #include "uart_hal.h"
 #include "kstress_port.h"
 #include "rtos_hal.h"
+#include "perf_tick.h"
+#if SIM_CRIT
+#include "port_sim.h"
+#endif
 
 #define ISR_HZ              2000u
 #define REPORT_TICKS        10000u   /* 10 с при тіку 1 мс */
@@ -89,6 +94,8 @@ static QueueHandle_t q_pong;
 static SemaphoreHandle_t mtx;
 static TaskHandle_t h_mtx;
 static volatile uint32_t isr_seq;
+static TickType_t ktick0;        /* тік ядра і тік perf на старті tick: */
+static uint32_t ptick0;          /* за весь прогін вони мають іти однаково */
 
 /* Дані під м'ютексом: інваріант a == b і власник NULL поза ділянкою */
 static struct {
@@ -226,6 +233,10 @@ static void tick_task(void *arg)
 
     (void)arg;
     tim14_start();
+    taskENTER_CRITICAL();
+    ktick0 = xTaskGetTickCount();
+    ptick0 = perf_tick_count();
+    taskEXIT_CRITICAL();
     last = xTaskGetTickCount();
     for (;;) {
         if (xTaskDelayUntil(&last, 1) == pdFALSE)
@@ -331,21 +342,45 @@ static void report(uint32_t t_s)
                     (unsigned long)cnt.mtx_err, (unsigned long)cnt.notify_err,
                     (unsigned long)cnt.mtx_timeout, (unsigned long)cnt.q_timeout,
                     (unsigned long)cnt.stale);
-    /* Критичні секції задач (taskENTER_CRITICAL): скільки входів і скільки разів
-     * усередині них спрацювали PendSV, тік і TIM14 - на залізі 0 */
-    uart_hal_printf("%lu KSTRESS_CRIT t_s=%lu crit_task=%lu switches=%lu pendsv_in=%lu "
-                    "switches_in=%lu tick_in=%lu tim14_in=%lu heap_min=%lu",
-                    (unsigned long)HAL_GetTick(), (unsigned long)t_s,
-                    (unsigned long)p.crit_task, (unsigned long)p.switches,
+    /* Критичні секції задач (taskENTER_CRITICAL): crit_task_n - входів, crit_task -
+     * подій усередині (PendSV, тік ядра, TIM14); на залізі crit_task = 0 */
+    uart_hal_printf("%lu KSTRESS_CRIT t_s=%lu crit_task_n=%lu crit_task=%lu pendsv_in=%lu "
+                    "switches_in=%lu tick_in=%lu tim14_in=%lu switches=%lu",
+                    (unsigned long)HAL_GetTick(), (unsigned long)t_s, (unsigned long)p.crit_task_n,
+                    (unsigned long)(p.pendsv_in_task_crit + p.tick_in_task_crit +
+                                    p.tim14_in_task_crit),
                     (unsigned long)p.pendsv_in_task_crit, (unsigned long)p.switches_in_task_crit,
                     (unsigned long)p.tick_in_task_crit, (unsigned long)p.tim14_in_task_crit,
-                    (unsigned long)xPortGetMinimumEverFreeHeapSize());
+                    (unsigned long)p.switches);
     /* Те саме для критичних секцій ISR (taskENTER_CRITICAL_FROM_ISR) */
-    uart_hal_printf("%lu KSTRESS_CRIT_ISR t_s=%lu crit_isr=%lu pendsv_in=%lu switches_in=%lu "
-                    "tick_in=%lu tim14_in=%lu", (unsigned long)HAL_GetTick(), (unsigned long)t_s,
-                    (unsigned long)p.crit_isr, (unsigned long)p.pendsv_in_isr_crit,
-                    (unsigned long)p.switches_in_isr_crit, (unsigned long)p.tick_in_isr_crit,
-                    (unsigned long)p.tim14_in_isr_crit);
+    uart_hal_printf("%lu KSTRESS_CRIT_ISR t_s=%lu crit_isr_n=%lu crit_isr=%lu pendsv_in=%lu "
+                    "switches_in=%lu tick_in=%lu tim14_in=%lu", (unsigned long)HAL_GetTick(),
+                    (unsigned long)t_s, (unsigned long)p.crit_isr_n,
+                    (unsigned long)(p.pendsv_in_isr_crit + p.tick_in_isr_crit + p.tim14_in_isr_crit),
+                    (unsigned long)p.pendsv_in_isr_crit, (unsigned long)p.switches_in_isr_crit,
+                    (unsigned long)p.tick_in_isr_crit, (unsigned long)p.tim14_in_isr_crit);
+    /* Тіки ядра і perf від старту tick (мають збігатися: відкладений тік не губиться)
+     * і робота обходу SIM_CRIT - відкладені тіки й PendSV (це не помилки) */
+    {
+        uint32_t deferred_tick = 0, deferred_pendsv = 0;
+        uint32_t ktick, ptick;
+#if SIM_CRIT
+        port_sim_counters_t sim;
+
+        port_sim_counters(&sim);
+        deferred_tick = sim.deferred_tick;
+        deferred_pendsv = sim.deferred_pendsv;
+#endif
+        taskENTER_CRITICAL();
+        ktick = (uint32_t)(xTaskGetTickCount() - ktick0);
+        ptick = perf_tick_count() - ptick0;
+        taskEXIT_CRITICAL();
+        uart_hal_printf("%lu KSTRESS_TICK t_s=%lu ktick=%lu ptick=%lu deferred_tick=%lu "
+                        "deferred_pendsv=%lu heap_min=%lu", (unsigned long)HAL_GetTick(),
+                        (unsigned long)t_s, (unsigned long)ktick, (unsigned long)ptick,
+                        (unsigned long)deferred_tick, (unsigned long)deferred_pendsv,
+                        (unsigned long)xPortGetMinimumEverFreeHeapSize());
+    }
 }
 
 static void mtx_task(void *arg)

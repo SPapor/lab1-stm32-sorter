@@ -6,7 +6,7 @@
  *
  * Два види критичних секцій ядра:
  *   задачі - taskENTER_CRITICAL (vPortEnterCritical, лічильник ulCriticalNesting);
- *   ISR    - taskENTER_CRITICAL_FROM_ISR (ulSetInterruptMask, port_kstress_asm.c).
+ *   ISR    - taskENTER_CRITICAL_FROM_ISR (ulSetInterruptMask, обгортка нижче).
  * На залізі обидві - cpsid i, і всередині них не виконуються ні переривання, ні
  * PendSV. У Wokwi PRIMASK не маскує (журнал, проблема 35), тож рахуємо, скільки
  * разів усередині них:
@@ -16,9 +16,13 @@
  * До старту ядра (ulCriticalNesting = 0xaaaaaaaa + k) нічого не рахується. */
 #define vPortEnterCritical  port_vPortEnterCritical
 #define vPortExitCritical   port_vPortExitCritical
+#define ulSetInterruptMask  port_ulSetInterruptMask
+#define vClearInterruptMask port_vClearInterruptMask
 #include "port.c"
 #undef vPortEnterCritical
 #undef vPortExitCritical
+#undef ulSetInterruptMask
+#undef vClearInterruptMask
 #include "kstress_port.h"
 
 /* Справжня вкладеність - кілька рівнів; усе зі старшим бітом - ще до старту */
@@ -26,6 +30,8 @@
 
 void vPortEnterCritical(void);
 void vPortExitCritical(void);
+uint32_t ulSetInterruptMask(void);
+void vClearInterruptMask(uint32_t ulMask);
 
 static volatile kstress_port_counters_t c;
 static volatile uint32_t isr_mask_depth;
@@ -45,12 +51,28 @@ void vPortEnterCritical(void)
 {
     port_vPortEnterCritical();
     if (started())
-        c.crit_task++;
+        c.crit_task_n++;
 }
 
 void vPortExitCritical(void)
 {
     port_vPortExitCritical();
+}
+
+/* Функції порту: у SIM_CRIT=1 - з port.c вище, у SIM_CRIT=0 - з portasm.c
+ * (port_kstress_asm.c) */
+uint32_t ulSetInterruptMask(void)
+{
+    uint32_t mask = port_ulSetInterruptMask();
+
+    kstress_isr_mask_enter();
+    return mask;
+}
+
+void vClearInterruptMask(uint32_t ulMask)
+{
+    kstress_isr_mask_exit();
+    port_vClearInterruptMask(ulMask);
 }
 
 uint32_t kstress_crit_nesting(void)
@@ -62,7 +84,7 @@ void kstress_isr_mask_enter(void)
 {
     isr_mask_depth++;
     if (started())
-        c.crit_isr++;
+        c.crit_isr_n++;
 }
 
 void kstress_isr_mask_exit(void)
