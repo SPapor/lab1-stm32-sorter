@@ -28,6 +28,12 @@ uint32_t rtos_hal_heap_total(void);
  * у .noinit цілий; запис після цього стирається. 0 — асерту не було. */
 int rtos_hal_assert_take(uint32_t *line, uint32_t *pc);
 
+/* На вході кожного обробника переривання NVIC у rtos: 1 - відкрита критична
+ * секція ядра, обробник має одразу повернутися, нічого не скидаючи (збірка
+ * SIM_CRIT=1 відкладе переривання до кінця секції, Platform/rtos/port_sim);
+ * 0 - обробляти. З SIM_CRIT=0 завжди 0 */
+int rtos_hal_irq_defer(int irqn);
+
 /* Частота тактування таймерів APB (TIM14, TIM17), Гц */
 uint32_t rtos_hal_timer_clk_hz(void);
 

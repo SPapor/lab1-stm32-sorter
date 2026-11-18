@@ -21,6 +21,8 @@ SUPPORTED = re.compile(r'%(?:%|[-0]*[0-9]*l?[diuxXcs])')
 CONVERSION = re.compile(r'%[-+ #0]*[0-9*]*(?:\.[0-9*]*)?(?:hh|h|ll|l|z|j|t|L)?[a-zA-Z%]?')
 STRING = re.compile(r'"((?:[^"\\\n]|\\.)*)"')
 COMMENT = re.compile(r'/\*.*?\*/|//[^\n]*', re.S)
+# Вставки asm: там %0, %1 - операнди, а не формати
+ASM = re.compile(r'__asm(?:__)?\s*(?:volatile|__volatile__)?\s*\(.*?\)\s*;', re.S)
 
 
 def sources():
@@ -37,7 +39,8 @@ def sources():
 
 def bad_specs(text):
     """Специфікатори в рядкових літералах (поза коментарями), яких fmt не вміє"""
-    code = COMMENT.sub(lambda m: re.sub(r'[^\n]', ' ', m.group(0)), text)
+    blank = lambda m: re.sub(r'[^\n]', ' ', m.group(0))  # noqa: E731
+    code = ASM.sub(blank, COMMENT.sub(blank, text))
     found = []
     for m in STRING.finditer(code):
         for spec in CONVERSION.finditer(m.group(1)):
@@ -60,6 +63,7 @@ class FmtSpecsTest(unittest.TestCase):
         self.assertEqual(bad_specs('x("n=%zu v=%.2f t=%llu ok=%08lX %%");'),
                          [(1, '%zu'), (1, '%.2f'), (1, '%llu')])
         self.assertEqual(bad_specs('/* "%zu" */ x("%-5lu %c %s");'), [])
+        self.assertEqual(bad_specs('__asm volatile ("mrs %0, psp" : "=r" (x));'), [])
 
 
 if __name__ == '__main__':

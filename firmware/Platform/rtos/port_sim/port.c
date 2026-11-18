@@ -796,21 +796,30 @@ void vPortYield( void ) /* PRIVILEGED_FUNCTION */
  * модель Cortex-M0+ у Wokwi не враховує PRIMASK, тож cpsid i не зупиняє ні
  * переривань, ні SysTick, ні PendSV. На залізі всередині cpsid i вони
  * відкладаються до cpsie i; тут те саме робиться програмно:
- *   - переривання NVIC: найзовнішній вхід вимикає всі ввімкнені лінії (ICER) і
- *     запам'ятовує їх, вихід вмикає назад (ISER) - чекаючі виконаються одразу;
- *   - SysTick: його обробник (Platform/rtos/rtos_hal.c) питає port_sim_defer_tick
+ *   - переривання NVIC: обробник на вході питає port_sim_defer_irq і всередині
+ *     секції лише вимикає свою лінію і запам'ятовує її (прапорець периферії
+ *     лишається); вихід виставляє ці лінії в очікування (ISPR) і вмикає -
+ *     обробники виконаються одразу, як після cpsie i;
+ *   - SysTick: обробник (Platform/rtos/rtos_hal.c) питає port_sim_defer_tick
  *     і всередині секції лише рахує тік, а вихід проганяє xTaskIncrementTick
  *     стільки разів - як xTaskResumeAll з відкладеними тіками;
  *   - PendSV: обробник (portasm.c) усередині секції лише ставить прапорець,
  *     вихід виставляє PENDSVSET знову.
  * Секції задач (vPortEnterCritical) і ISR (ulSetInterruptMask) - одна глибина.
+ * Переривання повертаються раніше, ніж PendSV і тік: поки відкладене переривання
+ * виконується на виході, перемкнути задачу нема чим, і лінія не лишиться
+ * вимкненою під іншою задачею.
  * На залізі все це зайве, але працює так само: там до цих рядків справа не
  * доходить, бо всередині cpsid i ніхто нічого не відкладає. */
-portDONT_DISCARD volatile uint32_t ulPortSimCritDepth = 0;     /* читає PendSV_Handler */
+portDONT_DISCARD volatile uint32_t ulPortSimBlock = 0;          /* читає PendSV_Handler */
 portDONT_DISCARD volatile uint32_t ulPortSimPendSVPending = 0;  /* пише PendSV_Handler */
+static volatile uint32_t ulSimDepth = 0;
+static volatile uint32_t ulSimBlockIrq = 0;
 static volatile uint32_t ulSimTicksPending = 0;
-static uint32_t ulSimSavedIser = 0;
+static volatile uint32_t ulSimIrqPending = 0;                   /* лінії NVIC, біт на лінію */
 static volatile port_sim_counters_t xSimCounters;
+
+#define portNVIC_ISPR0_REG                    ( *( ( volatile uint32_t * ) 0xe000e200 ) )
 
 /* Після старту ядра (до нього вкладеність = 0xaaaaaaaa + k) */
 static int prvSimStarted( void )
@@ -818,35 +827,33 @@ static int prvSimStarted( void )
     return ulCriticalNesting < 0x80000000UL;
 }
 
-/* Викликати з cpsid i. Глибина - спершу: тік або PendSV, що прийдуть між цими
- * рядками, уже відкладуться. Маску ставить лише найзовнішній вхід */
+/* Викликати з cpsid i. Глибина - спершу: переривання між цими рядками вкладеться
+ * своєю секцією вже як внутрішня і нічого не змінить */
 static void prvSimEnter( void )
 {
-    ulPortSimCritDepth++;
+    ulSimDepth++;
 
-    if( ulPortSimCritDepth == 1UL )
+    if( ulSimDepth == 1UL )
     {
-        uint32_t ulEnabled = portNVIC_ISER0_REG;
-
-        ulSimSavedIser = ulEnabled;
-        portNVIC_ICER0_REG = ulEnabled;
+        ulPortSimBlock = 1UL;
+        ulSimBlockIrq = 1UL;
     }
 }
 
-/* Викликати з cpsid i, до cpsie i. Відкладені тіки - ще під маскою; тік, що
- * прийде між останньою перевіркою і глибиною 0, теж не загубиться */
+/* Викликати з cpsid i, до cpsie i */
 static void prvSimExit( void )
 {
-    if( ulPortSimCritDepth > 1UL )
+    if( ulSimDepth > 1UL )
     {
-        ulPortSimCritDepth--;
+        ulSimDepth--;
         return;
     }
 
     for( ; ; )
     {
-        uint32_t ulEnabled;
+        uint32_t ulLines;
 
+        /* Тіки - поки все відкладено: xTaskIncrementTick не перерве сам себе */
         while( ulSimTicksPending != 0UL )
         {
             ulSimTicksPending--;
@@ -857,18 +864,32 @@ static void prvSimExit( void )
             }
         }
 
-        ulEnabled = ulSimSavedIser;
-        ulPortSimCritDepth = 0;
-        portNVIC_ISER0_REG = ulEnabled;
+        /* Переривання - ще до PendSV: вони виконаються тут же, а їхні PendSV і
+         * тіки ще відкладаються. Ядро вже узгоджене, як після cpsie i */
+        ulSimBlockIrq = 0;
+        ulLines = ulSimIrqPending;
+        ulSimIrqPending = 0;
+
+        if( ulLines != 0UL )
+        {
+            xSimCounters.deferred_irq++;
+            portNVIC_ISPR0_REG = ulLines;
+            portNVIC_ISER0_REG = ulLines;
+        }
 
         if( ulSimTicksPending == 0UL )
         {
             break;
         }
 
-        prvSimEnter();
+        ulSimBlockIrq = 1UL; /* поки переривання йшли, прийшов тік */
     }
 
+    ulSimDepth = 0;
+    ulPortSimBlock = 0;
+
+    /* Тік, що прийшов між останньою перевіркою і ulPortSimBlock = 0, чекає до
+     * найближчого виходу з секції (будь-якої задачі), а не губиться */
     if( ulPortSimPendSVPending != 0UL )
     {
         ulPortSimPendSVPending = 0;
@@ -879,7 +900,7 @@ static void prvSimExit( void )
 
 uint32_t port_sim_defer_tick( void )
 {
-    if( ulPortSimCritDepth == 0UL )
+    if( ulPortSimBlock == 0UL )
     {
         return 0;
     }
@@ -887,6 +908,25 @@ uint32_t port_sim_defer_tick( void )
     ulSimTicksPending++;
     xSimCounters.deferred_tick++;
     return 1;
+}
+
+uint32_t port_sim_defer_irq( uint32_t ulIrqn )
+{
+    uint32_t ulBit = 1UL << ulIrqn;
+
+    if( ulSimBlockIrq == 0UL )
+    {
+        return 0;
+    }
+
+    portNVIC_ICER0_REG = ulBit;
+    ulSimIrqPending |= ulBit;
+    return 1;
+}
+
+uint32_t port_sim_blocked( void )
+{
+    return ulPortSimBlock;
 }
 
 void port_sim_counters( port_sim_counters_t * pxOut )

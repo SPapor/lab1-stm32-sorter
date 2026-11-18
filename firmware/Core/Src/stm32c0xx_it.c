@@ -112,7 +112,11 @@ void HardFault_Handler(void)
 void EXTI4_15_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI4_15_IRQn 0 */
-
+#if ARCH_RTOS
+  /* Усередині критичної секції ядра - відкласти (rtos_hal.h, SIM_CRIT) */
+  if (rtos_hal_irq_defer(EXTI4_15_IRQn))
+    return;
+#endif
   /* USER CODE END EXTI4_15_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(ESTOP_Pin);
   /* USER CODE BEGIN EXTI4_15_IRQn 1 */

@@ -9,11 +9,11 @@
  *             друк блокувальний, тож після нього кілька пробуджень запізнюються)
  *   pong  P3  черга q_ping: перевіряє контрольну суму кожного повідомлення
  *             (від ping і від ISR), на повідомлення ping відповідає в q_pong
- *   ping  P2  повідомлення в q_ping, чекає відповіді з q_pong; пачка по
- *             PING_BURST обмінів раз на тік, щоб P1 і idle теж працювали
+ *   ping  P2  повідомлення в q_ping, чекає відповіді з q_pong; PING_BURST
+ *             обмінів раз на PING_PERIOD тіків, щоб P1 і idle теж працювали
  *   mtx   P1  чекає сповіщення від ISR; м'ютекс зі спільним лічильником
- *   TIM14 2 кГц: xQueueSendFromISR у q_ping, vTaskNotifyGiveFromISR задачі mtx,
- *             portYIELD_FROM_ISR
+ *   TIM14 2 кГц: vTaskNotifyGiveFromISR задачі mtx щоразу, xQueueSendFromISR у
+ *             q_ping - кожне ISR_MSG_EVERY-те, portYIELD_FROM_ISR
  *
  * Пульс з ISR (рядок KSTRESS_ISR): обробник TIM14 раз на 5 с перевіряє, чи
  * просунулися ping і pong, і якщо ні - сам пише рядок прямо в регістр USART, тож
@@ -37,17 +37,28 @@
 #include "kstress_port.h"
 #include "rtos_hal.h"
 #include "perf_tick.h"
+#include "perf_hal.h"
 #if SIM_CRIT
 #include "port_sim.h"
 #endif
 
 #define ISR_HZ              2000u
+/* Повідомлення в чергу - кожне ISR_MSG_EVERY-те переривання, сповіщення - кожне;
+ * ping - раз на PING_PERIOD тіків. У Wokwi код іде в рази повільніше, ніж на
+ * 48 МГц (порожній цикл на 600 обертів - 1,3 мс): з 2 000 повідомлень на секунду
+ * pong займала 64 % процесора, а з 500 і ping щотіку idle все одно не лишалося
+ * нічого, і mtx (P1) не отримувала процесора зовсім */
+#define ISR_MSG_EVERY       8u
+#define PING_PERIOD         4u
 #define REPORT_TICKS        10000u   /* 10 с при тіку 1 мс */
 #define MSG_QLEN            8u
-#define PING_BURST          2u
+#define PING_BURST          1u
 #define WAIT_TICKS          pdMS_TO_TICKS(100)
 #define MTX_WAIT_TICKS      pdMS_TO_TICKS(50)
-#define HOLD_LOOPS          600u     /* ~100 мкс з м'ютексом: P1 і P4 часто перетинаються */
+/* Скільки тримати м'ютекс: за часом perf_now, а не числом обертів циклу - у
+ * Wokwi 600 обертів порожнього циклу тривали 1,3 мс замість ~0,13, і tick (1 мс)
+ * не встигав заблокуватися, тож нижчі задачі голодували */
+#define HOLD_US             20u      /* P1 і P4 усе ще перетинаються (P1 - 2 кГц) */
 #define IRQ_PRIO            2u       /* вище за SysTick і PendSV (3) */
 #define PULSE_ISR_CALLS     (5u * ISR_HZ)   /* перевірка для KSTRESS_ISR раз на 5 с */
 
@@ -89,11 +100,37 @@ typedef struct {
 } kstress_cnt_t;
 
 static volatile kstress_cnt_t cnt;
+
+/* Час у тактах perf_now: робота задачі tick за ітерацію (без очікування в
+ * xTaskDelayUntil) і з неї - mtx_round. Обробник TIM14 не міряється: perf_now з
+ * переривання, пріоритетнішого за SysTick, може відстати на тік, якщо застане
+ * SysTick_Handler до rtos_hal_ticks++ (docs/journal.md) */
+typedef struct {
+    uint32_t n;
+    uint32_t max;
+    uint64_t sum;
+} cyc_t;
+
+static volatile cyc_t t_iter, t_mtx;
+
+static void cyc_add(volatile cyc_t *c, uint32_t cyc)
+{
+    c->n++;
+    c->sum += cyc;
+    if (cyc > c->max)
+        c->max = cyc;
+}
+
+static uint32_t cyc_avg(const volatile cyc_t *c)
+{
+    return c->n != 0u ? (uint32_t)(c->sum / c->n) : 0u;
+}
 static QueueHandle_t q_ping;
 static QueueHandle_t q_pong;
 static SemaphoreHandle_t mtx;
 static TaskHandle_t h_mtx;
-static volatile uint32_t isr_seq;
+static volatile uint32_t isr_seq;      /* повідомлень ISR */
+static volatile uint32_t isr_calls;    /* переривань TIM14 */
 static TickType_t ktick0;        /* тік ядра і тік perf на старті tick: */
 static uint32_t ptick0;          /* за весь прогін вони мають іти однаково */
 
@@ -144,7 +181,7 @@ static void pulse(void)
     kstress_port_counters(&p);
     rtos_hal_raw_putu(HAL_GetTick(), 10u);
     rtos_hal_raw_puts(" KSTRESS_ISR");
-    raw_kv(" isr=", isr_seq, 10u);
+    raw_kv(" isr=", isr_calls, 10u);
     raw_kv(" tick=", cnt.ticks, 10u);
     raw_kv(" ping=", cnt.ping, 10u);
     raw_kv(" isr_msg=", cnt.isr_msg, 10u);
@@ -166,8 +203,10 @@ void TIM14_IRQHandler(void)
     BaseType_t woken = pdFALSE;
     msg_t m;
 
+    if (rtos_hal_irq_defer(TIM14_IRQn))
+        return;                          /* виконається після критичної секції */
     kstress_note_isr(KSTRESS_SRC_TIM14);
-    if (isr_seq != 0u && isr_seq % PULSE_ISR_CALLS == 0u) {
+    if (isr_calls != 0u && isr_calls % PULSE_ISR_CALLS == 0u) {
         static uint32_t ping_seen, pong_seen;
 
         if (cnt.ping == ping_seen && cnt.isr_msg == pong_seen)
@@ -176,9 +215,11 @@ void TIM14_IRQHandler(void)
         pong_seen = cnt.isr_msg;
     }
     TIM14->SR = ~TIM_SR_UIF;
-    msg_make(&m, SRC_ISR, isr_seq++);
-    if (xQueueSendFromISR(q_ping, &m, &woken) != pdPASS)
-        cnt.isr_drop++;
+    if (isr_calls++ % ISR_MSG_EVERY == 0u) {
+        msg_make(&m, SRC_ISR, isr_seq++);
+        if (xQueueSendFromISR(q_ping, &m, &woken) != pdPASS)
+            cnt.isr_drop++;
+    }
     vTaskNotifyGiveFromISR(h_mtx, &woken);
     cnt.notify_given++;
     portYIELD_FROM_ISR(woken);
@@ -215,7 +256,12 @@ static int mtx_round(void)
         cnt.mtx_err++;
     shared.owner = self;
     shared.a++;
-    for (volatile uint32_t i = 0; i < HOLD_LOOPS; i++) {
+    {
+        uint32_t t0 = perf_now();
+        uint32_t hold = HOLD_US * (SystemCoreClock / 1000000u);
+
+        while (perf_now() - t0 < hold) {
+        }
     }
     shared.b++;
     if (shared.owner != self || shared.a != shared.b)
@@ -239,12 +285,18 @@ static void tick_task(void *arg)
     taskEXIT_CRITICAL();
     last = xTaskGetTickCount();
     for (;;) {
+        uint32_t t0, t1;
+
         if (xTaskDelayUntil(&last, 1) == pdFALSE)
             cnt.late++;
+        t0 = perf_now();
         cnt.ticks++;
         cnt.mtx_p4 += (uint32_t)mtx_round();
+        t1 = perf_now();
+        cyc_add(&t_mtx, t1 - t0);
         if (cnt.ticks % REPORT_TICKS == 0u)
             report(cnt.ticks / 1000u);
+        cyc_add(&t_iter, perf_now() - t0);
     }
 }
 
@@ -319,7 +371,7 @@ static void ping_task(void *arg)
                 cnt.stale++;
             }
         }
-        (void)xTaskDelayUntil(&last, 1);   /* vTaskDelay у прошивці не збирається */
+        (void)xTaskDelayUntil(&last, PING_PERIOD);   /* vTaskDelay у прошивці не збирається */
     }
 }
 
@@ -345,13 +397,13 @@ static void report(uint32_t t_s)
     /* Критичні секції задач (taskENTER_CRITICAL): crit_task_n - входів, crit_task -
      * подій усередині (PendSV, тік ядра, TIM14); на залізі crit_task = 0 */
     uart_hal_printf("%lu KSTRESS_CRIT t_s=%lu crit_task_n=%lu crit_task=%lu pendsv_in=%lu "
-                    "switches_in=%lu tick_in=%lu tim14_in=%lu switches=%lu",
+                    "switches_in=%lu tick_in=%lu tim14_in=%lu switches=%lu pc=0x%08lX",
                     (unsigned long)HAL_GetTick(), (unsigned long)t_s, (unsigned long)p.crit_task_n,
                     (unsigned long)(p.pendsv_in_task_crit + p.tick_in_task_crit +
                                     p.tim14_in_task_crit),
                     (unsigned long)p.pendsv_in_task_crit, (unsigned long)p.switches_in_task_crit,
                     (unsigned long)p.tick_in_task_crit, (unsigned long)p.tim14_in_task_crit,
-                    (unsigned long)p.switches);
+                    (unsigned long)p.switches, (unsigned long)p.first_in_crit_pc);
     /* Те саме для критичних секцій ISR (taskENTER_CRITICAL_FROM_ISR) */
     uart_hal_printf("%lu KSTRESS_CRIT_ISR t_s=%lu crit_isr_n=%lu crit_isr=%lu pendsv_in=%lu "
                     "switches_in=%lu tick_in=%lu tim14_in=%lu", (unsigned long)HAL_GetTick(),
@@ -359,10 +411,29 @@ static void report(uint32_t t_s)
                     (unsigned long)(p.pendsv_in_isr_crit + p.tick_in_isr_crit + p.tim14_in_isr_crit),
                     (unsigned long)p.pendsv_in_isr_crit, (unsigned long)p.switches_in_isr_crit,
                     (unsigned long)p.tick_in_isr_crit, (unsigned long)p.tim14_in_isr_crit);
+    /* idle - частка часу задачі idle від старту ядра (run-time stats): якщо 0,
+     * задачі з пріоритетом 1 теж не отримують процесора */
+    uart_hal_printf("%lu KSTRESS_TIME t_s=%lu iter_avg_cyc=%lu iter_max_cyc=%lu mtx_avg_cyc=%lu "
+                    "mtx_max_cyc=%lu", (unsigned long)HAL_GetTick(), (unsigned long)t_s,
+                    (unsigned long)cyc_avg(&t_iter), (unsigned long)t_iter.max,
+                    (unsigned long)cyc_avg(&t_mtx), (unsigned long)t_mtx.max);
+    /* Частка процесора за задачами від старту ядра, проміле (run-time stats; час
+     * переривань ядро зараховує перерваній задачі) */
+    {
+        static TaskStatus_t st[6];
+        UBaseType_t n = uxTaskGetSystemState(st, 6, NULL);
+        uint64_t total = portGET_RUN_TIME_COUNTER_VALUE() + 1u;
+
+        uart_hal_line_add("%lu KSTRESS_CPU t_s=%lu", (unsigned long)HAL_GetTick(), (unsigned long)t_s);
+        for (UBaseType_t i = 0; i < n; i++)
+            uart_hal_line_add(" %s=%lu", st[i].pcTaskName,
+                              (unsigned long)(st[i].ulRunTimeCounter * 1000u / total));
+        uart_hal_line_end();
+    }
     /* Тіки ядра і perf від старту tick (мають збігатися: відкладений тік не губиться)
      * і робота обходу SIM_CRIT - відкладені тіки й PendSV (це не помилки) */
     {
-        uint32_t deferred_tick = 0, deferred_pendsv = 0;
+        uint32_t deferred_tick = 0, deferred_pendsv = 0, deferred_irq = 0;
         uint32_t ktick, ptick;
 #if SIM_CRIT
         port_sim_counters_t sim;
@@ -370,6 +441,7 @@ static void report(uint32_t t_s)
         port_sim_counters(&sim);
         deferred_tick = sim.deferred_tick;
         deferred_pendsv = sim.deferred_pendsv;
+        deferred_irq = sim.deferred_irq;
 #endif
         taskENTER_CRITICAL();
         ktick = (uint32_t)(xTaskGetTickCount() - ktick0);
@@ -380,6 +452,14 @@ static void report(uint32_t t_s)
                         (unsigned long)t_s, (unsigned long)ktick, (unsigned long)ptick,
                         (unsigned long)deferred_tick, (unsigned long)deferred_pendsv,
                         (unsigned long)xPortGetMinimumEverFreeHeapSize());
+        /* Лінія NVIC TIM17 на кожному тіку: поза секцією вона має бути ввімкнена.
+         * hal_ms - час HAL (TIM17) від скидання: відстає від тіку, якщо його
+         * переривання губляться */
+        uart_hal_printf("%lu KSTRESS_NVIC t_s=%lu samples=%lu off_in_crit=%lu off_free=%lu "
+                        "deferred_irq=%lu hal_ms=%lu", (unsigned long)HAL_GetTick(),
+                        (unsigned long)t_s, (unsigned long)p.nvic_samples,
+                        (unsigned long)p.nvic_off_in_crit, (unsigned long)p.nvic_off_free,
+                        (unsigned long)deferred_irq, (unsigned long)HAL_GetTick());
     }
 }
 

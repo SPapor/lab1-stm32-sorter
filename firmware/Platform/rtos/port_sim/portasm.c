@@ -370,13 +370,13 @@ void vStartFirstTask( void ) /* __attribute__ (( naked )) PRIVILEGED_FUNCTION */
         __asm volatile
         (
             " .extern pxCurrentTCB                            \n"
-            " .extern ulPortSimCritDepth                      \n"
+            " .extern ulPortSimBlock                          \n"
             " .extern ulPortSimPendSVPending                  \n"
             " .syntax unified                                 \n"
             "                                                 \n"
             /* SIM_CRIT: усередині критичної секції (Wokwi не маскує PendSV через
              * PRIMASK) - лише запам'ятати і вийти; вихід із секції виставить PendSV знову. */
-            " ldr r0, =ulPortSimCritDepth                     \n"
+            " ldr r0, =ulPortSimBlock                         \n"
             " ldr r0, [r0]                                    \n"
             " cmp r0, #0                                      \n"
             " beq sim_pendsv_run                              \n"

@@ -18,6 +18,10 @@ typedef struct {
     uint32_t tick_in_isr_crit;
     uint32_t tim14_in_task_crit;     /* переривання TIM14 у критичній секції задачі */
     uint32_t tim14_in_isr_crit;
+    uint32_t nvic_samples;           /* вибірок NVIC на кожному тіку SysTick */
+    uint32_t nvic_off_in_crit;       /* лінія TIM17 вимкнена, і секція відкрита (так і треба) */
+    uint32_t nvic_off_free;          /* лінія TIM17 вимкнена поза секцією - втрата переривань */
+    uint32_t first_in_crit_pc;       /* де задачу перервало перше переривання в її секції */
 } kstress_port_counters_t;
 
 typedef enum {
@@ -27,6 +31,9 @@ typedef enum {
 
 /* ulCriticalNesting порту як є (0xaaaaaaaa + k - до старту ядра) */
 uint32_t kstress_crit_nesting(void);
+
+/* На кожному тіку SysTick: чи ввімкнена лінія NVIC TIM17 і чи відкрита секція */
+void kstress_sample_nvic(void);
 
 /* На початку обробників SysTick і TIM14 */
 void kstress_note_isr(kstress_src_t src);

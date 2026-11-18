@@ -51,6 +51,16 @@ uint32_t rtos_hal_timer_clk_hz(void)
     return hz;
 }
 
+int rtos_hal_irq_defer(int irqn)
+{
+#if SIM_CRIT
+    return (int)port_sim_defer_irq((uint32_t)irqn);
+#else
+    (void)irqn;
+    return 0;
+#endif
+}
+
 /* --- HAL timebase: TIM17 --------------------------------------------------
  * Заміна слабких HAL_InitTick, HAL_SuspendTick, HAL_ResumeTick з stm32c0xx_hal.c.
  * HAL_InitTick викликають HAL_Init і HAL_RCC_ClockConfig (після зміни частоти). */
@@ -107,6 +117,8 @@ void HAL_ResumeTick(void)
 void TIM17_IRQHandler(void);
 void TIM17_IRQHandler(void)
 {
+    if (rtos_hal_irq_defer(TIM17_IRQn))
+        return;
     if (TIM17->SR & TIM_SR_UIF) {
         TIM17->SR = ~TIM_SR_UIF;      /* rc_w0: нуль скидає лише UIF */
         HAL_IncTick();
@@ -124,6 +136,9 @@ void SysTick_Handler(void);
  * момент, загубився б (docs/rtos-design.md, розділ 3) */
 void SysTick_Handler(void)
 {
+#ifdef TEST_KSTRESS
+    kstress_sample_nvic();
+#endif
     rtos_hal_ticks++;
     if (!kernel_ticks)
         return;

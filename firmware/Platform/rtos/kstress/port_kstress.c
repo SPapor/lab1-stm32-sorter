@@ -102,10 +102,36 @@ void kstress_note_isr(kstress_src_t src)
         if (isr_mask_depth != 0u)
             c.tick_in_isr_crit++;
     } else {
-        if (in_task_crit())
-            c.tim14_in_task_crit++;
+        if (in_task_crit()) {
+            uint32_t psp;
+
+            __asm volatile ("mrs %0, psp" : "=r" (psp));
+            if (c.tim14_in_task_crit++ == 0u)
+                c.first_in_crit_pc = ((const uint32_t *)psp)[6];
+        }
         if (isr_mask_depth != 0u)
             c.tim14_in_isr_crit++;
+    }
+}
+
+#define KSTRESS_ISER0       ( *( ( volatile uint32_t * ) 0xe000e100 ) )
+#define KSTRESS_TIM17_LINE  ( 1UL << 22 )
+
+void kstress_sample_nvic(void)
+{
+#if SIM_CRIT
+    int open = ulPortSimBlock != 0u;
+#else
+    int open = in_task_crit();
+#endif
+    if (!started())
+        return;
+    c.nvic_samples++;
+    if ((KSTRESS_ISER0 & KSTRESS_TIM17_LINE) == 0u) {
+        if (open)
+            c.nvic_off_in_crit++;
+        else
+            c.nvic_off_free++;
     }
 }
 
