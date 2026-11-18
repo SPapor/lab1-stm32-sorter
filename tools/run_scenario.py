@@ -13,9 +13,10 @@
 wokwi-cli закінчує і пише VCD). Маркер - саме рядок відповіді: прошивка друкує
 його цілим, а ехо набраної команди може перемежовуватися іншими рядками.
 Безкоштовний тариф Wokwi обриває сеанс wokwi-cli через 5 хв. Схема для wokwi-cli -
-копія diagram.json без каналів аналізатора CLI_DROP (I2C на D0/D1 і UART TX на D3):
-буфер Wokwi - 1 млн змін, I2C заповнює його за ~24 с, а великий запис wokwi-cli
-не може забрати (з'єднання рветься). Для tools/vcd_timing.py вони не потрібні.
+копія diagram.json без каналу аналізатора CLI_DROP (UART TX на D3): буфер Wokwi -
+1 млн змін, а великий запис wokwi-cli не може забрати (з'єднання рветься); так
+само раніше заповнював буфер I2C на D0/D1 (~24 с), з ЛР4 там службові піни gate і
+estop (docs/pinout.md). Для tools/vcd_timing.py UART не потрібен.
 Підказки людині в цьому режимі - лише позначки в лозі, а замість Enter скрипт
 чекає auto секунд часу МК (поле кроку prompt; без нього - wait, без нього - 0).
 Потрібен WOKWI_CLI_TOKEN у середовищі.
@@ -112,7 +113,7 @@ CLI_PORT = 'rfc2217://localhost:4001'
 CLI_DIAGRAM = '.diagram.json'                      # у tools/wokwi, будується з diagram.json
 DIAGRAM = os.path.join(CLI_DIR, '..', '..', 'diagram.json')
 DISPLAYS = ('lcd', 'ssd1306', 'ili9341', 'st7735', 'st7789', 'epaper')   # що знімає --screenshot
-CLI_DROP = {'logic:D0', 'logic:D1', 'logic:D3'}    # канали аналізатора, яких у wokwi-cli немає
+CLI_DROP = {'logic:D3'}    # канал аналізатора, якого у wokwi-cli немає
 MARK_GO, MARK_END = 'set go 0', 'set end 0'      # відповідь: SET name=go|end st=BAD
 
 

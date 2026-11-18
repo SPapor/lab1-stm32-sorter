@@ -33,8 +33,8 @@
     [ "sda_gnd:1.l", "nucleo:PA10", "blue", [] ],
     [ "sda_gnd:2.l", "nucleo:GND.7", "black", [] ],
 
-    [ "logic:D0", "nucleo:PA9", "green", [] ],
-    [ "logic:D1", "nucleo:PA10", "blue", [] ],
+    [ "logic:D0", "nucleo:PB12.1", "green", [] ],
+    [ "logic:D1", "nucleo:PB15", "blue", [] ],
     [ "logic:D2", "nucleo:PA6", "purple", [] ],
     [ "logic:D3", "nucleo:PA2", "white", [] ],
     [ "logic:D4", "nucleo:PA5", "limegreen", [] ],
