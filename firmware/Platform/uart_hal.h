@@ -31,7 +31,7 @@ void uart_hal_write(const char *s, size_t n);
  *   uart_hal_line_end();
  * Буфер один: рядок збирає і закінчує один виконавець. */
 void uart_hal_line_add(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
-void uart_hal_line_vadd(const char *fmt, va_list ap);
+void uart_hal_line_vadd(const char *fmt, va_list ap) __attribute__((format(printf, 1, 0)));
 size_t uart_hal_line_len(void);
 /* Доповнює рядок пробілами до len символів (без "\r\n") */
 void uart_hal_line_pad(size_t len);
