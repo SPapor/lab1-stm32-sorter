@@ -10,6 +10,10 @@
 #define I2C_HAL_TIMEOUT_MS 5u     /* найдовша робоча транзакція (6 байтів MPU) ~0,7 мс */
 #define I2C_HAL_MAX_TRIES  3u     /* FR-09: транзакція + до 2 повторів, після кожної помилки — відновлення */
 
+/* Куди йде рядок I2C_RECOVER: подія і формат без мітки часу */
+typedef void (*i2c_hal_log_fn)(const char *event, const char *fmt, ...)
+    __attribute__((format(printf, 2, 3)));
+
 typedef struct {
     I2C_HandleTypeDef *h;
     void (*reinit)(void);     /* повторна ініціалізація периферії (MX_I2Cx_Init) */
@@ -22,6 +26,7 @@ typedef struct {
     uint32_t last_isr;        /*   регістр ISR до відновлення */
     uint8_t defer_log;        /* 1 — рядок I2C_RECOVER відкладається */
     uint8_t log_pending;      /* є відкладений рядок I2C_RECOVER */
+    i2c_hal_log_fn log;       /* NULL - рядок одразу в UART (uart_hal) */
 } i2c_hal_ctx_t;
 
 /* Заповнює bus функціями write/read, що працюють через хендл h.
@@ -40,5 +45,9 @@ void i2c_hal_set_tries(i2c_hal_ctx_t *ctx, uint8_t tries);
  * on = 0: друк знову негайний, а відкладений рядок (якщо був) друкується зараз.
  * Потрібно, щоб у записі аналізатора UART не накладався на транзакцію I²C. */
 void i2c_hal_defer_log(i2c_hal_ctx_t *ctx, uint8_t on);
+
+/* Рядок I2C_RECOVER - через log (у rtos - черга журналу: шину крутить задача
+ * imu з пріоритетом 3, а такі задачі в UART не пишуть). NULL - одразу в UART */
+void i2c_hal_set_log(i2c_hal_ctx_t *ctx, i2c_hal_log_fn log);
 
 #endif /* I2C_HAL_H */

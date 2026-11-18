@@ -15,10 +15,18 @@ static bus_status_t map_status(HAL_StatusTypeDef s, uint32_t err)
 /* Рядок FR-10; мітка часу — момент друку (для відкладеного рядка — після транзакції) */
 static void print_recover(const i2c_hal_ctx_t *c)
 {
-    uart_hal_printf("%lu I2C_RECOVER try=%u/%u where=%s addr=0x%02X err=0x%02lX isr=0x%08lX",
-                    (unsigned long)HAL_GetTick(), (unsigned)c->last_try, (unsigned)c->max_tries,
-                    c->last_where, (unsigned)c->last_addr,
-                    (unsigned long)c->last_err, (unsigned long)c->last_isr);
+    static const char fmt[] = "try=%u/%u where=%s addr=0x%02X err=0x%02lX isr=0x%08lX";
+
+    if (c->log != NULL) {
+        c->log("I2C_RECOVER", fmt, (unsigned)c->last_try, (unsigned)c->max_tries,
+               c->last_where, (unsigned)c->last_addr,
+               (unsigned long)c->last_err, (unsigned long)c->last_isr);
+        return;
+    }
+    uart_hal_line_add("%lu I2C_RECOVER ", (unsigned long)HAL_GetTick());
+    uart_hal_line_add(fmt, (unsigned)c->last_try, (unsigned)c->max_tries, c->last_where,
+                      (unsigned)c->last_addr, (unsigned long)c->last_err, (unsigned long)c->last_isr);
+    uart_hal_line_end();
 }
 
 /* Модель I2C у Wokwi C0: при записі HAL не бачить TXIS для другого байта
@@ -89,6 +97,7 @@ void i2c_hal_bus_init(i2c_bus_t *bus, i2c_hal_ctx_t *ctx, I2C_HandleTypeDef *h, 
     ctx->last_isr = 0;
     ctx->defer_log = 0;
     ctx->log_pending = 0;
+    ctx->log = NULL;
 
     bus->write = hal_write;
     bus->read = hal_read;
@@ -98,6 +107,11 @@ void i2c_hal_bus_init(i2c_bus_t *bus, i2c_hal_ctx_t *ctx, I2C_HandleTypeDef *h, 
 void i2c_hal_set_tries(i2c_hal_ctx_t *ctx, uint8_t tries)
 {
     ctx->max_tries = tries ? tries : 1u;
+}
+
+void i2c_hal_set_log(i2c_hal_ctx_t *ctx, i2c_hal_log_fn log)
+{
+    ctx->log = log;
 }
 
 void i2c_hal_defer_log(i2c_hal_ctx_t *ctx, uint8_t on)
