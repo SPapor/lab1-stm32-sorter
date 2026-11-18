@@ -811,10 +811,10 @@ void vPortYield( void ) /* PRIVILEGED_FUNCTION */
  * вимкненою під іншою задачею.
  * На залізі все це зайве, але працює так само: там до цих рядків справа не
  * доходить, бо всередині cpsid i ніхто нічого не відкладає. */
-portDONT_DISCARD volatile uint32_t ulPortSimBlock = 0;          /* читає PendSV_Handler */
+portDONT_DISCARD volatile uint32_t ulPortSimBlock = 0;          /* тік і PendSV; читає PendSV_Handler */
 portDONT_DISCARD volatile uint32_t ulPortSimPendSVPending = 0;  /* пише PendSV_Handler */
-static volatile uint32_t ulSimDepth = 0;
-static volatile uint32_t ulSimBlockIrq = 0;
+static volatile uint32_t ulSimBlockIrq = 0;                     /* переривання NVIC */
+static volatile uint32_t ulSimTaskDepth = 0;                    /* вкладеність секцій задачі */
 static volatile uint32_t ulSimTicksPending = 0;
 static volatile uint32_t ulSimIrqPending = 0;                   /* лінії NVIC, біт на лінію */
 static volatile port_sim_counters_t xSimCounters;
@@ -827,25 +827,30 @@ static int prvSimStarted( void )
     return ulCriticalNesting < 0x80000000UL;
 }
 
-/* Викликати з cpsid i. Глибина - спершу: переривання між цими рядками вкладеться
- * своєю секцією вже як внутрішня і нічого не змінить */
-static void prvSimEnter( void )
+/* Як cpsid i з PRIMASK: усе відкласти і повернути попередній стан. Секція ISR
+ * на виході відновлює саме його, тож переривання, що влізло між рядками секції
+ * задачі, повертає все як було (секції ISR завжди вкладені, LIFO). Спершу -
+ * PendSV і тік: між двома записами може влізти лише переривання, а не
+ * перемикання задачі, яке лишило б стан напівзаписаним під іншою задачею */
+static uint32_t prvSimEnter( void )
 {
-    ulSimDepth++;
+    uint32_t ulPrev = ( ulSimBlockIrq << 1 ) | ulPortSimBlock;
 
-    if( ulSimDepth == 1UL )
-    {
-        ulPortSimBlock = 1UL;
-        ulSimBlockIrq = 1UL;
-    }
+    ulPortSimBlock = 1UL;
+    ulSimBlockIrq = 1UL;
+    return ulPrev;
 }
 
-/* Викликати з cpsid i, до cpsie i */
-static void prvSimExit( void )
+/* Як cpsie i / відновлення PRIMASK. Вихід з найзовнішньої секції (ulPrev = 0)
+ * проганяє відкладене: тіки - поки все відкладено (xTaskIncrementTick не
+ * перерве сам себе); переривання - ще до PendSV і тіку (поки вони виконуються,
+ * перемкнути задачу нема чим, і лінія не лишиться вимкненою під іншою задачею) */
+static void prvSimExit( uint32_t ulPrev )
 {
-    if( ulSimDepth > 1UL )
+    if( ulPrev != 0UL )
     {
-        ulSimDepth--;
+        ulSimBlockIrq = ulPrev >> 1;
+        ulPortSimBlock = ulPrev & 1UL;
         return;
     }
 
@@ -853,7 +858,6 @@ static void prvSimExit( void )
     {
         uint32_t ulLines;
 
-        /* Тіки - поки все відкладено: xTaskIncrementTick не перерве сам себе */
         while( ulSimTicksPending != 0UL )
         {
             ulSimTicksPending--;
@@ -864,8 +868,6 @@ static void prvSimExit( void )
             }
         }
 
-        /* Переривання - ще до PendSV: вони виконаються тут же, а їхні PendSV і
-         * тіки ще відкладаються. Ядро вже узгоджене, як після cpsie i */
         ulSimBlockIrq = 0;
         ulLines = ulSimIrqPending;
         ulSimIrqPending = 0;
@@ -885,11 +887,10 @@ static void prvSimExit( void )
         ulSimBlockIrq = 1UL; /* поки переривання йшли, прийшов тік */
     }
 
-    ulSimDepth = 0;
+    /* Тік, що прийде між останньою перевіркою і цим рядком, чекає до
+     * найближчого виходу з секції (хоч би й наступного SysTick), а не губиться */
     ulPortSimBlock = 0;
 
-    /* Тік, що прийшов між останньою перевіркою і ulPortSimBlock = 0, чекає до
-     * найближчого виходу з секції (будь-якої задачі), а не губиться */
     if( ulPortSimPendSVPending != 0UL )
     {
         ulPortSimPendSVPending = 0;
@@ -937,10 +938,12 @@ void port_sim_counters( port_sim_counters_t * pxOut )
 /* PendSV_Handler (portasm.c) замість cpsid i / vTaskSwitchContext / cpsie i */
 portDONT_DISCARD void vPortSimSwitchContext( void )
 {
+    uint32_t ulPrev;
+
     portDISABLE_INTERRUPTS();
-    prvSimEnter();
+    ulPrev = prvSimEnter();
     vTaskSwitchContext();
-    prvSimExit();
+    prvSimExit( ulPrev );
     portENABLE_INTERRUPTS();
 }
 
@@ -950,19 +953,20 @@ uint32_t ulSetInterruptMask( void ) /* PRIVILEGED_FUNCTION */
 
     __asm volatile ( "mrs %0, PRIMASK" : "=r" ( ulPrimask ) );
     portDISABLE_INTERRUPTS();
-    prvSimEnter();
 
     if( prvSimStarted() )
     {
         xSimCounters.crit_isr_n++;
     }
 
-    return ulPrimask;
+    /* Попередній стан обходу - у старших бітах маски, PRIMASK - у біті 0 */
+    return ulPrimask | ( prvSimEnter() << 1 );
 }
 
 void vClearInterruptMask( uint32_t ulMask ) /* PRIVILEGED_FUNCTION */
 {
-    prvSimExit();
+    prvSimExit( ulMask >> 1 );
+    ulMask &= 1UL;
     __asm volatile ( "msr PRIMASK, %0" ::"r" ( ulMask ) : "memory" );
 }
 /* SIM_CRIT end ------------------------------------------------------------- */
@@ -972,7 +976,8 @@ void vClearInterruptMask( uint32_t ulMask ) /* PRIVILEGED_FUNCTION */
 void vPortEnterCritical( void ) /* PRIVILEGED_FUNCTION */
 {
     portDISABLE_INTERRUPTS();
-    prvSimEnter(); /* SIM_CRIT */
+    ( void ) prvSimEnter(); /* SIM_CRIT: спершу стан, потім глибина - див. prvSimEnter */
+    ulSimTaskDepth++;       /* SIM_CRIT */
 
     if( prvSimStarted() ) /* SIM_CRIT */
     {
@@ -993,7 +998,13 @@ void vPortExitCritical( void ) /* PRIVILEGED_FUNCTION */
 {
     configASSERT( ulCriticalNesting );
     ulCriticalNesting--;
-    prvSimExit(); /* SIM_CRIT */
+
+    /* SIM_CRIT: найзовнішня секція задачі починалася зі стану 0 (перемкнути
+     * задачу під час секції нема чим, а секції ISR свій стан відновлюють) */
+    if( --ulSimTaskDepth == 0UL )
+    {
+        prvSimExit( 0UL );
+    }
 
     if( ulCriticalNesting == 0 )
     {
