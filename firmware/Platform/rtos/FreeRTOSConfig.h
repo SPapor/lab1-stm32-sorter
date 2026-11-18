@@ -58,8 +58,8 @@ extern uint32_t SystemCoreClock;
 /* Стартове значення, масив ucHeap у .bss. Справжній розмір — за
  * xPortGetMinimumEverFreeHeapSize після S3 (крок 3) */
 #define configTOTAL_HEAP_SIZE               ((size_t)(5u * 1024u))
-/* printf (newlib) викликає лише одна задача — логер на кроці 2, зараз — app;
- * окрема struct _reent на задачу (~100 Б RAM кожна) не потрібна */
+/* stdio newlib у прошивці немає (форматер App/fmt.c), а strcmp, memcpy і memset
+ * не мають стану: окрема struct _reent на задачу (~100 Б RAM кожна) не потрібна */
 #define configUSE_NEWLIB_REENTRANT          0
 
 /* --- Механізми, які потрібні продукту (docs/rtos-design.md) -------------- */

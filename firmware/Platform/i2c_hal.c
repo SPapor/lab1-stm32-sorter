@@ -1,5 +1,5 @@
 #include "i2c_hal.h"
-#include <stdio.h>
+#include "uart_hal.h"
 
 static bus_status_t map_status(HAL_StatusTypeDef s, uint32_t err)
 {
@@ -15,10 +15,10 @@ static bus_status_t map_status(HAL_StatusTypeDef s, uint32_t err)
 /* Рядок FR-10; мітка часу — момент друку (для відкладеного рядка — після транзакції) */
 static void print_recover(const i2c_hal_ctx_t *c)
 {
-    printf("%lu I2C_RECOVER try=%u/%u where=%s addr=0x%02X err=0x%02lX isr=0x%08lX\r\n",
-           (unsigned long)HAL_GetTick(), (unsigned)c->last_try, (unsigned)c->max_tries,
-           c->last_where, (unsigned)c->last_addr,
-           (unsigned long)c->last_err, (unsigned long)c->last_isr);
+    uart_hal_printf("%lu I2C_RECOVER try=%u/%u where=%s addr=0x%02X err=0x%02lX isr=0x%08lX",
+                    (unsigned long)HAL_GetTick(), (unsigned)c->last_try, (unsigned)c->max_tries,
+                    c->last_where, (unsigned)c->last_addr,
+                    (unsigned long)c->last_err, (unsigned long)c->last_isr);
 }
 
 /* Модель I2C у Wokwi C0: при записі HAL не бачить TXIS для другого байта

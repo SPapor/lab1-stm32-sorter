@@ -27,7 +27,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdarg.h>
-#include <stdio.h>
 #include <string.h>
 #include "board.h"
 #include "platform.h"
@@ -363,18 +362,10 @@ static void cap_uart(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int _write(int fd, char *p, int n)
-{
-  (void)fd;
-  HAL_UART_Transmit(BOARD_UART, (uint8_t *)p, n, HAL_MAX_DELAY);
-  return n;
-}
-
-/* Сирі байти в UART повз stdio. printf("\r\n") GCC сам перетворює на puts, а
- * putchar — ще один модуль newlib; stdout без буфера, тож порядок виводу той самий */
+/* Сирі байти в UART: ехо CLI і переноси рядків */
 static void con_write(const char *s, int n)
 {
-  (void)_write(1, (char *)s, n);
+  uart_hal_write(s, (size_t)n);
 }
 /* USER CODE END 0 */
 
@@ -417,7 +408,6 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   BOOTMARK('m');               /* після MX_*_Init */
-  setvbuf(stdout, NULL, _IONBF, 0);
 #if PERF
   perf_hal_init();
   perf_setup();
@@ -551,21 +541,21 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 /* ---------------------------------------------------------------------------
  * Журнал подій FR-10: один рядок "<мс> <ПОДІЯ> key=value ..." на подію.
- * printf → _write → HAL_UART_Transmit: виклик блокує цикл до кінця передачі,
- * ≈ 87 мкс на байт при 115200 8N1.
+ * Рядок форматується в буфер (App/fmt.c) і йде в UART одним HAL_UART_Transmit,
+ * що блокує цикл до кінця передачі: ≈ 87 мкс на байт при 115200 8N1.
  * ------------------------------------------------------------------------- */
 static void ev_vprint(const char *event, unsigned width, const char *fmt, va_list ap)
 {
-  int n;
+  size_t text;
 #if PERF
   uint32_t t0 = perf_now();
 #endif
-  printf("%lu %s ", (unsigned long)HAL_GetTick(), event);
-  n = vprintf(fmt, ap);
+  uart_hal_line_add("%lu %s ", (unsigned long)HAL_GetTick(), event);
+  text = uart_hal_line_len();
+  uart_hal_line_vadd(fmt, ap);
   /* Доповнення до width символів тексту (лише BOOT, решта - width = 0) */
-  for (; n >= 0 && (unsigned)n < width; n++)
-    con_write(" ", 1);
-  con_write("\r\n", 2);
+  uart_hal_line_pad(text + width);
+  uart_hal_line_end();
 #if PERF
   perf_add(&st_uart_line, perf_now() - t0);
 #endif
@@ -1303,7 +1293,7 @@ static void set_knob(const char *name, int32_t v)
 }
 
 /* Журнал подій (методичка 5.2): "<мс> EVT t_us=<64-біт мкс> name=<подія>".
- * printf з newlib-nano не вміє %llu, тому 64 біти — двома частинами по 10^9.
+ * Форматер (App/fmt.c) не має %llu, тому 64 біти — двома частинами по 10^9.
  * Як і решта подій, вимикається командою log off. */
 static void evt(const char *name, uint64_t t_us)
 {
@@ -1347,11 +1337,12 @@ static void selftest_report(selftest_counts_t *cnt, const char *dev, health_t h,
 {
   va_list ap;
 
-  printf("%lu SELFTEST dev=%s status=%s ", (unsigned long)HAL_GetTick(), dev, health_name(h));
+  uart_hal_line_add("%lu SELFTEST dev=%s status=%s ", (unsigned long)HAL_GetTick(), dev,
+                    health_name(h));
   va_start(ap, fmt);
-  vprintf(fmt, ap);
+  uart_hal_line_vadd(fmt, ap);
   va_end(ap);
-  con_write("\r\n", 2);
+  uart_hal_line_end();
 
   if (h == HEALTH_OK)
     cnt->ok++;
@@ -1436,8 +1427,8 @@ static selftest_counts_t selftest_run(void)
   if (h == HEALTH_FAIL)
     fault_note("SERVO_RANGE", "Servo range");
 
-  printf("%lu SELFTEST_END ok=%u warn=%u fail=%u\r\n",
-         (unsigned long)HAL_GetTick(), cnt.ok, cnt.warn, cnt.fail);
+  uart_hal_printf("%lu SELFTEST_END ok=%u warn=%u fail=%u",
+                  (unsigned long)HAL_GetTick(), cnt.ok, cnt.warn, cnt.fail);
   return cnt;
 }
 
@@ -1472,7 +1463,7 @@ static void console_echo(char ch)
     if (!(ch == '\n' && prev == '\r'))
       con_write("\r\n", 2);
   } else if (ch == 0x08 || ch == 0x7F) {
-    printf("\b \b");
+    con_write("\b \b", 3);
   } else {
     con_write(&ch, 1);
   }
@@ -1484,7 +1475,7 @@ static void cmd_run(const cli_cmd_t *cmd)
   switch (cmd->id) {
   case CLI_HELP:
     for (size_t i = 0; i < sizeof help_lines / sizeof help_lines[0]; i++)
-      printf("%s\r\n", help_lines[i]);
+      uart_hal_printf("%s", help_lines[i]);
     break;
   case CLI_STATUS:
     cli_reply("STATUS", "state=%s a=%lu b=%lu reject=%lu total=%lu impact=%u log=%u fault=%s",
@@ -1549,10 +1540,10 @@ static const char *bus_st_name(bus_status_t st)
 #ifdef LAB2_CAP
 static void i2c_scan(void)
 {
-  printf("I2C scan:\r\n");
+  uart_hal_printf("I2C scan:");
   for (uint8_t a = 0x08; a < 0x78; a++)
     if (HAL_I2C_IsDeviceReady(BOARD_I2C, a << 1, 2, 10) == HAL_OK)
-      printf("  found 0x%02X\r\n", a);
+      uart_hal_printf("  found 0x%02X", a);
 }
 
 /* Кожні TELEMETRY_PERIOD_MS, поки stream on: прискорення й обидва АЦП */
@@ -1569,11 +1560,11 @@ static void telemetry_run(void)
 {
   mpu6050_accel_raw_t a = {0};
   mpu6050_status_t st_acc = mpu6050_read_accel_raw(&imu, &a);
-  printf("accel st=%d raw %6d %6d %6d | mg %5ld %5ld %5ld | gate %4u class %4u\r\n",
-         (int)st_acc, a.x, a.y, a.z,
-         (long)mpu6050_raw_to_mg(a.x), (long)mpu6050_raw_to_mg(a.y),
-         (long)mpu6050_raw_to_mg(a.z),
-         adc_hal_read(BOARD_ADC_CH_GATE), adc_hal_read(BOARD_ADC_CH_CLASS));
+  uart_hal_printf("accel st=%d raw %6d %6d %6d | mg %5ld %5ld %5ld | gate %4u class %4u",
+                  (int)st_acc, a.x, a.y, a.z,
+                  (long)mpu6050_raw_to_mg(a.x), (long)mpu6050_raw_to_mg(a.y),
+                  (long)mpu6050_raw_to_mg(a.z),
+                  adc_hal_read(BOARD_ADC_CH_GATE), adc_hal_read(BOARD_ADC_CH_CLASS));
 }
 
 /* Рамка однієї дії для логічного аналізатора: LED_MARK (PA5, канал D4) = 1 рівно
@@ -1599,11 +1590,11 @@ static void cap_report(const char *name, const char *st, const char *fmt, ...)
 {
   va_list ap;
 
-  printf("%lu CAP %s st=%s ", (unsigned long)HAL_GetTick(), name, st);
+  uart_hal_line_add("%lu CAP %s st=%s ", (unsigned long)HAL_GetTick(), name, st);
   va_start(ap, fmt);
-  vprintf(fmt, ap);
+  uart_hal_line_vadd(fmt, ap);
   va_end(ap);
-  con_write("\r\n", 2);
+  uart_hal_line_end();
 }
 
 /* Невдала транзакція: ISR зафіксовано в i2c_hal до відновлення шини */
