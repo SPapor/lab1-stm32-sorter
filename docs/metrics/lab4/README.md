@@ -25,6 +25,7 @@
 | `KSTRESS_2026-11-18_1528.log` | `1baa13f6`, rtos, `TEST_KSTRESS=1` | повтор з лічильниками критичних секцій задач і ISR окремо: та сама картина, 3 перемикання, одне в `taskENTER_CRITICAL` |
 | `KSTRESS_2026-11-18_1755.log` | `f8d7ee39`, rtos, `TEST_KSTRESS=1`, `SIM_CRIT=1` | ворота Б з обходом: 120 с, помилок 0, подій у критичних секціях 0, тіки ядра = тіки perf (docs/rtos-design.md, розділ 2) |
 | `CRITCOST_sim1_2026-11-18_1758.log`, `CRITCOST_sim0_2026-11-18_1800.log` | `f8d7ee39`, rtos, `TEST_CRITCOST=1` | ціна пари вхід/вихід критичної секції з обходом і без |
+| `MANUAL_rtos_2026-11-18_2146.log` | `134b06e9`, rtos (сім задач), `LTO=1`, `SIM_CRIT=1` | ручна перевірка кроку 2 у браузері: старт, 5 посилок, 4 E-STOP, status/stats/stack/heap, SIMCRIT у простої (docs/rtos-design.md, розділ 6) |
 
 Записи аналізатора до `_1856`, `_1857` і `_1942` - docs/captures/.
 
