@@ -17,6 +17,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "stm32c0xx_hal.h"
+#include "board.h"
 #if SIM_CRIT
 #include "port_sim.h"
 #endif
@@ -218,6 +219,28 @@ void rtos_hal_runtime_start(void)
 uint64_t rtos_hal_runtime_now(void)
 {
     return perf_now_cyc64() - runtime_base;
+}
+
+static const void *trace_lcd;
+
+void rtos_hal_trace_lcd(const void *tcb)
+{
+    trace_lcd = tcb;
+}
+
+/* traceTASK_SWITCHED_IN: D6 = 1, поки процесор у будь-якої задачі, крім idle;
+ * D7 = 1, поки у задачі lcd. Виконується в PendSV, усередині перемикання */
+void rtos_hal_trace_in(const void *tcb)
+{
+    if (tcb == (const void *)xTaskGetIdleTaskHandle()) {
+        BOARD_PROBE_OFF(BOARD_PROBE_TASK_PIN | BOARD_PROBE_LCD_PIN);
+    } else {
+        BOARD_PROBE_ON(BOARD_PROBE_TASK_PIN);
+        if (tcb == trace_lcd)
+            BOARD_PROBE_ON(BOARD_PROBE_LCD_PIN);
+        else
+            BOARD_PROBE_OFF(BOARD_PROBE_LCD_PIN);
+    }
 }
 #endif
 

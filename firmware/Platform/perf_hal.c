@@ -17,10 +17,10 @@ void perf_hal_init(void)
     cyc_per_us = SystemCoreClock / 1000000u;
     us_per_tick = cyc_per_tick / cyc_per_us;
 
-    /* PB13, PB14 — push-pull виходи, як LED_MARK і ADC_MARK у CubeMX */
+    /* PB12-PB15 — push-pull виходи, як LED_MARK і ADC_MARK у CubeMX */
     BOARD_PROBE_CLK_ENABLE();
-    BOARD_PROBE_OFF(BOARD_PROBE_TASK_PIN | BOARD_PROBE_LCD_PIN);
-    g.Pin = BOARD_PROBE_TASK_PIN | BOARD_PROBE_LCD_PIN;
+    BOARD_PROBE_OFF(BOARD_PROBE_ALL_PINS);
+    g.Pin = BOARD_PROBE_ALL_PINS;
     g.Mode = GPIO_MODE_OUTPUT_PP;
     g.Pull = GPIO_NOPULL;
     g.Speed = GPIO_SPEED_FREQ_LOW;

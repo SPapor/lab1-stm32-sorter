@@ -55,9 +55,10 @@ extern uint32_t SystemCoreClock;
  * (xTaskCreateStatic) вимагало б ще й vApplicationGetIdleTaskMemory */
 #define configSUPPORT_STATIC_ALLOCATION     0
 #define configSUPPORT_DYNAMIC_ALLOCATION    1
-/* Стартове значення, масив ucHeap у .bss. Справжній розмір — за
- * xPortGetMinimumEverFreeHeapSize після S3 (крок 3) */
-#define configTOTAL_HEAP_SIZE               ((size_t)(5u * 1024u))
+/* Масив ucHeap у .bss: сім задач (стеки 4 224 B), TCB, черги qLog і qParcel,
+ * потоковий буфер і чотири м'ютекси (docs/rtos-design.md, розділ 6). Справжній
+ * запас - OSHEAP min_free (команда heap) після S1-S3 */
+#define configTOTAL_HEAP_SIZE               ((size_t)(7u * 1024u))
 /* stdio newlib у прошивці немає (форматер App/fmt.c), а strcmp, memcpy і memset
  * не мають стану: окрема struct _reent на задачу (~100 Б RAM кожна) не потрібна */
 #define configUSE_NEWLIB_REENTRANT          0
@@ -125,6 +126,13 @@ uint64_t rtos_hal_runtime_now(void);
 void rtos_hal_assert_failed(uint32_t line) __attribute__((noreturn, noinline));
 #if RTOS_ASSERT
 #define configASSERT(x)                     do { if ((x) == 0) rtos_hal_assert_failed(__LINE__); } while (0)
+#endif
+
+/* Службові піни D6 і D7 (docs/rtos-design.md, розділ 6): перемикання на задачу.
+ * Макрос розгортається в tasks.c, де видно pxCurrentTCB */
+#if PERF && !defined(TEST_KSTRESS)
+void rtos_hal_trace_in(const void *tcb);
+#define traceTASK_SWITCHED_IN()             rtos_hal_trace_in((const void *)pxCurrentTCB)
 #endif
 
 /* Стрес-тест ядра в Wokwi (збірка TEST_KSTRESS=1, Tasks/kstress.c, у продукт не

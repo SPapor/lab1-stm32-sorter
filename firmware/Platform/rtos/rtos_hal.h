@@ -20,6 +20,11 @@ void rtos_hal_start_scheduler(void) __attribute__((noreturn));
 void rtos_hal_mark_api(void);
 void rtos_hal_startup_us(uint32_t *api_us, uint32_t *start_us);
 
+/* Службові піни в rtos (лише PERF=1): D6 і D7 веде перемикання задач
+ * (traceTASK_SWITCHED_IN, FreeRTOSConfig.h), а не обгортки робіт, як у super loop.
+ * rtos_hal_trace_lcd - яка задача вважається lcd (її хендл) */
+void rtos_hal_trace_lcd(const void *tcb);
+
 /* Версія ядра (tskKERNEL_VERSION_NUMBER) і configTOTAL_HEAP_SIZE для рядка BOOT */
 const char *rtos_hal_kernel_version(void);
 uint32_t rtos_hal_heap_total(void);
