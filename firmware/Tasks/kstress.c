@@ -14,12 +14,14 @@
  *   TIM14 2 кГц: xQueueSendFromISR у q_ping, vTaskNotifyGiveFromISR задачі mtx,
  *             portYIELD_FROM_ISR
  *
- * Пульс з ISR (рядок KSTRESS_ISR раз на 5 с): пише сам обробник TIM14 прямо в
- * регістр USART, тож рядок є, навіть якщо задачі стоять. Поточна задача, адреса,
- * де її перервано (PC з кадру винятку на PSP), і вкладеність критичної секції
- * показують, де саме зависло. Може вклинитися посеред рядка задачі.
+ * Пульс з ISR (рядок KSTRESS_ISR): обробник TIM14 раз на 5 с перевіряє, чи
+ * просунулися ping і pong, і якщо ні - сам пише рядок прямо в регістр USART, тож
+ * він є, навіть коли задачі стоять. Поточна задача, адреса, де її перервано (PC
+ * з кадру винятку на PSP), і вкладеність критичної секції показують, де саме
+ * зависло. Поки задачі йдуть, пульсу немає: друк в ISR (~7 мс) спотворив би
+ * лічильники запізнень і з'їв би байти рядка, який саме передає задача.
  *
- * Помилка - будь-який лічильник *_err; assert, переповнення стека і HardFault
+ * Помилка - будь-який лічильник *_err (рядок KSTRESS_ERR); assert, переповнення стека і HardFault
  * зупиняють програму рядком FATAL (Platform/rtos/rtos_diag.c), і рядків KSTRESS
  * далі немає. Лічильники порту (переривання і перемикання всередині критичних
  * секцій) - Platform/rtos/kstress/port_kstress.c. */
@@ -32,6 +34,7 @@
 #include "stm32c0xx_hal.h"
 #include "uart_hal.h"
 #include "kstress_port.h"
+#include "rtos_hal.h"
 
 #define ISR_HZ              2000u
 #define REPORT_TICKS        10000u   /* 10 с при тіку 1 мс */
@@ -41,7 +44,7 @@
 #define MTX_WAIT_TICKS      pdMS_TO_TICKS(50)
 #define HOLD_LOOPS          600u     /* ~100 мкс з м'ютексом: P1 і P4 часто перетинаються */
 #define IRQ_PRIO            2u       /* вище за SysTick і PendSV (3) */
-#define PULSE_ISR_CALLS     (5u * ISR_HZ)   /* рядок KSTRESS_ISR раз на 5 с */
+#define PULSE_ISR_CALLS     (5u * ISR_HZ)   /* перевірка для KSTRESS_ISR раз на 5 с */
 
 #define STACK_TICK          192u     /* друк: форматер і буфер рядка */
 #define STACK_PONG          112u
@@ -72,7 +75,8 @@ typedef struct {
     uint32_t ticks;           /* пробуджень tick */
     uint32_t late;            /* xTaskDelayUntil без очікування: момент уже минув */
     uint32_t sum_err;         /* контрольна сума або джерело не ті */
-    uint32_t seq_err;         /* відповідь не на те повідомлення або ISR не по порядку */
+    uint32_t seq_err;         /* відповідь новіша за запит або ISR не по порядку */
+    uint32_t stale;           /* запізніла відповідь на старий запит (після тайм-ауту) */
     uint32_t mtx_err;         /* у критичній ділянці м'ютекса - чужий власник або a != b */
     uint32_t notify_err;      /* узято сповіщень більше, ніж дано */
     uint32_t mtx_timeout;
@@ -114,42 +118,13 @@ static void msg_make(msg_t *m, uint32_t src, uint32_t seq)
     m->sum = msg_sum(m);
 }
 
-/* Сирий вивід з ISR: опитування TXE, без HAL і без буфера uart_hal */
-static void raw_putc(char c)
-{
-    USART_TypeDef *u = USART2;
-
-    while ((u->ISR & USART_ISR_TXE_TXFNF) == 0u) {
-    }
-    u->TDR = (uint8_t)c;
-}
-
-static void raw_puts(const char *s)
-{
-    while (*s != '\0')
-        raw_putc(*s++);
-}
-
-static void raw_putu(uint32_t v, unsigned base)
-{
-    char buf[10];
-    unsigned n = 0;
-
-    do {
-        uint32_t d = v % base;
-        buf[n++] = (char)(d < 10u ? '0' + d : 'A' + d - 10u);
-        v /= base;
-    } while (v != 0u);
-    while (n > 0u)
-        raw_putc(buf[--n]);
-}
-
+/* Пульс пише з ISR сирим виводом (rtos_hal_raw_*), без HAL і буфера uart_hal */
 static void raw_kv(const char *key, uint32_t v, unsigned base)
 {
-    raw_puts(key);
+    rtos_hal_raw_puts(key);
     if (base == 16u)
-        raw_puts("0x");
-    raw_putu(v, base);
+        rtos_hal_raw_puts("0x");
+    rtos_hal_raw_putu(v, base);
 }
 
 /* Рядок KSTRESS_ISR: лічильники і місце, де ISR перервав задачу */
@@ -158,19 +133,19 @@ static void pulse(void)
     TaskHandle_t cur = xTaskGetCurrentTaskHandle();
     uint32_t pc = ((const uint32_t *)__get_PSP())[6];
 
-    raw_putu(HAL_GetTick(), 10u);
-    raw_puts(" KSTRESS_ISR");
+    rtos_hal_raw_putu(HAL_GetTick(), 10u);
+    rtos_hal_raw_puts(" KSTRESS_ISR");
     raw_kv(" isr=", isr_seq, 10u);
     raw_kv(" tick=", cnt.ticks, 10u);
     raw_kv(" ping=", cnt.ping, 10u);
     raw_kv(" isr_msg=", cnt.isr_msg, 10u);
     raw_kv(" mtx=", cnt.mtx_p1, 10u);
     raw_kv("/", cnt.mtx_p4, 10u);
-    raw_puts(" cur=");
-    raw_puts(cur != NULL ? pcTaskGetName(cur) : "-");
+    rtos_hal_raw_puts(" cur=");
+    rtos_hal_raw_puts(cur != NULL ? pcTaskGetName(cur) : "-");
     raw_kv(" pc=", pc, 16u);
     raw_kv(" crit=", kstress_crit_nesting(), 16u);
-    raw_puts("\r\n");
+    rtos_hal_raw_puts("\r\n");
 }
 
 void TIM14_IRQHandler(void);
@@ -180,8 +155,14 @@ void TIM14_IRQHandler(void)
     msg_t m;
 
     kstress_note_isr();
-    if (isr_seq != 0u && isr_seq % PULSE_ISR_CALLS == 0u)
-        pulse();
+    if (isr_seq != 0u && isr_seq % PULSE_ISR_CALLS == 0u) {
+        static uint32_t ping_seen, pong_seen;
+
+        if (cnt.ping == ping_seen && cnt.isr_msg == pong_seen)
+            pulse();                     /* за 5 с ні ping, ні pong не просунулися */
+        ping_seen = cnt.ping;
+        pong_seen = cnt.isr_msg;
+    }
     TIM14->SR = ~TIM_SR_UIF;
     msg_make(&m, SRC_ISR, isr_seq++);
     if (xQueueSendFromISR(q_ping, &m, &woken) != pdPASS)
@@ -193,10 +174,8 @@ void TIM14_IRQHandler(void)
 
 static void tim14_start(void)
 {
-    uint32_t clk = HAL_RCC_GetPCLK1Freq();
+    uint32_t clk = rtos_hal_timer_clk_hz();
 
-    if ((RCC->CFGR & RCC_CFGR_PPRE) != 0u)
-        clk *= 2u;                       /* таймери при діленні APB - удвічі */
     __HAL_RCC_TIM14_CLK_ENABLE();
     TIM14->CR1 = 0;
     TIM14->PSC = clk / 1000000u - 1u;    /* 1 МГц */
@@ -302,16 +281,27 @@ static void ping_task(void *arg)
                 cnt.q_timeout++;
                 continue;
             }
-            if (xQueueReceive(q_pong, &r, WAIT_TICKS) != pdPASS) {
-                cnt.q_timeout++;
-                continue;
+            /* Відповідь на старий запит (той, що вийшов за тайм-аут) - не помилка:
+             * пропускаємо її і чекаємо свою, інакше ping і pong розійшлися б назавжди */
+            for (;;) {
+                if (xQueueReceive(q_pong, &r, WAIT_TICKS) != pdPASS) {
+                    cnt.q_timeout++;
+                    break;
+                }
+                if (r.sum != msg_sum(&r) || r.src != SRC_PONG) {
+                    cnt.sum_err++;
+                    break;
+                }
+                if (r.seq == seq) {
+                    cnt.ping++;
+                    break;
+                }
+                if (r.seq > seq) {
+                    cnt.seq_err++;
+                    break;
+                }
+                cnt.stale++;
             }
-            if (r.sum != msg_sum(&r) || r.src != SRC_PONG)
-                cnt.sum_err++;
-            else if (r.seq != seq)
-                cnt.seq_err++;
-            else
-                cnt.ping++;
         }
         (void)xTaskDelayUntil(&last, 1);   /* vTaskDelay у прошивці не збирається */
     }
@@ -322,19 +312,20 @@ static void report(uint32_t t_s)
     kstress_port_counters_t p;
 
     kstress_port_counters(&p);
-    uart_hal_line_add("%lu KSTRESS t_s=%lu ping=%lu isr_msg=%lu isr_drop=%lu notify=%lu/%lu "
-                      "mtx=%lu/%lu tick=%lu late=%lu", (unsigned long)HAL_GetTick(),
-                      (unsigned long)t_s, (unsigned long)cnt.ping,
-                      (unsigned long)cnt.isr_msg, (unsigned long)cnt.isr_drop,
-                      (unsigned long)cnt.notify_taken, (unsigned long)cnt.notify_given,
-                      (unsigned long)cnt.mtx_p1, (unsigned long)cnt.mtx_p4, (unsigned long)cnt.ticks,
-                      (unsigned long)cnt.late);
-    uart_hal_line_add(" sum_err=%lu seq_err=%lu mtx_err=%lu notify_err=%lu mtx_timeout=%lu "
-                      "q_timeout=%lu", (unsigned long)cnt.sum_err, (unsigned long)cnt.seq_err,
-                      (unsigned long)cnt.mtx_err, (unsigned long)cnt.notify_err,
-                      (unsigned long)cnt.mtx_timeout, (unsigned long)cnt.q_timeout);
-    uart_hal_line_end();
-    /* Окремим рядком: разом з першим не вміщується в UART_HAL_LINE_MAX */
+    /* Три рядки: кожен і з 10-значними лічильниками вміщується в UART_HAL_LINE_MAX */
+    uart_hal_printf("%lu KSTRESS t_s=%lu ping=%lu isr_msg=%lu isr_drop=%lu notify=%lu/%lu "
+                    "mtx=%lu/%lu tick=%lu late=%lu", (unsigned long)HAL_GetTick(),
+                    (unsigned long)t_s, (unsigned long)cnt.ping,
+                    (unsigned long)cnt.isr_msg, (unsigned long)cnt.isr_drop,
+                    (unsigned long)cnt.notify_taken, (unsigned long)cnt.notify_given,
+                    (unsigned long)cnt.mtx_p1, (unsigned long)cnt.mtx_p4, (unsigned long)cnt.ticks,
+                    (unsigned long)cnt.late);
+    uart_hal_printf("%lu KSTRESS_ERR t_s=%lu sum_err=%lu seq_err=%lu mtx_err=%lu notify_err=%lu "
+                    "mtx_timeout=%lu q_timeout=%lu stale=%lu", (unsigned long)HAL_GetTick(),
+                    (unsigned long)t_s, (unsigned long)cnt.sum_err, (unsigned long)cnt.seq_err,
+                    (unsigned long)cnt.mtx_err, (unsigned long)cnt.notify_err,
+                    (unsigned long)cnt.mtx_timeout, (unsigned long)cnt.q_timeout,
+                    (unsigned long)cnt.stale);
     uart_hal_printf("%lu KSTRESS_CRIT t_s=%lu switches=%lu switches_in_crit=%lu pendsv_in_crit=%lu "
                     "isr_in_crit=%lu heap_min=%lu", (unsigned long)HAL_GetTick(),
                     (unsigned long)t_s, (unsigned long)p.switches,
@@ -357,16 +348,20 @@ static void mtx_task(void *arg)
 
 void kstress_create(void)
 {
-    BaseType_t ok = pdPASS;
+    BaseType_t ok = pdPASS;   /* помилка створення - pdFAIL або errCOULD_NOT_... (-1) */
 
     q_ping = xQueueCreate(MSG_QLEN, sizeof(msg_t));
     q_pong = xQueueCreate(MSG_QLEN, sizeof(msg_t));
     mtx = xSemaphoreCreateMutex();
     configASSERT(q_ping != NULL && q_pong != NULL && mtx != NULL);
-    ok &= xTaskCreate(tick_task, "tick", STACK_TICK, NULL, 4, NULL);
-    ok &= xTaskCreate(pong_task, "pong", STACK_PONG, NULL, 3, NULL);
-    ok &= xTaskCreate(ping_task, "ping", STACK_PING, NULL, 2, NULL);
-    ok &= xTaskCreate(mtx_task, "mtx", STACK_MTX, NULL, 1, &h_mtx);
+    if (xTaskCreate(tick_task, "tick", STACK_TICK, NULL, 4, NULL) != pdPASS)
+        ok = pdFAIL;
+    if (xTaskCreate(pong_task, "pong", STACK_PONG, NULL, 3, NULL) != pdPASS)
+        ok = pdFAIL;
+    if (xTaskCreate(ping_task, "ping", STACK_PING, NULL, 2, NULL) != pdPASS)
+        ok = pdFAIL;
+    if (xTaskCreate(mtx_task, "mtx", STACK_MTX, NULL, 1, &h_mtx) != pdPASS)
+        ok = pdFAIL;
     configASSERT(ok == pdPASS);
     (void)ok;
 }

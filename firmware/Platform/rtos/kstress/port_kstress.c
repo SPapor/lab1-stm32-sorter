@@ -11,8 +11,10 @@
 #include "port.c"
 #include "kstress_port.h"
 
-/* Значення до старту ядра (порт ставить 0 у xPortStartScheduler) */
-#define NESTING_BEFORE_START    0xaaaaaaaaUL
+/* До старту ядра порт тримає 0xaaaaaaaa (і кожна критична секція в xQueueCreate,
+ * xTaskCreate додає до нього 1), у xPortStartScheduler ставить 0. Справжня
+ * вкладеність - кілька рівнів, тож усе зі старшим бітом - ще до старту */
+#define NESTING_BEFORE_START_MIN    0x80000000UL
 
 static volatile uint32_t isr_in_crit;
 static volatile uint32_t pendsv_in_crit;
@@ -24,7 +26,7 @@ static int in_crit(void)
 {
     uint32_t n = ulCriticalNesting;
 
-    return n != 0u && n != NESTING_BEFORE_START;
+    return n != 0u && n < NESTING_BEFORE_START_MIN;
 }
 
 uint32_t kstress_crit_nesting(void)
