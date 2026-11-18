@@ -109,6 +109,11 @@ enum {
 #define ARCH_NAME           "superloop"
 #define TICK_HZ             1000u       /* тік HAL; у rtos — тік ядра з app.mk */
 #endif
+/* Ширина тексту рядка BOOT після "BOOT ": коротший доповнюється пробілами, тож друк
+ * BOOT займає той самий час в обох ARCH і не входить у різницю STARTUP між ними
+ * (docs/rtos-design.md, розділ 5). 96 - найдовший рядок rtos: git-хеш з -dirty,
+ * TICK_HZ до 4 цифр, os_heap до 4 цифр; довший друкується без доповнення. */
+#define BOOT_WIDTH          96u
 #ifndef GIT_HASH
 #define GIT_HASH            "unknown"   /* app.mk передає -DGIT_HASH з git describe */
 #endif
@@ -286,8 +291,9 @@ static void gate_task(void);
 static void sort_task(void);
 static void imu_task(void);
 static void lcd_task(void);
-static void ev_vprint(const char *event, const char *fmt, va_list ap);
+static void ev_vprint(const char *event, unsigned width, const char *fmt, va_list ap);
 static void ev_log(const char *event, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+static void boot_log(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 static void cli_reply(const char *event, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 static void led_mark(uint8_t on);
 static selftest_counts_t selftest_run(void);
@@ -418,9 +424,9 @@ int main(void)
 #endif
   BOOTMARK('b');               /* перед рядком BOOT */
 #if ARCH_RTOS
-  ev_log("BOOT", "fw=%s git=%s perf=%u arch=%s lto=%u tick_hz=%u kernel=%s os_heap=%lu",
-         FW_NAME, GIT_HASH, (unsigned)PERF, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ,
-         rtos_hal_kernel_version(), (unsigned long)rtos_hal_heap_total());
+  boot_log("fw=%s git=%s perf=%u arch=%s lto=%u tick_hz=%u kernel=%s os_heap=%lu",
+           FW_NAME, GIT_HASH, (unsigned)PERF, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ,
+           rtos_hal_kernel_version(), (unsigned long)rtos_hal_heap_total());
   {
     uint32_t line, pc;
 
@@ -429,8 +435,8 @@ int main(void)
       ev_log("ASSERT", "line=%lu pc=0x%08lX", (unsigned long)line, (unsigned long)pc);
   }
 #else
-  ev_log("BOOT", "fw=%s git=%s perf=%u arch=%s lto=%u tick_hz=%u", FW_NAME, GIT_HASH,
-         (unsigned)PERF, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ);
+  boot_log("fw=%s git=%s perf=%u arch=%s lto=%u tick_hz=%u", FW_NAME, GIT_HASH,
+           (unsigned)PERF, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ);
 #endif
   BOOTMARK('e');               /* після рядка BOOT */
 #if PERF
@@ -548,13 +554,17 @@ void SystemClock_Config(void)
  * printf → _write → HAL_UART_Transmit: виклик блокує цикл до кінця передачі,
  * ≈ 87 мкс на байт при 115200 8N1.
  * ------------------------------------------------------------------------- */
-static void ev_vprint(const char *event, const char *fmt, va_list ap)
+static void ev_vprint(const char *event, unsigned width, const char *fmt, va_list ap)
 {
+  int n;
 #if PERF
   uint32_t t0 = perf_now();
 #endif
   printf("%lu %s ", (unsigned long)HAL_GetTick(), event);
-  vprintf(fmt, ap);
+  n = vprintf(fmt, ap);
+  /* Доповнення до width символів тексту (лише BOOT, решта - width = 0) */
+  for (; n >= 0 && (unsigned)n < width; n++)
+    con_write(" ", 1);
   con_write("\r\n", 2);
 #if PERF
   perf_add(&st_uart_line, perf_now() - t0);
@@ -569,7 +579,19 @@ static void ev_log(const char *event, const char *fmt, ...)
   if (log_level == 0)
     return;
   va_start(ap, fmt);
-  ev_vprint(event, fmt, ap);
+  ev_vprint(event, 0u, fmt, ap);
+  va_end(ap);
+}
+
+/* Рядок BOOT: як ev_log, але завжди BOOT_WIDTH символів тексту */
+static void boot_log(const char *fmt, ...)
+{
+  va_list ap;
+
+  if (log_level == 0)
+    return;
+  va_start(ap, fmt);
+  ev_vprint("BOOT", BOOT_WIDTH, fmt, ap);
   va_end(ap);
 }
 
@@ -579,7 +601,7 @@ static void cli_reply(const char *event, const char *fmt, ...)
   va_list ap;
 
   va_start(ap, fmt);
-  ev_vprint(event, fmt, ap);
+  ev_vprint(event, 0u, fmt, ap);
   va_end(ap);
 }
 
