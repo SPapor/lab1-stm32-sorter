@@ -1,0 +1,12 @@
+# git=cad75f82 (з BOOT) scenario=BOOTMARK build="ARCH=rtos LTO=1 TICK_HZ=1000 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=1 PERF=1" perf=1 arch=rtos lto=1 tick_hz=1000 port=wokwi.com host_start=2026-11-18T00:08:00
+# Wokwi у браузері (wokwi.com, «Upload Firmware and Start Simulation»), лише плата NUCLEO-C031C6. Мітки: як у BOOTMARK_superloop_2026-11-18_0007.log.
+2 BOOT fw=lab4-rtos git=cad75f82 perf=1 arch=rtos lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=5120
+12 EVT t_us=11700 name=boot
+134 STATE state=FAULT
+146 BOOTMARK n=0 at=i tick=0 val=4294822239 load=4294967295
+152 BOOTMARK n=1 at=h tick=0 val=10055 load=11999
+157 BOOTMARK n=2 at=i tick=0 val=8624 load=11999
+162 BOOTMARK n=3 at=c tick=0 val=46247 load=47999
+167 BOOTMARK n=4 at=m tick=1 val=16127 load=47999
+173 BOOTMARK n=5 at=b tick=2 val=39479 load=47999
+178 BOOTMARK n=6 at=e tick=11 val=14686 load=47999

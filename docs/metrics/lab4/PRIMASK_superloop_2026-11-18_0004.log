@@ -1,0 +1,23 @@
+# git=79f4919e (з BOOT) scenario=PRIMASK build="ARCH=superloop LTO=1 TICK_HZ=1000 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=1 TEST_BOOTMARK=0 PERF=1" perf=1 arch=superloop lto=1 tick_hz=1000 port=wokwi.com host_start=2026-11-18T00:04:00
+# Wokwi у браузері (wokwi.com, «Upload Firmware and Start Simulation»), схема - лише плата NUCLEO-C031C6 з монітором порту на PA2/PA3, тож MPU і LCD - FAIL. Текст скопійовано з монітора порту до рядка PRIMASK і трохи далі.
+2 BOOT fw=lab3-superloop git=79f4919e perf=1 arch=superloop lto=1 tick_hz=1000
+10 EVT t_us=9864 name=boot
+13 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+19 PERF cpu_hz=48000000 now_cyc=526 pair_cyc=1298
+50 I2C_RECOVER try=1/1 where=rd addr=0x68 err=0x24 isr=0x00000001
+57 EVT t_us=56791 name=i2c_fail
+60 SELFTEST dev=mpu6050 status=FAIL who=0x00 tries=0 err=BUS
+67 EVT t_us=66749 name=i2c_ok
+96 I2C_RECOVER try=1/1 where=rd addr=0x27 err=0x24 isr=0x00000001
+103 EVT t_us=102790 name=i2c_fail
+106 SELFTEST dev=lcd1602 status=FAIL addr=0x27 err=BUS
+112 SELFTEST dev=ldr_gate status=OK raw=79
+116 SELFTEST dev=ldr_class status=OK raw=2598
+121 SELFTEST dev=servo status=OK pulse_us=1500
+125 SELFTEST_END ok=3 warn=0 fail=2
+129 FAULT reason=MPU_NOT_FOUND
+132 STATE state=FAULT
+134 STACK used=840 reserved=1024 free=184 overflow=0
+140 HEAP arena=436 used=436 free=0
+153 PRIMASK uwtick_delta=10 perf_tick_delta=10 pendst=0 wraps=10 primask=1
+160 EVT t_us=116420 name=ready_gate
