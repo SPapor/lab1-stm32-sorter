@@ -5,6 +5,9 @@
 #ifdef TEST_APIPROBE
 #include "api_probe.h"
 #endif
+#ifdef TEST_KSTRESS
+#include "kstress.h"
+#endif
 
 /* Пріоритет 1: вище за idle (0), щоб idle отримувала процесор лише тоді, коли
  * app заблокована (у кроці 1 — ніколи: цикл опитує без блокування) */
@@ -34,7 +37,14 @@ void app_task_start(void (*pass)(void))
 #if PERF
     rtos_hal_mark_api();      /* далі до старту ядра переривання вимкнені */
 #endif
+#ifdef TEST_KSTRESS
+    /* стрес-тест ядра замість задачі app */
+    kstress_create();
+    (void)app_task;
+    ok = pdPASS;
+#else
     ok = xTaskCreate(app_task, "app", APP_TASK_STACK_WORDS, NULL, APP_TASK_PRIO, NULL);
+#endif
     configASSERT(ok == pdPASS);
     (void)ok;    /* без configASSERT більше ніде не потрібна */
     rtos_hal_start_scheduler();

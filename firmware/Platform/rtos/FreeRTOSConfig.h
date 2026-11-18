@@ -120,6 +120,18 @@ uint64_t rtos_hal_runtime_now(void);
 void rtos_hal_assert_failed(uint32_t line) __attribute__((noreturn, noinline));
 #define configASSERT(x)                     do { if ((x) == 0) rtos_hal_assert_failed(__LINE__); } while (0)
 
+/* Стрес-тест ядра в Wokwi (збірка TEST_KSTRESS=1, Tasks/kstress.c, у продукт не
+ * входить): контрольні значення в кожному списку ядра (configASSERT, якщо список
+ * зіпсовано) і лічильники перемикань усередині критичних секцій
+ * (Platform/rtos/kstress/port_kstress.c) */
+#ifdef TEST_KSTRESS
+#define configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES 1
+void kstress_switched_out(void *tcb);
+void kstress_switched_in(void *tcb);
+#define traceTASK_SWITCHED_OUT()            kstress_switched_out((void *)pxCurrentTCB)
+#define traceTASK_SWITCHED_IN()             kstress_switched_in((void *)pxCurrentTCB)
+#endif
+
 /* --- MPU немає (порт ARM_CM0 вимагає явно) ------------------------------- */
 #define configENABLE_MPU                    0
 

@@ -17,6 +17,9 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "stm32c0xx_hal.h"
+#ifdef TEST_KSTRESS
+#include "kstress_port.h"
+#endif
 
 #define HAL_TICK_TIMER_HZ  1000000u   /* TIM17 тікає 1 МГц: ARR = 999 дає 1 кГц */
 #define START_GUARD_CYC    256u       /* vPortSetupTimerInterrupt: «до переходу через 0 мало» */
@@ -110,6 +113,9 @@ void SysTick_Handler(void);
  * момент, загубився б (docs/rtos-design.md, розділ 3) */
 void SysTick_Handler(void)
 {
+#ifdef TEST_KSTRESS
+    kstress_note_isr();
+#endif
     rtos_hal_ticks++;
     if (kernel_ticks)
         xPortSysTickHandler();

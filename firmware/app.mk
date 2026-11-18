@@ -34,6 +34,9 @@ endif
 ifeq ($(TEST_APIPROBE)$(ARCH_ON),1superloop)
 $(error TEST_APIPROBE=1 лише для ARCH=rtos)
 endif
+ifeq ($(TEST_KSTRESS)$(ARCH_ON),1superloop)
+$(error TEST_KSTRESS=1 лише для ARCH=rtos)
+endif
 
 # Platform/<arch>/ — те, що в двох архітектурах різне: обробники SVC, PendSV,
 # SysTick, база часу HAL, лічильник тіків для perf_now (perf_tick.h)
@@ -65,9 +68,12 @@ $(BUILD_DIR)/$(TARGET).elf: $(USER_OBJECTS)
 ifeq ($(ARCH_ON),rtos)
 RTOS_DIR     = Middlewares/FreeRTOS
 RTOS_PORT    = $(RTOS_DIR)/portable/GCC/ARM_CM0
+# У збірці TEST_KSTRESS port.c включається у Platform/rtos/kstress/port_kstress.c
+# (той самий порт плюс читання ulCriticalNesting), тож окремо не збирається
+RTOS_PORT_C  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress.c,$(RTOS_PORT)/port.c)
 RTOS_SOURCES = $(addprefix $(RTOS_DIR)/,tasks.c queue.c list.c stream_buffer.c) \
                $(RTOS_DIR)/portable/MemMang/heap_4.c \
-               $(RTOS_PORT)/port.c $(RTOS_PORT)/portasm.c
+               $(RTOS_PORT_C) $(RTOS_PORT)/portasm.c
 RTOS_OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(RTOS_SOURCES:.c=.o)))
 
 C_SOURCES  += $(RTOS_SOURCES)
@@ -80,7 +86,10 @@ $(BUILD_DIR)/$(TARGET).elf: $(RTOS_OBJECTS)
 # Вектор SysTick — SysTick_Handler у Platform/rtos/rtos_hal.c: він рахує тіки для
 # perf_now з самого HAL_Init і лише після старту ядра викликає обробник порту.
 # Порт V11 визначає обробник під іменем CMSIS, тож у port.c його перейменовуємо
-$(BUILD_DIR)/port.o: CFLAGS += -DSysTick_Handler=xPortSysTickHandler
+$(BUILD_DIR)/port.o $(BUILD_DIR)/port_kstress.o: CFLAGS += -DSysTick_Handler=xPortSysTickHandler
+ifeq ($(TEST_KSTRESS),1)
+C_INCLUDES += -IPlatform/rtos/kstress
+endif
 endif
 C_DEFS += -DARCH_RTOS=$(if $(filter rtos,$(ARCH_ON)),1,0)
 
@@ -109,9 +118,10 @@ C_DEFS += -DBUILD_LTO=$(LTO_ON)
 #   TEST_PRIMASK=1   — дослід: чи маскує PRIMASK переривання (рядок PRIMASK після READY)
 #   TEST_BOOTMARK=1  — дослід: лічильник perf у точках старту до BOOT (рядки BOOTMARK)
 #   TEST_APIPROBE=1  — зонд бюджету flash: посилання на все API ядра кроків 2-3 (лише rtos)
+#   TEST_KSTRESS=1   — стрес-тест ядра в Wokwi замість задачі app (лише rtos)
 #   PERF=0           — без вимірювального модуля ЛР3 (docs/perf.md); за замовчуванням 1
 # TEST_* у продукт не входять; docs/rtos-design.md, розділи 2 і 5
-BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE
+BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE TEST_KSTRESS
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
 
 # PERF завжди визначений (#if PERF): 0 лише явно, порожнє значення = 1.
