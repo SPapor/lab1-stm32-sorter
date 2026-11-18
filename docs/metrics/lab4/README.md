@@ -8,7 +8,9 @@
 | `S1_2026-11-17_1852.log` | S1 | `cc2c3a84`, rtos, `LTO=1` | до виправлення `perf_now`: `gate max_us=89477591` |
 | `S1_2026-11-17_1856.log` | S1 | `cedabba3`, super loop, `LTO=1` | smoke кроку 1, docs/rtos-design.md, розділ 5 |
 | `S1_2026-11-17_1857.log` | S1 | `cedabba3`, rtos (одна задача `app`), `LTO=1` | smoke кроку 1; 13 NACK на I²C (Wokwi) |
-| `S1_2026-11-17_1942.log` | S1 | `a84b069e`, super loop, `LTO=1` | після виправлень code review; збігається з `_1856` до 3 мкс. Пари rtos на `38f2289` ще немає: скінчилися хвилини CI Wokwi (журнал, проблема 41) |
+| `S1_2026-11-17_1942.log` | S1 | `a84b069e`, super loop, `LTO=1` | після виправлень code review; збігається з `_1856` до 3 мкс. Пари rtos з `wokwi-cli` немає: скінчилися хвилини CI Wokwi (журнал, проблема 41) |
+| `S1_2026-11-18_0011.log` | S1 | `cad75f82`, super loop, `LTO=1` | wokwi.com у браузері, вікно 69,4 с; основний smoke кроку 1 на поточній історії (docs/rtos-design.md, розділ 5) |
+| `S1_2026-11-18_1147.log` | S1 | `cad75f82`, rtos (одна задача `app`), `LTO=1` | wokwi.com у браузері, вікно 66,7 с; `os_api_us` / `os_start_us` у STARTUP; 11 NACK на I²C (Wokwi) |
 
 Досліди кроку 1 (Wokwi у браузері, wokwi.com, «Upload Firmware and Start Simulation»: хвилини CI скінчилися, а Wokwi для VS Code не запустився; лише плата NUCLEO-C031C6, тож MPU і LCD - FAIL, на досліди це не впливає). Текст скопійовано з монітора порту, заголовок у тому ж форматі, що пише `run_scenario.py`:
 
