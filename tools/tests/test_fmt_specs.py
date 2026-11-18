@@ -13,6 +13,8 @@ import unittest
 ROOT = os.path.join(os.path.dirname(__file__), '..', '..', 'firmware')
 DIRS = ('App', 'Devices', 'Platform', 'Tasks')
 FILES = ('Core/Src/main.c', 'Core/Src/stm32c0xx_it.c')
+# Копія порту FreeRTOS: там %0, %1 - операнди asm, а не формати
+SKIP = (os.path.join('Platform', 'rtos', 'port_sim'),)
 
 # Що вміє fmt_vbuf: прапорці '-' і '0', ширина, модифікатор l, d i u x X c s, %%
 SUPPORTED = re.compile(r'%(?:%|[-0]*[0-9]*l?[diuxXcs])')
@@ -24,6 +26,8 @@ COMMENT = re.compile(r'/\*.*?\*/|//[^\n]*', re.S)
 def sources():
     for d in DIRS:
         for base, _, names in os.walk(os.path.join(ROOT, d)):
+            if os.path.relpath(base, ROOT).startswith(SKIP):
+                continue
             for n in names:
                 if n.endswith(('.c', '.h')):
                     yield os.path.join(base, n)

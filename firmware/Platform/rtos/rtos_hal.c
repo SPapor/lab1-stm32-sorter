@@ -17,6 +17,9 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "stm32c0xx_hal.h"
+#if SIM_CRIT
+#include "port_sim.h"
+#endif
 #ifdef TEST_KSTRESS
 #include "kstress_port.h"
 #endif
@@ -121,12 +124,19 @@ void SysTick_Handler(void);
  * момент, загубився б (docs/rtos-design.md, розділ 3) */
 void SysTick_Handler(void)
 {
+    rtos_hal_ticks++;
+    if (!kernel_ticks)
+        return;
+#if SIM_CRIT
+    /* Усередині критичної секції тік ядра чекає її кінця (Platform/rtos/port_sim):
+     * на залізі cpsid i так само затримав би весь цей обробник */
+    if (port_sim_defer_tick())
+        return;
+#endif
 #ifdef TEST_KSTRESS
     kstress_note_isr(KSTRESS_SRC_TICK);
 #endif
-    rtos_hal_ticks++;
-    if (kernel_ticks)
-        xPortSysTickHandler();
+    xPortSysTickHandler();
 }
 
 /* Порт викликає це з xPortStartScheduler (переривання вже вимкнені), щоб

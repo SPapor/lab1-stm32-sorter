@@ -1,0 +1,279 @@
+Обхід PRIMASK для Wokwi (збірка SIM_CRIT=1, docs/rtos-design.md, розділ 2):
+відмінності firmware/Platform/rtos/port_sim/ від порту FreeRTOS-Kernel V11.3.3
+(сабмодуль firmware/Middlewares/FreeRTOS, portable/GCC/ARM_CM0). Новий файл без
+відповідника в порту - port_sim/port_sim.h (лічильники і port_sim_defer_tick).
+portmacro.h і mpu_wrappers_v2_asm.c не змінені і беруться із сабмодуля.
+Перевірка, що файл актуальний: make tools-test (tools/tests/test_port_sim_patch.py).
+Застосувати до копії порту: patch -p0 < docs/port_sim-V11.3.3.patch (з firmware/).
+
+--- Middlewares/FreeRTOS/portable/GCC/ARM_CM0/port.c
++++ Platform/rtos/port_sim/port.c
+@@ -43,6 +43,7 @@
+ 
+ /* Portasm includes. */
+ #include "portasm.h"
++#include "port_sim.h" /* SIM_CRIT */
+ 
+ #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
+ 
+@@ -68,6 +69,9 @@
+ #define portNVIC_SYSTICK_CLK_BIT              ( 1UL << 2UL )
+ #define portNVIC_SYSTICK_COUNT_FLAG_BIT       ( 1UL << 16UL )
+ #define portNVIC_PEND_SYSTICK_CLEAR_BIT       ( 1UL << 25UL )
++/* SIM_CRIT: лінії NVIC (переривання 0-31) */
++#define portNVIC_ISER0_REG                    ( *( ( volatile uint32_t * ) 0xe000e100 ) )
++#define portNVIC_ICER0_REG                    ( *( ( volatile uint32_t * ) 0xe000e180 ) )
+ #define portNVIC_PEND_SYSTICK_SET_BIT         ( 1UL << 26UL )
+ #define portMIN_INTERRUPT_PRIORITY            ( 255UL )
+ #define portNVIC_PENDSV_PRI                   ( portMIN_INTERRUPT_PRIORITY << 16UL )
+@@ -787,9 +791,154 @@
+ 
+ /*-----------------------------------------------------------*/
+ 
++/* SIM_CRIT -------------------------------------------------------------------
++ * Обхід для Wokwi (docs/rtos-design.md, розділ 2; docs/port_sim-V11.3.3.patch):
++ * модель Cortex-M0+ у Wokwi не враховує PRIMASK, тож cpsid i не зупиняє ні
++ * переривань, ні SysTick, ні PendSV. На залізі всередині cpsid i вони
++ * відкладаються до cpsie i; тут те саме робиться програмно:
++ *   - переривання NVIC: найзовнішній вхід вимикає всі ввімкнені лінії (ICER) і
++ *     запам'ятовує їх, вихід вмикає назад (ISER) - чекаючі виконаються одразу;
++ *   - SysTick: його обробник (Platform/rtos/rtos_hal.c) питає port_sim_defer_tick
++ *     і всередині секції лише рахує тік, а вихід проганяє xTaskIncrementTick
++ *     стільки разів - як xTaskResumeAll з відкладеними тіками;
++ *   - PendSV: обробник (portasm.c) усередині секції лише ставить прапорець,
++ *     вихід виставляє PENDSVSET знову.
++ * Секції задач (vPortEnterCritical) і ISR (ulSetInterruptMask) - одна глибина.
++ * На залізі все це зайве, але працює так само: там до цих рядків справа не
++ * доходить, бо всередині cpsid i ніхто нічого не відкладає. */
++portDONT_DISCARD volatile uint32_t ulPortSimCritDepth = 0;     /* читає PendSV_Handler */
++portDONT_DISCARD volatile uint32_t ulPortSimPendSVPending = 0;  /* пише PendSV_Handler */
++static volatile uint32_t ulSimTicksPending = 0;
++static uint32_t ulSimSavedIser = 0;
++static volatile port_sim_counters_t xSimCounters;
++
++/* Після старту ядра (до нього вкладеність = 0xaaaaaaaa + k) */
++static int prvSimStarted( void )
++{
++    return ulCriticalNesting < 0x80000000UL;
++}
++
++/* Викликати з cpsid i. Глибина - спершу: тік або PendSV, що прийдуть між цими
++ * рядками, уже відкладуться. Маску ставить лише найзовнішній вхід */
++static void prvSimEnter( void )
++{
++    ulPortSimCritDepth++;
++
++    if( ulPortSimCritDepth == 1UL )
++    {
++        uint32_t ulEnabled = portNVIC_ISER0_REG;
++
++        ulSimSavedIser = ulEnabled;
++        portNVIC_ICER0_REG = ulEnabled;
++    }
++}
++
++/* Викликати з cpsid i, до cpsie i. Відкладені тіки - ще під маскою; тік, що
++ * прийде між останньою перевіркою і глибиною 0, теж не загубиться */
++static void prvSimExit( void )
++{
++    if( ulPortSimCritDepth > 1UL )
++    {
++        ulPortSimCritDepth--;
++        return;
++    }
++
++    for( ; ; )
++    {
++        uint32_t ulEnabled;
++
++        while( ulSimTicksPending != 0UL )
++        {
++            ulSimTicksPending--;
++
++            if( xTaskIncrementTick() != pdFALSE )
++            {
++                ulPortSimPendSVPending = 1UL;
++            }
++        }
++
++        ulEnabled = ulSimSavedIser;
++        ulPortSimCritDepth = 0;
++        portNVIC_ISER0_REG = ulEnabled;
++
++        if( ulSimTicksPending == 0UL )
++        {
++            break;
++        }
++
++        prvSimEnter();
++    }
++
++    if( ulPortSimPendSVPending != 0UL )
++    {
++        ulPortSimPendSVPending = 0;
++        xSimCounters.deferred_pendsv++;
++        portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;
++    }
++}
++
++uint32_t port_sim_defer_tick( void )
++{
++    if( ulPortSimCritDepth == 0UL )
++    {
++        return 0;
++    }
++
++    ulSimTicksPending++;
++    xSimCounters.deferred_tick++;
++    return 1;
++}
++
++void port_sim_counters( port_sim_counters_t * pxOut )
++{
++    *pxOut = xSimCounters;
++}
++
++/* PendSV_Handler (portasm.c) замість cpsid i / vTaskSwitchContext / cpsie i */
++portDONT_DISCARD void vPortSimSwitchContext( void )
++{
++    portDISABLE_INTERRUPTS();
++    prvSimEnter();
++    vTaskSwitchContext();
++    prvSimExit();
++    portENABLE_INTERRUPTS();
++}
++
++uint32_t ulSetInterruptMask( void ) /* PRIVILEGED_FUNCTION */
++{
++    uint32_t ulPrimask;
++
++    __asm volatile ( "mrs %0, PRIMASK" : "=r" ( ulPrimask ) );
++    portDISABLE_INTERRUPTS();
++    prvSimEnter();
++
++    if( prvSimStarted() )
++    {
++        xSimCounters.crit_isr_n++;
++    }
++
++    return ulPrimask;
++}
++
++void vClearInterruptMask( uint32_t ulMask ) /* PRIVILEGED_FUNCTION */
++{
++    prvSimExit();
++    __asm volatile ( "msr PRIMASK, %0" ::"r" ( ulMask ) : "memory" );
++}
++/* SIM_CRIT end ------------------------------------------------------------- */
++
++/*-----------------------------------------------------------*/
++
+ void vPortEnterCritical( void ) /* PRIVILEGED_FUNCTION */
+ {
+     portDISABLE_INTERRUPTS();
++    prvSimEnter(); /* SIM_CRIT */
++
++    if( prvSimStarted() ) /* SIM_CRIT */
++    {
++        xSimCounters.crit_task_n++;
++    }
++
+     ulCriticalNesting++;
+ 
+     /* Barriers are normally not required but do ensure the code is
+@@ -804,6 +953,7 @@
+ {
+     configASSERT( ulCriticalNesting );
+     ulCriticalNesting--;
++    prvSimExit(); /* SIM_CRIT */
+ 
+     if( ulCriticalNesting == 0 )
+     {
+--- Middlewares/FreeRTOS/portable/GCC/ARM_CM0/portasm.c
++++ Platform/rtos/port_sim/portasm.c
+@@ -240,32 +240,8 @@
+ 
+ /*-----------------------------------------------------------*/
+ 
+-uint32_t ulSetInterruptMask( void ) /* __attribute__(( naked )) PRIVILEGED_FUNCTION */
+-{
+-    __asm volatile
+-    (
+-        " .syntax unified                                 \n"
+-        "                                                 \n"
+-        " mrs r0, PRIMASK                                 \n"
+-        " cpsid i                                         \n"
+-        " bx lr                                           \n"
+-        ::: "memory"
+-    );
+-}
+-
+-/*-----------------------------------------------------------*/
+-
+-void vClearInterruptMask( __attribute__( ( unused ) ) uint32_t ulMask ) /* __attribute__(( naked )) PRIVILEGED_FUNCTION */
+-{
+-    __asm volatile
+-    (
+-        " .syntax unified                                 \n"
+-        "                                                 \n"
+-        " msr PRIMASK, r0                                 \n"
+-        " bx lr                                           \n"
+-        ::: "memory"
+-    );
+-}
++/* SIM_CRIT: ulSetInterruptMask і vClearInterruptMask перенесено в port.c (функції C
++ * з тим самим cpsid i плюс маска NVIC обходу). */
+ 
+ /*-----------------------------------------------------------*/
+ 
+@@ -394,8 +370,22 @@
+         __asm volatile
+         (
+             " .extern pxCurrentTCB                            \n"
++            " .extern ulPortSimCritDepth                      \n"
++            " .extern ulPortSimPendSVPending                  \n"
+             " .syntax unified                                 \n"
+             "                                                 \n"
++            /* SIM_CRIT: усередині критичної секції (Wokwi не маскує PendSV через
++             * PRIMASK) - лише запам'ятати і вийти; вихід із секції виставить PendSV знову. */
++            " ldr r0, =ulPortSimCritDepth                     \n"
++            " ldr r0, [r0]                                    \n"
++            " cmp r0, #0                                      \n"
++            " beq sim_pendsv_run                              \n"
++            " ldr r0, =ulPortSimPendSVPending                 \n"
++            " movs r1, #1                                     \n"
++            " str r1, [r0]                                    \n"
++            " bx lr                                           \n"
++            " sim_pendsv_run:                                 \n"
++            "                                                 \n"
+             " mrs r0, psp                                     \n" /* Read PSP in r0. */
+             " ldr r2, =pxCurrentTCB                           \n" /* r2 = &( pxCurrentTCB ). */
+             " ldr r1, [r2]                                    \n" /* r1 = pxCurrentTCB. */
+@@ -410,9 +400,7 @@
+             " mov r7, r11                                     \n" /* r7 = r11. */
+             " stmia r0!, {r4-r7}                              \n" /* Store the high registers that are not saved automatically. */
+             "                                                 \n"
+-            " cpsid i                                         \n"
+-            " bl vTaskSwitchContext                           \n"
+-            " cpsie i                                         \n"
++            " bl vPortSimSwitchContext                        \n" /* SIM_CRIT: cpsid i + маска NVIC, vTaskSwitchContext, вихід. */
+             "                                                 \n"
+             " ldr r2, =pxCurrentTCB                           \n" /* r2 = &( pxCurrentTCB ). */
+             " ldr r1, [r2]                                    \n" /* r1 = pxCurrentTCB. */
+--- Middlewares/FreeRTOS/portable/GCC/ARM_CM0/portasm.h
++++ Platform/rtos/port_sim/portasm.h
+@@ -79,12 +79,12 @@
+ /**
+  * @brief Disables interrupts.
+  */
+-uint32_t ulSetInterruptMask( void ) __attribute__( ( naked ) ) PRIVILEGED_FUNCTION;
++uint32_t ulSetInterruptMask( void ) PRIVILEGED_FUNCTION; /* SIM_CRIT: C у port.c, не naked */
+ 
+ /**
+  * @brief Enables interrupts.
+  */
+-void vClearInterruptMask( uint32_t ulMask ) __attribute__( ( naked ) ) PRIVILEGED_FUNCTION;
++void vClearInterruptMask( uint32_t ulMask ) PRIVILEGED_FUNCTION; /* SIM_CRIT: C у port.c, не naked */
+ 
+ /**
+  * @brief PendSV Exception handler.

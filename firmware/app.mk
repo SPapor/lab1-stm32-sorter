@@ -16,10 +16,13 @@ LDFLAGS += -Wl,--print-memory-usage
 #   ARCH=rtos      — FreeRTOS: ядро з Middlewares/FreeRTOS, задачі з Tasks/
 #   LTO=1          — -flto для всього образу (обидві ARCH однаково)
 #   TICK_HZ=<Гц>   — частота тіку FreeRTOS, лише для ARCH=rtos (методичка 7.2, п. 6)
+#   SIM_CRIT=1|0   — лише rtos: 1 (за замовчуванням) - порт з обходом для Wokwi
+#                    (Platform/rtos/port_sim), 0 - порт із сабмодуля без змін
 # Порожнє значення (кореневий Makefile передає змінні завжди) = за замовчуванням.
 ARCH_ON    := $(if $(ARCH),$(ARCH),superloop)
 LTO_ON     := $(if $(filter 1,$(LTO)),1,0)
 TICK_HZ_ON := $(if $(TICK_HZ),$(TICK_HZ),1000)
+SIM_CRIT_ON := $(if $(filter 0,$(SIM_CRIT)),0,1)
 
 ifeq ($(filter $(ARCH_ON),superloop rtos),)
 $(error ARCH=$(ARCH_ON): має бути superloop або rtos)
@@ -68,17 +71,23 @@ $(BUILD_DIR)/$(TARGET).elf: $(USER_OBJECTS)
 ifeq ($(ARCH_ON),rtos)
 RTOS_DIR     = Middlewares/FreeRTOS
 RTOS_PORT    = $(RTOS_DIR)/portable/GCC/ARM_CM0
+# SIM_CRIT=1 (за замовчуванням): копія порту з Platform/rtos/port_sim/ - критична
+# секція відкладає переривання, тік ядра і PendSV, бо Wokwi не враховує PRIMASK
+# (docs/rtos-design.md, розділ 2; відмінності - docs/port_sim-V11.3.3.patch).
+# SIM_CRIT=0 - порт із сабмодуля без змін. portmacro.h в обох - із сабмодуля
+RTOS_PORT_SRC = $(if $(filter 1,$(SIM_CRIT_ON)),Platform/rtos/port_sim,$(RTOS_PORT))
 # У збірці TEST_KSTRESS port.c і portasm.c включаються у Platform/rtos/kstress/
 # (той самий порт плюс лічильники критичних секцій), тож окремо не збираються
-RTOS_PORT_C  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress.c,$(RTOS_PORT)/port.c)
-RTOS_PORT_S  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress_asm.c,$(RTOS_PORT)/portasm.c)
+RTOS_PORT_C  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress.c,$(RTOS_PORT_SRC)/port.c)
+RTOS_PORT_S  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress_asm.c,$(RTOS_PORT_SRC)/portasm.c)
 RTOS_SOURCES = $(addprefix $(RTOS_DIR)/,tasks.c queue.c list.c stream_buffer.c) \
                $(RTOS_DIR)/portable/MemMang/heap_4.c \
                $(RTOS_PORT_C) $(RTOS_PORT_S)
 RTOS_OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(RTOS_SOURCES:.c=.o)))
 
 C_SOURCES  += $(RTOS_SOURCES)
-C_INCLUDES += -I$(RTOS_DIR)/include -I$(RTOS_PORT)
+# port_sim раніше за порт сабмодуля: port_kstress.c включає "port.c" звідти
+C_INCLUDES += -I$(RTOS_DIR)/include $(if $(filter 1,$(SIM_CRIT_ON)),-IPlatform/rtos/port_sim) -I$(RTOS_PORT)
 C_DEFS     += -DTICK_HZ=$(TICK_HZ_ON)
 vpath %.c $(sort $(dir $(RTOS_SOURCES)))
 
@@ -93,6 +102,7 @@ C_INCLUDES += -IPlatform/rtos/kstress
 endif
 endif
 C_DEFS += -DARCH_RTOS=$(if $(filter rtos,$(ARCH_ON)),1,0)
+C_DEFS += -DSIM_CRIT=$(if $(filter rtos,$(ARCH_ON)),$(SIM_CRIT_ON),0)
 
 # LTO: оптимізація всього образу на етапі лінкування (docs/rtos-design.md, бюджет
 # пам'яті). Код генерується вже в лінкері, тож -Os і секції по функціях треба
@@ -144,7 +154,7 @@ C_DEFS += -DPERF=$(PERF_ON)
 # Каталог build/ один на всі варіанти: об'єкти іншої ARCH, що лишилися від
 # попередньої збірки, не лінкуються — до ELF ідуть лише $(OBJECTS).
 BUILD_CFG  = $(BUILD_DIR)/build.cfg
-BUILD_LINE = ARCH=$(ARCH_ON) LTO=$(LTO_ON) TICK_HZ=$(TICK_HZ_ON) \
+BUILD_LINE = ARCH=$(ARCH_ON) LTO=$(LTO_ON) TICK_HZ=$(TICK_HZ_ON) SIM_CRIT=$(SIM_CRIT_ON) \
              $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0)) PERF=$(PERF_ON)
 
 # Версія прошивки в банері й першому рядку журналу (методичка 5.2, 6): git-хеш,

@@ -44,6 +44,17 @@ jobs:
       - name: Firmware build (ARCH=rtos, LTO=1, TEST_I2C_FAULT)
         run: make build ARCH=rtos LTO=1 TEST_I2C_FAULT=1
 
+      - name: Firmware build (ARCH=rtos, LTO=1, SIM_CRIT=0 - port from the submodule as is)
+        run: |
+          make compile ARCH=rtos SIM_CRIT=0
+          make build ARCH=rtos LTO=1 SIM_CRIT=0
+
+      - name: Firmware builds (ARCH=rtos, LTO=1) - test builds TEST_KSTRESS, TEST_APIPROBE
+        run: |
+          make build ARCH=rtos LTO=1 TEST_KSTRESS=1
+          make build ARCH=rtos LTO=1 TEST_KSTRESS=1 SIM_CRIT=0
+          make build ARCH=rtos LTO=1 TEST_APIPROBE=1
+
       - name: Firmware build (ARCH=rtos, LTO=1) for upload
         run: |
           make build ARCH=rtos LTO=1
