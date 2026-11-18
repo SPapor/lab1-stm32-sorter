@@ -28,4 +28,9 @@ uint32_t rtos_hal_heap_total(void);
  * у .noinit цілий; запис після цього стирається. 0 — асерту не було. */
 int rtos_hal_assert_take(uint32_t *line, uint32_t *pc);
 
+/* HardFault (stm32c0xx_it.c): рядок FATAL hardfault exc=<EXC_RETURN> pc=<адреса>
+ * і зупинка, як у configASSERT. pc - зі стека задачі; якщо збій стався на MSP
+ * (переривання або код до старту ядра), pc=0. */
+void rtos_hal_hardfault(uint32_t exc_return) __attribute__((noreturn));
+
 #endif /* RTOS_HAL_H */

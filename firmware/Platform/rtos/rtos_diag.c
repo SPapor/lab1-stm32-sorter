@@ -1,5 +1,5 @@
 /* Діагностика ядра (методичка 4.11, 7.2 пп. 2 і 5): configASSERT, переповнення
- * стека задачі, вичерпання heap ОС. Усі три зупиняють програму: переривання
+ * стека задачі, вичерпання heap ОС, HardFault. Усі чотири зупиняють програму: переривання
  * вимкнено, LD4 блимає. Рядок FATAL іде прямим записом у USART2 з опитуванням TXE:
  * printf у цей момент небезпечний (стек задачі вже зіпсований або купа порожня),
  * а переривань, від яких залежить HAL, уже немає.
@@ -128,6 +128,24 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
     fatal_begin();
     fatal_puts("stack overflow in ");
     fatal_puts(pcTaskName);
+    fatal_puts("\r\n");
+    fatal_halt();
+}
+
+void rtos_hal_hardfault(uint32_t exc_return)
+{
+    uint32_t pc = 0;
+
+    fatal_stop();
+    /* Біт 2 EXC_RETURN: кадр винятку на PSP (задача). Кадр на MSP уже зсунутий
+     * кадром самого обробника, тож там адреси не шукаємо */
+    if (exc_return & 0x4u)
+        pc = ((const uint32_t *)__get_PSP())[6];
+    fatal_begin();
+    fatal_puts("hardfault exc=0x");
+    fatal_putu(exc_return, 16u);
+    fatal_puts(" pc=0x");
+    fatal_putu(pc, 16u);
     fatal_puts("\r\n");
     fatal_halt();
 }
