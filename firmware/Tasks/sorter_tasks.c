@@ -15,6 +15,9 @@
 #ifdef TEST_APIPROBE
 #include "api_probe.h"
 #endif
+#if SIM_CRIT
+#include "port_sim.h"
+#endif
 
 /* Пріоритети й стеки - docs/rtos-design.md, розділ 6. Стек у словах (4 B):
  * стартова оцінка за tools/stack_graph.py, справжній - команда stack */
@@ -104,6 +107,9 @@ static lock_stat_t lock_stat[TASKS_LOCK_COUNT];
 #if PERF
 static uint64_t rt_base[T_COUNT + 1u];   /* run-time на stats reset, останній - idle */
 static uint64_t rt_total_base;
+#if SIM_CRIT
+static port_sim_counters_t sim_base;
+#endif
 #endif
 
 /* Мс -> тіки з округленням угору, щонайменше 1 тік (TICK_HZ=100: gate 5 мс - 1 тік = 10 мс) */
@@ -434,6 +440,24 @@ void tasks_report(tasks_out_fn out)
     out("LOGQ", "len=%u max_used=%lu lines=%lu drop=%lu trunc=%lu rx_drop=%lu",
         (unsigned)QLOG_LEN, (unsigned long)log_max_used, (unsigned long)log_lines,
         (unsigned long)log_drop, (unsigned long)log_trunc, (unsigned long)rx_drop);
+#if SIM_CRIT
+    {
+        /* Обхід PRIMASK для Wokwi (docs/rtos-design.md, розділ 2): скільки
+         * критичних секцій за вікно від stats reset - для ціни обходу в
+         * «вартості ОС» (крок 3: секції × такти пари з TEST_CRITCOST) */
+        port_sim_counters_t c;
+
+        port_sim_counters(&c);
+        out("SIMCRIT", "win_ms=%lu task_n=%lu isr_n=%lu deferred_tick=%lu deferred_pendsv=%lu "
+            "deferred_irq=%lu",
+            (unsigned long)perf_udiv64(total, perf_hal_cpu_hz() / 1000u, NULL),
+            (unsigned long)(c.crit_task_n - sim_base.crit_task_n),
+            (unsigned long)(c.crit_isr_n - sim_base.crit_isr_n),
+            (unsigned long)(c.deferred_tick - sim_base.deferred_tick),
+            (unsigned long)(c.deferred_pendsv - sim_base.deferred_pendsv),
+            (unsigned long)(c.deferred_irq - sim_base.deferred_irq));
+    }
+#endif
 }
 
 void tasks_stats_reset(void)
@@ -446,6 +470,9 @@ void tasks_stats_reset(void)
         rt_base[i] = s.ulRunTimeCounter;
     }
     rt_total_base = rtos_hal_runtime_now();
+#if SIM_CRIT
+    port_sim_counters(&sim_base);
+#endif
     for (unsigned i = 0; i < TASKS_LOCK_COUNT; i++)
         lock_stat[i] = (lock_stat_t){ 0u, 0u, 0u };
     log_max_used = 0;
