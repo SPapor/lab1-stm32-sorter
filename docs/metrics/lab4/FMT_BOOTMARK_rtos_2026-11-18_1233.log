@@ -1,0 +1,56 @@
+# git=8c895f3d (з BOOT) scenario=BOOTMARK build="ARCH=rtos LTO=1 TICK_HZ=1000 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=1 TEST_APIPROBE=0 PERF=1" perf=1 arch=rtos lto=1 tick_hz=1000 port=wokwi.com host_start=2026-11-18T12:33:00
+# Ціна символу після форматера App/fmt.c (коміт 5dd9324): мітки b і e навколо рядка BOOT, Wokwi у браузері, та сама схема, що в S1; далі stats.
+2 BOOT fw=lab4-rtos git=8c895f3d perf=1 arch=rtos lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=5120       
+12 EVT t_us=12145 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=517 pair_cyc=1316
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+40 EVT t_us=39771 name=i2c_fail
+44 EVT t_us=43632 name=i2c_ok
+53 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+60 EVT t_us=59772 name=i2c_fail
+64 EVT t_us=63637 name=i2c_ok
+73 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+80 EVT t_us=79770 name=i2c_fail
+84 EVT t_us=83636 name=i2c_ok
+87 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+163 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+168 SELFTEST dev=ldr_gate status=OK raw=1001
+173 SELFTEST dev=ldr_class status=OK raw=1001
+177 SELFTEST dev=servo status=OK pulse_us=1500
+182 SELFTEST_END ok=4 warn=1 fail=0
+222 STATE state=READY
+224 STACK used=544 reserved=1024 free=480 overflow=0
+229 HEAP arena=0 used=0 free=0
+233 BOOTMARK n=0 at=i tick=0 val=4294818783 load=4294967295
+239 BOOTMARK n=1 at=h tick=0 val=10055 load=11999
+244 BOOTMARK n=2 at=i tick=0 val=8624 load=11999
+249 BOOTMARK n=3 at=c tick=0 val=46247 load=47999
+254 BOOTMARK n=4 at=m tick=1 val=16127 load=47999
+260 BOOTMARK n=5 at=b tick=1 val=3275 load=47999
+265 BOOTMARK n=6 at=e tick=12 val=41356 load=47999
+272 EVT t_us=172885 name=ready_gate
+276 EVT t_us=177540 name=ready_class
+281 EVT t_us=272214 name=ready_imu
+760 EVT t_us=759670 name=ready_lcd
+stats
+1097 PERF git=8c895f3d now_cyc=517 pair_cyc=1316 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+1106 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+1111 STARTUP boot_us=12145 gate_us=172885 class_us=177540 imu_us=272214 lcd_us=759670 os_api_us=270403 os_start_us=270967
+1124 STAT name=uart_rx n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1134 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1144 STAT name=gate n=156 min_us=94 avg_us=94 max_us=110 period_us=5000 jit_min_us=-865 jit_max_us=39900 miss=2
+1155 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1166 STAT name=imu n=79 min_us=978 avg_us=1007 max_us=1052 period_us=10000 jit_min_us=-48 jit_max_us=39088 miss=1
+1178 STAT name=lcd n=1 min_us=37648 avg_us=37648 max_us=37648 period_us=500000 jit_min_us=0 jit_max_us=0 miss=0
+1189 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1200 STAT name=loop n=10989 min_us=31 avg_us=55 max_us=41829 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1211 STAT name=i2c_xfer n=468 min_us=59 avg_us=397 max_us=12502 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1223 STAT name=uart_line n=36 min_us=2234 avg_us=6260 max_us=12528 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1235 STAT name=lcd_update n=1 min_us=37391 avg_us=37391 max_us=37391 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1246 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1257 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1267 UART rx=6 ore=0
+1270 EVT t_us=1097554 name=cmd_rx
+1274 EVT t_us=1269782 name=cmd_reply
+1310 LOAD pct=33 pm=332 win_cyc=49879468 busy_cyc=16553224 windows=1
