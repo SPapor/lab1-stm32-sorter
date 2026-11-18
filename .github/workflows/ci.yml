@@ -52,12 +52,13 @@ jobs:
       - name: Firmware build (ARCH=rtos, LTO=1, ASSERT=1 - configASSERT is not in the product)
         run: make build ARCH=rtos LTO=1 ASSERT=1
 
-      - name: Firmware builds (ARCH=rtos, LTO=1) - test builds TEST_KSTRESS, TEST_APIPROBE
+      - name: Firmware builds (ARCH=rtos, LTO=1) - test builds TEST_KSTRESS, TEST_APIPROBE, TEST_CRITCOST, TEST_INVERSION
         run: |
           make build ARCH=rtos LTO=1 TEST_KSTRESS=1
           make build ARCH=rtos LTO=1 TEST_KSTRESS=1 SIM_CRIT=0
           make build ARCH=rtos LTO=1 TEST_APIPROBE=1
           make build ARCH=rtos LTO=1 TEST_CRITCOST=1
+          make build ARCH=rtos LTO=1 TEST_INVERSION=1
 
       - name: Firmware build (ARCH=rtos, LTO=1) for upload
         run: |

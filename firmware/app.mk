@@ -47,6 +47,9 @@ endif
 ifeq ($(TEST_CRITCOST)$(ARCH_ON),1superloop)
 $(error TEST_CRITCOST=1 лише для ARCH=rtos)
 endif
+ifeq ($(TEST_INVERSION)$(ARCH_ON),1superloop)
+$(error TEST_INVERSION=1 лише для ARCH=rtos)
+endif
 
 # Platform/<arch>/ — те, що в двох архітектурах різне: обробники SVC, PendSV,
 # SysTick, база часу HAL, лічильник тіків для perf_now (perf_tick.h)
@@ -139,10 +142,12 @@ C_DEFS += -DBUILD_LTO=$(LTO_ON)
 #   TEST_APIPROBE=1  — зонд бюджету flash: посилання на все API ядра кроків 2-3 (лише rtos)
 #   TEST_KSTRESS=1   — стрес-тест ядра в Wokwi замість задачі app (лише rtos)
 #   TEST_CRITCOST=1  — ціна входу й виходу критичної секції ядра (лише rtos, PERF=1)
+#   TEST_INVERSION=1 — шина I2C під двійковим семафором замість м'ютекса: інверсія
+#                      пріоритетів без успадкування (методичка 7.2, п. 1; лише rtos)
 #   PERF=0           — без вимірювального модуля ЛР3 (docs/perf.md); за замовчуванням 1
 # TEST_* у продукт не входять; docs/rtos-design.md, розділи 2 і 5
 BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE TEST_KSTRESS \
-              TEST_CRITCOST
+              TEST_CRITCOST TEST_INVERSION
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
 
 # PERF завжди визначений (#if PERF): 0 лише явно, порожнє значення = 1.

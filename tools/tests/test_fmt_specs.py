@@ -50,6 +50,27 @@ def bad_specs(text):
     return found
 
 
+# Виклики, що в rtos ідуть через чергу журналу: аргументів не більше за
+# TASKS_LOG_ARGS (Tasks/sorter_tasks.h), інакше хвіст рядка загубиться (LOGQ trunc)
+QUEUED = re.compile(r'\b(?:ev_log|ev_i2c|c->log)\s*\(\s*"[^"]*"\s*,\s*((?:"(?:[^"\\]|\\.)*"\s*)+)')
+LOG_ARGS = re.compile(r'#define\s+TASKS_LOG_ARGS\s+(\d+)')
+
+
+def queued_formats(text):
+    """(рядок, формат) для кожного виклику ev_log/ev_i2c/c->log з літералом формату"""
+    blank = lambda m: re.sub(r'[^\n]', ' ', m.group(0))  # noqa: E731
+    code = COMMENT.sub(blank, text)
+    out = []
+    for m in QUEUED.finditer(code):
+        fmt = ''.join(STRING.findall(m.group(1)))
+        out.append((code.count('\n', 0, m.start()) + 1, fmt))
+    return out
+
+
+def arg_count(fmt):
+    return sum(1 for s in CONVERSION.finditer(fmt) if s.group(0) != '%%')
+
+
 class FmtSpecsTest(unittest.TestCase):
     def test_firmware_formats_supported(self):
         bad = []
@@ -58,6 +79,24 @@ class FmtSpecsTest(unittest.TestCase):
                 for line, spec in bad_specs(f.read()):
                     bad.append(f'{os.path.relpath(path, ROOT)}:{line}: {spec}')
         self.assertEqual(bad, [], 'специфікатори, яких немає у App/fmt.c')
+
+    def test_queued_log_args_fit_record(self):
+        with open(os.path.join(ROOT, 'Tasks', 'sorter_tasks.h'), encoding='utf-8') as f:
+            limit = int(LOG_ARGS.search(f.read()).group(1))
+        seen, over = 0, []
+        for path in sources():
+            with open(path, encoding='utf-8') as f:
+                for line, fmt in queued_formats(f.read()):
+                    seen += 1
+                    if arg_count(fmt) > limit:
+                        over.append(f'{os.path.relpath(path, ROOT)}:{line}: {arg_count(fmt)} > {limit}')
+        self.assertGreater(seen, 10)                       # знайшов справжні виклики
+        self.assertEqual(over, [], 'аргументів більше, ніж вміщує запис qLog')
+
+    def test_queued_formats_parser(self):
+        text = 'ev_log("SORT", "n=%lu a=%s "\n  "b=%u %%", n, a, b);  /* ev_log("X", "%u") */'
+        self.assertEqual(queued_formats(text), [(1, 'n=%lu a=%s b=%u %%')])
+        self.assertEqual(arg_count('n=%lu a=%s b=%u %%'), 3)
 
     def test_checker_catches_unsupported(self):
         self.assertEqual(bad_specs('x("n=%zu v=%.2f t=%llu ok=%08lX %%");'),
