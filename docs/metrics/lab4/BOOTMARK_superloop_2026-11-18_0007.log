@@ -1,0 +1,17 @@
+# git=cad75f82 (з BOOT) scenario=BOOTMARK build="ARCH=superloop LTO=1 TICK_HZ=1000 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=1 PERF=1" perf=1 arch=superloop lto=1 tick_hz=1000 port=wokwi.com host_start=2026-11-18T00:07:00
+# Wokwi у браузері (wokwi.com, «Upload Firmware and Start Simulation»), лише плата NUCLEO-C031C6. Мітки: i - HAL_InitTick перед перезапуском SysTick, h - після HAL_Init, c - після SystemClock_Config, m - після MX_*_Init, b - перед BOOT, e - після BOOT. Мітка n=0 - до першого запуску SysTick (VAL і LOAD ще не налаштовані).
+2 BOOT fw=lab3-superloop git=cad75f82 perf=1 arch=superloop lto=1 tick_hz=1000
+10 EVT t_us=9890 name=boot
+13 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+19 PERF cpu_hz=48000000 now_cyc=526 pair_cyc=1296
+125 SELFTEST_END ok=3 warn=0 fail=2
+132 STATE state=FAULT
+134 STACK used=840 reserved=1024 free=184 overflow=0
+140 HEAP arena=436 used=436 free=0
+143 BOOTMARK n=0 at=i tick=0 val=4294921239 load=4294967295
+150 BOOTMARK n=1 at=h tick=0 val=11471 load=11999
+155 BOOTMARK n=2 at=i tick=0 val=10064 load=11999
+160 BOOTMARK n=3 at=c tick=0 val=47687 load=47999
+165 BOOTMARK n=4 at=m tick=1 val=17711 load=47999
+171 BOOTMARK n=5 at=b tick=2 val=41255 load=47999
+176 BOOTMARK n=6 at=e tick=9 val=5604 load=47999

@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """Flash і RAM за модулями та найбільші символи з map-файлу GNU ld.
 
-    tools/map_summary.py [firmware.map] [-n N]
+    tools/map_summary.py [firmware.map] [-n N] [--objects] [--module МОДУЛЬ]
 
 За замовчуванням firmware/build/firmware.map (збірка з -Wl,-Map=...,--cref і
 -ffunction-sections -fdata-sections, як у firmware/Makefile). Модуль об'єкта
 визначається за тим, де лежить його джерело: Core, Drivers, Platform, Devices,
-App; бібліотеки - libc, libgcc тощо. .data рахується і у flash (початкові
-значення), і в RAM; ._user_heap_stack - резерв купи й стека зі скрипту лінкера.
+App, Tasks, Middlewares (ядро FreeRTOS); бібліотеки - libc, libgcc тощо. .data
+рахується і у flash (початкові значення), і в RAM; ._user_heap_stack - резерв купи
+й стека зі скрипту лінкера, .noinit - RAM, яку startup не обнуляє.
+--objects - ще й внесок кожного об'єктного файла (tasks.o, queue.o, ...), з
+--module - лише файли одного модуля (Middlewares, Platform, ...). З LTO код генерується в лінкері, і в map замість файлів -
+*.ltrans.o: по файлах можна розкласти лише збірку з LTO=0.
 Сума за модулями може бути трохи більшою за підсумок ld: у map розмір рядкових
 секцій (.str1.1) указано до того, як лінкер злив однакові рядки.
 """
@@ -20,8 +24,11 @@ from collections import defaultdict
 FLASH_OUT = {'.isr_vector', '.text', '.rodata', '.ARM.extab', '.ARM',
              '.preinit_array', '.init_array', '.fini_array'}
 BOTH_OUT = {'.data'}
-RAM_OUT = {'.bss', '._user_heap_stack'}
-MODULES = ('Core', 'Platform', 'Devices', 'App', 'Drivers')
+RAM_OUT = {'.bss', '.noinit', '._user_heap_stack'}
+MODULES = ('Core', 'Platform', 'Devices', 'App', 'Tasks', 'Drivers', 'Middlewares')
+# Джерела, які в прошивку не збираються (приклади і шаблони сторонніх пакетів):
+# їхні імена файлів не мають перекривати наші (main.c у прикладах FreeRTOS)
+SKIP_DIRS = {'build', 'examples', 'Templates'}
 
 IN_FULL = re.compile(r'^ (\S+)\s+0x([0-9a-f]+)\s+0x([0-9a-f]+)\s*(.*)$')
 IN_NAME = re.compile(r'^ (\S+)\s*$')
@@ -31,15 +38,20 @@ OUT_NAME = re.compile(r'^(\.\S+)\s*$')
 
 
 def source_modules(fw):
-    """basename без розширення -> модуль, за деревом firmware/."""
-    mods = {}
-    for root, _, files in os.walk(fw):
+    """basename без розширення -> модуль, за деревом firmware/. Обхід у порядку
+    MODULES: якщо однакове ім'я є в кількох місцях, виграє наш шар, а не сторонній."""
+    found = []
+    for root, dirs, files in os.walk(fw):
+        dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS and not d.startswith('.'))
         rel = os.path.relpath(root, fw).replace('\\', '/').split('/')
-        mod = next((m for m in MODULES if m in rel), None)
-        for f in files:
+        mod = next((m for m in MODULES if m in rel), None) or 'Core'   # startup_*.s - у корені
+        for f in sorted(files):
             stem, ext = os.path.splitext(f)
             if ext in ('.c', '.s', '.S'):
-                mods.setdefault(stem, mod or 'Core')   # startup_*.s лежить у корені
+                found.append((MODULES.index(mod), stem, mod))
+    mods = {}
+    for _, stem, mod in sorted(found):
+        mods.setdefault(stem, mod)
     return mods
 
 
@@ -51,7 +63,16 @@ def module_of(obj, mods):
     base = os.path.basename(obj)
     if base.startswith('crt'):
         return 'crt'
+    if '.ltrans' in base:                         # LTO: код усіх наших .o разом
+        return 'LTO'
     return mods.get(os.path.splitext(base)[0], '?')
+
+
+def obj_name(obj):
+    """build/tasks.o -> tasks.o; libc_nano.a(lib_a-printf.o) -> libc_nano.a(lib_a-printf.o)"""
+    if '.a(' in obj:
+        return os.path.basename(obj.split('(')[0]) + '(' + obj.split('(', 1)[1]
+    return os.path.basename(obj) or 'linker'
 
 
 def symbol_of(section, obj):
@@ -67,6 +88,7 @@ def symbol_of(section, obj):
 def parse(path, mods):
     flash = defaultdict(int)
     ram = defaultdict(int)
+    objs = defaultdict(lambda: [0, 0, ''])   # об'єкт -> [flash, RAM, модуль]
     out_size = defaultdict(int)     # розміри вихідних секцій — підсумок ld
     symbols = []
     out = None
@@ -87,7 +109,7 @@ def parse(path, mods):
                     if kind == 'out':
                         out_size[name] += size
                         continue
-                    account(out, name, size, m.group(3), mods, flash, ram, symbols)
+                    account(out, name, size, m.group(3), mods, flash, ram, symbols, objs)
                     continue
             m = OUT_FULL.match(line)
             if m:
@@ -101,7 +123,8 @@ def parse(path, mods):
                 continue
             m = IN_FULL.match(line)
             if m:
-                account(out, m.group(1), int(m.group(3), 16), m.group(4), mods, flash, ram, symbols)
+                account(out, m.group(1), int(m.group(3), 16), m.group(4), mods, flash, ram, symbols,
+                        objs)
                 continue
             m = IN_NAME.match(line)
             if m and not m.group(1).startswith('*('):
@@ -110,10 +133,10 @@ def parse(path, mods):
         sys.exit(f'{path}: немає розділу "Linker script and memory map"')
     ld_flash = sum(v for k, v in out_size.items() if k in FLASH_OUT or k in BOTH_OUT)
     ld_ram = sum(v for k, v in out_size.items() if k in RAM_OUT or k in BOTH_OUT)
-    return flash, ram, symbols, (ld_flash, ld_ram)
+    return flash, ram, symbols, (ld_flash, ld_ram), objs
 
 
-def account(out, section, size, obj, mods, flash, ram, symbols):
+def account(out, section, size, obj, mods, flash, ram, symbols, objs):
     if size == 0 or out is None:
         return
     in_flash = out in FLASH_OUT or out in BOTH_OUT
@@ -130,7 +153,11 @@ def account(out, section, size, obj, mods, flash, ram, symbols):
         flash[mod] += size
     if in_ram:
         ram[mod] += size
-    if section not in ('*fill*',):
+    if section != '*fill*':
+        o = objs[obj_name(obj)]
+        o[0] += size if in_flash else 0
+        o[1] += size if in_ram else 0
+        o[2] = mod
         region = 'FLASH+RAM' if out in BOTH_OUT else ('FLASH' if in_flash else 'RAM')
         symbols.append((size, region, mod, symbol_of(section, obj)))
 
@@ -139,10 +166,13 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument('map', nargs='?', default='firmware/build/firmware.map')
     ap.add_argument('-n', type=int, default=15, help='скільки символів показати (15)')
+    ap.add_argument('--objects', action='store_true', help='ще й внесок кожного .o')
+    ap.add_argument('--module', metavar='МОДУЛЬ',
+                    help='з --objects: лише файли цього модуля (напр. Middlewares)')
     args = ap.parse_args()
 
     fw = os.path.dirname(os.path.dirname(os.path.abspath(args.map)))
-    flash, ram, symbols, (ld_flash, ld_ram) = parse(args.map, source_modules(fw))
+    flash, ram, symbols, (ld_flash, ld_ram), objs = parse(args.map, source_modules(fw))
 
     names = sorted(set(flash) | set(ram), key=lambda m: (-flash.get(m, 0), -ram.get(m, 0)))
     tf, tr = sum(flash.values()), sum(ram.values())
@@ -154,6 +184,15 @@ def main():
     print(f'{"підсумок ld":<16} {ld_flash:>9} {"":>6} {ld_ram:>8}'
           '   (порівняти з --print-memory-usage; RAM може бути на кілька байтів меншою'
           ' через вирівнювання між секціями)')
+
+    if args.objects:
+        rows = sorted(((n, f, r, m) for n, (f, r, m) in objs.items()
+                       if not args.module or m == args.module), key=lambda x: (-x[1], -x[2]))
+        head = "об'єкт"
+        print(f'\n{head:<28} {"модуль":<12} {"flash, B":>9} {"RAM, B":>8}')
+        for n, f, r, m in rows:
+            print(f'{n:<28} {m:<12} {f:>9} {r:>8}')
+        print(f'{"разом":<28} {"":<12} {sum(x[1] for x in rows):>9} {sum(x[2] for x in rows):>8}')
 
     symbols.sort(key=lambda s: -s[0])
     print(f'\nНайбільші символи (топ {args.n}):')

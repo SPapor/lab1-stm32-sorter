@@ -1,0 +1,64 @@
+# git=50939149 (з BOOT) scenario=BOOT_WIDTH build="ARCH=superloop LTO=1 TICK_HZ=1000 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=0 PERF=1" perf=1 arch=superloop lto=1 tick_hz=1000 port=wokwi.com host_start=2026-11-18T12:13:00
+# Перевірка рядка BOOT однієї довжини (коміт 5093914): Wokwi у браузері, та сама схема, що в S1, без команд до stats. Довжина рядка BOOT без CRLF: 103 символів (текст доповнено пробілами до 96).
+2 BOOT fw=lab3-superloop git=50939149 perf=1 arch=superloop lto=1 tick_hz=1000                         
+12 EVT t_us=12079 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=526 pair_cyc=1298
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+40 EVT t_us=39824 name=i2c_fail
+44 EVT t_us=43728 name=i2c_ok
+53 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+60 EVT t_us=59830 name=i2c_fail
+64 EVT t_us=63740 name=i2c_ok
+73 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+80 EVT t_us=79825 name=i2c_fail
+84 EVT t_us=83735 name=i2c_ok
+87 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+163 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+168 SELFTEST dev=ldr_gate status=OK raw=1001
+173 SELFTEST dev=ldr_class status=OK raw=1001
+177 SELFTEST dev=servo status=OK pulse_us=1500
+182 SELFTEST_END ok=4 warn=1 fail=0
+221 STATE state=READY
+224 STACK used=848 reserved=1024 free=176 overflow=0
+229 HEAP arena=436 used=436 free=0
+235 EVT t_us=172913 name=ready_gate
+239 EVT t_us=177544 name=ready_class
+243 EVT t_us=234530 name=ready_imu
+758 EVT t_us=758391 name=ready_lcd
+1258 LOAD pct=18 pm=184 win_cyc=49205797 busy_cyc=9077834 windows=1
+2258 LOAD pct=19 pm=187 win_cyc=48001568 busy_cyc=8962982 windows=2
+3259 LOAD pct=19 pm=188 win_cyc=48062755 busy_cyc=9016226 windows=3
+4259 LOAD pct=19 pm=188 win_cyc=48000965 busy_cyc=9016016 windows=4
+5259 LOAD pct=19 pm=188 win_cyc=48000636 busy_cyc=9016203 windows=5
+6259 LOAD pct=19 pm=188 win_cyc=48001392 busy_cyc=9016109 windows=6
+7260 LOAD pct=19 pm=188 win_cyc=48000756 busy_cyc=9011984 windows=7
+8260 LOAD pct=19 pm=188 win_cyc=48002244 busy_cyc=9011786 windows=8
+stats
+9194 PERF git=50939149 now_cyc=526 pair_cyc=1298 cyc_per_us=48 arch=superloop lto=1 tick_hz=1000
+9203 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+9208 STARTUP boot_us=12079 gate_us=172913 class_us=177544 imu_us=234530 lcd_us=758391
+9218 STAT name=uart_rx n=2 min_us=47 avg_us=47 max_us=47 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9228 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9238 STAT name=gate n=1666 min_us=93 avg_us=94 max_us=94 period_us=5000 jit_min_us=-961 jit_max_us=42601 miss=18
+9249 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9259 STAT name=imu n=842 min_us=1018 avg_us=1018 max_us=1055 period_us=10000 jit_min_us=-675 jit_max_us=43721 miss=17
+9271 STAT name=lcd n=17 min_us=37330 avg_us=37335 max_us=37374 period_us=500000 jit_min_us=-205 jit_max_us=201 miss=0
+9283 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9294 STAT name=loop n=140044 min_us=31 avg_us=46 max_us=41576 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9305 STAT name=i2c_xfer n=4170 min_us=59 avg_us=345 max_us=12601 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9316 STAT name=uart_line n=37 min_us=2305 avg_us=6526 max_us=11707 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9328 STAT name=lcd_update n=17 min_us=37109 avg_us=37112 max_us=37118 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9340 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9350 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+9360 UART rx=6 ore=0
+9363 EVT t_us=9194007 name=cmd_rx
+9367 EVT t_us=9362850 name=cmd_reply
+9410 LOAD pct=31 pm=315 win_cyc=55206599 busy_cyc=17379994 windows=9
+10410 LOAD pct=19 pm=188 win_cyc=48035304 busy_cyc=9011947 windows=10
+11410 LOAD pct=19 pm=188 win_cyc=48000136 busy_cyc=9012022 windows=11
+12410 LOAD pct=19 pm=188 win_cyc=48002283 busy_cyc=9011799 windows=12
+13411 LOAD pct=19 pm=188 win_cyc=48002355 busy_cyc=9011764 windows=13
+14411 LOAD pct=19 pm=188 win_cyc=48000276 busy_cyc=9012057 windows=14
+15411 LOAD pct=19 pm=188 win_cyc=48002146 busy_cyc=9011984 windows=15
+16411 LOAD pct=19 pm=188 win_cyc=48002632 busy_cyc=9012071 windows=16

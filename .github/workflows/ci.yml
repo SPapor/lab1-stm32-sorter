@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true          # ядро FreeRTOS: firmware/Middlewares/FreeRTOS
 
       - name: Docker image (docker/Dockerfile)
         run: docker build -t stm32-build docker/
@@ -30,6 +32,26 @@ jobs:
       - name: Firmware build (TEST_I2C_FAULT)
         run: make build TEST_I2C_FAULT=1
 
+      - name: Firmware compile (ARCH=rtos, LTO=0) - -Werror and stack frames per file
+        run: make compile ARCH=rtos
+
+      - name: Firmware build (ARCH=rtos, LTO=1, TICK_HZ=100)
+        run: make build ARCH=rtos LTO=1 TICK_HZ=100
+
+      - name: Firmware build (ARCH=rtos, LTO=1, PERF=0)
+        run: make build ARCH=rtos LTO=1 PERF=0
+
+      - name: Firmware build (ARCH=rtos, LTO=1, TEST_I2C_FAULT)
+        run: make build ARCH=rtos LTO=1 TEST_I2C_FAULT=1
+
+      - name: Firmware build (ARCH=rtos, LTO=1) for upload
+        run: |
+          make build ARCH=rtos LTO=1
+          cp firmware/build/firmware.elf firmware-rtos.elf
+
+      - name: Firmware build (ARCH=superloop, LTO=1)
+        run: make build LTO=1
+
       - name: Firmware build
         run: make build
 
@@ -43,7 +65,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: firmware
-          path: firmware/build/firmware.elf
+          path: |
+            firmware/build/firmware.elf
+            firmware-rtos.elf
 
       - name: Upload coverage report
         if: always()

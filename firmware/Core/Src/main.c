@@ -52,6 +52,14 @@
 #include "mem_hal.h"
 #include <malloc.h>
 #endif
+#if ARCH_RTOS
+#include "rtos_hal.h"
+#include "app_task.h"
+#endif
+#if defined(TEST_PRIMASK) || defined(TEST_BOOTMARK)
+#include "perf_hal.h"
+#include "perf_tick.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,7 +100,20 @@ enum {
 #define PERF_WIN_MS         1000u   /* вікно завантаження CPU, docs/perf.md */
 #define IMU_READY_MG        500     /* |a| від 0,5 g — MPU справді міряє (у SLEEP на залізі дає нулі) */
 
+/* Архітектура (app.mk: ARCH, LTO, TICK_HZ) — у рядках BOOT і PERF */
+#if ARCH_RTOS
+#define FW_NAME             "lab4-rtos"
+#define ARCH_NAME           "rtos"
+#else
 #define FW_NAME             "lab3-superloop"
+#define ARCH_NAME           "superloop"
+#define TICK_HZ             1000u       /* тік HAL; у rtos — тік ядра з app.mk */
+#endif
+/* Ширина тексту рядка BOOT після "BOOT ": коротший доповнюється пробілами, тож друк
+ * BOOT займає той самий час в обох ARCH і не входить у різницю STARTUP між ними
+ * (docs/rtos-design.md, розділ 5). 96 - найдовший рядок rtos: git-хеш з -dirty,
+ * TICK_HZ до 4 цифр, os_heap до 4 цифр; довший друкується без доповнення. */
+#define BOOT_WIDTH          96u
 #ifndef GIT_HASH
 #define GIT_HASH            "unknown"   /* app.mk передає -DGIT_HASH з git describe */
 #endif
@@ -229,18 +250,14 @@ static volatile uint32_t estop_edge_ms;     /* час першого фронт�
 static uint8_t stream_on = 1;   /* періодичний рядок accel (команда stream) */
 #endif
 
-/* Текст команди help; синтаксис розбирає App/cli.c */
+/* Текст команди help: лише синтаксис, без описів (бюджет flash ЛР4,
+ * docs/rtos-design.md, розділ 4); синтаксис розбирає App/cli.c */
 static const char *const help_lines[] = {
-  "help                this list",
-  "status              state, counters A/B/REJECT",
-  "reset               zero the counters",
-  "log on|off          event lines on UART (default on)",
+  "help | status | reset | log on|off",
 #if PERF
-  "stats [reset]       timing stats",
-  "load                CPU load, 1 s",
-  "stack | heap        memory",
-  "hist gate|imu|lcd   jitter histogram",
-  "set <knob> <n>      lcd_ms lcd_chars imu_ms log",
+  "stats [reset] | load | stack | heap",
+  "hist gate|imu|lcd",
+  "set lcd_ms|lcd_chars|imu_ms|log <n>",
 #endif
 #ifdef LAB2_CAP
   "stream on|off       periodic 'accel' line (default on)",
@@ -259,14 +276,24 @@ static const char *const help_lines[] = {
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+static void loop_pass(void);
+#ifdef TEST_PRIMASK
+static void primask_test(void);
+#endif
+#ifdef TEST_BOOTMARK
+#define BOOTMARK(at) perf_bootmark(at)
+#else
+#define BOOTMARK(at) ((void)0)
+#endif
 static void uart_rx_task(void);
 static void estop_task(void);
 static void gate_task(void);
 static void sort_task(void);
 static void imu_task(void);
 static void lcd_task(void);
-static void ev_vprint(const char *event, const char *fmt, va_list ap);
+static void ev_vprint(const char *event, unsigned width, const char *fmt, va_list ap);
 static void ev_log(const char *event, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+static void boot_log(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 static void cli_reply(const char *event, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 static void led_mark(uint8_t on);
 static selftest_counts_t selftest_run(void);
@@ -372,14 +399,14 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  BOOTMARK('h');               /* дослід TEST_BOOTMARK: після HAL_Init */
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  BOOTMARK('c');               /* після перемикання тактування */
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -389,12 +416,29 @@ int main(void)
   MX_TIM3_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  BOOTMARK('m');               /* після MX_*_Init */
   setvbuf(stdout, NULL, _IONBF, 0);
 #if PERF
   perf_hal_init();
   perf_setup();
 #endif
-  ev_log("BOOT", "fw=%s git=%s perf=%u", FW_NAME, GIT_HASH, (unsigned)PERF);
+  BOOTMARK('b');               /* перед рядком BOOT */
+#if ARCH_RTOS
+  boot_log("fw=%s git=%s perf=%u arch=%s lto=%u tick_hz=%u kernel=%s os_heap=%lu",
+           FW_NAME, GIT_HASH, (unsigned)PERF, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ,
+           rtos_hal_kernel_version(), (unsigned long)rtos_hal_heap_total());
+  {
+    uint32_t line, pc;
+
+    /* configASSERT до скидання: рядок і адреса виклику збережені в .noinit */
+    if (rtos_hal_assert_take(&line, &pc))
+      ev_log("ASSERT", "line=%lu pc=0x%08lX", (unsigned long)line, (unsigned long)pc);
+  }
+#else
+  boot_log("fw=%s git=%s perf=%u arch=%s lto=%u tick_hz=%u", FW_NAME, GIT_HASH,
+           (unsigned)PERF, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ);
+#endif
+  BOOTMARK('e');               /* після рядка BOOT */
 #if PERF
   {
     uint64_t t = perf_now_us64();
@@ -440,36 +484,30 @@ int main(void)
   stack_report();               /* глибина стека й купа після старту (методичка 5.4) */
   heap_report();
 #endif
+#ifdef TEST_BOOTMARK
+  perf_bootmark_report(cli_reply);
+#endif
+#ifdef TEST_PRIMASK
+  primask_test();
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+#if ARCH_RTOS
+  /* FreeRTOS, крок 1: увесь цикл — у задачі app (Tasks/app_task.c); сюди не повертається.
+   * Тут перший виклик API ядра: з нього до старту ядра переривання вимкнені
+   * (ulCriticalNesting = 0xaaaaaaaa у порту), HAL_GetTick стоїть. Тому вся
+   * ініціалізація з HAL_Delay і тайм-аутами HAL (LCD, самоперевірка, I2C) — вище */
+  app_task_start(loop_pass);
+#endif
   while (1)
   {
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    /* Super loop: задачі по черзі; кожна сама перевіряє свій час і повертає
-     * керування. Блокувальні виклики всередині задач — docs/tasks.md. */
-#if PERF
-    uint32_t t_loop = perf_now();
-    if (perf_load_poll(&load, t_loop) && log_level >= 2)
-      load_line(ev_log);
-#endif
-    uart_rx_task();
-    estop_task();
-    gate_task();
-    sort_task();
-    imu_task();
-    lcd_task();
-#ifdef LAB2_CAP
-    telemetry_task();
-#endif
-#if PERF
-    ready_flush();
-    perf_add(&st_loop, perf_now() - t_loop);
-#endif
+    loop_pass();
   }
   /* USER CODE END 3 */
 }
@@ -516,13 +554,17 @@ void SystemClock_Config(void)
  * printf → _write → HAL_UART_Transmit: виклик блокує цикл до кінця передачі,
  * ≈ 87 мкс на байт при 115200 8N1.
  * ------------------------------------------------------------------------- */
-static void ev_vprint(const char *event, const char *fmt, va_list ap)
+static void ev_vprint(const char *event, unsigned width, const char *fmt, va_list ap)
 {
+  int n;
 #if PERF
   uint32_t t0 = perf_now();
 #endif
   printf("%lu %s ", (unsigned long)HAL_GetTick(), event);
-  vprintf(fmt, ap);
+  n = vprintf(fmt, ap);
+  /* Доповнення до width символів тексту (лише BOOT, решта - width = 0) */
+  for (; n >= 0 && (unsigned)n < width; n++)
+    con_write(" ", 1);
   con_write("\r\n", 2);
 #if PERF
   perf_add(&st_uart_line, perf_now() - t0);
@@ -537,7 +579,19 @@ static void ev_log(const char *event, const char *fmt, ...)
   if (log_level == 0)
     return;
   va_start(ap, fmt);
-  ev_vprint(event, fmt, ap);
+  ev_vprint(event, 0u, fmt, ap);
+  va_end(ap);
+}
+
+/* Рядок BOOT: як ev_log, але завжди BOOT_WIDTH символів тексту */
+static void boot_log(const char *fmt, ...)
+{
+  va_list ap;
+
+  if (log_level == 0)
+    return;
+  va_start(ap, fmt);
+  ev_vprint("BOOT", BOOT_WIDTH, fmt, ap);
   va_end(ap);
 }
 
@@ -547,7 +601,7 @@ static void cli_reply(const char *event, const char *fmt, ...)
   va_list ap;
 
   va_start(ap, fmt);
-  ev_vprint(event, fmt, ap);
+  ev_vprint(event, 0u, fmt, ap);
   va_end(ap);
 }
 
@@ -560,9 +614,63 @@ static void led_mark(uint8_t on)
   HAL_GPIO_WritePin(BOARD_LED_MARK_PORT, BOARD_LED_MARK_PIN, on ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
+#ifdef TEST_PRIMASK
+/* Дослід (docs/rtos-design.md, розділ 2): чи маскує PRIMASK переривання. З
+ * вимкненими перериваннями - 10 повних обертів SysTick, які рахуємо опитуванням
+ * COUNTFLAG. На залізі uwTick і лічильник тіків perf за цей час не змінюються, а
+ * тік чекає в PENDSTSET. У super loop обидва лічильники - uwTick, у rtos uwTick
+ * рахує TIM17, а тіки perf - SysTick_Handler. */
+static void primask_test(void)
+{
+  uint32_t uw0, pt0, uw1, pt1, pend, pm;
+  unsigned wraps = 0;
+
+  __disable_irq();
+  pm = __get_PRIMASK();
+  uw0 = uwTick;
+  pt0 = perf_tick_count();
+  (void)SysTick->CTRL;                 /* скинути COUNTFLAG */
+  while (wraps < 10u)
+    if (SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk)
+      wraps++;
+  uw1 = uwTick;
+  pt1 = perf_tick_count();
+  pend = (SCB->ICSR & SCB_ICSR_PENDSTSET_Msk) != 0u;
+  __enable_irq();
+  cli_reply("PRIMASK", "uwtick_delta=%lu perf_tick_delta=%lu pendst=%lu wraps=%u primask=%lu",
+            (unsigned long)(uw1 - uw0), (unsigned long)(pt1 - pt0), (unsigned long)pend,
+            wraps, (unsigned long)pm);
+}
+#endif
+
 /* ---------------------------------------------------------------------------
  * Задачі super loop (docs/tasks.md)
  * ------------------------------------------------------------------------- */
+
+/* Один прохід циклу: задачі по черзі; кожна сама перевіряє свій час і повертає
+ * керування. Блокувальні виклики всередині задач — docs/tasks.md. У super loop
+ * його викликає while (1) у main, у ARCH=rtos — задача app. */
+static void loop_pass(void)
+{
+#if PERF
+  uint32_t t_loop = perf_now();
+  if (perf_load_poll(&load, t_loop) && log_level >= 2)
+    load_line(ev_log);
+#endif
+  uart_rx_task();
+  estop_task();
+  gate_task();
+  sort_task();
+  imu_task();
+  lcd_task();
+#ifdef LAB2_CAP
+  telemetry_task();
+#endif
+#if PERF
+  ready_flush();
+  perf_add(&st_loop, perf_now() - t_loop);
+#endif
+}
 
 /* Кожен прохід: усі прийняті байти → cli; завершена команда виконується тут же
  * разом з друком відповіді. USART2 без FIFO, прийом опитуванням: якщо між двома
@@ -1034,13 +1142,29 @@ static void stats_report(void)
   };
   uint32_t rx, ore;
 
-  cli_reply("PERF", "git=%s now_cyc=%lu pair_cyc=%lu cyc_per_us=%lu", GIT_HASH,
-            (unsigned long)perf_now_cyc, (unsigned long)perf_pair_cyc, (unsigned long)cyc_per_us);
+  cli_reply("PERF", "git=%s now_cyc=%lu pair_cyc=%lu cyc_per_us=%lu arch=%s lto=%u tick_hz=%u",
+            GIT_HASH, (unsigned long)perf_now_cyc, (unsigned long)perf_pair_cyc,
+            (unsigned long)cyc_per_us, ARCH_NAME, (unsigned)BUILD_LTO, (unsigned)TICK_HZ);
   knobs_line();
+#if ARCH_RTOS
+  {
+    uint32_t os_api_us, os_start_us;
+
+    /* ще й старт ядра: перший виклик API і запуск першої задачі */
+    rtos_hal_startup_us(&os_api_us, &os_start_us);
+    cli_reply("STARTUP", "boot_us=%lu gate_us=%lu class_us=%lu imu_us=%lu lcd_us=%lu "
+              "os_api_us=%lu os_start_us=%lu",
+              (unsigned long)boot_us, (unsigned long)ready_us[RDY_GATE],
+              (unsigned long)ready_us[RDY_CLASS], (unsigned long)ready_us[RDY_IMU],
+              (unsigned long)ready_us[RDY_LCD], (unsigned long)os_api_us,
+              (unsigned long)os_start_us);
+  }
+#else
   cli_reply("STARTUP", "boot_us=%lu gate_us=%lu class_us=%lu imu_us=%lu lcd_us=%lu",
             (unsigned long)boot_us, (unsigned long)ready_us[RDY_GATE],
             (unsigned long)ready_us[RDY_CLASS], (unsigned long)ready_us[RDY_IMU],
             (unsigned long)ready_us[RDY_LCD]);
+#endif
   for (unsigned i = 0; i < PT_COUNT; i++)
     stat_line(&st_task[i], task_period[i]);
   for (size_t i = 0; i < sizeof other / sizeof other[0]; i++)
