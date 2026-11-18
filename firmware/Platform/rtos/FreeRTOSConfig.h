@@ -55,10 +55,10 @@ extern uint32_t SystemCoreClock;
  * (xTaskCreateStatic) вимагало б ще й vApplicationGetIdleTaskMemory */
 #define configSUPPORT_STATIC_ALLOCATION     0
 #define configSUPPORT_DYNAMIC_ALLOCATION    1
-/* Масив ucHeap у .bss: сім задач (стеки 4 224 B), TCB, черги qLog і qParcel,
+/* Масив ucHeap у .bss: сім задач (стеки 4 480 B), TCB, черги qLog і qParcel,
  * потоковий буфер і чотири м'ютекси (docs/rtos-design.md, розділ 6). Справжній
  * запас - OSHEAP min_free (команда heap) після S1-S3 */
-#define configTOTAL_HEAP_SIZE               ((size_t)(7u * 1024u))
+#define configTOTAL_HEAP_SIZE               ((size_t)(7u * 1024u + 256u))
 /* stdio newlib у прошивці немає (форматер App/fmt.c), а strcmp, memcpy і memset
  * не мають стану: окрема struct _reent на задачу (~100 Б RAM кожна) не потрібна */
 #define configUSE_NEWLIB_REENTRANT          0

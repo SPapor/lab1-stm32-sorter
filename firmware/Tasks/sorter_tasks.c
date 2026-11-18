@@ -21,7 +21,8 @@
 
 /* Пріоритети й стеки - docs/rtos-design.md, розділ 6. Стек у словах (4 B):
  * стартова оцінка за tools/stack_graph.py, перевірена командою stack після
- * посилок (sort: рядок SORT із сімома аргументами - 440 B з 512, тому 160 слів) */
+ * посилок і збоїв I2C (sort: рядок SORT із сімома аргументами - 440 B з 512, тому
+ * 160 слів; imu: I2C_RECOVER у глибині транзакції - 560 B з 640, тому 192) */
 enum { T_ESTOP = 0, T_GATE, T_SORT, T_IMU, T_CLI, T_LOGGER, T_LCD, T_COUNT };
 
 #define QLOG_LEN        16u     /* записів журналу в черзі */
@@ -66,7 +67,7 @@ static const struct {
     [T_ESTOP]  = { "estop",  estop_task,  128u, 6u },
     [T_GATE]   = { "gate",   gate_task,   128u, 5u },
     [T_SORT]   = { "sort",   sort_task,   160u, 4u },
-    [T_IMU]    = { "imu",    imu_task,    160u, 3u },
+    [T_IMU]    = { "imu",    imu_task,    192u, 3u },
     [T_CLI]    = { "cli",    cli_task,    192u, 2u },
     [T_LOGGER] = { "logger", logger_task, 160u, 2u },
     [T_LCD]    = { "lcd",    lcd_task,    160u, 1u },
