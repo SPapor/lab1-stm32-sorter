@@ -28,9 +28,18 @@ uint32_t rtos_hal_heap_total(void);
  * у .noinit цілий; запис після цього стирається. 0 — асерту не було. */
 int rtos_hal_assert_take(uint32_t *line, uint32_t *pc);
 
+/* Частота тактування таймерів APB (TIM14, TIM17), Гц */
+uint32_t rtos_hal_timer_clk_hz(void);
+
+/* Сирий вивід у USART2 опитуванням TXE, без HAL і без буфера рядка: для FATAL і
+ * діагностики з переривань. Переплітається з рядком, який саме передає задача */
+void rtos_hal_raw_puts(const char *s);
+void rtos_hal_raw_putu(uint32_t v, unsigned base);
+
 /* HardFault (stm32c0xx_it.c): рядок FATAL hardfault exc=<EXC_RETURN> pc=<адреса>
- * і зупинка, як у configASSERT. pc - зі стека задачі; якщо збій стався на MSP
- * (переривання або код до старту ядра), pc=0. */
+ * і зупинка, як у configASSERT. pc - зі стека задачі, якщо PSP вказує в RAM;
+ * якщо збій стався на MSP (переривання або код до старту ядра), pc=0: обробник
+ * CubeMX - функція C, і зсув її кадру на MSP невідомий. */
 void rtos_hal_hardfault(uint32_t exc_return) __attribute__((noreturn));
 
 #endif /* RTOS_HAL_H */

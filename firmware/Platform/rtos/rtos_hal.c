@@ -37,6 +37,17 @@ static uint32_t startup_api_us;         /* перед першим виклик�
 static uint32_t startup_start_us;       /* ядро запускає першу задачу */
 #endif
 
+/* Таймери тактуються від PCLK, а якщо APB ділиться - від 2 * PCLK. На C0 поле
+ * PPRE 0xx - без ділення (RM0490, RCC_CFGR), ділення - лише з бітом PPRE[2] */
+uint32_t rtos_hal_timer_clk_hz(void)
+{
+    uint32_t hz = HAL_RCC_GetPCLK1Freq();
+
+    if ((RCC->CFGR & RCC_CFGR_PPRE_2) != 0u)
+        hz *= 2u;
+    return hz;
+}
+
 /* --- HAL timebase: TIM17 --------------------------------------------------
  * Заміна слабких HAL_InitTick, HAL_SuspendTick, HAL_ResumeTick з stm32c0xx_hal.c.
  * HAL_InitTick викликають HAL_Init і HAL_RCC_ClockConfig (після зміни частоти). */
@@ -59,11 +70,8 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
     if (SysTick_Config(SystemCoreClock / configTICK_RATE_HZ) != 0u)
         return HAL_ERROR;
 
-    /* Таймер тактується від PCLK, а якщо дільник APB не 1 — від 2 * PCLK */
     __HAL_RCC_TIM17_CLK_ENABLE();
-    tim_hz = HAL_RCC_GetPCLK1Freq();
-    if ((RCC->CFGR & RCC_CFGR_PPRE) != 0u)
-        tim_hz *= 2u;
+    tim_hz = rtos_hal_timer_clk_hz();
 
     /* Переривання вимкнене до UG: при другому виклику (після зміни частоти) UIE
      * ще стоїть, і UG дав би зайвий HAL_IncTick */

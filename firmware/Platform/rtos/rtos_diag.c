@@ -13,6 +13,8 @@
 #include "board.h"
 
 #define ASSERT_MAGIC  0xA55E2710u
+#define RAM_START     0x20000000u     /* SRAM 12 КБ, скрипт лінкера */
+#define RAM_END       0x20003000u
 #define BLINK_HZ      4u              /* LD4 при зупинці: 2 спалахи на секунду */
 
 /* Останній configASSERT. Секції .noinit у скрипті лінкера CubeMX немає, і ld
@@ -35,13 +37,13 @@ static void fatal_putc(char c)
     u->TDR = (uint8_t)c;
 }
 
-static void fatal_puts(const char *s)
+void rtos_hal_raw_puts(const char *s)
 {
     while (*s != '\0')
         fatal_putc(*s++);
 }
 
-static void fatal_putu(uint32_t v, unsigned base)
+void rtos_hal_raw_putu(uint32_t v, unsigned base)
 {
     char buf[10];
     unsigned n = 0;
@@ -68,8 +70,8 @@ static void fatal_stop(void)
 /* Початок рядка FR-10: "<мс> FATAL " */
 static void fatal_begin(void)
 {
-    fatal_putu(HAL_GetTick(), 10u);
-    fatal_puts(" FATAL ");
+    rtos_hal_raw_putu(HAL_GetTick(), 10u);
+    rtos_hal_raw_puts(" FATAL ");
 }
 
 /* Зупинка: переривань немає, тож час — з прапорця COUNTFLAG SysTick (той іде й далі) */
@@ -99,11 +101,11 @@ void rtos_hal_assert_failed(uint32_t line)
     assert_rec.pc = pc;
     assert_rec.check = line ^ pc ^ ASSERT_MAGIC;
     fatal_begin();
-    fatal_puts("assert line=");
-    fatal_putu(line, 10u);
-    fatal_puts(" pc=0x");
-    fatal_putu(pc, 16u);
-    fatal_puts("\r\n");
+    rtos_hal_raw_puts("assert line=");
+    rtos_hal_raw_putu(line, 10u);
+    rtos_hal_raw_puts(" pc=0x");
+    rtos_hal_raw_putu(pc, 16u);
+    rtos_hal_raw_puts("\r\n");
     fatal_halt();
 }
 
@@ -126,27 +128,30 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
     (void)xTask;
     fatal_stop();
     fatal_begin();
-    fatal_puts("stack overflow in ");
-    fatal_puts(pcTaskName);
-    fatal_puts("\r\n");
+    rtos_hal_raw_puts("stack overflow in ");
+    rtos_hal_raw_puts(pcTaskName);
+    rtos_hal_raw_puts("\r\n");
     fatal_halt();
 }
 
 void rtos_hal_hardfault(uint32_t exc_return)
 {
     uint32_t pc = 0;
+    uint32_t psp = __get_PSP();
 
     fatal_stop();
+    /* EXC_RETURN - до будь-якого читання стека: зіпсований PSP дав би другий
+     * HardFault усередині цього (lockup), і рядка не було б зовсім */
+    fatal_begin();
+    rtos_hal_raw_puts("hardfault exc=0x");
+    rtos_hal_raw_putu(exc_return, 16u);
     /* Біт 2 EXC_RETURN: кадр винятку на PSP (задача). Кадр на MSP уже зсунутий
      * кадром самого обробника, тож там адреси не шукаємо */
-    if (exc_return & 0x4u)
-        pc = ((const uint32_t *)__get_PSP())[6];
-    fatal_begin();
-    fatal_puts("hardfault exc=0x");
-    fatal_putu(exc_return, 16u);
-    fatal_puts(" pc=0x");
-    fatal_putu(pc, 16u);
-    fatal_puts("\r\n");
+    if ((exc_return & 0x4u) && psp >= RAM_START && psp <= RAM_END - 32u)
+        pc = ((const uint32_t *)psp)[6];
+    rtos_hal_raw_puts(" pc=0x");
+    rtos_hal_raw_putu(pc, 16u);
+    rtos_hal_raw_puts("\r\n");
     fatal_halt();
 }
 
@@ -155,6 +160,6 @@ void vApplicationMallocFailedHook(void)
 {
     fatal_stop();
     fatal_begin();
-    fatal_puts("malloc\r\n");
+    rtos_hal_raw_puts("malloc\r\n");
     fatal_halt();
 }
