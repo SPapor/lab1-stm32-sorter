@@ -540,7 +540,7 @@ class CliTest(unittest.TestCase):
         d = {'parts': [{'id': 'nucleo'}, {'id': 'imu'}, {'id': 'lcd'}, {'id': 'logic'}],
              'connections': [['nucleo:PA9', 'imu:SCL', 'green', []],
                              ['nucleo:PA9', 'lcd:SCL', 'green', []],
-                             ['nucleo:PA9', 'logic:D0', 'green', []],
+                             ['nucleo:PA2', 'logic:D3', 'green', []],
                              ['nucleo:PA6', 'logic:D2', 'green', []]]}
         out = rs.cli_diagram(d, ['imu'])
         self.assertEqual([p['id'] for p in out['parts']], ['nucleo', 'lcd', 'logic'])

@@ -4,6 +4,7 @@
     tools/vcd_timing.py run.vcd [--label S3] [--debounce-ms 20] [--md]
 
 Канали - як у diagram.json і docs/pinout.md:
+D0 - працює gate, D1 - працює estop (ЛР4; у записах ЛР3 там I2C),
 D2 - ШІМ серво, D4 - LD4 (фронт = PARCEL_IN, спад = CCR записано),
 D5 - кнопка E-STOP, D6 - працює будь-яка задача, D7 - працює lcd_task.
 
@@ -13,7 +14,10 @@ D5 - кнопка E-STOP, D6 - працює будь-яка задача, D7 - �
            20 мс) уже минув: старт estop_task (вона в циклі перша після uart_rx).
            Антибрязкіт рахує цілі тіки від тіку натискання, тож estop_task стартує
            через 19-20 мс; межа пошуку - тік натискання + 20 мс - 0,5 мс (тіки в записі
-           зсунуті від 0 на невідому частку мс). Включно з брязкотом, якого не бачить прошивка;
+           зсунуті від 0 на невідому частку мс). Включно з брязкотом, якого не бачить прошивка.
+           Якщо в записі є імпульси D1 (ЛР4: свій канал estop), - перший D1↑ після тієї ж
+           межі, а не D6;
+  d0, d1 - ширини імпульсів D0 (робота gate) і D1 (робота estop);
   fr03   - D4↑ -> початок першого імпульсу D2, ширина якого відрізняється від
            попереднього більш ніж на 10 мкс: повна затримка FR-03 від виявлення;
   d4     - ширина імпульсу D4: програмна частина (як parcel_latency);
@@ -90,7 +94,8 @@ def press_starts(d5, quiet_us=PRESS_QUIET_US):
 
 
 def estop_latency(chans, debounce_us=20_000):
-    d6_up = rising(chans.get('D6', []))
+    d1_up = rising(chans.get('D1', []))
+    d6_up = d1_up or rising(chans.get('D6', []))
     out = []
     for t in press_starts(chans.get('D5', [])):
         t_min = (t // 1000) * 1000 + debounce_us - 500
@@ -133,6 +138,8 @@ def measure(path, debounce_ms=20):
         'estop': summary(estop_latency(ch, debounce_ms * 1000)),
         'fr03': summary(fr03_latency(ch)),
         'd4': summary([w for _, w in pulses(ch.get('D4', []))]),
+        'd0': summary([w for _, w in pulses(ch.get('D0', []))]),
+        'd1': summary([w for _, w in pulses(ch.get('D1', []))]),
         'd6': summary([w for _, w in pulses(ch.get('D6', []))]),
         'd7': summary([w for _, w in pulses(ch.get('D7', []))]),
         'd6_gap': summary(intervals(rising(ch.get('D6', [])))),
@@ -140,9 +147,11 @@ def measure(path, debounce_ms=20):
 
 
 TITLES = {
-    'estop': 'E-STOP: D5↓ -> D6↑ (старт estop_task)',
+    'estop': 'E-STOP: D5↓ -> D1↑ (ЛР3: D6↑) - старт роботи estop',
     'fr03': 'FR-03: D4↑ -> нова ширина ШІМ на D2',
     'd4': 'ширина D4 (PARCEL_IN -> CCR)',
+    'd0': 'ширина D0 (робота gate)',
+    'd1': 'ширина D1 (робота estop)',
     'd6': 'ширина D6 (час задачі)',
     'd7': 'ширина D7 (lcd_task)',
     'd6_gap': 'інтервал між стартами D6↑ (найдовший - «дірка»)',

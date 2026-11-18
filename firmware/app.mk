@@ -16,10 +16,17 @@ LDFLAGS += -Wl,--print-memory-usage
 #   ARCH=rtos      — FreeRTOS: ядро з Middlewares/FreeRTOS, задачі з Tasks/
 #   LTO=1          — -flto для всього образу (обидві ARCH однаково)
 #   TICK_HZ=<Гц>   — частота тіку FreeRTOS, лише для ARCH=rtos (методичка 7.2, п. 6)
+#   SIM_CRIT=1|0   — лише rtos: 1 (за замовчуванням) - порт з обходом для Wokwi
+#                    (Platform/rtos/port_sim), 0 - порт із сабмодуля без змін
+#   ASSERT=1       — лише rtos: configASSERT і перевірка обробників SVC/PendSV
+#                    (у продукті їх немає, docs/rtos-design.md, розділ 4)
 # Порожнє значення (кореневий Makefile передає змінні завжди) = за замовчуванням.
 ARCH_ON    := $(if $(ARCH),$(ARCH),superloop)
 LTO_ON     := $(if $(filter 1,$(LTO)),1,0)
 TICK_HZ_ON := $(if $(TICK_HZ),$(TICK_HZ),1000)
+SIM_CRIT_ON := $(if $(filter 0,$(SIM_CRIT)),0,1)
+# configASSERT ядра: лише ASSERT=1 або стрес-тест (він перевіряє саме ядро)
+ASSERT_ON   := $(if $(filter 1,$(ASSERT) $(TEST_KSTRESS)),1,0)
 
 ifeq ($(filter $(ARCH_ON),superloop rtos),)
 $(error ARCH=$(ARCH_ON): має бути superloop або rtos)
@@ -29,6 +36,19 @@ ifeq ($(ARCH_ON),superloop)
 ifneq ($(TICK_HZ_ON),1000)
 $(error TICK_HZ=$(TICK_HZ_ON) лише для ARCH=rtos; super loop має тік HAL 1000 Гц)
 endif
+endif
+
+ifeq ($(TEST_APIPROBE)$(ARCH_ON),1superloop)
+$(error TEST_APIPROBE=1 лише для ARCH=rtos)
+endif
+ifeq ($(TEST_KSTRESS)$(ARCH_ON),1superloop)
+$(error TEST_KSTRESS=1 лише для ARCH=rtos)
+endif
+ifeq ($(TEST_CRITCOST)$(ARCH_ON),1superloop)
+$(error TEST_CRITCOST=1 лише для ARCH=rtos)
+endif
+ifeq ($(TEST_INVERSION)$(ARCH_ON),1superloop)
+$(error TEST_INVERSION=1 лише для ARCH=rtos)
 endif
 
 # Platform/<arch>/ — те, що в двох архітектурах різне: обробники SVC, PendSV,
@@ -61,13 +81,23 @@ $(BUILD_DIR)/$(TARGET).elf: $(USER_OBJECTS)
 ifeq ($(ARCH_ON),rtos)
 RTOS_DIR     = Middlewares/FreeRTOS
 RTOS_PORT    = $(RTOS_DIR)/portable/GCC/ARM_CM0
+# SIM_CRIT=1 (за замовчуванням): копія порту з Platform/rtos/port_sim/ - критична
+# секція відкладає переривання, тік ядра і PendSV, бо Wokwi не враховує PRIMASK
+# (docs/rtos-design.md, розділ 2; відмінності - docs/port_sim-V11.3.3.patch).
+# SIM_CRIT=0 - порт із сабмодуля без змін. portmacro.h в обох - із сабмодуля
+RTOS_PORT_SRC = $(if $(filter 1,$(SIM_CRIT_ON)),Platform/rtos/port_sim,$(RTOS_PORT))
+# У збірці TEST_KSTRESS port.c і portasm.c включаються у Platform/rtos/kstress/
+# (той самий порт плюс лічильники критичних секцій), тож окремо не збираються
+RTOS_PORT_C  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress.c,$(RTOS_PORT_SRC)/port.c)
+RTOS_PORT_S  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress_asm.c,$(RTOS_PORT_SRC)/portasm.c)
 RTOS_SOURCES = $(addprefix $(RTOS_DIR)/,tasks.c queue.c list.c stream_buffer.c) \
                $(RTOS_DIR)/portable/MemMang/heap_4.c \
-               $(RTOS_PORT)/port.c $(RTOS_PORT)/portasm.c
+               $(RTOS_PORT_C) $(RTOS_PORT_S)
 RTOS_OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(RTOS_SOURCES:.c=.o)))
 
 C_SOURCES  += $(RTOS_SOURCES)
-C_INCLUDES += -I$(RTOS_DIR)/include -I$(RTOS_PORT)
+# port_sim раніше за порт сабмодуля: port_kstress.c включає "port.c" звідти
+C_INCLUDES += -I$(RTOS_DIR)/include $(if $(filter 1,$(SIM_CRIT_ON)),-IPlatform/rtos/port_sim) -I$(RTOS_PORT)
 C_DEFS     += -DTICK_HZ=$(TICK_HZ_ON)
 vpath %.c $(sort $(dir $(RTOS_SOURCES)))
 
@@ -76,9 +106,14 @@ $(BUILD_DIR)/$(TARGET).elf: $(RTOS_OBJECTS)
 # Вектор SysTick — SysTick_Handler у Platform/rtos/rtos_hal.c: він рахує тіки для
 # perf_now з самого HAL_Init і лише після старту ядра викликає обробник порту.
 # Порт V11 визначає обробник під іменем CMSIS, тож у port.c його перейменовуємо
-$(BUILD_DIR)/port.o: CFLAGS += -DSysTick_Handler=xPortSysTickHandler
+$(BUILD_DIR)/port.o $(BUILD_DIR)/port_kstress.o: CFLAGS += -DSysTick_Handler=xPortSysTickHandler
+ifeq ($(TEST_KSTRESS),1)
+C_INCLUDES += -IPlatform/rtos/kstress
+endif
 endif
 C_DEFS += -DARCH_RTOS=$(if $(filter rtos,$(ARCH_ON)),1,0)
+C_DEFS += -DSIM_CRIT=$(if $(filter rtos,$(ARCH_ON)),$(SIM_CRIT_ON),0)
+C_DEFS += -DRTOS_ASSERT=$(ASSERT_ON)
 
 # LTO: оптимізація всього образу на етапі лінкування (docs/rtos-design.md, бюджет
 # пам'яті). Код генерується вже в лінкері, тож -Os і секції по функціях треба
@@ -104,9 +139,15 @@ C_DEFS += -DBUILD_LTO=$(LTO_ON)
 #   TEST_I2C_FAULT=1 — тест FR-09 з PRD: періодичне звернення до відсутньої адреси 0x69
 #   TEST_PRIMASK=1   — дослід: чи маскує PRIMASK переривання (рядок PRIMASK після READY)
 #   TEST_BOOTMARK=1  — дослід: лічильник perf у точках старту до BOOT (рядки BOOTMARK)
+#   TEST_APIPROBE=1  — зонд бюджету flash: посилання на все API ядра кроків 2-3 (лише rtos)
+#   TEST_KSTRESS=1   — стрес-тест ядра в Wokwi замість задачі app (лише rtos)
+#   TEST_CRITCOST=1  — ціна входу й виходу критичної секції ядра (лише rtos, PERF=1)
+#   TEST_INVERSION=1 — шина I2C під двійковим семафором замість м'ютекса: інверсія
+#                      пріоритетів без успадкування (методичка 7.2, п. 1; лише rtos)
 #   PERF=0           — без вимірювального модуля ЛР3 (docs/perf.md); за замовчуванням 1
 # TEST_* у продукт не входять; docs/rtos-design.md, розділи 2 і 5
-BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK
+BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE TEST_KSTRESS \
+              TEST_CRITCOST TEST_INVERSION
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
 
 # PERF завжди визначений (#if PERF): 0 лише явно, порожнє значення = 1.
@@ -121,6 +162,9 @@ else
 PERF_ON := $(if $(filter 0,$(PERF)),0,1)
 endif
 C_DEFS += -DPERF=$(PERF_ON)
+ifeq ($(TEST_CRITCOST)$(PERF_ON),10)
+$(error TEST_CRITCOST=1 міряє perf_now, потрібен PERF=1)
+endif
 
 # Об'єкти в Makefile залежать лише від .c і Makefile, тож після зміни варіанта
 # make узяв би старі .o. Варіант пишемо у файл, лише коли він змінився, і всі
@@ -128,7 +172,7 @@ C_DEFS += -DPERF=$(PERF_ON)
 # Каталог build/ один на всі варіанти: об'єкти іншої ARCH, що лишилися від
 # попередньої збірки, не лінкуються — до ELF ідуть лише $(OBJECTS).
 BUILD_CFG  = $(BUILD_DIR)/build.cfg
-BUILD_LINE = ARCH=$(ARCH_ON) LTO=$(LTO_ON) TICK_HZ=$(TICK_HZ_ON) \
+BUILD_LINE = ARCH=$(ARCH_ON) LTO=$(LTO_ON) TICK_HZ=$(TICK_HZ_ON) SIM_CRIT=$(SIM_CRIT_ON) ASSERT=$(ASSERT_ON) \
              $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0)) PERF=$(PERF_ON)
 
 # Версія прошивки в банері й першому рядку журналу (методичка 5.2, 6): git-хеш,

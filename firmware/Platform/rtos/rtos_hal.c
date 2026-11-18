@@ -17,6 +17,13 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "stm32c0xx_hal.h"
+#include "board.h"
+#if SIM_CRIT
+#include "port_sim.h"
+#endif
+#ifdef TEST_KSTRESS
+#include "kstress_port.h"
+#endif
 
 #define HAL_TICK_TIMER_HZ  1000000u   /* TIM17 тікає 1 МГц: ARR = 999 дає 1 кГц */
 #define START_GUARD_CYC    256u       /* vPortSetupTimerInterrupt: «до переходу через 0 мало» */
@@ -33,6 +40,27 @@ static uint64_t runtime_base;           /* perf_now_cyc64 на старті яд
 static uint32_t startup_api_us;         /* перед першим викликом API ядра */
 static uint32_t startup_start_us;       /* ядро запускає першу задачу */
 #endif
+
+/* Таймери тактуються від PCLK, а якщо APB ділиться - від 2 * PCLK. На C0 поле
+ * PPRE 0xx - без ділення (RM0490, RCC_CFGR), ділення - лише з бітом PPRE[2] */
+uint32_t rtos_hal_timer_clk_hz(void)
+{
+    uint32_t hz = HAL_RCC_GetPCLK1Freq();
+
+    if ((RCC->CFGR & RCC_CFGR_PPRE_2) != 0u)
+        hz *= 2u;
+    return hz;
+}
+
+int rtos_hal_irq_defer(int irqn)
+{
+#if SIM_CRIT
+    return (int)port_sim_defer_irq((uint32_t)irqn);
+#else
+    (void)irqn;
+    return 0;
+#endif
+}
 
 /* --- HAL timebase: TIM17 --------------------------------------------------
  * Заміна слабких HAL_InitTick, HAL_SuspendTick, HAL_ResumeTick з stm32c0xx_hal.c.
@@ -56,11 +84,8 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
     if (SysTick_Config(SystemCoreClock / configTICK_RATE_HZ) != 0u)
         return HAL_ERROR;
 
-    /* Таймер тактується від PCLK, а якщо дільник APB не 1 — від 2 * PCLK */
     __HAL_RCC_TIM17_CLK_ENABLE();
-    tim_hz = HAL_RCC_GetPCLK1Freq();
-    if ((RCC->CFGR & RCC_CFGR_PPRE) != 0u)
-        tim_hz *= 2u;
+    tim_hz = rtos_hal_timer_clk_hz();
 
     /* Переривання вимкнене до UG: при другому виклику (після зміни частоти) UIE
      * ще стоїть, і UG дав би зайвий HAL_IncTick */
@@ -93,6 +118,8 @@ void HAL_ResumeTick(void)
 void TIM17_IRQHandler(void);
 void TIM17_IRQHandler(void)
 {
+    if (rtos_hal_irq_defer(TIM17_IRQn))
+        return;
     if (TIM17->SR & TIM_SR_UIF) {
         TIM17->SR = ~TIM_SR_UIF;      /* rc_w0: нуль скидає лише UIF */
         HAL_IncTick();
@@ -110,9 +137,22 @@ void SysTick_Handler(void);
  * момент, загубився б (docs/rtos-design.md, розділ 3) */
 void SysTick_Handler(void)
 {
+#ifdef TEST_KSTRESS
+    kstress_sample_nvic();
+#endif
     rtos_hal_ticks++;
-    if (kernel_ticks)
-        xPortSysTickHandler();
+    if (!kernel_ticks)
+        return;
+#if SIM_CRIT
+    /* Усередині критичної секції тік ядра чекає її кінця (Platform/rtos/port_sim):
+     * на залізі cpsid i так само затримав би весь цей обробник */
+    if (port_sim_defer_tick())
+        return;
+#endif
+#ifdef TEST_KSTRESS
+    kstress_note_isr(KSTRESS_SRC_TICK);
+#endif
+    xPortSysTickHandler();
 }
 
 /* Порт викликає це з xPortStartScheduler (переривання вже вимкнені), щоб
@@ -179,6 +219,28 @@ void rtos_hal_runtime_start(void)
 uint64_t rtos_hal_runtime_now(void)
 {
     return perf_now_cyc64() - runtime_base;
+}
+
+static const void *trace_lcd;
+
+void rtos_hal_trace_lcd(const void *tcb)
+{
+    trace_lcd = tcb;
+}
+
+/* traceTASK_SWITCHED_IN: D6 = 1, поки процесор у будь-якої задачі, крім idle;
+ * D7 = 1, поки у задачі lcd. Виконується в PendSV, усередині перемикання */
+void rtos_hal_trace_in(const void *tcb)
+{
+    if (tcb == (const void *)xTaskGetIdleTaskHandle()) {
+        BOARD_PROBE_OFF(BOARD_PROBE_TASK_PIN | BOARD_PROBE_LCD_PIN);
+    } else {
+        BOARD_PROBE_ON(BOARD_PROBE_TASK_PIN);
+        if (tcb == trace_lcd)
+            BOARD_PROBE_ON(BOARD_PROBE_LCD_PIN);
+        else
+            BOARD_PROBE_OFF(BOARD_PROBE_LCD_PIN);
+    }
 }
 #endif
 

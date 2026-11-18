@@ -22,6 +22,9 @@
 #include "stm32c0xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#if ARCH_RTOS
+#include "rtos_hal.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -84,7 +87,10 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
-
+#if ARCH_RTOS
+  /* LR на вході - EXC_RETURN: з нього видно, чий стек (задачі чи MSP) */
+  rtos_hal_hardfault((uint32_t)__builtin_return_address(0));
+#endif
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {
@@ -106,7 +112,11 @@ void HardFault_Handler(void)
 void EXTI4_15_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI4_15_IRQn 0 */
-
+#if ARCH_RTOS
+  /* Усередині критичної секції ядра - відкласти (rtos_hal.h, SIM_CRIT) */
+  if (rtos_hal_irq_defer(EXTI4_15_IRQn))
+    return;
+#endif
   /* USER CODE END EXTI4_15_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(ESTOP_Pin);
   /* USER CODE BEGIN EXTI4_15_IRQn 1 */

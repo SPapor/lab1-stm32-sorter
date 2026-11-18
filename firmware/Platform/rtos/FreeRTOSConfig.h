@@ -55,11 +55,12 @@ extern uint32_t SystemCoreClock;
  * (xTaskCreateStatic) вимагало б ще й vApplicationGetIdleTaskMemory */
 #define configSUPPORT_STATIC_ALLOCATION     0
 #define configSUPPORT_DYNAMIC_ALLOCATION    1
-/* Стартове значення, масив ucHeap у .bss. Справжній розмір — за
- * xPortGetMinimumEverFreeHeapSize після S3 (крок 3) */
-#define configTOTAL_HEAP_SIZE               ((size_t)(5u * 1024u))
-/* printf (newlib) викликає лише одна задача — логер на кроці 2, зараз — app;
- * окрема struct _reent на задачу (~100 Б RAM кожна) не потрібна */
+/* Масив ucHeap у .bss: сім задач (стеки 4 480 B), TCB, черги qLog і qParcel,
+ * потоковий буфер і чотири м'ютекси (docs/rtos-design.md, розділ 6). Справжній
+ * запас - OSHEAP min_free (команда heap) після S1-S3 */
+#define configTOTAL_HEAP_SIZE               ((size_t)(7u * 1024u + 256u))
+/* stdio newlib у прошивці немає (форматер App/fmt.c), а strcmp, memcpy і memset
+ * не мають стану: окрема struct _reent на задачу (~100 Б RAM кожна) не потрібна */
 #define configUSE_NEWLIB_REENTRANT          0
 
 /* --- Механізми, які потрібні продукту (docs/rtos-design.md) -------------- */
@@ -90,8 +91,9 @@ extern uint32_t SystemCoreClock;
  * дні стека задачі. Рядок FATAL stack overflow in <ім'я> (методичка 7.2, п. 2) */
 #define configCHECK_FOR_STACK_OVERFLOW      2
 /* Обробники SVC і PendSV мають бути саме з порту: ядро перевіряє таблицю
- * векторів при старті (configASSERT). Так ловиться обробник, згенерований CubeMX */
-#define configCHECK_HANDLER_INSTALLATION    1
+ * векторів при старті (configASSERT). Так ловиться обробник, згенерований CubeMX.
+ * Лише в збірці ASSERT=1, як і сам configASSERT (нижче) */
+#define configCHECK_HANDLER_INSTALLATION    RTOS_ASSERT
 
 /* Run-time stats і trace — частина вимірювального модуля: є лише з PERF=1.
  * Лічильник часу — perf_now у тактах CPU (21 нс). 32 біти переповнюються за
@@ -112,13 +114,38 @@ uint64_t rtos_hal_runtime_now(void);
 #define portGET_RUN_TIME_COUNTER_VALUE()    rtos_hal_runtime_now()
 #endif
 
-/* configASSERT без імені файлу (кожен рядок __FILE__ — ще кілька десятків байтів
- * флешу на виклик): номер рядка й адреса виклику — у .noinit, далі переривання
- * вимкнено й блимає LD4. Після скидання main друкує ASSERT line=N pc=0x... */
+/* configASSERT - лише в збірці ASSERT=1 (app.mk; CI її збирає, TEST_KSTRESS
+ * вмикає завжди). У продукті його немає: з обходом SIM_CRIT ядро з повним API
+ * інакше лишало б менше 3 КБ flash на задачі кроків 2-3 (docs/rtos-design.md,
+ * розділ 4). Переповнення стека, malloc і HardFault ловляться і без нього.
+ * Без імені файлу (кожен рядок __FILE__ — ще кілька десятків байтів флешу на
+ * виклик): номер рядка й адреса виклику — у .noinit, далі переривання вимкнено й
+ * блимає LD4. Після скидання main друкує ASSERT line=N pc=0x... */
 /* noinline: адреса повернення має бути місцем configASSERT, навіть якщо LTO
  * захоче вбудувати функцію в єдиного викликача */
 void rtos_hal_assert_failed(uint32_t line) __attribute__((noreturn, noinline));
+#if RTOS_ASSERT
 #define configASSERT(x)                     do { if ((x) == 0) rtos_hal_assert_failed(__LINE__); } while (0)
+#endif
+
+/* Службові піни D6 і D7 (docs/rtos-design.md, розділ 6): перемикання на задачу.
+ * Макрос розгортається в tasks.c, де видно pxCurrentTCB */
+#if PERF && !defined(TEST_KSTRESS)
+void rtos_hal_trace_in(const void *tcb);
+#define traceTASK_SWITCHED_IN()             rtos_hal_trace_in((const void *)pxCurrentTCB)
+#endif
+
+/* Стрес-тест ядра в Wokwi (збірка TEST_KSTRESS=1, Tasks/kstress.c, у продукт не
+ * входить): контрольні значення в кожному списку ядра (configASSERT, якщо список
+ * зіпсовано) і лічильники перемикань усередині критичних секцій
+ * (Platform/rtos/kstress/port_kstress.c) */
+#ifdef TEST_KSTRESS
+#define configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES 1
+void kstress_switched_out(void *tcb);
+void kstress_switched_in(void *tcb);
+#define traceTASK_SWITCHED_OUT()            kstress_switched_out((void *)pxCurrentTCB)
+#define traceTASK_SWITCHED_IN()             kstress_switched_in((void *)pxCurrentTCB)
+#endif
 
 /* --- MPU немає (порт ARM_CM0 вимагає явно) ------------------------------- */
 #define configENABLE_MPU                    0

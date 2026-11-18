@@ -176,7 +176,7 @@ class StatsTableTest(unittest.TestCase):
         self.assertNotIn('без stats reset', st.blocks_table(st.parse_lines(log.splitlines(True))))
 
 
-def write_vcd(path, changes, names=('D2', 'D4', 'D5', 'D6', 'D7')):
+def write_vcd(path, changes, names=('D0', 'D1', 'D2', 'D4', 'D5', 'D6', 'D7')):
     """changes: [(t_us, канал, рівень)]; запис у нс, як у Wokwi."""
     ids = {n: chr(ord('!') + i) for i, n in enumerate(names)}
     with open(path, 'w') as f:
@@ -285,6 +285,22 @@ class VcdTimingTest(unittest.TestCase):
             write_vcd(path, ch)
             res = vt.measure(path)
         self.assertAlmostEqual(res['estop']['max'], 70000 - 50700)
+
+    def test_estop_from_own_channel_d1(self):
+        # ЛР4: у estop свій канал D1. D6 (будь-яка задача) раніше, але міряється D1;
+        # D0 - канал gate
+        ch = [(50700, 'D5', 0), (120000, 'D5', 1),
+              (70000, 'D6', 1), (70050, 'D6', 0),            # інша задача на тіку 70
+              (70400, 'D1', 1), (70500, 'D1', 0),            # робота estop
+              (5000, 'D0', 1), (5094, 'D0', 0), (10000, 'D0', 1), (10100, 'D0', 0)]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, 'run.vcd')
+            write_vcd(path, ch)
+            res = vt.measure(path)
+        self.assertAlmostEqual(res['estop']['max'], 70400 - 50700)
+        self.assertAlmostEqual(res['d1']['max'], 100)
+        self.assertEqual(res['d0']['n'], 2)
+        self.assertAlmostEqual(res['d0']['max'], 100)
 
     def test_press_starts_ignores_bounce(self):
         d5 = [(0, 1), (100000, 0), (100300, 1), (100600, 0), (180000, 1), (180200, 0), (180400, 1),

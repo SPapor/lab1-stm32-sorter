@@ -40,6 +40,11 @@
 #define BOARD_PROBE_CLK_ENABLE() __HAL_RCC_GPIOB_CLK_ENABLE()
 #define BOARD_PROBE_TASK_PIN     GPIO_PIN_13      /* PB13, CN10-30 (morpho), канал D6: працює будь-яка задача */
 #define BOARD_PROBE_LCD_PIN      GPIO_PIN_14      /* PB14, CN10-28 (morpho), канал D7: працює lcd_task */
+/* ЛР4: окремі канали задач estop і gate ([UM] табл. 12: просто I/O, лише morpho) */
+#define BOARD_PROBE_GATE_PIN     GPIO_PIN_12      /* PB12, CN10 (morpho), канал D0: працює gate */
+#define BOARD_PROBE_ESTOP_PIN    GPIO_PIN_15      /* PB15, CN10-26 (morpho), канал D1: працює estop */
+#define BOARD_PROBE_ALL_PINS     (BOARD_PROBE_TASK_PIN | BOARD_PROBE_LCD_PIN | \
+                                  BOARD_PROBE_GATE_PIN | BOARD_PROBE_ESTOP_PIN)
 /* Запис у BSRR — одна інструкція str: біти 0..15 ставлять 1, біти 16..31 скидають у 0 */
 #define BOARD_PROBE_ON(pin)      (BOARD_PROBE_PORT->BSRR = (pin))
 #define BOARD_PROBE_OFF(pin)     (BOARD_PROBE_PORT->BSRR = (uint32_t)(pin) << 16)

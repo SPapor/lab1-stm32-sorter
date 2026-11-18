@@ -1,0 +1,40 @@
+# git=1baa13f6 (з BOOT) scenario=KSTRESS build="ARCH=rtos LTO=1 TICK_HZ=1000 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=0 TEST_APIPROBE=0 TEST_KSTRESS=1 PERF=1" perf=1 arch=rtos lto=1 tick_hz=1000 port=wokwi.com host_start=2026-11-18T15:28:00
+# Повтор стрес-тесту з лічильниками критичних секцій задач і ISR окремо (лише після старту ядра). Wokwi у браузері, схема як у S1; зупинено на ~30 с часу МК: та сама картина, що в KSTRESS_2026-11-18_1411.log (журнал, проблема 43).
+1 BOOT fw=lab4-rtos git=1baa13f6 perf=1 arch=rtos lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=5120       
+12 EVT t_us=12122 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=517 pair_cyc=1195
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+40 EVT t_us=39784 name=i2c_fail
+44 EVT t_us=43648 name=i2c_ok
+53 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+60 EVT t_us=59783 name=i2c_fail
+64 EVT t_us=63651 name=i2c_ok
+73 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+80 EVT t_us=79785 name=i2c_fail
+84 EVT t_us=83652 name=i2c_ok
+87 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+163 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+168 SELFTEST dev=ldr_gate status=OK raw=1001
+173 SELFTEST dev=ldr_class status=OK raw=1001
+177 SELFTEST dev=servo status=OK pulse_us=1500
+182 SELFTEST_END ok=4 warn=1 fail=0
+222 STATE state=READY
+224 STACK used=544 reserved=1024 free=480 overflow=0
+230 HEAP arena=0 used=0 free=0
+5235 KSTRESS_ISR isr=10000 tick=3275 ping=0 isr_msg=0 mtx=0/3274 cur=tick pc=0x800357C crit=0x1 switches=3 switches_in=1 tick_in=5001
+10235 KSTRESS_ISR isr=20000 tick=6552 ping=0 isr_msg=0 mtx=0/6551 cur=tick pc=0x800357C crit=0x1 switches=3 switches_in=1 tick_in=10001
+15236 KSTRESS_ISR isr=30000 tick=9795 ping=0 isr_msg=0 mtx=0/9794 cur=tick pc=0x80036C8 crit=0x1 switches=3 switches_in=1 tick_in=15001
+15554 KSTRESS t_s=10 ping=0 isr_msg=0 isr_drop=30627 notify=0/30634 mtx=0/10000 tick=10000 late=9999
+15565 KSTRESS_ERR t_s=10 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+15575 KSTRESS_CRIT t_s=10 crit_task=30008 switches=3 pendsv_in=10000 switches_in=1 tick_in=15318 tim14_in=30634 heap_min=1448
+15588 KSTRESS_CRIT_ISR t_s=10 crit_isr=76586 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+20237 KSTRESS_ISR isr=40000 tick=13012 ping=0 isr_msg=0 mtx=0/13011 cur=tick pc=0x8003578 crit=0x1 switches=3 switches_in=1 tick_in=20002
+25237 KSTRESS_ISR isr=50000 tick=16256 ping=0 isr_msg=0 mtx=0/16255 cur=tick pc=0x800357A crit=0x1 switches=3 switches_in=1 tick_in=25003
+30237 KSTRESS_ISR isr=60000 tick=19501 ping=0 isr_msg=0 mtx=0/19501 cur=tick pc=0x8001500 crit=0x1 switches=3 switches_in=1 tick_in=30004
+31007 KSTRESS t_s=20 ping=0 isr_msg=0 isr_drop=61534 notify=0/61541 mtx=0/20000 tick=20000 late=19999
+31018 KSTRESS_ERR t_s=20 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+31029 KSTRESS_CRIT t_s=20 crit_task=60008 switches=3 pendsv_in=20000 switches_in=1 tick_in=30775 tim14_in=61541 heap_min=1448
+31042 KSTRESS_CRIT_ISR t_s=20 crit_isr=153809 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=631
+35237 KSTRESS_ISR isr=70000 tick=22704 ping=0 isr_msg=0 mtx=0/22703 cur=tick pc=0x80036CA crit=0x1 switches=3 switches_in=1 tick_in=35005
+40237 KSTRESS_ISR isr=80000 tick=25935 ping=0 isr_msg=0 mtx=0/25934 cur=tick pc=0x800357A crit=0x1 switches=3 switches_in=1 tick_in=40006
