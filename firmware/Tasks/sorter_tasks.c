@@ -20,7 +20,8 @@
 #endif
 
 /* Пріоритети й стеки - docs/rtos-design.md, розділ 6. Стек у словах (4 B):
- * стартова оцінка за tools/stack_graph.py, справжній - команда stack */
+ * стартова оцінка за tools/stack_graph.py, перевірена командою stack після
+ * посилок (sort: рядок SORT із сімома аргументами - 440 B з 512, тому 160 слів) */
 enum { T_ESTOP = 0, T_GATE, T_SORT, T_IMU, T_CLI, T_LOGGER, T_LCD, T_COUNT };
 
 #define QLOG_LEN        16u     /* записів журналу в черзі */
@@ -64,7 +65,7 @@ static const struct {
 } task_def[T_COUNT] = {
     [T_ESTOP]  = { "estop",  estop_task,  128u, 6u },
     [T_GATE]   = { "gate",   gate_task,   128u, 5u },
-    [T_SORT]   = { "sort",   sort_task,   128u, 4u },
+    [T_SORT]   = { "sort",   sort_task,   160u, 4u },
     [T_IMU]    = { "imu",    imu_task,    160u, 3u },
     [T_CLI]    = { "cli",    cli_task,    192u, 2u },
     [T_LOGGER] = { "logger", logger_task, 160u, 2u },
