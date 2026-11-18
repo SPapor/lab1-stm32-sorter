@@ -21,6 +21,7 @@
 | `BOOTMARK_superloop_2026-11-18_0007.log`, `BOOTMARK_rtos_2026-11-18_0008.log` | `cad75f82`, `TEST_BOOTMARK=1` | стан лічильника perf у точках старту до `BOOT` (docs/rtos-design.md, розділ 5) |
 | `BOOTWIDTH_superloop_2026-11-18_1213.log`, `BOOTWIDTH_rtos_2026-11-18_1209.log` | `50939149`, `LTO=1` | рядок `BOOT` однієї довжини (103 символи) в обох ARCH, STARTUP з `stats`; повна схема, як у S1 (docs/rtos-design.md, розділ 5) |
 | `FMT_BOOTMARK_superloop_2026-11-18_1228.log`, `FMT_BOOTMARK_rtos_2026-11-18_1233.log` | `8c895f3d`, `LTO=1`, `TEST_BOOTMARK=1` | ціна символу після форматера App/fmt.c і перевірка парсерів на новому виводі (docs/rtos-design.md, розділ 4) |
+| `KSTRESS_2026-11-18_1411.log` | `3439b99b`, rtos, `TEST_KSTRESS=1` | стрес-тест ядра: зависання планувальника після перемикання в критичній секції (журнал, проблема 43), зупинено на 15,2 с |
 
 Записи аналізатора до `_1856`, `_1857` і `_1942` - docs/captures/.
 
