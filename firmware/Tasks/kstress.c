@@ -3,13 +3,14 @@
  * м'ютекс, коли PRIMASK не маскує переривання (docs/journal.md, проблема 35).
  *
  *   tick  P4  xTaskDelayUntil 1 мс; м'ютекс зі спільним лічильником;
- *             раз на 10 с - знімок лічильників для рядка KSTRESS
+ *             раз на 10 с друкує рядки KSTRESS і KSTRESS_CRIT (на найвищому
+ *             пріоритеті, щоб звіт був, навіть якщо нижчі задачі голодують;
+ *             друк блокувальний, тож після нього кілька пробуджень запізнюються)
  *   pong  P3  черга q_ping: перевіряє контрольну суму кожного повідомлення
  *             (від ping і від ISR), на повідомлення ping відповідає в q_pong
  *   ping  P2  повідомлення в q_ping, чекає відповіді з q_pong; пачка по
  *             PING_BURST обмінів раз на тік, щоб P1 і idle теж працювали
- *   mtx   P1  чекає сповіщення від ISR; м'ютекс зі спільним лічильником;
- *             друкує рядок KSTRESS (найнижчий пріоритет, друк блокувальний)
+ *   mtx   P1  чекає сповіщення від ISR; м'ютекс зі спільним лічильником
  *   TIM14 2 кГц: xQueueSendFromISR у q_ping, vTaskNotifyGiveFromISR задачі mtx,
  *             portYIELD_FROM_ISR
  *
@@ -30,16 +31,16 @@
 #define ISR_HZ              2000u
 #define REPORT_TICKS        10000u   /* 10 с при тіку 1 мс */
 #define MSG_QLEN            8u
-#define PING_BURST          8u
+#define PING_BURST          2u
 #define WAIT_TICKS          pdMS_TO_TICKS(100)
 #define MTX_WAIT_TICKS      pdMS_TO_TICKS(50)
 #define HOLD_LOOPS          600u     /* ~100 мкс з м'ютексом: P1 і P4 часто перетинаються */
 #define IRQ_PRIO            2u       /* вище за SysTick і PendSV (3) */
 
-#define STACK_TICK          112u
+#define STACK_TICK          192u     /* друк: форматер і буфер рядка */
 #define STACK_PONG          112u
 #define STACK_PING          112u
-#define STACK_MTX           192u     /* друк: форматер і буфер рядка */
+#define STACK_MTX           112u
 
 enum {
     SRC_PING = 0x50494E47u,
@@ -60,7 +61,8 @@ typedef struct {
     uint32_t isr_drop;        /* черга повна, ISR не відправив */
     uint32_t notify_given;
     uint32_t notify_taken;
-    uint32_t mtx_rounds;
+    uint32_t mtx_p1;          /* заходів у м'ютекс задачі mtx (P1) */
+    uint32_t mtx_p4;          /* і задачі tick (P4) */
     uint32_t ticks;           /* пробуджень tick */
     uint32_t late;            /* xTaskDelayUntil без очікування: момент уже минув */
     uint32_t sum_err;         /* контрольна сума або джерело не ті */
@@ -77,8 +79,6 @@ static QueueHandle_t q_pong;
 static SemaphoreHandle_t mtx;
 static TaskHandle_t h_mtx;
 static volatile uint32_t isr_seq;
-static volatile uint8_t report_due;
-static volatile uint32_t report_s;
 
 /* Дані під м'ютексом: інваріант a == b і власник NULL поза ділянкою */
 static struct {
@@ -144,14 +144,14 @@ static void tim14_start(void)
     TIM14->CR1 = TIM_CR1_CEN;
 }
 
-/* Один захід у м'ютекс: інваріант на вході й на виході */
-static void mtx_round(void)
+/* Один захід у м'ютекс: інваріант на вході й на виході; 1 - зайшли */
+static int mtx_round(void)
 {
     void *self = xTaskGetCurrentTaskHandle();
 
     if (xSemaphoreTake(mtx, MTX_WAIT_TICKS) != pdTRUE) {
         cnt.mtx_timeout++;
-        return;
+        return 0;
     }
     if (shared.owner != NULL || shared.a != shared.b)
         cnt.mtx_err++;
@@ -163,9 +163,11 @@ static void mtx_round(void)
     if (shared.owner != self || shared.a != shared.b)
         cnt.mtx_err++;
     shared.owner = NULL;
-    cnt.mtx_rounds++;
     xSemaphoreGive(mtx);
+    return 1;
 }
+
+static void report(uint32_t t_s);
 
 static void tick_task(void *arg)
 {
@@ -178,11 +180,9 @@ static void tick_task(void *arg)
         if (xTaskDelayUntil(&last, 1) == pdFALSE)
             cnt.late++;
         cnt.ticks++;
-        mtx_round();
-        if (cnt.ticks % REPORT_TICKS == 0u) {
-            report_s = cnt.ticks / 1000u;
-            report_due = 1;
-        }
+        cnt.mtx_p4 += (uint32_t)mtx_round();
+        if (cnt.ticks % REPORT_TICKS == 0u)
+            report(cnt.ticks / 1000u);
     }
 }
 
@@ -250,17 +250,17 @@ static void ping_task(void *arg)
     }
 }
 
-static void report(void)
+static void report(uint32_t t_s)
 {
     kstress_port_counters_t p;
 
     kstress_port_counters(&p);
     uart_hal_line_add("%lu KSTRESS t_s=%lu ping=%lu isr_msg=%lu isr_drop=%lu notify=%lu/%lu "
-                      "mtx=%lu tick=%lu late=%lu", (unsigned long)HAL_GetTick(),
-                      (unsigned long)report_s, (unsigned long)cnt.ping,
+                      "mtx=%lu/%lu tick=%lu late=%lu", (unsigned long)HAL_GetTick(),
+                      (unsigned long)t_s, (unsigned long)cnt.ping,
                       (unsigned long)cnt.isr_msg, (unsigned long)cnt.isr_drop,
                       (unsigned long)cnt.notify_taken, (unsigned long)cnt.notify_given,
-                      (unsigned long)cnt.mtx_rounds, (unsigned long)cnt.ticks,
+                      (unsigned long)cnt.mtx_p1, (unsigned long)cnt.mtx_p4, (unsigned long)cnt.ticks,
                       (unsigned long)cnt.late);
     uart_hal_line_add(" sum_err=%lu seq_err=%lu mtx_err=%lu notify_err=%lu mtx_timeout=%lu "
                       "q_timeout=%lu", (unsigned long)cnt.sum_err, (unsigned long)cnt.seq_err,
@@ -270,7 +270,7 @@ static void report(void)
     /* Окремим рядком: разом з першим не вміщується в UART_HAL_LINE_MAX */
     uart_hal_printf("%lu KSTRESS_CRIT t_s=%lu switches=%lu switches_in_crit=%lu pendsv_in_crit=%lu "
                     "isr_in_crit=%lu heap_min=%lu", (unsigned long)HAL_GetTick(),
-                    (unsigned long)report_s, (unsigned long)p.switches,
+                    (unsigned long)t_s, (unsigned long)p.switches,
                     (unsigned long)p.switches_in_crit, (unsigned long)p.pendsv_in_crit,
                     (unsigned long)p.isr_in_crit, (unsigned long)xPortGetMinimumEverFreeHeapSize());
 }
@@ -284,11 +284,7 @@ static void mtx_task(void *arg)
         cnt.notify_taken += n;
         if (cnt.notify_taken > cnt.notify_given)
             cnt.notify_err++;
-        mtx_round();
-        if (report_due) {
-            report_due = 0;
-            report();
-        }
+        cnt.mtx_p1 += (uint32_t)mtx_round();
     }
 }
 
