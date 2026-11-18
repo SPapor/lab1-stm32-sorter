@@ -1,0 +1,120 @@
+# git=f8d7ee39 (з BOOT) scenario=KSTRESS build="ARCH=rtos LTO=1 TICK_HZ=1000 SIM_CRIT=1 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=0 TEST_APIPROBE=0 TEST_KSTRESS=1 TEST_CRITCOST=0 PERF=1" perf=1 arch=rtos lto=1 tick_hz=1000 port=wokwi.com host_start=2026-11-18T17:55:00
+# Стрес-тест ядра з обходом SIM_CRIT=1 (docs/rtos-design.md, розділ 2), Wokwi у браузері, схема як у S1, 120 с часу МК. Ворота Б: помилок 0, подій у критичних секціях 0, тіки ядра і perf збігаються.
+1 BOOT fw=lab4-rtos git=f8d7ee39 perf=1 arch=rtos lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=5120       
+12 EVT t_us=12145 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=517 pair_cyc=1264
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+40 EVT t_us=39783 name=i2c_fail
+44 EVT t_us=43650 name=i2c_ok
+53 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+60 EVT t_us=59786 name=i2c_fail
+64 EVT t_us=63657 name=i2c_ok
+73 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+80 EVT t_us=79789 name=i2c_fail
+84 EVT t_us=83660 name=i2c_ok
+87 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+163 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+168 SELFTEST dev=ldr_gate status=OK raw=1001
+173 SELFTEST dev=ldr_class status=OK raw=1001
+177 SELFTEST dev=servo status=OK pulse_us=1500
+182 SELFTEST_END ok=4 warn=1 fail=0
+222 STATE state=READY
+224 STACK used=544 reserved=1024 free=480 overflow=0
+229 HEAP arena=0 used=0 free=0
+10234 KSTRESS t_s=10 ping=2500 isr_msg=2500 isr_drop=0 notify=19997/19998 mtx=5135/10000 tick=10000 late=0
+10245 KSTRESS_ERR t_s=10 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+10256 KSTRESS_CRIT t_s=10 crit_task_n=106976 crit_task=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0 switches=32324 pc=0x00000000
+10269 KSTRESS_CRIT_ISR t_s=10 crit_isr_n=22498 crit_isr=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+10280 KSTRESS_TIME t_s=10 iter_avg_cyc=8047 iter_max_cyc=36148 mtx_avg_cyc=6997 mtx_max_cyc=33210
+10293 KSTRESS_CPU t_s=10 tick=344 pong=205 ping=183 mtx=215 IDLE=72
+10300 KSTRESS_TICK t_s=10 ktick=10066 ptick=10066 deferred_tick=2003 deferred_pendsv=5359 heap_min=1448
+10311 KSTRESS_NVIC t_s=10 samples=10000 off_in_crit=206 off_free=0 deferred_irq=18401 hal_ms=10311
+20234 KSTRESS t_s=20 ping=5000 isr_msg=4976 isr_drop=24 notify=39995/39998 mtx=13805/20000 tick=20000 late=164
+20246 KSTRESS_ERR t_s=20 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+20256 KSTRESS_CRIT t_s=20 crit_task_n=211181 crit_task=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0 switches=63122 pc=0x00000000
+20270 KSTRESS_CRIT_ISR t_s=20 crit_isr_n=44998 crit_isr=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+20281 KSTRESS_TIME t_s=20 iter_avg_cyc=9028 iter_max_cyc=4209634 mtx_avg_cyc=7778 mtx_max_cyc=39912
+20294 KSTRESS_CPU t_s=20 tick=360 pong=192 ping=146 mtx=239 IDLE=78
+20302 KSTRESS_TICK t_s=20 ktick=20068 ptick=20068 deferred_tick=5689 deferred_pendsv=12451 heap_min=1448
+20313 KSTRESS_NVIC t_s=20 samples=20000 off_in_crit=206 off_free=0 deferred_irq=31768 hal_ms=20313
+30233 KSTRESS t_s=30 ping=7500 isr_msg=7450 isr_drop=50 notify=59996/59997 mtx=19148/30000 tick=30000 late=445
+30246 KSTRESS_ERR t_s=30 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+30256 KSTRESS_CRIT t_s=30 crit_task_n=315185 crit_task=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0 switches=94644 pc=0x00000000
+30270 KSTRESS_CRIT_ISR t_s=30 crit_isr_n=67497 crit_isr=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+30281 KSTRESS_TIME t_s=30 iter_avg_cyc=9614 iter_max_cyc=4340298 mtx_avg_cyc=8089 mtx_max_cyc=41604
+30294 KSTRESS_CPU t_s=30 tick=366 pong=198 ping=143 mtx=246 IDLE=69
+30302 KSTRESS_TICK t_s=30 ktick=30069 ptick=30069 deferred_tick=8979 deferred_pendsv=19734 heap_min=1448
+30313 KSTRESS_NVIC t_s=30 samples=30000 off_in_crit=206 off_free=0 deferred_irq=46907 hal_ms=30313
+40233 KSTRESS t_s=40 ping=10000 isr_msg=9924 isr_drop=76 notify=79996/79997 mtx=25345/40000 tick=40000 late=578
+40245 KSTRESS_ERR t_s=40 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+40256 KSTRESS_CRIT t_s=40 crit_task_n=423011 crit_task=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0 switches=123814 pc=0x00000000
+40269 KSTRESS_CRIT_ISR t_s=40 crit_isr_n=89997 crit_isr=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+40280 KSTRESS_TIME t_s=40 iter_avg_cyc=9151 iter_max_cyc=4340298 mtx_avg_cyc=7549 mtx_max_cyc=41604
+40293 KSTRESS_CPU t_s=40 tick=358 pong=213 ping=141 mtx=225 IDLE=90
+40301 KSTRESS_TICK t_s=40 ktick=40067 ptick=40067 deferred_tick=12710 deferred_pendsv=27188 heap_min=1448
+40312 KSTRESS_NVIC t_s=40 samples=40000 off_in_crit=206 off_free=0 deferred_irq=66290 hal_ms=40312
+50233 KSTRESS t_s=50 ping=12500 isr_msg=12399 isr_drop=101 notify=99996/99998 mtx=31682/50000 tick=50000 late=709
+50246 KSTRESS_ERR t_s=50 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+50257 KSTRESS_CRIT t_s=50 crit_task_n=533635 crit_task=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0 switches=153278 pc=0x00000000
+50271 KSTRESS_CRIT_ISR t_s=50 crit_isr_n=112498 crit_isr=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+50282 KSTRESS_TIME t_s=50 iter_avg_cyc=9698 iter_max_cyc=4340298 mtx_avg_cyc=8025 mtx_max_cyc=41604
+50295 KSTRESS_CPU t_s=50 tick=366 pong=219 ping=142 mtx=220 IDLE=83
+50303 KSTRESS_TICK t_s=50 ktick=50070 ptick=50070 deferred_tick=16978 deferred_pendsv=36056 heap_min=1448
+50314 KSTRESS_NVIC t_s=50 samples=50000 off_in_crit=571 off_free=0 deferred_irq=79340 hal_ms=50314
+60233 KSTRESS t_s=60 ping=15000 isr_msg=14873 isr_drop=127 notify=119995/119996 mtx=36704/60000 tick=60000 late=847
+60245 KSTRESS_ERR t_s=60 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+60256 KSTRESS_CRIT t_s=60 crit_task_n=638097 crit_task=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0 switches=182989 pc=0x00000000
+60270 KSTRESS_CRIT_ISR t_s=60 crit_isr_n=134996 crit_isr=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+60280 KSTRESS_TIME t_s=60 iter_avg_cyc=9386 iter_max_cyc=4404568 mtx_avg_cyc=7704 mtx_max_cyc=41604
+60293 KSTRESS_CPU t_s=60 tick=362 pong=218 ping=155 mtx=222 IDLE=80
+60301 KSTRESS_TICK t_s=60 ktick=60068 ptick=60068 deferred_tick=20409 deferred_pendsv=44820 heap_min=1448
+60312 KSTRESS_NVIC t_s=60 samples=60000 off_in_crit=572 off_free=0 deferred_irq=98029 hal_ms=60312
+70232 KSTRESS t_s=70 ping=17500 isr_msg=17348 isr_drop=152 notify=139989/139996 mtx=42935/70000 tick=70000 late=980
+70245 KSTRESS_ERR t_s=70 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+70256 KSTRESS_CRIT t_s=70 crit_task_n=747883 crit_task=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0 switches=212875 pc=0x00000000
+70269 KSTRESS_CRIT_ISR t_s=70 crit_isr_n=157496 crit_isr=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+70280 KSTRESS_TIME t_s=70 iter_avg_cyc=9603 iter_max_cyc=4404568 mtx_avg_cyc=7908 mtx_max_cyc=41604
+70293 KSTRESS_CPU t_s=70 tick=364 pong=223 ping=153 mtx=220 IDLE=74
+70301 KSTRESS_TICK t_s=70 ktick=70068 ptick=70068 deferred_tick=25180 deferred_pendsv=55585 heap_min=1448
+70312 KSTRESS_NVIC t_s=70 samples=70000 off_in_crit=572 off_free=0 deferred_irq=113163 hal_ms=70312
+80232 KSTRESS t_s=80 ping=20000 isr_msg=19822 isr_drop=177 notify=159992/159995 mtx=46991/80000 tick=80000 late=1140
+80245 KSTRESS_ERR t_s=80 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+80256 KSTRESS_CRIT t_s=80 crit_task_n=857586 crit_task=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0 switches=243644 pc=0x00000000
+80270 KSTRESS_CRIT_ISR t_s=80 crit_isr_n=179995 crit_isr=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+80281 KSTRESS_TIME t_s=80 iter_avg_cyc=10110 iter_max_cyc=4404568 mtx_avg_cyc=8366 mtx_max_cyc=41604
+80294 KSTRESS_CPU t_s=80 tick=369 pong=229 ping=152 mtx=219 IDLE=67
+80302 KSTRESS_TICK t_s=80 ktick=80070 ptick=80070 deferred_tick=27911 deferred_pendsv=64648 heap_min=1448
+80313 KSTRESS_NVIC t_s=80 samples=80000 off_in_crit=572 off_free=0 deferred_irq=128649 hal_ms=80313
+90232 KSTRESS t_s=90 ping=22499 isr_msg=22296 isr_drop=204 notify=179988/179995 mtx=52003/90000 tick=90000 late=1763
+90245 KSTRESS_ERR t_s=90 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+90256 KSTRESS_CRIT t_s=90 crit_task_n=967938 crit_task=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0 switches=271825 pc=0x00000000
+90270 KSTRESS_CRIT_ISR t_s=90 crit_isr_n=202495 crit_isr=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+90281 KSTRESS_TIME t_s=90 iter_avg_cyc=10334 iter_max_cyc=4418503 mtx_avg_cyc=8590 mtx_max_cyc=43140
+90294 KSTRESS_CPU t_s=90 tick=373 pong=230 ping=150 mtx=218 IDLE=63
+90302 KSTRESS_TICK t_s=90 ktick=90070 ptick=90070 deferred_tick=31298 deferred_pendsv=73368 heap_min=1448
+90313 KSTRESS_NVIC t_s=90 samples=90000 off_in_crit=572 off_free=0 deferred_irq=147411 hal_ms=90313
+100232 KSTRESS t_s=100 ping=25000 isr_msg=24769 isr_drop=230 notify=199991/199994 mtx=56780/100000 tick=100000 late=2355
+100245 KSTRESS_ERR t_s=100 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+100256 KSTRESS_CRIT t_s=100 crit_task_n=1080926 crit_task=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0 switches=300180 pc=0x00000000
+100270 KSTRESS_CRIT_ISR t_s=100 crit_isr_n=224994 crit_isr=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+100281 KSTRESS_TIME t_s=100 iter_avg_cyc=10880 iter_max_cyc=4420055 mtx_avg_cyc=9107 mtx_max_cyc=43140
+100295 KSTRESS_CPU t_s=100 tick=380 pong=232 ping=153 mtx=213 IDLE=57
+100303 KSTRESS_TICK t_s=100 ktick=100071 ptick=100071 deferred_tick=35168 deferred_pendsv=82700 heap_min=1448
+100314 KSTRESS_NVIC t_s=100 samples=100000 off_in_crit=828 off_free=0 deferred_irq=160978 hal_ms=100314
+110232 KSTRESS t_s=110 ping=27500 isr_msg=27242 isr_drop=258 notify=219987/219994 mtx=61344/110000 tick=110000 late=3017
+110245 KSTRESS_ERR t_s=110 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+110256 KSTRESS_CRIT t_s=110 crit_task_n=1192420 crit_task=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0 switches=328121 pc=0x00000000
+110270 KSTRESS_CRIT_ISR t_s=110 crit_isr_n=247494 crit_isr=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+110281 KSTRESS_TIME t_s=110 iter_avg_cyc=11071 iter_max_cyc=4488982 mtx_avg_cyc=9294 mtx_max_cyc=43140
+110295 KSTRESS_CPU t_s=110 tick=382 pong=234 ping=152 mtx=212 IDLE=54
+110303 KSTRESS_TICK t_s=110 ktick=110071 ptick=110071 deferred_tick=39341 deferred_pendsv=93510 heap_min=1448
+110314 KSTRESS_NVIC t_s=110 samples=110000 off_in_crit=828 off_free=0 deferred_irq=179656 hal_ms=110314
+120232 KSTRESS t_s=120 ping=30000 isr_msg=29714 isr_drop=285 notify=239992/239995 mtx=65528/120000 tick=120000 late=3422
+120245 KSTRESS_ERR t_s=120 sum_err=0 seq_err=0 mtx_err=0 notify_err=0 mtx_timeout=0 q_timeout=0 stale=0
+120256 KSTRESS_CRIT t_s=120 crit_task_n=1302156 crit_task=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0 switches=358208 pc=0x00000000
+120271 KSTRESS_CRIT_ISR t_s=120 crit_isr_n=269995 crit_isr=0 pendsv_in=0 switches_in=0 tick_in=0 tim14_in=0
+120282 KSTRESS_TIME t_s=120 iter_avg_cyc=11379 iter_max_cyc=4494006 mtx_avg_cyc=9590 mtx_max_cyc=43140
+120295 KSTRESS_CPU t_s=120 tick=386 pong=238 ping=152 mtx=209 IDLE=50
+120304 KSTRESS_TICK t_s=120 ktick=120072 ptick=120072 deferred_tick=43263 deferred_pendsv=103475 heap_min=1448
+120315 KSTRESS_NVIC t_s=120 samples=120000 off_in_crit=828 off_free=0 deferred_irq=193883 hal_ms=120315

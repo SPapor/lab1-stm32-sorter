@@ -1,0 +1,8 @@
+# git=f8d7ee39 (з BOOT) scenario=CRITCOST build="ARCH=rtos LTO=1 TICK_HZ=1000 SIM_CRIT=0 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=0 TEST_APIPROBE=0 TEST_KSTRESS=0 TEST_CRITCOST=1 PERF=1" perf=1 arch=rtos lto=1 tick_hz=1000 port=wokwi.com host_start=2026-11-18T18:00:00
+# Ціна входу й виходу критичної секції (Tasks/critcost.c), Wokwi у браузері, схема як у S1. Рядки CRITCOST скопійовано з монітора порту, решту виводу старту не наводжу.
+1 BOOT fw=lab4-rtos git=f8d7ee39 perf=1 arch=rtos lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=5120       
+182 SELFTEST_END ok=4 warn=1 fail=0
+222 STATE state=READY
+1141 CRITCOST kind=none sim_crit=0 n=10000 min_cyc=529 avg_cyc_x100=55010 max_cyc=1333
+1149 CRITCOST kind=task sim_crit=0 n=10000 min_cyc=805 avg_cyc_x100=82966 max_cyc=1609
+1158 CRITCOST kind=isr sim_crit=0 n=10000 min_cyc=614 avg_cyc_x100=63493 max_cyc=1417
