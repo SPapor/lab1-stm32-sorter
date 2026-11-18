@@ -1,0 +1,68 @@
+# git=50939149 (з BOOT) scenario=BOOT_WIDTH build="ARCH=rtos LTO=1 TICK_HZ=1000 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=0 PERF=1" perf=1 arch=rtos lto=1 tick_hz=1000 port=wokwi.com host_start=2026-11-18T12:09:00
+# Перевірка рядка BOOT однієї довжини (коміт 5093914): Wokwi у браузері, та сама схема, що в S1, без команд до stats. Довжина рядка BOOT без CRLF: 103 символів (текст доповнено пробілами до 96).
+2 BOOT fw=lab4-rtos git=50939149 perf=1 arch=rtos lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=5120       
+12 EVT t_us=12300 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=526 pair_cyc=1243
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+40 EVT t_us=39799 name=i2c_fail
+44 EVT t_us=43708 name=i2c_ok
+53 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+60 EVT t_us=59789 name=i2c_fail
+64 EVT t_us=63704 name=i2c_ok
+73 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+80 EVT t_us=79797 name=i2c_fail
+84 EVT t_us=83712 name=i2c_ok
+87 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+163 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+168 SELFTEST dev=ldr_gate status=OK raw=1001
+173 SELFTEST dev=ldr_class status=OK raw=1001
+177 SELFTEST dev=servo status=OK pulse_us=1500
+182 SELFTEST_END ok=4 warn=1 fail=0
+222 STATE state=READY
+224 STACK used=800 reserved=1024 free=224 overflow=0
+229 HEAP arena=436 used=436 free=0
+235 EVT t_us=172893 name=ready_gate
+240 EVT t_us=177536 name=ready_class
+244 EVT t_us=235302 name=ready_imu
+753 EVT t_us=752715 name=ready_lcd
+1252 LOAD pct=17 pm=173 win_cyc=48895226 busy_cyc=8437023 windows=1
+2259 LOAD pct=19 pm=186 win_cyc=48335877 busy_cyc=8979602 windows=2
+3259 LOAD pct=18 pm=180 win_cyc=48002095 busy_cyc=8646131 windows=3
+4259 LOAD pct=18 pm=180 win_cyc=48000485 busy_cyc=8627279 windows=4
+5259 LOAD pct=18 pm=180 win_cyc=48002187 busy_cyc=8627449 windows=5
+6259 LOAD pct=18 pm=180 win_cyc=48002344 busy_cyc=8629770 windows=6
+7259 LOAD pct=18 pm=180 win_cyc=48000149 busy_cyc=8627505 windows=7
+8259 LOAD pct=18 pm=180 win_cyc=48001491 busy_cyc=8626441 windows=8
+9259 LOAD pct=18 pm=180 win_cyc=48001000 busy_cyc=8621324 windows=9
+10259 LOAD pct=18 pm=180 win_cyc=48001061 busy_cyc=8624704 windows=10
+10773 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+11259 LOAD pct=21 pm=208 win_cyc=48000531 busy_cyc=9997500 windows=11
+12260 LOAD pct=19 pm=185 win_cyc=48047276 busy_cyc=8902667 windows=12
+13260 LOAD pct=17 pm=174 win_cyc=48001718 busy_cyc=8337455 windows=13
+stats
+14064 PERF git=50939149 now_cyc=526 pair_cyc=1243 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+14073 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+14078 STARTUP boot_us=12300 gate_us=172893 class_us=177536 imu_us=235302 lcd_us=752715 os_api_us=233506 os_start_us=234074
+14091 STAT name=uart_rx n=1 min_us=47 avg_us=47 max_us=47 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14102 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14112 STAT name=gate n=2577 min_us=94 avg_us=94 max_us=110 period_us=5000 jit_min_us=-967 jit_max_us=68833 miss=29
+14123 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14134 STAT name=imu n=1298 min_us=975 avg_us=1000 max_us=1056 period_us=10000 jit_min_us=-982 jit_max_us=65121 miss=27
+14146 STAT name=lcd n=27 min_us=30630 avg_us=35200 max_us=69847 period_us=500000 jit_min_us=-161 jit_max_us=1136 miss=0
+14158 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14169 STAT name=loop n=206705 min_us=31 avg_us=46 max_us=69971 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14180 STAT name=i2c_xfer n=6442 min_us=59 avg_us=329 max_us=32469 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14192 STAT name=uart_line n=42 min_us=2304 avg_us=6737 max_us=12313 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14204 STAT name=lcd_update n=27 min_us=30409 avg_us=34978 max_us=69626 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14215 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14226 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+14236 UART rx=6 ore=0
+14239 EVT t_us=14064713 name=cmd_rx
+14243 EVT t_us=14239276 name=cmd_reply
+14287 LOAD pct=34 pm=336 win_cyc=49254166 busy_cyc=16547535 windows=14
+15287 LOAD pct=18 pm=180 win_cyc=48000278 busy_cyc=8624291 windows=15
+16286 LOAD pct=18 pm=180 win_cyc=48000288 busy_cyc=8624199 windows=16
+17286 LOAD pct=18 pm=180 win_cyc=48001248 busy_cyc=8624140 windows=17
+18288 LOAD pct=19 pm=186 win_cyc=48058680 busy_cyc=8954002 windows=18
+19288 LOAD pct=18 pm=180 win_cyc=48011136 busy_cyc=8625317 windows=19

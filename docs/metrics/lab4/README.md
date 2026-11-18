@@ -19,6 +19,7 @@
 | `PRIMASK_superloop_2026-11-18_0004.log` | `79f4919e`, super loop, `TEST_PRIMASK=1` | 10 обертів SysTick з PRIMASK = 1: обробники виконуються (журнал, проблема 35) |
 | `PRIMASK_rtos_2026-11-18_0005.log` | `cad75f82`, rtos, `TEST_PRIMASK=1` | те саме в rtos |
 | `BOOTMARK_superloop_2026-11-18_0007.log`, `BOOTMARK_rtos_2026-11-18_0008.log` | `cad75f82`, `TEST_BOOTMARK=1` | стан лічильника perf у точках старту до `BOOT` (docs/rtos-design.md, розділ 5) |
+| `BOOTWIDTH_superloop_2026-11-18_1213.log`, `BOOTWIDTH_rtos_2026-11-18_1209.log` | `50939149`, `LTO=1` | рядок `BOOT` однієї довжини (103 символи) в обох ARCH, STARTUP з `stats`; повна схема, як у S1 (docs/rtos-design.md, розділ 5) |
 
 Записи аналізатора до `_1856`, `_1857` і `_1942` - docs/captures/.
 
