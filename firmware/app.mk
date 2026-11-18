@@ -31,6 +31,10 @@ $(error TICK_HZ=$(TICK_HZ_ON) лише для ARCH=rtos; super loop має ті�
 endif
 endif
 
+ifeq ($(TEST_APIPROBE)$(ARCH_ON),1superloop)
+$(error TEST_APIPROBE=1 лише для ARCH=rtos)
+endif
+
 # Platform/<arch>/ — те, що в двох архітектурах різне: обробники SVC, PendSV,
 # SysTick, база часу HAL, лічильник тіків для perf_now (perf_tick.h)
 USER_DIRS = Platform Platform/$(ARCH_ON) Devices App
@@ -104,9 +108,10 @@ C_DEFS += -DBUILD_LTO=$(LTO_ON)
 #   TEST_I2C_FAULT=1 — тест FR-09 з PRD: періодичне звернення до відсутньої адреси 0x69
 #   TEST_PRIMASK=1   — дослід: чи маскує PRIMASK переривання (рядок PRIMASK після READY)
 #   TEST_BOOTMARK=1  — дослід: лічильник perf у точках старту до BOOT (рядки BOOTMARK)
+#   TEST_APIPROBE=1  — зонд бюджету flash: посилання на все API ядра кроків 2-3 (лише rtos)
 #   PERF=0           — без вимірювального модуля ЛР3 (docs/perf.md); за замовчуванням 1
 # TEST_* у продукт не входять; docs/rtos-design.md, розділи 2 і 5
-BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK
+BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
 
 # PERF завжди визначений (#if PERF): 0 лише явно, порожнє значення = 1.

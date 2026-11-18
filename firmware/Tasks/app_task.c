@@ -2,6 +2,9 @@
 #include "rtos_hal.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#ifdef TEST_APIPROBE
+#include "api_probe.h"
+#endif
 
 /* Пріоритет 1: вище за idle (0), щоб idle отримувала процесор лише тоді, коли
  * app заблокована (у кроці 1 — ніколи: цикл опитує без блокування) */
@@ -25,6 +28,9 @@ void app_task_start(void (*pass)(void))
     BaseType_t ok;
 
     app_pass = pass;
+#ifdef TEST_APIPROBE
+    api_probe_ref();
+#endif
 #if PERF
     rtos_hal_mark_api();      /* далі до старту ядра переривання вимкнені */
 #endif
