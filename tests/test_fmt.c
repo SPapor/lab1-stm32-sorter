@@ -20,12 +20,29 @@ void tearDown(void)
 {
 }
 
-/* fmt_vbuf проти vsnprintf: текст, довжина і '\0' при різних cap */
+/* Шлях черги журналу rtos: аргументи з va_list у масив (fmt_vargs), пізніше -
+ * рядок з масиву (fmt_abuf). Має вийти те саме, що дав fmt_vbuf */
+static void check_args(const char *want, size_t want_n, size_t cap, const char *fmt, va_list ap)
+{
+    fmt_arg_t arr[16];
+    char got[256];
+    unsigned n;
+    size_t gn;
+
+    memset(got, 'X', sizeof got);
+    n = fmt_vargs(fmt, ap, arr, 16u);
+    TEST_ASSERT_TRUE_MESSAGE(n <= 16u, fmt);
+    gn = fmt_abuf(got, cap, fmt, arr, n);
+    TEST_ASSERT_EQUAL_INT_MESSAGE((int)want_n, (int)gn, fmt);
+    TEST_ASSERT_EQUAL_MEMORY_MESSAGE(want, got, sizeof got, fmt);
+}
+
+/* fmt_vbuf проти vsnprintf: текст, довжина і '\0' при різних cap; те саме через масив */
 static void check_cap(size_t cap, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 static void check_cap(size_t cap, const char *fmt, ...)
 {
     char want[256], got[256];
-    va_list ap, ap2;
+    va_list ap, ap2, ap3;
     int wn;
     size_t gn;
 
@@ -34,8 +51,11 @@ static void check_cap(size_t cap, const char *fmt, ...)
     memset(got, 'X', sizeof got);
     va_start(ap, fmt);
     va_copy(ap2, ap);
+    va_copy(ap3, ap);
     wn = vsnprintf(want, cap, fmt, ap);
     gn = fmt_vbuf(got, cap, fmt, ap2);
+    check_args(want, (size_t)wn, cap, fmt, ap3);
+    va_end(ap3);
     va_end(ap2);
     va_end(ap);
     TEST_ASSERT_EQUAL_INT_MESSAGE(wn, (int)gn, fmt);
@@ -49,12 +69,17 @@ static void check_line(const char *expected, const char *fmt, ...) __attribute__
 static void check_line(const char *expected, const char *fmt, ...)
 {
     char want[256], got[256];
-    va_list ap, ap2;
+    va_list ap, ap2, ap3;
+    int wn;
 
+    memset(want, 'X', sizeof want);
     va_start(ap, fmt);
     va_copy(ap2, ap);
-    vsnprintf(want, sizeof want, fmt, ap);
+    va_copy(ap3, ap);
+    wn = vsnprintf(want, sizeof want, fmt, ap);
     fmt_vbuf(got, sizeof got, fmt, ap2);
+    check_args(want, (size_t)wn, sizeof want, fmt, ap3);
+    va_end(ap3);
     va_end(ap2);
     va_end(ap);
     TEST_ASSERT_EQUAL_STRING(want, got);
@@ -261,6 +286,34 @@ static void test_log_lines(void)
     check_line("160880 CLI st=BAD", "%lu %s st=BAD", 160880ul, "CLI");
 }
 
+/* Масив: аргументів більше за місце - решта загублена, кількість повертається;
+ * відсутні в масиві - 0 і "(null)" */
+static void args_take(fmt_arg_t *arr, unsigned max, unsigned *n, const char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    *n = fmt_vargs(fmt, ap, arr, max);
+    va_end(ap);
+}
+
+static void test_args_overflow_and_missing(void)
+{
+    fmt_arg_t arr[3] = { 0, 0, 0 };
+    char got[64];
+    unsigned n;
+
+    args_take(arr, 2u, &n, "%u %s %ld %c", 7u, "ab", -5L, 'z');
+    TEST_ASSERT_EQUAL_UINT(4u, n);
+    TEST_ASSERT_EQUAL_UINT(0u, (unsigned)arr[2]);   /* третього місця не чіпали */
+    fmt_abuf(got, sizeof got, "%u %s %ld %c", arr, 2u);
+    TEST_ASSERT_EQUAL_STRING("7 ab 0 \0", got);    /* %c з 0 - символ '\0' обриває рядок */
+    fmt_abuf(got, sizeof got, "%u %s", arr, 1u);
+    TEST_ASSERT_EQUAL_STRING("7 (null)", got);
+    args_take(arr, 3u, &n, "no args %% here");
+    TEST_ASSERT_EQUAL_UINT(0u, n);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -276,5 +329,6 @@ int main(void)
     RUN_TEST(test_unknown_spec);
     RUN_TEST(test_minus_beats_zero);
     RUN_TEST(test_log_lines);
+    RUN_TEST(test_args_overflow_and_missing);
     return UNITY_END();
 }
