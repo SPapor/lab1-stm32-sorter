@@ -90,8 +90,9 @@ extern uint32_t SystemCoreClock;
  * дні стека задачі. Рядок FATAL stack overflow in <ім'я> (методичка 7.2, п. 2) */
 #define configCHECK_FOR_STACK_OVERFLOW      2
 /* Обробники SVC і PendSV мають бути саме з порту: ядро перевіряє таблицю
- * векторів при старті (configASSERT). Так ловиться обробник, згенерований CubeMX */
-#define configCHECK_HANDLER_INSTALLATION    1
+ * векторів при старті (configASSERT). Так ловиться обробник, згенерований CubeMX.
+ * Лише в збірці ASSERT=1, як і сам configASSERT (нижче) */
+#define configCHECK_HANDLER_INSTALLATION    RTOS_ASSERT
 
 /* Run-time stats і trace — частина вимірювального модуля: є лише з PERF=1.
  * Лічильник часу — perf_now у тактах CPU (21 нс). 32 біти переповнюються за
@@ -112,13 +113,19 @@ uint64_t rtos_hal_runtime_now(void);
 #define portGET_RUN_TIME_COUNTER_VALUE()    rtos_hal_runtime_now()
 #endif
 
-/* configASSERT без імені файлу (кожен рядок __FILE__ — ще кілька десятків байтів
- * флешу на виклик): номер рядка й адреса виклику — у .noinit, далі переривання
- * вимкнено й блимає LD4. Після скидання main друкує ASSERT line=N pc=0x... */
+/* configASSERT - лише в збірці ASSERT=1 (app.mk; CI її збирає, TEST_KSTRESS
+ * вмикає завжди). У продукті його немає: з обходом SIM_CRIT ядро з повним API
+ * інакше лишало б менше 3 КБ flash на задачі кроків 2-3 (docs/rtos-design.md,
+ * розділ 4). Переповнення стека, malloc і HardFault ловляться і без нього.
+ * Без імені файлу (кожен рядок __FILE__ — ще кілька десятків байтів флешу на
+ * виклик): номер рядка й адреса виклику — у .noinit, далі переривання вимкнено й
+ * блимає LD4. Після скидання main друкує ASSERT line=N pc=0x... */
 /* noinline: адреса повернення має бути місцем configASSERT, навіть якщо LTO
  * захоче вбудувати функцію в єдиного викликача */
 void rtos_hal_assert_failed(uint32_t line) __attribute__((noreturn, noinline));
+#if RTOS_ASSERT
 #define configASSERT(x)                     do { if ((x) == 0) rtos_hal_assert_failed(__LINE__); } while (0)
+#endif
 
 /* Стрес-тест ядра в Wokwi (збірка TEST_KSTRESS=1, Tasks/kstress.c, у продукт не
  * входить): контрольні значення в кожному списку ядра (configASSERT, якщо список

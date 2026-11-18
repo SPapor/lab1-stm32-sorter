@@ -18,11 +18,15 @@ LDFLAGS += -Wl,--print-memory-usage
 #   TICK_HZ=<Гц>   — частота тіку FreeRTOS, лише для ARCH=rtos (методичка 7.2, п. 6)
 #   SIM_CRIT=1|0   — лише rtos: 1 (за замовчуванням) - порт з обходом для Wokwi
 #                    (Platform/rtos/port_sim), 0 - порт із сабмодуля без змін
+#   ASSERT=1       — лише rtos: configASSERT і перевірка обробників SVC/PendSV
+#                    (у продукті їх немає, docs/rtos-design.md, розділ 4)
 # Порожнє значення (кореневий Makefile передає змінні завжди) = за замовчуванням.
 ARCH_ON    := $(if $(ARCH),$(ARCH),superloop)
 LTO_ON     := $(if $(filter 1,$(LTO)),1,0)
 TICK_HZ_ON := $(if $(TICK_HZ),$(TICK_HZ),1000)
 SIM_CRIT_ON := $(if $(filter 0,$(SIM_CRIT)),0,1)
+# configASSERT ядра: лише ASSERT=1 або стрес-тест (він перевіряє саме ядро)
+ASSERT_ON   := $(if $(filter 1,$(ASSERT) $(TEST_KSTRESS)),1,0)
 
 ifeq ($(filter $(ARCH_ON),superloop rtos),)
 $(error ARCH=$(ARCH_ON): має бути superloop або rtos)
@@ -106,6 +110,7 @@ endif
 endif
 C_DEFS += -DARCH_RTOS=$(if $(filter rtos,$(ARCH_ON)),1,0)
 C_DEFS += -DSIM_CRIT=$(if $(filter rtos,$(ARCH_ON)),$(SIM_CRIT_ON),0)
+C_DEFS += -DRTOS_ASSERT=$(ASSERT_ON)
 
 # LTO: оптимізація всього образу на етапі лінкування (docs/rtos-design.md, бюджет
 # пам'яті). Код генерується вже в лінкері, тож -Os і секції по функціях треба
@@ -162,7 +167,7 @@ endif
 # Каталог build/ один на всі варіанти: об'єкти іншої ARCH, що лишилися від
 # попередньої збірки, не лінкуються — до ELF ідуть лише $(OBJECTS).
 BUILD_CFG  = $(BUILD_DIR)/build.cfg
-BUILD_LINE = ARCH=$(ARCH_ON) LTO=$(LTO_ON) TICK_HZ=$(TICK_HZ_ON) SIM_CRIT=$(SIM_CRIT_ON) \
+BUILD_LINE = ARCH=$(ARCH_ON) LTO=$(LTO_ON) TICK_HZ=$(TICK_HZ_ON) SIM_CRIT=$(SIM_CRIT_ON) ASSERT=$(ASSERT_ON) \
              $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0)) PERF=$(PERF_ON)
 
 # Версія прошивки в банері й першому рядку журналу (методичка 5.2, 6): git-хеш,

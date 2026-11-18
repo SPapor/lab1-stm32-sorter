@@ -6,13 +6,13 @@ RUN = docker run --rm -v $(PWD):/workspace -w /workspace --user $$(id -u):$$(id 
 
 # ARCH, LTO, TICK_HZ - лише з командного рядка: ARCH у середовищі буває чужим
 # (ARCH=arm для збірки ядра Linux), а make бере змінні середовища як свої
-$(foreach v,ARCH LTO TICK_HZ SIM_CRIT,$(if $(filter environment%,$(origin $(v))),$(eval $(v) :=)))
+$(foreach v,ARCH LTO TICK_HZ SIM_CRIT ASSERT,$(if $(filter environment%,$(origin $(v))),$(eval $(v) :=)))
 
 # Варіант збірки: make build LAB2_CAP=1 (harness ЛР2), TEST_I2C_FAULT=1 (тест FR-09),
 # PERF=0 (без вимірювального модуля, docs/perf.md).
 # Архітектура (docs/rtos-design.md): ARCH=superloop (за замовчуванням) | rtos,
 # LTO=0|1, TICK_HZ=<Гц> (лише rtos, за замовчуванням 1000)
-FW_VARS = ARCH=$(ARCH) LTO=$(LTO) TICK_HZ=$(TICK_HZ) SIM_CRIT=$(SIM_CRIT) \
+FW_VARS = ARCH=$(ARCH) LTO=$(LTO) TICK_HZ=$(TICK_HZ) SIM_CRIT=$(SIM_CRIT) ASSERT=$(ASSERT) \
 	LAB2_CAP=$(LAB2_CAP) TEST_I2C_FAULT=$(TEST_I2C_FAULT) TEST_PRIMASK=$(TEST_PRIMASK) \
 	TEST_BOOTMARK=$(TEST_BOOTMARK) TEST_APIPROBE=$(TEST_APIPROBE) TEST_KSTRESS=$(TEST_KSTRESS) TEST_CRITCOST=$(TEST_CRITCOST) PERF=$(PERF) GIT_HASH=$(GIT_HASH)
 
