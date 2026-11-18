@@ -68,12 +68,13 @@ $(BUILD_DIR)/$(TARGET).elf: $(USER_OBJECTS)
 ifeq ($(ARCH_ON),rtos)
 RTOS_DIR     = Middlewares/FreeRTOS
 RTOS_PORT    = $(RTOS_DIR)/portable/GCC/ARM_CM0
-# У збірці TEST_KSTRESS port.c включається у Platform/rtos/kstress/port_kstress.c
-# (той самий порт плюс читання ulCriticalNesting), тож окремо не збирається
+# У збірці TEST_KSTRESS port.c і portasm.c включаються у Platform/rtos/kstress/
+# (той самий порт плюс лічильники критичних секцій), тож окремо не збираються
 RTOS_PORT_C  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress.c,$(RTOS_PORT)/port.c)
+RTOS_PORT_S  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress_asm.c,$(RTOS_PORT)/portasm.c)
 RTOS_SOURCES = $(addprefix $(RTOS_DIR)/,tasks.c queue.c list.c stream_buffer.c) \
                $(RTOS_DIR)/portable/MemMang/heap_4.c \
-               $(RTOS_PORT_C) $(RTOS_PORT)/portasm.c
+               $(RTOS_PORT_C) $(RTOS_PORT_S)
 RTOS_OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(RTOS_SOURCES:.c=.o)))
 
 C_SOURCES  += $(RTOS_SOURCES)

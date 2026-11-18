@@ -3,7 +3,7 @@
  * м'ютекс, коли PRIMASK не маскує переривання (docs/journal.md, проблема 35).
  *
  *   tick  P4  xTaskDelayUntil 1 мс; м'ютекс зі спільним лічильником;
- *             раз на 10 с друкує рядки KSTRESS і KSTRESS_CRIT (на найвищому
+ *             раз на 10 с друкує рядки KSTRESS* (на найвищому
  *             пріоритеті, щоб звіт був, навіть якщо нижчі задачі голодують;
  *             друк блокувальний, тож після нього кілька пробуджень запізнюються)
  *   pong  P3  черга q_ping: перевіряє контрольну суму кожного повідомлення
@@ -132,7 +132,9 @@ static void pulse(void)
 {
     TaskHandle_t cur = xTaskGetCurrentTaskHandle();
     uint32_t pc = ((const uint32_t *)__get_PSP())[6];
+    kstress_port_counters_t p;
 
+    kstress_port_counters(&p);
     rtos_hal_raw_putu(HAL_GetTick(), 10u);
     rtos_hal_raw_puts(" KSTRESS_ISR");
     raw_kv(" isr=", isr_seq, 10u);
@@ -145,6 +147,9 @@ static void pulse(void)
     rtos_hal_raw_puts(cur != NULL ? pcTaskGetName(cur) : "-");
     raw_kv(" pc=", pc, 16u);
     raw_kv(" crit=", kstress_crit_nesting(), 16u);
+    raw_kv(" switches=", p.switches, 10u);
+    raw_kv(" switches_in=", p.switches_in_task_crit, 10u);
+    raw_kv(" tick_in=", p.tick_in_task_crit, 10u);
     rtos_hal_raw_puts("\r\n");
 }
 
@@ -154,7 +159,7 @@ void TIM14_IRQHandler(void)
     BaseType_t woken = pdFALSE;
     msg_t m;
 
-    kstress_note_isr();
+    kstress_note_isr(KSTRESS_SRC_TIM14);
     if (isr_seq != 0u && isr_seq % PULSE_ISR_CALLS == 0u) {
         static uint32_t ping_seen, pong_seen;
 
@@ -326,11 +331,21 @@ static void report(uint32_t t_s)
                     (unsigned long)cnt.mtx_err, (unsigned long)cnt.notify_err,
                     (unsigned long)cnt.mtx_timeout, (unsigned long)cnt.q_timeout,
                     (unsigned long)cnt.stale);
-    uart_hal_printf("%lu KSTRESS_CRIT t_s=%lu switches=%lu switches_in_crit=%lu pendsv_in_crit=%lu "
-                    "isr_in_crit=%lu heap_min=%lu", (unsigned long)HAL_GetTick(),
-                    (unsigned long)t_s, (unsigned long)p.switches,
-                    (unsigned long)p.switches_in_crit, (unsigned long)p.pendsv_in_crit,
-                    (unsigned long)p.isr_in_crit, (unsigned long)xPortGetMinimumEverFreeHeapSize());
+    /* Критичні секції задач (taskENTER_CRITICAL): скільки входів і скільки разів
+     * усередині них спрацювали PendSV, тік і TIM14 - на залізі 0 */
+    uart_hal_printf("%lu KSTRESS_CRIT t_s=%lu crit_task=%lu switches=%lu pendsv_in=%lu "
+                    "switches_in=%lu tick_in=%lu tim14_in=%lu heap_min=%lu",
+                    (unsigned long)HAL_GetTick(), (unsigned long)t_s,
+                    (unsigned long)p.crit_task, (unsigned long)p.switches,
+                    (unsigned long)p.pendsv_in_task_crit, (unsigned long)p.switches_in_task_crit,
+                    (unsigned long)p.tick_in_task_crit, (unsigned long)p.tim14_in_task_crit,
+                    (unsigned long)xPortGetMinimumEverFreeHeapSize());
+    /* Те саме для критичних секцій ISR (taskENTER_CRITICAL_FROM_ISR) */
+    uart_hal_printf("%lu KSTRESS_CRIT_ISR t_s=%lu crit_isr=%lu pendsv_in=%lu switches_in=%lu "
+                    "tick_in=%lu tim14_in=%lu", (unsigned long)HAL_GetTick(), (unsigned long)t_s,
+                    (unsigned long)p.crit_isr, (unsigned long)p.pendsv_in_isr_crit,
+                    (unsigned long)p.switches_in_isr_crit, (unsigned long)p.tick_in_isr_crit,
+                    (unsigned long)p.tim14_in_isr_crit);
 }
 
 static void mtx_task(void *arg)

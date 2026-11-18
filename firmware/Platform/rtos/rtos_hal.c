@@ -122,7 +122,7 @@ void SysTick_Handler(void);
 void SysTick_Handler(void)
 {
 #ifdef TEST_KSTRESS
-    kstress_note_isr();
+    kstress_note_isr(KSTRESS_SRC_TICK);
 #endif
     rtos_hal_ticks++;
     if (kernel_ticks)
