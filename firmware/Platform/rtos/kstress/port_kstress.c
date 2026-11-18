@@ -27,6 +27,11 @@ static int in_crit(void)
     return n != 0u && n != NESTING_BEFORE_START;
 }
 
+uint32_t kstress_crit_nesting(void)
+{
+    return ulCriticalNesting;
+}
+
 void kstress_note_isr(void)
 {
     if (in_crit())

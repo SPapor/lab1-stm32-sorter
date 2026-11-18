@@ -12,6 +12,9 @@ typedef struct {
     uint32_t switches;           /* усього перемикань задач */
 } kstress_port_counters_t;
 
+/* ulCriticalNesting порту як є (0xaaaaaaaa - до старту ядра) */
+uint32_t kstress_crit_nesting(void);
+
 /* На початку обробників SysTick і TIM14 */
 void kstress_note_isr(void);
 

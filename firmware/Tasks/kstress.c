@@ -14,6 +14,11 @@
  *   TIM14 2 кГц: xQueueSendFromISR у q_ping, vTaskNotifyGiveFromISR задачі mtx,
  *             portYIELD_FROM_ISR
  *
+ * Пульс з ISR (рядок KSTRESS_ISR раз на 5 с): пише сам обробник TIM14 прямо в
+ * регістр USART, тож рядок є, навіть якщо задачі стоять. Поточна задача, адреса,
+ * де її перервано (PC з кадру винятку на PSP), і вкладеність критичної секції
+ * показують, де саме зависло. Може вклинитися посеред рядка задачі.
+ *
  * Помилка - будь-який лічильник *_err; assert, переповнення стека і HardFault
  * зупиняють програму рядком FATAL (Platform/rtos/rtos_diag.c), і рядків KSTRESS
  * далі немає. Лічильники порту (переривання і перемикання всередині критичних
@@ -36,6 +41,7 @@
 #define MTX_WAIT_TICKS      pdMS_TO_TICKS(50)
 #define HOLD_LOOPS          600u     /* ~100 мкс з м'ютексом: P1 і P4 часто перетинаються */
 #define IRQ_PRIO            2u       /* вище за SysTick і PendSV (3) */
+#define PULSE_ISR_CALLS     (5u * ISR_HZ)   /* рядок KSTRESS_ISR раз на 5 с */
 
 #define STACK_TICK          192u     /* друк: форматер і буфер рядка */
 #define STACK_PONG          112u
@@ -108,6 +114,65 @@ static void msg_make(msg_t *m, uint32_t src, uint32_t seq)
     m->sum = msg_sum(m);
 }
 
+/* Сирий вивід з ISR: опитування TXE, без HAL і без буфера uart_hal */
+static void raw_putc(char c)
+{
+    USART_TypeDef *u = USART2;
+
+    while ((u->ISR & USART_ISR_TXE_TXFNF) == 0u) {
+    }
+    u->TDR = (uint8_t)c;
+}
+
+static void raw_puts(const char *s)
+{
+    while (*s != '\0')
+        raw_putc(*s++);
+}
+
+static void raw_putu(uint32_t v, unsigned base)
+{
+    char buf[10];
+    unsigned n = 0;
+
+    do {
+        uint32_t d = v % base;
+        buf[n++] = (char)(d < 10u ? '0' + d : 'A' + d - 10u);
+        v /= base;
+    } while (v != 0u);
+    while (n > 0u)
+        raw_putc(buf[--n]);
+}
+
+static void raw_kv(const char *key, uint32_t v, unsigned base)
+{
+    raw_puts(key);
+    if (base == 16u)
+        raw_puts("0x");
+    raw_putu(v, base);
+}
+
+/* Рядок KSTRESS_ISR: лічильники і місце, де ISR перервав задачу */
+static void pulse(void)
+{
+    TaskHandle_t cur = xTaskGetCurrentTaskHandle();
+    uint32_t pc = ((const uint32_t *)__get_PSP())[6];
+
+    raw_putu(HAL_GetTick(), 10u);
+    raw_puts(" KSTRESS_ISR");
+    raw_kv(" isr=", isr_seq, 10u);
+    raw_kv(" tick=", cnt.ticks, 10u);
+    raw_kv(" ping=", cnt.ping, 10u);
+    raw_kv(" isr_msg=", cnt.isr_msg, 10u);
+    raw_kv(" mtx=", cnt.mtx_p1, 10u);
+    raw_kv("/", cnt.mtx_p4, 10u);
+    raw_puts(" cur=");
+    raw_puts(cur != NULL ? pcTaskGetName(cur) : "-");
+    raw_kv(" pc=", pc, 16u);
+    raw_kv(" crit=", kstress_crit_nesting(), 16u);
+    raw_puts("\r\n");
+}
+
 void TIM14_IRQHandler(void);
 void TIM14_IRQHandler(void)
 {
@@ -115,6 +180,8 @@ void TIM14_IRQHandler(void)
     msg_t m;
 
     kstress_note_isr();
+    if (isr_seq != 0u && isr_seq % PULSE_ISR_CALLS == 0u)
+        pulse();
     TIM14->SR = ~TIM_SR_UIF;
     msg_make(&m, SRC_ISR, isr_seq++);
     if (xQueueSendFromISR(q_ping, &m, &woken) != pdPASS)
