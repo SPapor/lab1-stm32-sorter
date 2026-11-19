@@ -29,6 +29,7 @@ void rtos_osm_set(rtos_osm_id_t id);
 int rtos_osm_take(rtos_osm_id_t id);
 void rtos_osm_clear(rtos_osm_id_t id);
 void rtos_osm_switch_out(void);
+void rtos_osm_switch_in(void);
 
 void rtos_osm_stats(rtos_osm_id_t id, const perf_stat_t **raw, const perf_stat_t **nosim);
 void rtos_osm_reset(void);

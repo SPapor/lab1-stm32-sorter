@@ -1540,7 +1540,8 @@ static void stats_report(void)
 
     rtos_osm_stats((rtos_osm_id_t)i, &raw, &nosim);
     stat_line(raw, NULL);
-    stat_line(nosim, NULL);
+    if (nosim != NULL)
+      stat_line(nosim, NULL);
   }
 #endif
 #ifdef TEST_INVERSION

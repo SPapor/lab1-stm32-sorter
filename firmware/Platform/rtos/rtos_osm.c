@@ -3,6 +3,7 @@
 #include "perf_hal.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "stm32c0xx_hal.h"
 #if SIM_CRIT
 #include "port_sim.h"
 #endif
@@ -21,7 +22,7 @@ static const char *const name_raw[OSM_COUNT] = {
     [OSM_QUEUE] = "os_queue", [OSM_MUTEX] = "os_mutex",
 };
 static const char *const name_nosim[OSM_COUNT] = {
-    [OSM_TICK] = "os_tick_nosim", [OSM_SELECT] = "os_select_nosim",
+    [OSM_TICK] = "os_tick_nosim", [OSM_SELECT] = "",
     [OSM_CTXSW] = "os_ctxsw_nosim", [OSM_ISR_ESTOP] = "os_isr_estop_nosim",
     [OSM_ISR_CLI] = "os_isr_cli_nosim", [OSM_QUEUE] = "os_queue_nosim",
     [OSM_MUTEX] = "os_mutex_nosim",
@@ -85,15 +86,30 @@ void rtos_osm_clear(rtos_osm_id_t id)
     slot_on[id] = 0;
 }
 
+static uint32_t sel_val;
+static volatile uint8_t sel_on;
+
 void rtos_osm_switch_out(void)
 {
-    rtos_osm_set(OSM_SELECT);
+    sel_val = SysTick->VAL;
+    sel_on = 1;
+}
+
+void rtos_osm_switch_in(void)
+{
+    uint32_t v;
+
+    if (!sel_on)
+        return;
+    v = SysTick->VAL;
+    sel_on = 0;
+    perf_add(&st_raw[OSM_SELECT], sel_val >= v ? sel_val - v : sel_val + SysTick->LOAD + 1u - v);
 }
 
 void rtos_osm_stats(rtos_osm_id_t id, const perf_stat_t **raw, const perf_stat_t **nosim)
 {
     *raw = &st_raw[id];
-    *nosim = &st_nosim[id];
+    *nosim = (id == OSM_SELECT) ? NULL : &st_nosim[id];
 }
 
 void rtos_osm_reset(void)

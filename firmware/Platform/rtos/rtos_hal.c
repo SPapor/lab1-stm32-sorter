@@ -249,7 +249,7 @@ void rtos_hal_trace_task(unsigned slot, const void *tcb, uint16_t pin)
 void rtos_hal_trace_in(const void *tcb)
 {
 #ifdef OSMETRICS
-    (void)rtos_osm_take(OSM_SELECT);
+    rtos_osm_switch_in();
 #endif
     if (tcb == (const void *)xTaskGetIdleTaskHandle())
         BOARD_PROBE_OFF(BOARD_PROBE_TASK_PIN);
