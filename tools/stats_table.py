@@ -15,7 +15,8 @@ STAT ... -> UART), рядки LOAD/STACK/HEAP за весь прогін і по
 --os: метрики ОС з останнього блоку stats (ARCH=rtos, ЛР4): STAT os_* - виміряне і
 без ціни обходу SIM_CRIT, TASK по задачах, MTX, SIMCRIT, OSHEAP (docs/perf.md, розділ 10).
 У rtos після рядка UART у тому самому блоці йдуть TASK, MTX, LOGQ, SIMCRIT і STAT os_*;
-STACK name=<задача> - стеки задач, окремо від STACK стека MSP.
+STACK name=<задача> - стеки задач, окремо від STACK стека MSP. Рядки TASK від
+команди tasks після stats блок не змінюють (лишаються значення вікна stats).
 Усі часи з Wokwi - симуляційні (методичка 2.2).
 """
 import argparse
@@ -101,8 +102,9 @@ def parse_lines(lines):
             block['uart'] = {'rx': _int(kv, 'rx'), 'ore': _int(kv, 'ore'),
                              'sent': None if in_stream else sent}
         elif ev in ('TASK', 'MTX') and block is not None:
-            block['tasks' if ev == 'TASK' else 'mtx'][kv.get('name', '?')] = {
-                k: (v if k in ('name', 'state') else _int(kv, k)) for k, v in kv.items()}
+            dst = block['tasks' if ev == 'TASK' else 'mtx']
+            dst.setdefault(kv.get('name', '?'), {
+                k: (v if k in ('name', 'state') else _int(kv, k)) for k, v in kv.items()})
         elif ev in ('LOGQ', 'SIMCRIT') and block is not None:
             block[ev.lower()] = {k: _int(kv, k) for k in kv}
         elif ev == 'STACK' and 'name' in kv:
