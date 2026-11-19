@@ -1,0 +1,124 @@
+# git=16f67200 (з BOOT) scenario=INVERSION_mutex build="ARCH=rtos LTO=1 TICK_HZ=1000 SIM_CRIT=1 ASSERT=0 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=0 TEST_APIPROBE=0 TEST_KSTRESS=0 TEST_CRITCOST=0 OSMETRICS=0 TEST_INVERSION=mutex PERF=1" perf=1 arch=rtos lto=1 tick_hz=1000 port=wokwi.com host_saved=2026-11-19
+# Дослід інверсії пріоритетів (методичка 7.2, п. 1; docs/rtos-design.md, розділ 7), варіант mutex: wokwi.com у браузері, схема S1 без аналізатора, без дій. Рядок BOOT, далі все від stats reset до кінця відповіді stats (~15 с); старт між ними опущено.
+2 BOOT fw=lab4-rtos git=16f67200 perf=1 arch=rtos lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=7424       
+stats reset
+10900 STATS reset=1
+10905 EVT t_us=10899583 name=cmd_rx
+10906 EVT t_us=10904671 name=cmd_reply
+11242 LOAD pct=42 pm=416 win_cyc=48000053 busy_cyc=19983981 windows=10
+11315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+11325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+11805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+11815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12242 LOAD pct=40 pm=398 win_cyc=47999956 busy_cyc=19111969 windows=11
+12315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13242 LOAD pct=40 pm=398 win_cyc=47999992 busy_cyc=19112153 windows=12
+13315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13825 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14242 LOAD pct=41 pm=412 win_cyc=48000016 busy_cyc=19795523 windows=13
+14315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14825 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15242 LOAD pct=41 pm=412 win_cyc=48000340 busy_cyc=19789560 windows=14
+15315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+16242 LOAD pct=40 pm=398 win_cyc=47999644 busy_cyc=19111704 windows=15
+16315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+16325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+16335 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+16805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+16815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+17242 LOAD pct=41 pm=412 win_cyc=48000016 busy_cyc=19763831 windows=16
+17315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+17325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+17805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+17815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+18242 LOAD pct=40 pm=398 win_cyc=47999992 busy_cyc=19111983 windows=17
+18315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+18325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+18805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+18815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19242 LOAD pct=40 pm=398 win_cyc=47999992 busy_cyc=19111583 windows=18
+19315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20242 LOAD pct=40 pm=398 win_cyc=48000068 busy_cyc=19123595 windows=19
+20315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20335 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+21242 LOAD pct=41 pm=412 win_cyc=47999928 busy_cyc=19773565 windows=20
+21315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+21325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+21805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+21815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+22242 LOAD pct=40 pm=398 win_cyc=48000001 busy_cyc=19106158 windows=21
+22315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+22325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+22805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+22815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+23242 LOAD pct=40 pm=399 win_cyc=48000005 busy_cyc=19130911 windows=22
+23315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+23324 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+23805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+23814 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+24242 LOAD pct=40 pm=397 win_cyc=48000351 busy_cyc=19061759 windows=23
+24315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+24324 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+24805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+24814 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+25242 LOAD pct=40 pm=398 win_cyc=47999644 busy_cyc=19090470 windows=24
+25315 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+25324 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+25805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+25814 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+stats
+25998 PERF git=16f67200 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+26012 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+26018 STARTUP boot_us=12240 gate_us=175967 class_us=180674 imu_us=252417 lcd_us=795911 os_api_us=237655 os_start_us=240586
+26037 STAT name=uart_rx n=1 min_us=11881 avg_us=11881 max_us=11881 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26054 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26068 STAT name=gate n=3034 min_us=203 avg_us=208 max_us=217 period_us=5000 jit_min_us=-31 jit_max_us=31 miss=0
+26085 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26098 STAT name=imu n=1520 min_us=1097 avg_us=2455 max_us=46413 period_us=10000 jit_min_us=-8537 jit_max_us=36623 miss=30
+26118 STAT name=lcd n=30 min_us=44299 avg_us=44535 max_us=44640 period_us=500000 jit_min_us=-10007 jit_max_us=10007 miss=0
+26136 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26152 STAT name=logger n=66 min_us=4858 avg_us=10397 max_us=11760 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26167 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26182 STAT name=i2c_xfer n=7136 min_us=62 avg_us=423 max_us=7738 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26198 STAT name=uart_line n=95 min_us=3688 avg_us=10408 max_us=18411 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26216 STAT name=lcd_update n=30 min_us=43971 avg_us=44207 max_us=44312 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26233 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26248 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26264 UART rx=6 ore=0
+26268 LOAD pct=58 pm=584 win_cyc=47999993 busy_cyc=28033037 windows=25
+26283 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+26297 TASK name=gate prio=5 cpu_pm=87 stack_free=336 state=blocked run_ms=1340
+26312 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+26326 TASK name=imu prio=3 cpu_pm=175 stack_free=164 state=blocked run_ms=2700
+26339 TASK name=cli prio=2 cpu_pm=16 stack_free=184 state=run run_ms=256
+26353 TASK name=logger prio=2 cpu_pm=42 stack_free=168 state=blocked run_ms=654
+26367 TASK name=lcd prio=1 cpu_pm=80 stack_free=220 state=ready run_ms=1237
+26382 TASK name=hog prio=2 cpu_pm=13 stack_free=144 state=blocked run_ms=210
+26395 TASK name=IDLE prio=0 cpu_pm=587 stack_free=108 state=ready run_ms=9032
+26406 MTX name=adc takes=3101 timeouts=0 wait_max_us=68
+26415 MTX name=i2c takes=3134 timeouts=0 wait_max_us=45202
+26423 MTX name=sorter takes=30 timeouts=0 wait_max_us=55
+26432 MTX name=uart takes=119 timeouts=0 wait_max_us=25025
+26439 LOGQ len=16 max_used=3 lines=66 drop=0 trunc=0 rx_drop=0
+26449 SIMCRIT win_ms=15367 task_n=18586 isr_n=15543 deferred_tick=12 deferred_pendsv=69 deferred_irq=892
+26466 STAT name=inv_imu_wait n=3114 min_us=55 avg_us=490 max_us=45202 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+26483 EVT t_us=25998367 name=cmd_rx
+26485 EVT t_us=26483329 name=cmd_reply
