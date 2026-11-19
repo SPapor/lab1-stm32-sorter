@@ -452,6 +452,9 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   BOOTMARK('m');               /* після MX_*_Init */
+#if ARCH_RTOS
+  HAL_NVIC_SetPriority(BOARD_ESTOP_IRQ, 3, 0);
+#endif
 #if PERF
   perf_hal_init();
   perf_setup();

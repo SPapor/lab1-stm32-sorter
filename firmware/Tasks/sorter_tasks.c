@@ -28,7 +28,7 @@ enum { T_ESTOP = 0, T_GATE, T_SORT, T_IMU, T_CLI, T_LOGGER, T_LCD, T_COUNT };
 #define QLOG_LEN        16u     /* записів журналу в черзі */
 #define QPARCEL_LEN     2u      /* PARCEL_IN, що чекають на sort */
 #define SB_RX_BYTES     64u     /* потоковий буфер прийому UART */
-#define USART2_IRQ_PRIO 2u      /* нижче за EXTI (0), вище за SysTick і TIM17 (3) */
+#define USART2_IRQ_PRIO 3u
 #define SECOND_MS       1000u   /* logger: LOAD і EVT ready_* */
 
 typedef struct {
