@@ -40,7 +40,11 @@ enum {
 #define QLOG_LEN        16u     /* записів журналу в черзі */
 #define QPARCEL_LEN     2u      /* PARCEL_IN, що чекають на sort */
 #define SB_RX_BYTES     64u     /* потоковий буфер прийому UART */
+#ifdef OSMETRICS
+#define USART2_IRQ_PRIO 2u
+#else
 #define USART2_IRQ_PRIO 3u
+#endif
 #define SECOND_MS       1000u   /* logger: LOAD і EVT ready_* */
 #ifdef TEST_INVERSION
 #define HOG_MS          50u
