@@ -33,7 +33,9 @@ jobs:
         run: make build TEST_I2C_FAULT=1
 
       - name: Firmware compile (ARCH=rtos, LTO=0) - -Werror and stack frames per file
-        run: make compile ARCH=rtos
+        run: |
+          make compile ARCH=rtos
+          make compile ARCH=rtos OSMETRICS=1
 
       - name: Firmware build (ARCH=rtos, LTO=1, TICK_HZ=100)
         run: make build ARCH=rtos LTO=1 TICK_HZ=100
@@ -52,13 +54,16 @@ jobs:
       - name: Firmware build (ARCH=rtos, LTO=1, ASSERT=1 - configASSERT is not in the product)
         run: make build ARCH=rtos LTO=1 ASSERT=1
 
-      - name: Firmware builds (ARCH=rtos, LTO=1) - test builds TEST_KSTRESS, TEST_APIPROBE, TEST_CRITCOST, TEST_INVERSION
+      - name: Firmware builds (ARCH=rtos, LTO=1) - test builds TEST_KSTRESS, TEST_APIPROBE, TEST_CRITCOST, TEST_INVERSION, OSMETRICS
         run: |
           make build ARCH=rtos LTO=1 TEST_KSTRESS=1
           make build ARCH=rtos LTO=1 TEST_KSTRESS=1 SIM_CRIT=0
           make build ARCH=rtos LTO=1 TEST_APIPROBE=1
           make build ARCH=rtos LTO=1 TEST_CRITCOST=1
-          make build ARCH=rtos LTO=1 TEST_INVERSION=1
+          make build ARCH=rtos LTO=1 TEST_INVERSION=sem
+          make build ARCH=rtos LTO=1 TEST_INVERSION=mutex
+          make build ARCH=rtos LTO=1 OSMETRICS=1
+          make build ARCH=rtos LTO=1 OSMETRICS=1 SIM_CRIT=0
 
       - name: Firmware build (ARCH=rtos, LTO=1) for upload
         run: |
