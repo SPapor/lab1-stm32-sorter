@@ -1,0 +1,1467 @@
+# git=b6e72123 (з PERF) scenario=6.2.5 build="ARCH=rtos LTO=1 TICK_HZ=1000 SIM_CRIT=1 ASSERT=0 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=0 TEST_APIPROBE=0 TEST_KSTRESS=0 TEST_CRITCOST=0 OSMETRICS=0 TEST_INVERSION=0 PERF=1" perf=1 arch=rtos lto=1 tick_hz=1000 port=rfc2217://localhost:4000 host_start=2026-11-19T19:07:16
+# сценарій 6.2.5: Точка зламу: lcd_ms, lcd_chars, imu_ms
+229238 LOAD pct=36 pm=362 win_cyc=47999993 busy_cyc=17361224 windows=227
+230238 LOAD pct=36 pm=361 win_cyc=48000064 busy_cyc=17342363 windows=228
+231238 LOAD pct=36 pm=362 win_cyc=48000351 busy_cyc=17361502 windows=229
+# > stats
+s232238 LOAD pct=36 pm=361 win_cyc=47999993 busy_cyc=17326278 windows=230
+tats
+233148 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+233161 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+233169 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+233188 STAT name=uart_rx n=114 min_us=174 avg_us=13558 max_us=450831 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+233203 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+233219 STAT name=gate n=8079 min_us=202 avg_us=206 max_us=498 period_us=5000 jit_min_us=-315 jit_max_us=315 miss=0
+233234 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+233251 LOAD pct=43 pm=433 win_cyc=47999398 busy_cyc=20787455 windows=231
+233263 STAT name=imu n=4043 min_us=1097 avg_us=1418 max_us=2104 period_us=10000 jit_min_us=-322 jit_max_us=323 miss=0
+233281 STAT name=lcd n=156 min_us=74542 avg_us=77852 max_us=107056 period_us=500000 jit_min_us=-230635 jit_max_us=230523 miss=0
+233301 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+233314 STAT name=logger n=96 min_us=5144 avg_us=7314 max_us=22734 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+233332 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+233346 STAT name=i2c_xfer n=29320 min_us=62 avg_us=342 max_us=7529 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+233363 STAT name=uart_line n=228 min_us=1801 avg_us=9391 max_us=18922 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+233381 STAT name=lcd_update n=156 min_us=74199 avg_us=77504 max_us=106713 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+233398 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+233412 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+233428 UART rx=921 ore=0
+233434 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+233449 TASK name=gate prio=5 cpu_pm=86 stack_free=336 state=blocked run_ms=3508
+233463 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+233478 TASK name=imu prio=3 cpu_pm=157 stack_free=232 state=blocked run_ms=6383
+233492 TASK name=cli prio=2 cpu_pm=30 stack_free=148 state=run run_ms=1232
+233505 TASK name=logger prio=2 cpu_pm=20 stack_free=168 state=blocked run_ms=840
+233521 TASK name=lcd prio=1 cpu_pm=220 stack_free=228 state=ready run_ms=8935
+233534 TASK name=IDLE prio=0 cpu_pm=486 stack_free=108 state=ready run_ms=19762
+233545 MTX name=adc takes=8144 timeouts=0 wait_max_us=181
+233554 MTX name=i2c takes=29362 timeouts=0 wait_max_us=2710
+233563 MTX name=sorter takes=197 timeouts=0 wait_max_us=83
+233572 MTX name=uart takes=621 timeouts=0 wait_max_us=13903
+233581 LOGQ len=16 max_used=2 lines=96 drop=0 trunc=0 rx_drop=544
+233591 SIMCRIT win_ms=40607 task_n=100141 isr_n=39178 deferred_tick=2078 deferred_pendsv=1702 deferred_irq=4827
+233608 EVT t_us=233153099 name=cmd_rx
+233611 EVT t_us=233612690 name=cmd_reply
+# > set log 2
+set234238 LOAD pct=65 pm=651 win_cyc=47999988 busy_cyc=31235095 windows=232
+ log 235238 LOAD pct=36 pm=363 win_cyc=48000000 busy_cyc=17420243 windows=233
+2
+235711 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+235719 EVT t_us=235716061 name=cmd_rx
+235721 EVT t_us=235723843 name=cmd_reply
+# > set lcd_ms 500
+set236238 LOAD pct=38 pm=382 win_cyc=48000000 busy_cyc=18359056 windows=234
+ lcd_237238 LOAD pct=36 pm=364 win_cyc=48000000 busy_cyc=17490548 windows=235
+ms 5238238 LOAD pct=36 pm=362 win_cyc=48000000 busy_cyc=17357615 windows=236
+00
+238712 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+238721 EVT t_us=238717521 name=cmd_rx
+238723 EVT t_us=238725820 name=cmd_reply
+# > set lcd_chars 0
+set239238 LOAD pct=38 pm=383 win_cyc=48000000 busy_cyc=18393605 windows=237
+ lcd_240238 LOAD pct=36 pm=365 win_cyc=48000000 busy_cyc=17497374 windows=238
+chars241238 LOAD pct=36 pm=364 win_cyc=48000000 busy_cyc=17481561 windows=239
+ 0
+241917 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+241924 EVT t_us=241922676 name=cmd_rx
+241929 EVT t_us=241928909 name=cmd_reply
+# > set imu_ms 10
+se242238 LOAD pct=38 pm=383 win_cyc=48000296 busy_cyc=18372071 windows=240
+t imu243238 LOAD pct=36 pm=363 win_cyc=47999956 busy_cyc=17424649 windows=241
+_ms 1244238 LOAD pct=36 pm=363 win_cyc=48000376 busy_cyc=17436037 windows=242
+0
+244717 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+# > log on
+244724 EVT t_us=244722666 name=cmd_rx
+244729 EVT t_us=244728910 name=cmd_reply
+log245238 LOAD pct=38 pm=383 win_cyc=48000028 busy_cyc=18393089 windows=243
+ on
+246037 LOG on=1
+246040 EVT t_us=246042642 name=cmd_rx
+246041 EVT t_us=246044662 name=cmd_reply
+# період LCD: 500 -> 200 -> 100 -> 50 -> 32 мс
+# > set lcd_ms 500
+s246238 LOAD pct=38 pm=381 win_cyc=47999644 busy_cyc=18297133 windows=244
+et lc247238 LOAD pct=37 pm=368 win_cyc=48000328 busy_cyc=17650102 windows=245
+d_ms 248237 LOAD pct=37 pm=367 win_cyc=48000028 busy_cyc=17597875 windows=246
+500
+249135 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+249143 EVT t_us=249139837 name=cmd_rx
+249144 EVT t_us=249148205 name=cmd_reply
+# > stats reset
+s249237 LOAD pct=38 pm=384 win_cyc=47999944 busy_cyc=18435050 windows=247
+tats250237 LOAD pct=36 pm=365 win_cyc=47999680 busy_cyc=17517219 windows=248
+ reset251237 LOAD pct=37 pm=367 win_cyc=48000004 busy_cyc=17620926 windows=249
+
+251442 STATS reset=1
+251445 EVT t_us=251446699 name=cmd_rx
+251449 EVT t_us=251449821 name=cmd_reply
+252237 LOAD pct=38 pm=379 win_cyc=48000016 busy_cyc=18208457 windows=250
+253237 LOAD pct=36 pm=362 win_cyc=47999968 busy_cyc=17356746 windows=251
+254237 LOAD pct=36 pm=364 win_cyc=48000016 busy_cyc=17488790 windows=252
+255237 LOAD pct=36 pm=362 win_cyc=47999992 busy_cyc=17371283 windows=253
+256237 LOAD pct=36 pm=362 win_cyc=48000340 busy_cyc=17356542 windows=254
+257237 LOAD pct=36 pm=363 win_cyc=47999668 busy_cyc=17428872 windows=255
+258237 LOAD pct=36 pm=363 win_cyc=47999992 busy_cyc=17429336 windows=256
+259237 LOAD pct=36 pm=363 win_cyc=47999992 busy_cyc=17426375 windows=257
+260237 LOAD pct=36 pm=362 win_cyc=47999996 busy_cyc=17374398 windows=258
+261237 LOAD pct=36 pm=363 win_cyc=47999928 busy_cyc=17423121 windows=259
+262237 LOAD pct=36 pm=363 win_cyc=48000002 busy_cyc=17445805 windows=260
+# > stats
+stat263237 LOAD pct=36 pm=365 win_cyc=48000352 busy_cyc=17500484 windows=261
+s
+263448 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+263461 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+263468 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+263488 STAT name=uart_rx n=6 min_us=174 avg_us=2090 max_us=9973 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+263502 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+263518 STAT name=gate n=2415 min_us=204 avg_us=210 max_us=218 period_us=5000 jit_min_us=-322 jit_max_us=322 miss=0
+263533 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+263550 STAT name=imu n=1211 min_us=1097 avg_us=1342 max_us=2026 period_us=10000 jit_min_us=-322 jit_max_us=322 miss=0
+263568 STAT name=lcd n=24 min_us=75726 avg_us=76350 max_us=78286 period_us=500000 jit_min_us=-11431 jit_max_us=12193 miss=0
+263585 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+263601 STAT name=logger n=2 min_us=6390 avg_us=6832 max_us=7275 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+263617 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+263631 STAT name=i2c_xfer n=5702 min_us=62 avg_us=370 max_us=820 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+263648 STAT name=uart_line n=28 min_us=2269 avg_us=11939 max_us=18436 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+263664 STAT name=lcd_update n=24 min_us=75379 avg_us=75985 max_us=77391 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+263682 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+263698 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+263712 UART rx=6 ore=0
+263720 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+263733 TASK name=gate prio=5 cpu_pm=86 stack_free=336 state=blocked run_ms=1066
+263748 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+263762 TASK name=imu prio=3 cpu_pm=153 stack_free=232 state=blocked run_ms=1883
+263777 TASK name=cli prio=2 cpu_pm=21 stack_free=148 state=run run_ms=258
+263790 TASK name=logger prio=2 cpu_pm=9 stack_free=168 state=blocked run_ms=117
+263803 TASK name=lcd prio=1 cpu_pm=111 stack_free=228 state=ready run_ms=1367
+263818 TASK name=IDLE prio=0 cpu_pm=621 stack_free=108 state=ready run_ms=7633
+263830 MTX name=adc takes=2478 timeouts=0 wait_max_us=68
+263838 MTX name=i2c takes=5744 timeouts=0 wait_max_us=1675
+263847 MTX name=sorter takes=24 timeouts=0 wait_max_us=55
+263854 MTX name=uart takes=50 timeouts=0 wait_max_us=1740
+263863 LOGQ len=16 max_used=1 lines=2 drop=0 trunc=0 rx_drop=0
+263873 SIMCRIT win_ms=12273 task_n=21942 isr_n=12151 deferred_tick=291 deferred_pendsv=263 deferred_irq=647
+263889 EVT t_us=263453499 name=cmd_rx
+263892 EVT t_us=263894378 name=cmd_reply
+# > set lcd_ms 200
+s264237 LOAD pct=72 pm=716 win_cyc=47999655 busy_cyc=34372681 windows=262
+et lc265237 LOAD pct=37 pm=366 win_cyc=47999993 busy_cyc=17588428 windows=263
+d_ms 266237 LOAD pct=36 pm=365 win_cyc=48000004 busy_cyc=17517230 windows=264
+200
+267012 KNOBS lcd_ms=200 lcd_chars=0 imu_ms=10 log=2
+267021 EVT t_us=267017645 name=cmd_rx
+267023 EVT t_us=267025922 name=cmd_reply
+# > stats reset
+s267237 LOAD pct=38 pm=382 win_cyc=48000015 busy_cyc=18343655 windows=265
+tats 268237 LOAD pct=54 pm=544 win_cyc=48000329 busy_cyc=26131884 windows=266
+reset269237 LOAD pct=54 pm=544 win_cyc=47999656 busy_cyc=26120449 windows=267
+
+269320 STATS reset=1
+269323 EVT t_us=269324401 name=cmd_rx
+269324 EVT t_us=269328029 name=cmd_reply
+270237 LOAD pct=56 pm=557 win_cyc=48000363 busy_cyc=26757315 windows=268
+271237 LOAD pct=54 pm=540 win_cyc=48000341 busy_cyc=25917886 windows=269
+272237 LOAD pct=54 pm=541 win_cyc=47999656 busy_cyc=25958043 windows=270
+273237 LOAD pct=54 pm=538 win_cyc=48000003 busy_cyc=25847536 windows=271
+274237 LOAD pct=54 pm=540 win_cyc=47999993 busy_cyc=25938950 windows=272
+275237 LOAD pct=54 pm=540 win_cyc=47999656 busy_cyc=25943244 windows=273
+276237 LOAD pct=54 pm=539 win_cyc=48000003 busy_cyc=25870458 windows=274
+277237 LOAD pct=54 pm=540 win_cyc=47999993 busy_cyc=25922508 windows=275
+278237 LOAD pct=54 pm=541 win_cyc=48000064 busy_cyc=25947850 windows=276
+279237 LOAD pct=54 pm=540 win_cyc=48000351 busy_cyc=25928907 windows=277
+280237 LOAD pct=54 pm=540 win_cyc=47999993 busy_cyc=25929736 windows=278
+# > stats
+stats281237 LOAD pct=54 pm=543 win_cyc=47999386 busy_cyc=26078640 windows=279
+
+281311 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+281323 KNOBS lcd_ms=200 lcd_chars=0 imu_ms=10 log=2
+281332 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+281351 STAT name=uart_rx n=6 min_us=174 avg_us=1737 max_us=9542 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+281367 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+281381 STAT name=gate n=2413 min_us=202 avg_us=204 max_us=210 period_us=5000 jit_min_us=-310 jit_max_us=310 miss=0
+281398 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+281412 STAT name=imu n=1209 min_us=1251 avg_us=1466 max_us=2022 period_us=10000 jit_min_us=-310 jit_max_us=310 miss=0
+281431 STAT name=lcd n=60 min_us=75345 avg_us=76553 max_us=99649 period_us=200000 jit_min_us=-11443 jit_max_us=11444 miss=0
+281449 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+281463 STAT name=logger n=2 min_us=7275 avg_us=7513 max_us=7751 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+281480 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+281494 STAT name=i2c_xfer n=10581 min_us=243 avg_us=333 max_us=813 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+281511 STAT name=uart_line n=28 min_us=2270 avg_us=12003 max_us=18406 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+281529 STAT name=lcd_update n=60 min_us=74989 avg_us=76208 max_us=99322 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+281547 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+281561 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+281577 UART rx=6 ore=0
+281582 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+281598 TASK name=gate prio=5 cpu_pm=85 stack_free=336 state=blocked run_ms=1049
+281612 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+281626 TASK name=imu prio=3 cpu_pm=159 stack_free=232 state=blocked run_ms=1960
+281640 TASK name=cli prio=2 cpu_pm=21 stack_free=148 state=run run_ms=259
+281653 TASK name=logger prio=2 cpu_pm=9 stack_free=168 state=blocked run_ms=118
+281668 TASK name=lcd prio=1 cpu_pm=279 stack_free=228 state=ready run_ms=3425
+281681 TASK name=IDLE prio=0 cpu_pm=448 stack_free=108 state=ready run_ms=5499
+281692 MTX name=adc takes=2474 timeouts=0 wait_max_us=55
+281701 MTX name=i2c takes=10623 timeouts=0 wait_max_us=824
+281710 MTX name=sorter takes=60 timeouts=0 wait_max_us=68
+281718 MTX name=uart takes=50 timeouts=0 wait_max_us=93
+281727 LOGQ len=16 max_used=1 lines=2 drop=0 trunc=0 rx_drop=0
+281737 SIMCRIT win_ms=12260 task_n=33785 isr_n=11746 deferred_tick=683 deferred_pendsv=615 deferred_irq=650
+281752 EVT t_us=281316986 name=cmd_rx
+281757 EVT t_us=281757820 name=cmd_reply
+# > set lcd_ms 100
+se282237 LOAD pct=89 pm=893 win_cyc=48000000 busy_cyc=42847879 windows=280
+t lcd283237 LOAD pct=54 pm=540 win_cyc=48000000 busy_cyc=25924273 windows=281
+_ms 1284237 LOAD pct=54 pm=543 win_cyc=48000000 busy_cyc=26056751 windows=282
+00
+284898 KNOBS lcd_ms=100 lcd_chars=0 imu_ms=10 log=2
+284906 EVT t_us=284903846 name=cmd_rx
+284908 EVT t_us=284910563 name=cmd_reply
+# > stats reset
+st285237 LOAD pct=68 pm=682 win_cyc=48000000 busy_cyc=32730398 windows=283
+ats r286237 LOAD pct=84 pm=838 win_cyc=48000000 busy_cyc=40208969 windows=284
+eset
+287208 STATS reset=1
+287211 EVT t_us=287213360 name=cmd_rx
+287212 EVT t_us=287216927 name=cmd_reply
+287237 LOAD pct=86 pm=856 win_cyc=48000012 busy_cyc=41100345 windows=285
+288237 LOAD pct=84 pm=839 win_cyc=47999988 busy_cyc=40256886 windows=286
+289237 LOAD pct=84 pm=839 win_cyc=48000000 busy_cyc=40256507 windows=287
+290237 LOAD pct=83 pm=835 win_cyc=48000296 busy_cyc=40059447 windows=288
+291237 LOAD pct=84 pm=837 win_cyc=47999956 busy_cyc=40159806 windows=289
+292237 LOAD pct=84 pm=837 win_cyc=48000376 busy_cyc=40180627 windows=290
+293237 LOAD pct=84 pm=837 win_cyc=48000016 busy_cyc=40191280 windows=291
+294237 LOAD pct=84 pm=839 win_cyc=47999632 busy_cyc=40261683 windows=292
+295237 LOAD pct=83 pm=835 win_cyc=48000352 busy_cyc=40079173 windows=293
+296236 LOAD pct=83 pm=829 win_cyc=48000028 busy_cyc=39768107 windows=294
+297236 LOAD pct=84 pm=839 win_cyc=47999932 busy_cyc=40275420 windows=295
+298236 LOAD pct=84 pm=839 win_cyc=47999692 busy_cyc=40277297 windows=296
+# > stats
+stats299236 LOAD pct=84 pm=841 win_cyc=48000004 busy_cyc=40365123 windows=297
+
+299412 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+299427 KNOBS lcd_ms=100 lcd_chars=0 imu_ms=10 log=2
+299433 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+299452 STAT name=uart_rx n=6 min_us=174 avg_us=1828 max_us=10098 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+299469 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+299483 STAT name=gate n=2455 min_us=204 avg_us=204 max_us=210 period_us=5000 jit_min_us=-315 jit_max_us=315 miss=0
+299500 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+299514 STAT name=imu n=1230 min_us=1097 avg_us=1665 max_us=2028 period_us=10000 jit_min_us=-315 jit_max_us=315 miss=0
+299532 STAT name=lcd n=122 min_us=68147 avg_us=76159 max_us=97107 period_us=100000 jit_min_us=-11454 jit_max_us=11455 miss=0
+299551 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+299567 STAT name=logger n=2 min_us=6766 avg_us=7077 max_us=7388 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+299582 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+299597 STAT name=i2c_xfer n=19082 min_us=62 avg_us=314 max_us=1292 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+299613 STAT name=uart_line n=29 min_us=2709 avg_us=11946 max_us=18475 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+299631 STAT name=lcd_update n=122 min_us=67803 avg_us=75812 max_us=96755 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+299649 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+299663 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+299679 UART rx=6 ore=0
+299686 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+299700 TASK name=gate prio=5 cpu_pm=86 stack_free=336 state=blocked run_ms=1079
+299714 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+299729 TASK name=imu prio=3 cpu_pm=170 stack_free=232 state=blocked run_ms=2131
+299742 TASK name=cli prio=2 cpu_pm=20 stack_free=148 state=run run_ms=258
+299757 TASK name=logger prio=2 cpu_pm=10 stack_free=168 state=blocked run_ms=127
+299771 TASK name=lcd prio=1 cpu_pm=558 stack_free=228 state=ready run_ms=6965
+299784 TASK name=IDLE prio=0 cpu_pm=157 stack_free=108 state=ready run_ms=1964
+299797 MTX name=adc takes=2518 timeouts=0 wait_max_us=55
+299804 MTX name=i2c takes=19122 timeouts=0 wait_max_us=1668
+299813 MTX name=sorter takes=122 timeouts=0 wait_max_us=83
+299822 MTX name=uart takes=51 timeouts=0 wait_max_us=102
+299830 LOGQ len=16 max_used=1 lines=2 drop=0 trunc=0 rx_drop=0
+299840 SIMCRIT win_ms=12474 task_n=54452 isr_n=11377 deferred_tick=1267 deferred_pendsv=1044 deferred_irq=2652
+299857 EVT t_us=299418581 name=cmd_rx
+299858 EVT t_us=299863240 name=cmd_reply
+# > set lcd_ms 50
+s300237 LOAD pct=99 pm=992 win_cyc=48034946 busy_cyc=47661895 windows=298
+et lc301237 LOAD pct=100 pm=1000 win_cyc=48000892 busy_cyc=48000892 windows=299
+d_ms 302236 LOAD pct=89 pm=886 win_cyc=47964162 busy_cyc=42475393 windows=300
+50
+302777 KNOBS lcd_ms=50 lcd_chars=0 imu_ms=10 log=2
+302784 EVT t_us=302783582 name=cmd_rx
+302788 EVT t_us=302789644 name=cmd_reply
+# > stats reset
+st303236 LOAD pct=92 pm=925 win_cyc=47999572 busy_cyc=44394707 windows=301
+ats r304237 LOAD pct=100 pm=1000 win_cyc=48025226 busy_cyc=48025226 windows=302
+eset
+305077 STATS reset=1
+305081 EVT t_us=305083476 name=cmd_rx
+305082 EVT t_us=305087036 name=cmd_reply
+305237 LOAD pct=100 pm=1000 win_cyc=47998794 busy_cyc=47998794 windows=303
+306237 LOAD pct=100 pm=1000 win_cyc=48012578 busy_cyc=48012578 windows=304
+307237 LOAD pct=100 pm=1000 win_cyc=47987878 busy_cyc=47987878 windows=305
+308237 LOAD pct=100 pm=1000 win_cyc=48012791 busy_cyc=48012791 windows=306
+309237 LOAD pct=100 pm=1000 win_cyc=47999535 busy_cyc=47999535 windows=307
+310237 LOAD pct=100 pm=1000 win_cyc=47987818 busy_cyc=47987818 windows=308
+311237 LOAD pct=100 pm=1000 win_cyc=48011987 busy_cyc=48011987 windows=309
+312237 LOAD pct=100 pm=1000 win_cyc=47988109 busy_cyc=47988109 windows=310
+313237 LOAD pct=100 pm=1000 win_cyc=48011550 busy_cyc=48011550 windows=311
+314237 LOAD pct=100 pm=1000 win_cyc=48001145 busy_cyc=48001145 windows=312
+315237 LOAD pct=100 pm=1000 win_cyc=47987545 busy_cyc=47987545 windows=313
+# > stats
+stat316236 LOAD pct=100 pm=1000 win_cyc=47974614 busy_cyc=47974614 windows=314
+s
+316486 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+316499 KNOBS lcd_ms=50 lcd_chars=0 imu_ms=10 log=2
+316507 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+316526 STAT name=uart_rx n=6 min_us=174 avg_us=1443 max_us=7720 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+316541 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+316557 STAT name=gate n=2296 min_us=204 avg_us=207 max_us=217 period_us=5000 jit_min_us=-322 jit_max_us=323 miss=0
+316572 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+316588 STAT name=imu n=1151 min_us=1251 avg_us=1808 max_us=2029 period_us=10000 jit_min_us=-322 jit_max_us=323 miss=0
+316606 STAT name=lcd n=144 min_us=73754 avg_us=78912 max_us=98351 period_us=50000 jit_min_us=24534 jit_max_us=42859 miss=0
+316623 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+316639 STAT name=logger n=2 min_us=6769 avg_us=7079 max_us=7388 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+316656 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+316670 STAT name=i2c_xfer n=21884 min_us=62 avg_us=310 max_us=872 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+316687 STAT name=uart_line n=28 min_us=2692 avg_us=11926 max_us=16923 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+316703 STAT name=lcd_update n=144 min_us=73426 avg_us=78484 max_us=96411 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+316721 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+316736 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+316751 UART rx=6 ore=0
+316759 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+316772 TASK name=gate prio=5 cpu_pm=86 stack_free=336 state=blocked run_ms=1011
+316787 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+316801 TASK name=imu prio=3 cpu_pm=178 stack_free=232 state=blocked run_ms=2082
+316816 TASK name=cli prio=2 cpu_pm=22 stack_free=148 state=run run_ms=259
+316829 TASK name=logger prio=2 cpu_pm=10 stack_free=168 state=blocked run_ms=119
+316842 TASK name=lcd prio=1 cpu_pm=707 stack_free=228 state=ready run_ms=8256
+316857 TASK name=IDLE prio=0 cpu_pm=0 stack_free=108 state=ready run_ms=0
+316868 MTX name=adc takes=2358 timeouts=0 wait_max_us=61
+316877 MTX name=i2c takes=21926 timeouts=0 wait_max_us=13291
+316886 MTX name=sorter takes=144 timeouts=0 wait_max_us=630
+316893 MTX name=uart takes=50 timeouts=0 wait_max_us=89
+316902 LOGQ len=16 max_used=1 lines=2 drop=0 trunc=0 rx_drop=0
+316912 SIMCRIT win_ms=11678 task_n=61113 isr_n=9942 deferred_tick=1903 deferred_pendsv=1689 deferred_irq=2465
+316929 EVT t_us=316490980 name=cmd_rx
+316931 EVT t_us=316934741 name=cmd_reply
+# > set lcd_ms 32
+s317237 LOAD pct=100 pm=1000 win_cyc=48036490 busy_cyc=48036490 windows=315
+et lc318237 LOAD pct=100 pm=1000 win_cyc=47988608 busy_cyc=47988608 windows=316
+d_ms 319236 LOAD pct=100 pm=1000 win_cyc=47999952 busy_cyc=47999952 windows=317
+32
+319827 KNOBS lcd_ms=32 lcd_chars=0 imu_ms=10 log=2
+319834 EVT t_us=319833562 name=cmd_rx
+319838 EVT t_us=319839656 name=cmd_reply
+# > stats reset
+st320237 LOAD pct=100 pm=1000 win_cyc=48011440 busy_cyc=48011440 windows=318
+ats r321237 LOAD pct=100 pm=1000 win_cyc=47999976 busy_cyc=47999976 windows=319
+eset
+322133 STATS reset=1
+322139 EVT t_us=322139329 name=cmd_rx
+322141 EVT t_us=322144932 name=cmd_reply
+322236 LOAD pct=100 pm=1000 win_cyc=47988860 busy_cyc=47988860 windows=320
+323236 LOAD pct=100 pm=1000 win_cyc=48000240 busy_cyc=48000240 windows=321
+324237 LOAD pct=100 pm=1000 win_cyc=48011140 busy_cyc=48011140 windows=322
+325236 LOAD pct=100 pm=1000 win_cyc=47988668 busy_cyc=47988668 windows=323
+326236 LOAD pct=100 pm=1000 win_cyc=47999964 busy_cyc=47999964 windows=324
+327236 LOAD pct=100 pm=1000 win_cyc=47999844 busy_cyc=47999844 windows=325
+328236 LOAD pct=100 pm=1000 win_cyc=47999796 busy_cyc=47999796 windows=326
+329236 LOAD pct=100 pm=1000 win_cyc=47999964 busy_cyc=47999964 windows=327
+330236 LOAD pct=100 pm=1000 win_cyc=48011572 busy_cyc=48011572 windows=328
+331236 LOAD pct=100 pm=1000 win_cyc=47988524 busy_cyc=47988524 windows=329
+332236 LOAD pct=100 pm=1000 win_cyc=48000120 busy_cyc=48000120 windows=330
+# > stats
+stat333236 LOAD pct=100 pm=1000 win_cyc=48011428 busy_cyc=48011428 windows=331
+s
+333536 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+333549 KNOBS lcd_ms=32 lcd_chars=0 imu_ms=10 log=2
+333557 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+333576 STAT name=uart_rx n=6 min_us=174 avg_us=1892 max_us=9896 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+333591 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+333606 STAT name=gate n=2295 min_us=204 avg_us=204 max_us=281 period_us=5000 jit_min_us=-310 jit_max_us=312 miss=0
+333622 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+333637 STAT name=imu n=1151 min_us=1097 avg_us=1801 max_us=2022 period_us=10000 jit_min_us=-311 jit_max_us=310 miss=0
+333656 STAT name=lcd n=144 min_us=70156 avg_us=78829 max_us=99574 period_us=32000 jit_min_us=38364 jit_max_us=59119 miss=143
+333673 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+333689 STAT name=logger n=2 min_us=5187 avg_us=6287 max_us=7387 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+333706 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+333720 STAT name=i2c_xfer n=21911 min_us=62 avg_us=311 max_us=1331 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+333737 STAT name=uart_line n=28 min_us=4257 avg_us=11957 max_us=16818 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+333753 STAT name=lcd_update n=144 min_us=69828 avg_us=78384 max_us=99246 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+333771 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+333786 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+333801 UART rx=6 ore=0
+333809 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+333822 TASK name=gate prio=5 cpu_pm=85 stack_free=336 state=blocked run_ms=999
+333837 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+333851 TASK name=imu prio=3 cpu_pm=176 stack_free=232 state=blocked run_ms=2065
+333866 TASK name=cli prio=2 cpu_pm=22 stack_free=148 state=run run_ms=259
+333879 TASK name=logger prio=2 cpu_pm=10 stack_free=168 state=blocked run_ms=119
+333892 TASK name=lcd prio=1 cpu_pm=709 stack_free=228 state=ready run_ms=8280
+333907 TASK name=IDLE prio=0 cpu_pm=0 stack_free=108 state=ready run_ms=0
+333917 MTX name=adc takes=2356 timeouts=0 wait_max_us=55
+333926 MTX name=i2c takes=21952 timeouts=0 wait_max_us=1663
+333935 MTX name=sorter takes=144 timeouts=0 wait_max_us=616
+333942 MTX name=uart takes=50 timeouts=0 wait_max_us=622
+333951 LOGQ len=16 max_used=1 lines=2 drop=0 trunc=0 rx_drop=0
+333961 SIMCRIT win_ms=11672 task_n=61080 isr_n=10301 deferred_tick=1538 deferred_pendsv=1503 deferred_irq=1080
+333978 EVT t_us=333543440 name=cmd_rx
+333980 EVT t_us=333984642 name=cmd_reply
+# та сама частота LCD (100 мс), але лише змінені символи, по 4 за прохід
+# > set lcd_ms 100
+s334236 LOAD pct=100 pm=1000 win_cyc=47999952 busy_cyc=47999952 windows=332
+et lc335236 LOAD pct=100 pm=1000 win_cyc=48000336 busy_cyc=48000336 windows=333
+d_ms 336236 LOAD pct=100 pm=1000 win_cyc=48000000 busy_cyc=48000000 windows=334
+100
+337087 KNOBS lcd_ms=100 lcd_chars=0 imu_ms=10 log=2
+337095 EVT t_us=337093847 name=cmd_rx
+337096 EVT t_us=337100564 name=cmd_reply
+# > set lcd_chars 4
+s337236 LOAD pct=100 pm=1000 win_cyc=47988044 busy_cyc=47988044 windows=335
+et lc338236 LOAD pct=100 pm=1000 win_cyc=48000323 busy_cyc=48000323 windows=336
+d_cha339236 LOAD pct=100 pm=1000 win_cyc=48000267 busy_cyc=48000267 windows=337
+rs 4340235 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+340248 LOAD pct=100 pm=1000 win_cyc=48548686 busy_cyc=48548686 windows=338
+
+340288 KNOBS lcd_ms=100 lcd_chars=4 imu_ms=10 log=2
+340297 EVT t_us=340295610 name=cmd_rx
+340299 EVT t_us=340303921 name=cmd_reply
+# > stats reset
+stats res342236 LOAD pct=100 pm=1000 win_cyc=95462909 busy_cyc=95462909 windows=339
+et
+342741 STATS reset=1
+342746 EVT t_us=342747694 name=cmd_rx
+342749 EVT t_us=342753380 name=cmd_reply
+343235 LOAD pct=100 pm=1000 win_cyc=47963318 busy_cyc=47963318 windows=340
+344236 LOAD pct=100 pm=1000 win_cyc=48025636 busy_cyc=48025636 windows=341
+345236 LOAD pct=100 pm=1000 win_cyc=48010625 busy_cyc=48010625 windows=342
+346236 LOAD pct=100 pm=1000 win_cyc=47987030 busy_cyc=47987030 windows=343
+347236 LOAD pct=100 pm=1000 win_cyc=48001985 busy_cyc=48001985 windows=344
+348236 LOAD pct=100 pm=1000 win_cyc=48000135 busy_cyc=48000135 windows=345
+349236 LOAD pct=100 pm=1000 win_cyc=48010144 busy_cyc=48010144 windows=346
+350236 LOAD pct=100 pm=1000 win_cyc=47989565 busy_cyc=47989565 windows=347
+351236 LOAD pct=100 pm=1000 win_cyc=48011523 busy_cyc=48011523 windows=348
+352236 LOAD pct=100 pm=1000 win_cyc=47986474 busy_cyc=47986474 windows=349
+353236 LOAD pct=100 pm=1000 win_cyc=48002039 busy_cyc=48002039 windows=350
+# > stats
+stat354236 LOAD pct=100 pm=1000 win_cyc=48011859 busy_cyc=48011859 windows=351
+s
+354538 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+354551 KNOBS lcd_ms=100 lcd_chars=4 imu_ms=10 log=2
+354559 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+354578 STAT name=uart_rx n=6 min_us=174 avg_us=1808 max_us=9391 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+354593 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+354609 STAT name=gate n=2374 min_us=204 avg_us=208 max_us=286 period_us=5000 jit_min_us=-322 jit_max_us=322 miss=0
+354626 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+354640 STAT name=imu n=1190 min_us=1253 avg_us=1798 max_us=2027 period_us=10000 jit_min_us=-323 jit_max_us=323 miss=0
+354658 STAT name=lcd n=150 min_us=71298 avg_us=78766 max_us=100163 period_us=100000 jit_min_us=-28493 jit_max_us=-7997 miss=0
+354677 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+354691 STAT name=logger n=2 min_us=5208 avg_us=6330 max_us=7451 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+354708 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+354721 STAT name=i2c_xfer n=22679 min_us=62 avg_us=311 max_us=4599 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+354739 STAT name=uart_line n=28 min_us=4832 avg_us=12043 max_us=18010 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+354757 STAT name=lcd_update n=150 min_us=70931 avg_us=78374 max_us=99836 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+354773 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+354789 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+354803 UART rx=6 ore=0
+354810 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+354825 TASK name=gate prio=5 cpu_pm=86 stack_free=336 state=blocked run_ms=1048
+354840 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+354853 TASK name=imu prio=3 cpu_pm=177 stack_free=208 state=blocked run_ms=2143
+354868 TASK name=cli prio=2 cpu_pm=21 stack_free=148 state=run run_ms=259
+354881 TASK name=logger prio=2 cpu_pm=9 stack_free=168 state=blocked run_ms=119
+354896 TASK name=lcd prio=1 cpu_pm=708 stack_free=228 state=ready run_ms=8546
+354909 TASK name=IDLE prio=0 cpu_pm=0 stack_free=108 state=ready run_ms=0
+354920 MTX name=adc takes=2436 timeouts=0 wait_max_us=131
+354929 MTX name=i2c takes=22720 timeouts=0 wait_max_us=1677
+354937 MTX name=sorter takes=150 timeouts=0 wait_max_us=622
+354946 MTX name=uart takes=50 timeouts=0 wait_max_us=628
+354955 LOGQ len=16 max_used=1 lines=2 drop=0 trunc=0 rx_drop=0
+354965 SIMCRIT win_ms=12067 task_n=63174 isr_n=10556 deferred_tick=1677 deferred_pendsv=1579 deferred_irq=1595
+354980 EVT t_us=354546054 name=cmd_rx
+354983 EVT t_us=354987467 name=cmd_reply
+# > set lcd_chars 0
+s355236 LOAD pct=100 pm=1000 win_cyc=47980702 busy_cyc=47980702 windows=352
+et lc356236 LOAD pct=100 pm=1000 win_cyc=48007128 busy_cyc=48007128 windows=353
+d_cha357236 LOAD pct=100 pm=1000 win_cyc=48011942 busy_cyc=48011942 windows=354
+rs 0358236 LOAD pct=100 pm=1000 win_cyc=47987770 busy_cyc=47987770 windows=355
+
+358296 KNOBS lcd_ms=100 lcd_chars=0 imu_ms=10 log=2
+358305 EVT t_us=358303802 name=cmd_rx
+358306 EVT t_us=358310569 name=cmd_reply
+# > set lcd_ms 500
+set l359236 LOAD pct=100 pm=1000 win_cyc=48011039 busy_cyc=48011039 windows=356
+cd_ms360236 LOAD pct=100 pm=1000 win_cyc=47989117 busy_cyc=47989117 windows=357
+ 500361236 LOAD pct=100 pm=1000 win_cyc=48000264 busy_cyc=48000264 windows=358
+
+361288 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+361297 EVT t_us=361295672 name=cmd_rx
+361299 EVT t_us=361304058 name=cmd_reply
+# період imu: 10 -> 5 -> 2 -> 1 мс
+# > set imu_ms 5
+set i362236 LOAD pct=100 pm=1000 win_cyc=47999904 busy_cyc=47999904 windows=359
+mu_ms363236 LOAD pct=100 pm=1000 win_cyc=48012410 busy_cyc=48012410 windows=360
+ 5
+363895 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=5 log=2
+363901 EVT t_us=363902675 name=cmd_rx
+363906 EVT t_us=363908821 name=cmd_reply
+# > stats reset
+st364235 LOAD pct=54 pm=535 win_cyc=47962299 busy_cyc=25671156 windows=361
+ats r365235 LOAD pct=53 pm=529 win_cyc=48000341 busy_cyc=25412550 windows=362
+eset
+366201 STATS reset=1
+366206 EVT t_us=366208046 name=cmd_rx
+366207 EVT t_us=366213199 name=cmd_reply
+366235 LOAD pct=54 pm=541 win_cyc=48000375 busy_cyc=25978710 windows=363
+367235 LOAD pct=52 pm=522 win_cyc=47999620 busy_cyc=25049323 windows=364
+368235 LOAD pct=53 pm=526 win_cyc=47999657 busy_cyc=25268558 windows=365
+369235 LOAD pct=52 pm=521 win_cyc=48000003 busy_cyc=25030089 windows=366
+370235 LOAD pct=52 pm=521 win_cyc=47999992 busy_cyc=24992880 windows=367
+371235 LOAD pct=52 pm=525 win_cyc=48000005 busy_cyc=25198563 windows=368
+372235 LOAD pct=52 pm=524 win_cyc=48000351 busy_cyc=25135421 windows=369
+373235 LOAD pct=52 pm=523 win_cyc=47999992 busy_cyc=25090509 windows=370
+374235 LOAD pct=52 pm=521 win_cyc=48000065 busy_cyc=25027931 windows=371
+375235 LOAD pct=52 pm=524 win_cyc=48000003 busy_cyc=25139722 windows=372
+376235 LOAD pct=52 pm=523 win_cyc=47999377 busy_cyc=25082230 windows=373
+# > stats
+stat377235 LOAD pct=52 pm=524 win_cyc=48000002 busy_cyc=25146770 windows=374
+s
+377610 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+377626 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=5 log=2
+377636 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+377660 STAT name=uart_rx n=6 min_us=174 avg_us=2064 max_us=11491 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+377680 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+377700 STAT name=gate n=2299 min_us=204 avg_us=204 max_us=210 period_us=5000 jit_min_us=-310 jit_max_us=310 miss=0
+377720 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+377739 STAT name=imu n=2307 min_us=1251 avg_us=1356 max_us=2021 period_us=5000 jit_min_us=-3036 jit_max_us=4431 miss=0
+377761 STAT name=lcd n=23 min_us=104303 avg_us=107448 max_us=113262 period_us=500000 jit_min_us=-6 jit_max_us=2 miss=0
+377785 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+377804 STAT name=logger n=2 min_us=8930 avg_us=8936 max_us=8943 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+377823 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+377841 STAT name=i2c_xfer n=7784 min_us=244 avg_us=415 max_us=1316 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+377864 STAT name=uart_line n=28 min_us=4321 avg_us=14685 max_us=23689 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+377885 STAT name=lcd_update n=23 min_us=103968 avg_us=107091 max_us=112929 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+377906 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+377926 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+377946 UART rx=6 ore=0
+377955 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+377972 TASK name=gate prio=5 cpu_pm=85 stack_free=336 state=blocked run_ms=1007
+377991 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+378010 TASK name=imu prio=3 cpu_pm=303 stack_free=208 state=blocked run_ms=3561
+378026 TASK name=cli prio=2 cpu_pm=22 stack_free=148 state=run run_ms=265
+378045 TASK name=logger prio=2 cpu_pm=10 stack_free=168 state=blocked run_ms=120
+378062 TASK name=lcd prio=1 cpu_pm=123 stack_free=228 state=ready run_ms=1451
+378081 TASK name=IDLE prio=0 cpu_pm=460 stack_free=108 state=ready run_ms=5407
+378095 MTX name=adc takes=2379 timeouts=0 wait_max_us=55
+378106 MTX name=i2c takes=7890 timeouts=0 wait_max_us=1681
+378116 MTX name=sorter takes=23 timeouts=0 wait_max_us=68
+378126 MTX name=uart takes=50 timeouts=0 wait_max_us=1657
+378137 LOGQ len=16 max_used=1 lines=2 drop=0 trunc=0 rx_drop=0
+378151 SIMCRIT win_ms=11749 task_n=28930 isr_n=11553 deferred_tick=409 deferred_pendsv=586 deferred_irq=492
+378171 EVT t_us=377618095 name=cmd_rx
+378174 EVT t_us=378178487 name=cmd_reply
+378235 LOAD pct=84 pm=844 win_cyc=48000360 busy_cyc=40500348 windows=375
+# > set imu_ms 2
+set i379235 LOAD pct=56 pm=564 win_cyc=47999638 busy_cyc=27075590 windows=376
+mu_ms380235 LOAD pct=52 pm=525 win_cyc=48000002 busy_cyc=25191875 windows=377
+ 2
+380881 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=2 log=2
+380897 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+380937 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+380977 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 2": немає відповіді, спроба 1 з 4
+# > set imu_ms 2 (повтор: CR + команда)
+381017 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+381057 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+381097 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+381137 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+381177 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+381217 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+381257 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+381297 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+381251 EVT t_us=380889184 name=cmd_rx
+381337 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+381377 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+381417 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+381410 EVT t_us=381218729 name=cmd_reply
+
+se381457 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+t 382257 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+382977 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+383697 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+384497 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+385247 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+386097 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+386967 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+387767 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+im388567 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+389437 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+390227 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+u_390637 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+m391567 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+s392497 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ 393317 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2393877 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+# "set imu_ms 2": без ехо 7 байт
+394887 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+408850 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=2 log=2
+395647 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+396407 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+397247 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+398087 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+399027 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+399887 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+400687 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+401527 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+402287 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+403047 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+403847 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+404777 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+405657 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+406377 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 2": немає відповіді, спроба 2 з 4
+# > set imu_ms 2 (повтор: CR + команда)
+407177 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+408017 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+408897 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+410417 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+411137 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+411507 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412197 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+se412237 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412277 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412317 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412357 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412397 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+t 412437 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412477 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412517 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412557 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412597 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412637 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412677 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412717 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412757 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+412797 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+413657 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+414577 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+415617 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+416537 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+417857 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+419336 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+419867 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+420866 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+421586 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 2": без ехо 11 байт
+422306 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+423146 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+423866 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+im424666 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 2": немає відповіді, спроба 3 з 4
+# > set imu_ms 2 (повтор: CR + команда)
+425426 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+426186 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+426986 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+427736 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+428426 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+429186 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+429906 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+u_430666 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ms431396 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ 2
+443689 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=2 log=2
+432156 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+set 432876 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+433596 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+434436 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+im435276 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+435641 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+436456 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+437326 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+437976 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+438236 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+u_438396 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+439266 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+m440196 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+441036 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+441926 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+442816 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+443576 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+445296 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+s 446216 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2447126 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+447986 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 2": без ехо 9 байт
+448866 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+449626 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+450426 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+451186 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 2": немає відповіді, спроба 4 з 4
+# "set imu_ms 2" так і не виконалась
+# > stats reset
+452026 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+452906 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+453746 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+454506 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+455346 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+456146 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+470858 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=2 log=2
+sta457026 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+t457826 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+458636 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+459566 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+460496 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+461226 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+s 462146 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+463076 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+463796 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+464676 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+466076 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+467445 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+467965 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+468695 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+469415 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+re470095 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+470775 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+472505 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+473225 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats reset": без ехо 8 байт
+473945 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+se474705 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+475525 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+t
+488838 STATS reset=1
+# "stats reset": немає відповіді, спроба 1 з 4
+# > stats reset (повтор: CR + команда)
+476245 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+477005 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+477765 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+s478565 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+479255 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+479985 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ta480745 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+481025 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+481755 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ts482595 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ 483455 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+484325 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+485155 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+486025 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+486795 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+re487765 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+s488685 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+490165 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+e490965 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+491725 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+t492565 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+493365 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats reset": без ехо 6 байт
+494295 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+495165 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+496055 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats reset": немає відповіді, спроба 2 з 4
+# > stats reset (повтор: CR + команда)
+496815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+497655 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+512208 STATS reset=1
+498455 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+499215 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+500055 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+s500905 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+501705 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+502545 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+503385 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+504185 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+505065 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+505875 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+506715 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+507595 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+508525 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+509385 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+tats r510285 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+511215 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+512135 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+514055 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+515404 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+516204 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+516964 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+517644 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+518364 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+519124 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+519804 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+520524 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats reset": без ехо 11 байт
+es521284 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+522004 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+522764 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats reset": немає відповіді, спроба 3 з 4
+# > stats reset (повтор: CR + команда)
+523504 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+et
+524344 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+525144 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+525904 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+526704 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+527424 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+528144 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+528914 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+529654 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+544057 STATS reset=1
+530494 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+sta531294 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+532164 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+532994 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ts 533824 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+r534684 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+535604 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+536534 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+537334 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+538294 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+539094 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ese539894 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+540654 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+541454 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+t
+# "stats reset": без ехо 7 байт
+542344 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+543224 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+558287 STATS reset=1
+# "stats reset": немає відповіді, спроба 4 з 4
+# "stats reset" так і не виконалась
+544024 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# > stats
+545384 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+s546264 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+547024 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+547944 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+548784 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+549624 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+550424 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+551184 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+551944 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+552824 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ta553584 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+554604 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats": без ехо 5 байт
+555444 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ts556324 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+557354 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+572257 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+# "stats": немає відповіді, спроба 1 з 4
+# > stats (повтор: CR + команда)
+573107 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=2 log=2
+573666 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+575086 STAT name=uart_rx n=2 min_us=760008 avg_us=2969963 max_us=5179919 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+576336 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+577466 STAT name=gate n=4188 min_us=204 avg_us=204 max_us=217 period_us=5000 jit_min_us=-1450 jit_max_us=1465 miss=0
+558374 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+559654 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+560614 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+561894 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+563383 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+563903 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+564743 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+583986 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+585276 STAT name=imu n=14360 min_us=1097 avg_us=1635 max_us=8244 period_us=2000 jit_min_us=-703 jit_max_us=6445 miss=711
+565463 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats": без ехо 7 байт
+566183 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+566903 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+567663 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats": немає відповіді, спроба 2 з 4
+# > stats (повтор: CR + команда)
+589896 STAT name=lcd n=0 min_us=0 avg_us=0 max_us=0 period_us=500000 jit_min_us=0 jit_max_us=0 miss=0
+591156 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+592406 STAT name=logger n=29 min_us=350565 avg_us=1141533 max_us=7343757 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+593726 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+568383 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+595606 STAT name=i2c_xfer n=38330 min_us=62 avg_us=651 max_us=7664 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+569223 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+597766 STAT name=uart_line n=44 min_us=280076 avg_us=881912 max_us=1440018 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+599086 STAT name=lcd_update n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+570023 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+601046 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+602206 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+603446 UART rx=20 ore=0
+# "stats": без ехо 7 байт
+570783 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+571503 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+605816 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+# "stats": немає відповіді, спроба 3 з 4
+# > stats (повтор: CR + команда)
+572263 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+579603 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+608796 TASK name=gate prio=5 cpu_pm=91 stack_free=336 state=blocked run_ms=4333
+580513 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+581363 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+581873 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+582198 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+583043 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+584033 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+587503 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+588263 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+616915 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+617836 TASK name=imu prio=3 cpu_pm=1161 stack_free=164 state=blocked run_ms=54825
+589063 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+589863 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+595653 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats": без ехо 7 байт
+597813 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+601013 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+604903 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+605783 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats": немає відповіді, спроба 4 з 4
+# "stats" так і не виконалась
+# > set imu_ms 1
+607923 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+608843 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+611722 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+612562 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+613282 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+628105 TASK name=cli prio=2 cpu_pm=9 stack_free=148 state=run run_ms=443
+613962 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+629995 TASK name=logger prio=2 cpu_pm=16 stack_free=168 state=ready run_ms=766
+614682 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+615442 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+616162 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+616882 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+619682 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+620362 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+621122 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+621842 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+622642 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+623322 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+624082 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+624812 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+625582 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+626462 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+627312 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+628072 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+643825 TASK name=lcd prio=1 cpu_pm=0 stack_free=228 state=ready run_ms=0
+630042 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+631322 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+632222 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+647225 TASK name=IDLE prio=0 cpu_pm=0 stack_free=108 state=ready run_ms=0
+648025 MTX name=adc takes=18286 timeouts=0 wait_max_us=68
+648745 MTX name=i2c takes=92150 timeouts=0 wait_max_us=627
+649465 MTX name=sorter takes=0 timeouts=0 wait_max_us=0
+# "set imu_ms 1": без ехо 13 байт
+633082 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+633962 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+651825 MTX name=uart takes=112 timeouts=117 wait_max_us=13109831
+634802 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 1": немає відповіді, спроба 1 з 4
+# > set imu_ms 1 (повтор: CR + команда)
+635602 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+636402 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+637242 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+656285 LOGQ len=16 max_used=16 lines=78 drop=2366 trunc=0 rx_drop=0
+657365 SIMCRIT win_ms=47210 task_n=317428 isr_n=90260 deferred_tick=10394 deferred_pendsv=4383 deferred_irq=12559
+638082 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+638972 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+639822 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+640672 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+641432 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+642232 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+642992 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+643792 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+s645632 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+646432 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+647192 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+650952 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+651872 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+653532 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+654452 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+655372 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+656332 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+660141 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+661021 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+661741 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+662501 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+663221 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+663941 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+664661 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ta665381 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+666181 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+666951 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 1": без ехо 13 байт
+667721 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+668361 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+669011 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+669771 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 1": немає відповіді, спроба 2 з 4
+# > set imu_ms 1 (повтор: CR + команда)
+670571 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+671291 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+672051 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+672771 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+673541 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ts674461 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+675271 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+676111 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+689194 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+690114 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=2 log=2
+690754 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+676901 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+677781 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+678061 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+678151 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+679021 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+679901 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+697084 STAT name=uart_rx n=2 min_us=760008 avg_us=2969963 max_us=5179919 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+680791 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+681641 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+682481 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+683291 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+684051 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+702814 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+684891 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+685651 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+686631 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+687441 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 1": без ехо 12 байт
+688321 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+689161 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+693001 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+693801 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+694611 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 1": немає відповіді, спроба 3 з 4
+# > set imu_ms 1 (повтор: CR + команда)
+695371 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+696251 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+697131 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+699211 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+700101 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+700941 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+701861 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+702861 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+705141 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+706661 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+707590 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+708050 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+708810 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+709490 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+722383 STAT name=gate n=29532 min_us=204 avg_us=205 max_us=258 period_us=5000 jit_min_us=-4598 jit_max_us=6924 miss=3
+723623 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+710210 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+710930 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+711650 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+712370 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+713130 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+713930 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+714690 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+715450 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+729813 STAT name=imu n=84130 min_us=1090 avg_us=1655 max_us=8244 period_us=2000 jit_min_us=-709 jit_max_us=7353 miss=4186
+731253 STAT name=lcd n=0 min_us=0 avg_us=0 max_us=0 period_us=500000 jit_min_us=0 jit_max_us=0 miss=0
+716170 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+716890 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+717690 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+718490 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+719180 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+719940 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+720660 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+721470 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 1": без ехо 14 байт
+722440 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+725650 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+725950 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+741353 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+# "set imu_ms 1": немає відповіді, спроба 4 з 4
+# "set imu_ms 1" так і не виконалась
+# > stats reset
+726070 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+726790 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+727245 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+744873 STAT name=logger n=174 min_us=121008 avg_us=1052475 max_us=7343757 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+728160 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+729010 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+747923 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+729780 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+733140 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+750933 STAT name=i2c_xfer n=192650 min_us=62 avg_us=654 max_us=7721 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+733980 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+753533 STAT name=uart_line n=227 min_us=120843 avg_us=834541 max_us=2120207 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+734860 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+735750 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+736550 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+737350 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+738110 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+738870 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+739630 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+740550 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+741320 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+743240 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+744000 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+744840 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+747050 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+747890 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats reset": без ехо 12 байт
+750020 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+750980 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+753620 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+756119 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats reset": немає відповіді, спроба 1 з 4
+# > stats reset (повтор: CR + команда)
+756959 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+757639 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+758359 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+759039 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+759799 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+760599 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+761399 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+762169 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+774272 STAT name=lcd_update n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+775512 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+762929 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+763659 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+764339 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+765139 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+765899 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+766659 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+767389 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+782532 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+783792 UART rx=102 ore=0
+768149 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+785152 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+768879 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+786912 TASK name=gate prio=5 cpu_pm=86 stack_free=336 state=blocked run_ms=19751
+769639 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+770519 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+789642 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+771289 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+791412 TASK name=imu prio=3 cpu_pm=921 stack_free=164 state=blocked run_ms=209795
+771454 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+793332 TASK name=cli prio=2 cpu_pm=6 stack_free=148 state=run run_ms=1380
+772359 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats reset": без ехо 13 байт
+773199 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+774069 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+774199 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats reset": немає відповіді, спроба 2 з 4
+# > stats reset (повтор: CR + команда)
+797892 TASK name=logger prio=2 cpu_pm=11 stack_free=168 state=ready run_ms=2658
+777609 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+778489 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+779249 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+802452 TASK name=lcd prio=1 cpu_pm=0 stack_free=228 state=ready run_ms=0
+780049 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+780849 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+781609 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+782499 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+785199 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+786959 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+808021 TASK name=IDLE prio=0 cpu_pm=0 stack_free=108 state=ready run_ms=0
+808742 MTX name=adc takes=50430 timeouts=0 wait_max_us=109
+809342 MTX name=i2c takes=252750 timeouts=0 wait_max_us=627
+810031 MTX name=sorter takes=0 timeouts=0 wait_max_us=0
+810592 MTX name=uart takes=308 timeouts=322 wait_max_us=18573682
+811401 LOGQ len=16 max_used=16 lines=234 drop=6218 trunc=0 rx_drop=35
+788839 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+789609 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+791379 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+793299 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+795219 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+796099 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+796939 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+816928 SIMCRIT win_ms=227559 task_n=806168 isr_n=228369 deferred_tick=27240 deferred_pendsv=10886 deferred_irq=30438
+797859 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+800019 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+stats
+800899 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+820251 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+820426 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=2 log=2
+802379 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+804428 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+805148 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+822111 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+805828 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+824631 STAT name=uart_rx n=2 min_us=760008 avg_us=2969963 max_us=5179919 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+# "stats reset": без ехо 10 байт
+825961 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+806548 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+807268 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+807988 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+829561 STAT name=gate n=54138 min_us=203 avg_us=205 max_us=258 period_us=5000 jit_min_us=-4599 jit_max_us=8923 miss=10
+# "stats reset": немає відповіді, спроба 3 з 4
+# > stats reset (повтор: CR + команда)
+831011 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+812408 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+813128 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+813928 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+814658 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+815418 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+836231 STAT name=imu n=137860 min_us=1090 avg_us=1657 max_us=8300 period_us=2000 jit_min_us=-709 jit_max_us=9359 miss=6857
+837601 STAT name=lcd n=0 min_us=0 avg_us=0 max_us=0 period_us=500000 jit_min_us=0 jit_max_us=0 miss=0
+816138 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+816948 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+840291 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+818368 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+819308 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+820298 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+821438 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+821918 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+845711 STAT name=logger n=258 min_us=121008 avg_us=1089683 max_us=7343757 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+847241 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+822158 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+849881 STAT name=i2c_xfer n=292050 min_us=62 avg_us=654 max_us=7721 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+851721 STAT name=uart_line n=342 min_us=106105 avg_us=834306 max_us=2120207 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+852741 STAT name=lcd_update n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+853741 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+854781 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+855821 UART rx=133 ore=0
+# "stats reset": без ехо 13 байт
+824678 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+827968 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+828728 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+829608 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats reset": немає відповіді, спроба 4 з 4
+# "stats reset" так і не виконалась
+832998 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+833798 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+834598 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+835358 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+836278 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+839498 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+840258 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# > stats
+842258 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+843058 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+866210 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+843898 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+844788 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+845758 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+849808 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+857227 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+857997 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+858757 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+859477 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+860237 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+860957 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+861637 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+875560 TASK name=gate prio=5 cpu_pm=89 stack_free=336 state=blocked run_ms=26727
+# "stats": без ехо 6 байт
+862437 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+863217 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+863937 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats": немає відповіді, спроба 1 з 4
+# > stats (повтор: CR + команда)
+879230 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+864657 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+865367 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+866177 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+868047 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+868567 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+884230 TASK name=imu prio=3 cpu_pm=968 stack_free=164 state=blocked run_ms=290129
+869307 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+886120 TASK name=cli prio=2 cpu_pm=6 stack_free=148 state=run run_ms=2079
+870037 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+870342 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+871247 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+889480 TASK name=logger prio=2 cpu_pm=11 stack_free=168 state=ready run_ms=3588
+872147 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+873077 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+873877 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats": без ехо 7 байт
+893130 TASK name=lcd prio=1 cpu_pm=0 stack_free=228 state=ready run_ms=0
+874717 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+875527 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats": немає відповіді, спроба 2 з 4
+# > stats (повтор: CR + команда)
+877407 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+878327 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+898580 TASK name=IDLE prio=0 cpu_pm=0 stack_free=108 state=ready run_ms=0
+879197 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+881077 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+881837 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+882637 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+902579 MTX name=adc takes=68606 timeouts=0 wait_max_us=111
+903179 MTX name=i2c takes=346550 timeouts=0 wait_max_us=627
+903780 MTX name=sorter takes=0 timeouts=0 wait_max_us=0
+904459 MTX name=uart takes=424 timeouts=433 wait_max_us=18573682
+905180 LOGQ len=16 max_used=16 lines=311 drop=8517 trunc=0 rx_drop=67
+906059 SIMCRIT win_ms=299550 task_n=1102250 isr_n=312480 deferred_tick=36996 deferred_pendsv=15047 deferred_irq=42058
+
+s883397 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+884197 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats": без ехо 6 байт
+886087 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+887847 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+888687 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+889527 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "stats": немає відповіді, спроба 3 з 4
+# > stats (повтор: CR + команда)
+891417 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+892257 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+893177 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+895147 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+896067 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+897067 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+898507 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+tats
+# "stats": без ехо 2 байт
+900426 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+901146 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+918129 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+919219 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=2 log=2
+# "stats": немає відповіді, спроба 4 з 4
+# "stats" так і не виконалась
+# > set imu_ms 10
+919909 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+921429 STAT name=uart_rx n=2 min_us=760008 avg_us=2969963 max_us=5179919 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+922839 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+901866 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+924759 STAT name=gate n=73490 min_us=202 avg_us=205 max_us=260 period_us=5000 jit_min_us=-4599 jit_max_us=8923 miss=11
+926079 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+902546 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+908176 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+908856 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+909576 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+910416 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+911106 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+911866 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+932749 STAT name=imu n=185430 min_us=1090 avg_us=1657 max_us=8300 period_us=2000 jit_min_us=-709 jit_max_us=9359 miss=9222
+934119 STAT name=lcd n=0 min_us=0 avg_us=0 max_us=0 period_us=500000 jit_min_us=0 jit_max_us=0 miss=0
+935199 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+912636 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+913376 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+938079 STAT name=logger n=334 min_us=121008 avg_us=1114623 max_us=7343757 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+939439 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+914216 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+915056 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+915876 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+943409 STAT name=i2c_xfer n=384250 min_us=62 avg_us=654 max_us=7721 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+916506 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 10": без ехо 13 байт
+946449 STAT name=uart_line n=449 min_us=106105 avg_us=835150 max_us=2120207 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+917366 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+917866 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 10": немає відповіді, спроба 1 з 4
+# > set imu_ms 10 (повтор: CR + команда)
+918296 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+924726 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+928176 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+929016 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+952498 STAT name=lcd_update n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+953618 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+954699 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+955838 UART rx=178 ore=0
+929816 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+930576 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+931336 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+932176 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+932796 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+937246 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+938046 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+941576 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+942456 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+963088 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+943456 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+946376 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+965208 TASK name=gate prio=5 cpu_pm=87 stack_free=336 state=ready run_ms=35004
+948825 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+949545 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+950265 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+951025 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+951745 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+952625 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+971328 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+956785 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+957545 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+958345 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+959075 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+975738 TASK name=imu prio=3 cpu_pm=932 stack_free=164 state=blocked run_ms=372668
+959795 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 10": без ехо 14 байт
+977578 TASK name=cli prio=2 cpu_pm=7 stack_free=148 state=run run_ms=2820
+960605 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+979298 TASK name=logger prio=2 cpu_pm=11 stack_free=168 state=ready run_ms=4447
+# "set imu_ms 10": немає відповіді, спроба 2 з 4
+# > set imu_ms 10 (повтор: CR + команда)
+961375 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+981218 TASK name=lcd prio=1 cpu_pm=0 stack_free=228 state=ready run_ms=0
+962215 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+982938 TASK name=IDLE prio=0 cpu_pm=0 stack_free=108 state=ready run_ms=0
+983738 MTX name=adc takes=85422 timeouts=0 wait_max_us=111
+963055 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+985258 MTX name=i2c takes=427830 timeouts=0 wait_max_us=627
+985988 MTX name=sorter takes=0 timeouts=0 wait_max_us=0
+986668 MTX name=uart takes=524 timeouts=529 wait_max_us=18573682
+987468 LOGQ len=16 max_used=16 lines=372 drop=10553 trunc=0 rx_drop=102
+964415 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+965255 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+966935 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+967845 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+992074 SIMCRIT win_ms=399490 task_n=1362065 isr_n=386251 deferred_tick=45602 deferred_pendsv=18957 deferred_irq=52958
+968815 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+969655 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+970495 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+971295 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+973095 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+974015 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+974895 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+975785 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+977665 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+979345 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+981185 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+982985 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+985305 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+989255 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+990165 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+991085 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+992005 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+995444 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+996124 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+996924 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+997604 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 10": без ехо 15 байт
+set im998324 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+999084 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+999844 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1000564 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set imu_ms 10": немає відповіді, спроба 3 з 4
+# > set imu_ms 10 (повтор: CR + команда)
+1001324 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1002124 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1002884 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1003654 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1004104 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1004794 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1005514 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1006354 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1007084 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1007804 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1008564 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1009374 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+u_1010174 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1010539 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1011344 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1012244 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ms1013094 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1013784 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1013889 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1014104 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1014934 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ 11015844 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+# "set imu_ms 10": без ехо 9 байт
+# "set imu_ms 10": немає відповіді, спроба 4 з 4
+# "set imu_ms 10" так і не виконалась
+# > load
+# "load": без ехо 5 байт
+# "load": немає відповіді, спроба 1 з 4
+# > load (повтор: CR + команда)
+# "load": без ехо 6 байт
+# "load": немає відповіді, спроба 2 з 4
+# > load (повтор: CR + команда)
+# "load": без ехо 6 байт
+# "load": немає відповіді, спроба 3 з 4
+# > load (повтор: CR + команда)
+# "load": без ехо 6 байт
+# "load": немає відповіді, спроба 4 з 4
+# "load" так і не виконалась
+# > stack
+# "stack": без ехо 6 байт
+# "stack": немає відповіді, спроба 1 з 4
+# > stack (повтор: CR + команда)

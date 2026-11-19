@@ -1,0 +1,354 @@
+# git=b6e72123 (з PERF) scenario=6.2.3 build="ARCH=rtos LTO=1 TICK_HZ=1000 SIM_CRIT=1 ASSERT=0 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=0 TEST_APIPROBE=0 TEST_KSTRESS=0 TEST_CRITCOST=0 OSMETRICS=0 TEST_INVERSION=0 PERF=1" perf=1 arch=rtos lto=1 tick_hz=1000 port=rfc2217://localhost:4000 host_start=2026-11-19T19:06:21
+# сценарій 6.2.3: Потік команд: втрати байтів і команда -> відповідь
+175239 LOAD pct=36 pm=361 win_cyc=47999645 busy_cyc=17323938 windows=174
+176239 LOAD pct=36 pm=362 win_cyc=47999656 busy_cyc=17357527 windows=175
+177239 LOAD pct=36 pm=361 win_cyc=48000699 busy_cyc=17344151 windows=176
+# > stats
+st178239 LOAD pct=36 pm=362 win_cyc=47999297 busy_cyc=17394356 windows=177
+ats
+178963 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+178975 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+178983 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+179002 STAT name=uart_rx n=82 min_us=174 avg_us=8172 max_us=447286 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+179019 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+179033 STAT name=gate n=10589 min_us=204 avg_us=205 max_us=287 period_us=5000 jit_min_us=-322 jit_max_us=323 miss=0
+179050 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+179064 STAT name=imu n=5297 min_us=1096 avg_us=1605 max_us=2104 period_us=10000 jit_min_us=-324 jit_max_us=322 miss=0
+179083 STAT name=lcd n=443 min_us=68147 avg_us=76628 max_us=138155 period_us=500000 jit_min_us=-7 jit_max_us=7 miss=0
+179100 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+179115 STAT name=logger n=18 min_us=5133 avg_us=7022 max_us=8357 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+179131 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+179145 STAT name=i2c_xfer n=70858 min_us=62 avg_us=318 max_us=7519 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+179163 STAT name=uart_line n=139 min_us=1797 avg_us=10288 max_us=18386 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+179180 STAT name=lcd_update n=443 min_us=67803 avg_us=76275 max_us=137807 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+179197 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+179212 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+179227 UART rx=82 ore=0
+179234 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+179246 LOAD pct=57 pm=574 win_cyc=48000364 busy_cyc=27564339 windows=178
+179262 TASK name=gate prio=5 cpu_pm=86 stack_free=336 state=blocked run_ms=4576
+179276 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+179291 TASK name=imu prio=3 cpu_pm=167 stack_free=232 state=blocked run_ms=8907
+179304 TASK name=cli prio=2 cpu_pm=14 stack_free=148 state=run run_ms=778
+179319 TASK name=logger prio=2 cpu_pm=10 stack_free=168 state=blocked run_ms=573
+179333 TASK name=lcd prio=1 cpu_pm=475 stack_free=228 state=blocked run_ms=25277
+179346 TASK name=IDLE prio=0 cpu_pm=246 stack_free=108 state=ready run_ms=13091
+179359 MTX name=adc takes=10654 timeouts=0 wait_max_us=132
+179367 MTX name=i2c takes=70902 timeouts=0 wait_max_us=28648
+179375 MTX name=sorter takes=443 timeouts=0 wait_max_us=622
+179384 MTX name=uart takes=238 timeouts=0 wait_max_us=9415
+179393 LOGQ len=16 max_used=1 lines=18 drop=0 trunc=0 rx_drop=0
+179403 SIMCRIT win_ms=53141 task_n=206464 isr_n=48225 deferred_tick=5252 deferred_pendsv=4356 deferred_irq=7040
+179420 EVT t_us=178966562 name=cmd_rx
+179423 EVT t_us=179423934 name=cmd_reply
+# > set log 2
+set 180239 LOAD pct=51 pm=507 win_cyc=47999991 busy_cyc=24324414 windows=179
+log 2181239 LOAD pct=36 pm=364 win_cyc=48000053 busy_cyc=17470334 windows=180
+
+181410 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+181417 EVT t_us=181413600 name=cmd_rx
+181419 EVT t_us=181419823 name=cmd_reply
+# > set lcd_ms 500
+set 182239 LOAD pct=38 pm=383 win_cyc=48000004 busy_cyc=18376007 windows=181
+lcd_m183239 LOAD pct=36 pm=365 win_cyc=48000003 busy_cyc=17513953 windows=182
+s 50184239 LOAD pct=36 pm=364 win_cyc=47999379 busy_cyc=17461721 windows=183
+0
+184514 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+184523 EVT t_us=184518386 name=cmd_rx
+184525 EVT t_us=184526643 name=cmd_reply
+# > set lcd_chars 0
+set 185239 LOAD pct=38 pm=383 win_cyc=48000000 busy_cyc=18389036 windows=184
+lcd_c186239 LOAD pct=36 pm=364 win_cyc=48000000 busy_cyc=17466471 windows=185
+hars 187239 LOAD pct=36 pm=364 win_cyc=48000000 busy_cyc=17479460 windows=186
+0
+187719 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+187726 EVT t_us=187723031 name=cmd_rx
+187729 EVT t_us=187729289 name=cmd_reply
+# > set imu_ms 10
+set188239 LOAD pct=38 pm=383 win_cyc=48000000 busy_cyc=18364716 windows=187
+ imu_189239 LOAD pct=36 pm=363 win_cyc=48000000 busy_cyc=17446601 windows=188
+ms 1190239 LOAD pct=36 pm=363 win_cyc=48000000 busy_cyc=17447484 windows=189
+0
+190524 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+190533 EVT t_us=190528513 name=cmd_rx
+190535 EVT t_us=190536821 name=cmd_reply
+# > stats reset
+stat191239 LOAD pct=38 pm=384 win_cyc=48000024 busy_cyc=18439602 windows=190
+s res192239 LOAD pct=36 pm=364 win_cyc=48000060 busy_cyc=17476951 windows=191
+et
+192825 STATS reset=1
+192830 EVT t_us=192828384 name=cmd_rx
+192832 EVT t_us=192833466 name=cmd_reply
+# > log on
+lo193239 LOAD pct=38 pm=381 win_cyc=47999940 busy_cyc=18294853 windows=192
+g on
+194229 LOG on=1
+194232 EVT t_us=194232984 name=cmd_rx
+194240 LOAD pct=37 pm=372 win_cyc=48090205 busy_cyc=17880601 windows=193
+194234 EVT t_us=194235568 name=cmd_reply
+# 1) 20 x status з паузою 0,5 с - мають пройти всі
+# >> потік "status" rate_hz=2 count=20 (час МК)
+status
+194431 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+194442 EVT t_us=194434967 name=cmd_rx
+194445 EVT t_us=194446382 name=cmd_reply
+status
+194931 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+194943 EVT t_us=194934994 name=cmd_rx
+194945 EVT t_us=194946478 name=cmd_reply
+status
+195329 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+195340 EVT t_us=195333160 name=cmd_rx
+195343 EVT t_us=195344081 name=cmd_reply
+status
+195829 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+195841 EVT t_us=195833652 name=cmd_rx
+195842 EVT t_us=195844581 name=cmd_reply
+196239 LOAD pct=41 pm=407 win_cyc=95910387 busy_cyc=39063533 windows=194
+status
+196432 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+196444 EVT t_us=196436686 name=cmd_rx
+196446 EVT t_us=196447555 name=cmd_reply
+status
+196925 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+196939 EVT t_us=196929443 name=cmd_rx
+196941 EVT t_us=196940923 name=cmd_reply
+197239 LOAD pct=41 pm=407 win_cyc=47999704 busy_cyc=19547807 windows=195
+status
+197330 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+197342 EVT t_us=197334221 name=cmd_rx
+197344 EVT t_us=197345654 name=cmd_reply
+status
+197850 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+197861 EVT t_us=197853851 name=cmd_rx
+197864 EVT t_us=197864742 name=cmd_reply
+198239 LOAD pct=41 pm=412 win_cyc=48000304 busy_cyc=19797234 windows=196
+status
+198413 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+198424 EVT t_us=198416840 name=cmd_rx
+198428 EVT t_us=198428289 name=cmd_reply
+status
+198953 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+198964 EVT t_us=198957273 name=cmd_rx
+198965 EVT t_us=198968123 name=cmd_reply
+199238 LOAD pct=41 pm=412 win_cyc=47999992 busy_cyc=19781649 windows=197
+status
+199310 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+199322 EVT t_us=199314345 name=cmd_rx
+199324 EVT t_us=199325744 name=cmd_reply
+status
+199850 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+199862 EVT t_us=199854687 name=cmd_rx
+199863 EVT t_us=199866111 name=cmd_reply
+200238 LOAD pct=41 pm=410 win_cyc=48000052 busy_cyc=19676471 windows=198
+status
+200420 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+200432 EVT t_us=200424240 name=cmd_rx
+200434 EVT t_us=200435649 name=cmd_reply
+status
+200950 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+200962 EVT t_us=200954176 name=cmd_rx
+200964 EVT t_us=200965570 name=cmd_reply
+201238 LOAD pct=41 pm=409 win_cyc=47999680 busy_cyc=19628890 windows=199
+status
+201318 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+201330 EVT t_us=201322705 name=cmd_rx
+201332 EVT t_us=201333583 name=cmd_reply
+status
+201860 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+201872 EVT t_us=201864552 name=cmd_rx
+201873 EVT t_us=201876031 name=cmd_reply
+202238 LOAD pct=41 pm=406 win_cyc=47999992 busy_cyc=19501538 windows=200
+status
+202414 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+202425 EVT t_us=202418291 name=cmd_rx
+202429 EVT t_us=202429213 name=cmd_reply
+status
+202963 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+202974 EVT t_us=202967318 name=cmd_rx
+202975 EVT t_us=202978212 name=cmd_reply
+203238 LOAD pct=41 pm=410 win_cyc=47999944 busy_cyc=19683246 windows=201
+status
+203311 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+203322 EVT t_us=203314893 name=cmd_rx
+203325 EVT t_us=203326378 name=cmd_reply
+# >> потік завершено: надіслано 20 команд, 140 байтів
+status
+203861 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+203872 EVT t_us=203864810 name=cmd_rx
+203874 EVT t_us=203876291 name=cmd_reply
+204238 LOAD pct=41 pm=410 win_cyc=47999992 busy_cyc=19670705 windows=202
+205238 LOAD pct=36 pm=363 win_cyc=47999992 busy_cyc=17416885 windows=203
+206238 LOAD pct=36 pm=364 win_cyc=48000016 busy_cyc=17462428 windows=204
+# 2) 50 x status без пауз
+# >> потік "status" rate_hz=0 count=50 (час МК)
+# >> потік завершено: надіслано 50 команд, 350 байтів
+status
+206453 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+206464 EVT t_us=206457367 name=cmd_rx
+206468 EVT t_us=206468324 name=cmd_reply
+status
+206483 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+206496 EVT t_us=206487765 name=cmd_rx
+206501 EVT t_us=206499441 name=cmd_reply
+status
+206520 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+206531 EVT t_us=206524132 name=cmd_rx
+206534 EVT t_us=206535573 name=cmd_reply
+status
+206550 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+206562 EVT t_us=206554297 name=cmd_rx
+206564 EVT t_us=206565738 name=cmd_reply
+status
+206580 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+206592 EVT t_us=206584706 name=cmd_rx
+status
+206593 EVT t_us=206596111 name=cmd_reply
+206612 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+206623 EVT t_us=206609161 name=cmd_rx
+206625 EVT t_us=206626909 name=cmd_reply
+status
+206642 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+206653 EVT t_us=206646415 name=cmd_rx
+206656 EVT t_us=206657301 name=cmd_reply
+status
+206672 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+206683 EVT t_us=206676650 name=cmd_rx
+206686 EVT t_us=206687555 name=cmd_reply
+status
+206702 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+206714 EVT t_us=206706921 name=cmd_rx
+206718 EVT t_us=206717821 name=cmd_reply
+status
+206733 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+206744 EVT t_us=206737123 name=cmd_rx
+status
+206745 EVT t_us=206748029 name=cmd_reply
+206763 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+206775 EVT t_us=206762667 name=cmd_rx
+206780 EVT t_us=206778821 name=cmd_reply
+ss207238 LOAD pct=63 pm=627 win_cyc=48000340 busy_cyc=30084054 windows=205
+208238 LOAD pct=36 pm=362 win_cyc=47999644 busy_cyc=17397385 windows=206
+209238 LOAD pct=36 pm=363 win_cyc=48000016 busy_cyc=17416614 windows=207
+# 3) 50 x status без пауз, поки LCD оновлюється кожні 100 мс
+# > set lcd_ms 100
+set l210238 LOAD pct=37 pm=367 win_cyc=47999992 busy_cyc=17602807 windows=208
+cd_ms211238 LOAD pct=37 pm=365 win_cyc=47999988 busy_cyc=17543058 windows=209
+ 100212238 LOAD pct=37 pm=366 win_cyc=47999928 busy_cyc=17555336 windows=210
+
+212300 CLI st=BAD
+212303 EVT t_us=212304285 name=cmd_rx
+212304 EVT t_us=212306998 name=cmd_reply
+# "set lcd_ms 100": CLI st=BAD, спроба 1 з 4
+# > set lcd_ms 100 (повтор: CR + команда)
+
+set 213238 LOAD pct=38 pm=381 win_cyc=48000009 busy_cyc=18274044 windows=211
+lcd_m214238 LOAD pct=36 pm=365 win_cyc=47999993 busy_cyc=17509582 windows=212
+s 10215238 LOAD pct=37 pm=365 win_cyc=48000352 busy_cyc=17532098 windows=213
+0
+215503 KNOBS lcd_ms=100 lcd_chars=0 imu_ms=10 log=2
+215512 EVT t_us=215507547 name=cmd_rx
+215514 EVT t_us=215515826 name=cmd_reply
+# >> потік "status" rate_hz=0 count=50 (час МК)
+# >> потік завершено: надіслано 50 команд, 350 байтів
+status
+215611 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+215624 EVT t_us=215616032 name=cmd_rx
+215629 EVT t_us=215627790 name=cmd_reply
+status
+215649 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+215660 EVT t_us=215653303 name=cmd_rx
+215663 EVT t_us=215664202 name=cmd_reply
+status
+215679 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+215691 EVT t_us=215683604 name=cmd_rx
+215692 EVT t_us=215694479 name=cmd_reply
+status
+215709 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+215721 EVT t_us=215713721 name=cmd_rx
+215722 EVT t_us=215724646 name=cmd_reply
+status
+215739 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+215751 EVT t_us=215743968 name=cmd_rx
+215753 EVT t_us=215754823 name=cmd_reply
+status
+215769 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+215781 EVT t_us=215774143 name=cmd_rx
+215783 EVT t_us=215785565 name=cmd_reply
+status
+215800 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+215811 EVT t_us=215804284 name=cmd_rx
+215814 EVT t_us=215815737 name=cmd_reply
+status
+215830 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+215842 EVT t_us=215834710 name=cmd_rx
+status
+215854 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+215843 EVT t_us=215846199 name=cmd_reply
+status
+215868 EVT t_us=215858513 name=cmd_rx
+215871 EVT t_us=215869748 name=cmd_reply
+215893 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+215904 EVT t_us=215885606 name=cmd_rx
+215905 EVT t_us=215908199 name=cmd_reply
+sststst216238 LOAD pct=80 pm=804 win_cyc=47999655 busy_cyc=38606489 windows=214
+217238 LOAD pct=84 pm=838 win_cyc=48000761 busy_cyc=40209279 windows=215
+218238 LOAD pct=84 pm=841 win_cyc=48000004 busy_cyc=40349195 windows=216
+219238 LOAD pct=84 pm=838 win_cyc=48000003 busy_cyc=40231809 windows=217
+# > set lcd_ms 500
+set l220238 LOAD pct=84 pm=843 win_cyc=48000341 busy_cyc=40444205 windows=218
+cd_ms221238 LOAD pct=84 pm=842 win_cyc=47999656 busy_cyc=40407046 windows=219
+ 500
+222213 CLI st=BAD
+222218 EVT t_us=222217940 name=cmd_rx
+222222 EVT t_us=222220648 name=cmd_reply
+222238 LOAD pct=86 pm=856 win_cyc=48000363 busy_cyc=41102316 windows=220
+# "set lcd_ms 500": CLI st=BAD, спроба 1 з 4
+# > set lcd_ms 500 (повтор: CR + команда)
+
+set 223238 LOAD pct=84 pm=841 win_cyc=48000341 busy_cyc=40357121 windows=221
+lcd_m224238 LOAD pct=84 pm=842 win_cyc=47999656 busy_cyc=40410585 windows=222
+s 500225238 LOAD pct=84 pm=841 win_cyc=48000003 busy_cyc=40374562 windows=223
+
+225319 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+225326 EVT t_us=225323560 name=cmd_rx
+225330 EVT t_us=225329737 name=cmd_reply
+# > stats
+stat226238 LOAD pct=38 pm=383 win_cyc=47999993 busy_cyc=18400969 windows=224
+s
+226518 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+226531 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+226539 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+226558 STAT name=uart_rx n=108 min_us=174 avg_us=10129 max_us=343304 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+226573 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+226589 STAT name=gate n=6753 min_us=202 avg_us=206 max_us=498 period_us=5000 jit_min_us=-315 jit_max_us=315 miss=0
+226605 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+226621 STAT name=imu n=3380 min_us=1097 avg_us=1434 max_us=2104 period_us=10000 jit_min_us=-322 jit_max_us=323 miss=0
+226639 STAT name=lcd n=143 min_us=74542 avg_us=77993 max_us=107056 period_us=500000 jit_min_us=11425 jit_max_us=11425 miss=0
+226658 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+226672 STAT name=logger n=94 min_us=5144 avg_us=7309 max_us=22734 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+226688 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+226703 STAT name=i2c_xfer n=26224 min_us=62 avg_us=339 max_us=7529 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+226720 STAT name=uart_line n=187 min_us=1801 avg_us=8821 max_us=17012 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+226738 STAT name=lcd_update n=143 min_us=74199 avg_us=77645 max_us=106713 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+226754 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+226769 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+226784 UART rx=915 ore=0
+226792 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+226805 TASK name=gate prio=5 cpu_pm=86 stack_free=336 state=blocked run_ms=2940
+226821 TASK name=sort prio=4 cpu_pm=0 stack_free=496 state=blocked run_ms=0
+226834 TASK name=imu prio=3 cpu_pm=158 stack_free=232 state=blocked run_ms=5374
+226849 TASK name=cli prio=2 cpu_pm=26 stack_free=148 state=run run_ms=884
+226862 TASK name=logger prio=2 cpu_pm=22 stack_free=168 state=blocked run_ms=765
+226878 TASK name=lcd prio=1 cpu_pm=241 stack_free=228 state=ready run_ms=8189
+226891 TASK name=IDLE prio=0 cpu_pm=467 stack_free=108 state=ready run_ms=15864
+226902 MTX name=adc takes=6816 timeouts=0 wait_max_us=181
+226911 MTX name=i2c takes=26266 timeouts=0 wait_max_us=2710
+226919 MTX name=sorter takes=184 timeouts=0 wait_max_us=83
+226928 MTX name=uart takes=574 timeouts=0 wait_max_us=13903
+226938 LOGQ len=16 max_used=2 lines=94 drop=0 trunc=0 rx_drop=544
+226948 SIMCRIT win_ms=33964 task_n=88289 isr_n=32666 deferred_tick=1934 deferred_pendsv=1570 deferred_irq=4731
+226963 EVT t_us=226523254 name=cmd_rx
+226968 EVT t_us=226967820 name=cmd_reply
+227238 LOAD pct=72 pm=717 win_cyc=47999656 busy_cyc=34414151 windows=225
+228238 LOAD pct=36 pm=361 win_cyc=48000003 busy_cyc=17336322 windows=226
