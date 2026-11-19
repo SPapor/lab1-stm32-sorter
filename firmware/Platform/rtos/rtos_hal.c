@@ -24,6 +24,9 @@
 #ifdef TEST_KSTRESS
 #include "kstress_port.h"
 #endif
+#ifdef OSMETRICS
+#include "rtos_osm.h"
+#endif
 
 #define HAL_TICK_TIMER_HZ  1000000u   /* TIM17 тікає 1 МГц: ARR = 999 дає 1 кГц */
 #define START_GUARD_CYC    256u       /* vPortSetupTimerInterrupt: «до переходу через 0 мало» */
@@ -152,7 +155,17 @@ void SysTick_Handler(void)
 #ifdef TEST_KSTRESS
     kstress_note_isr(KSTRESS_SRC_TICK);
 #endif
+#ifdef OSMETRICS
+    {
+        rtos_osm_mark_t m;
+
+        rtos_osm_stamp(&m);
+        xPortSysTickHandler();
+        rtos_osm_add(OSM_TICK, &m);
+    }
+#else
     xPortSysTickHandler();
+#endif
 }
 
 /* Порт викликає це з xPortStartScheduler (переривання вже вимкнені), щоб
@@ -221,25 +234,34 @@ uint64_t rtos_hal_runtime_now(void)
     return perf_now_cyc64() - runtime_base;
 }
 
-static const void *trace_lcd;
+#define TRACE_TASKS 3u
+static const void *trace_tcb[TRACE_TASKS];
+static uint16_t trace_pin[TRACE_TASKS];
 
-void rtos_hal_trace_lcd(const void *tcb)
+void rtos_hal_trace_task(unsigned slot, const void *tcb, uint16_t pin)
 {
-    trace_lcd = tcb;
+    if (slot < TRACE_TASKS) {
+        trace_tcb[slot] = tcb;
+        trace_pin[slot] = pin;
+    }
 }
 
-/* traceTASK_SWITCHED_IN: D6 = 1, поки процесор у будь-якої задачі, крім idle;
- * D7 = 1, поки у задачі lcd. Виконується в PendSV, усередині перемикання */
 void rtos_hal_trace_in(const void *tcb)
 {
-    if (tcb == (const void *)xTaskGetIdleTaskHandle()) {
-        BOARD_PROBE_OFF(BOARD_PROBE_TASK_PIN | BOARD_PROBE_LCD_PIN);
-    } else {
+#ifdef OSMETRICS
+    rtos_osm_switch_in();
+#endif
+    if (tcb == (const void *)xTaskGetIdleTaskHandle())
+        BOARD_PROBE_OFF(BOARD_PROBE_TASK_PIN);
+    else
         BOARD_PROBE_ON(BOARD_PROBE_TASK_PIN);
-        if (tcb == trace_lcd)
-            BOARD_PROBE_ON(BOARD_PROBE_LCD_PIN);
+    for (unsigned i = 0; i < TRACE_TASKS; i++) {
+        if (trace_pin[i] == 0u)
+            continue;
+        if (tcb == trace_tcb[i])
+            BOARD_PROBE_ON(trace_pin[i]);
         else
-            BOARD_PROBE_OFF(BOARD_PROBE_LCD_PIN);
+            BOARD_PROBE_OFF(trace_pin[i]);
     }
 }
 #endif

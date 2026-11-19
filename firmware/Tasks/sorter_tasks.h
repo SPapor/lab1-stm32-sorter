@@ -75,12 +75,20 @@ void tasks_snapshot(void *dst, const void *src, size_t n);
 
 #if PERF
 /* Рядки для команд stats, stack і heap */
-void tasks_report(tasks_out_fn out);        /* TASK по задачах, MTX, LOGQ */
+void tasks_list(tasks_out_fn out);
+void tasks_report(tasks_out_fn out);
 void tasks_stack_report(tasks_out_fn out);  /* STACK name=<задача> за high water mark */
 void tasks_heap_report(tasks_out_fn out);   /* OSHEAP: купа ядра */
 void tasks_stats_reset(void);
 /* Такти, які idle мала від старту ядра (run-time stats) */
 uint64_t tasks_idle_cyc(void);
+#ifdef TEST_INVERSION
+#include "perf.h"
+const perf_stat_t *tasks_inv_wait(void);
+#endif
+#ifdef OSMETRICS
+void tasks_osbench(unsigned n);
+#endif
 #endif
 
 #endif /* SORTER_TASKS_H */

@@ -78,6 +78,8 @@ static void test_perf_commands(void)
     assert_line("load\r", CLI_LOAD, 0);
     assert_line("stack\r", CLI_STACK, 0);
     assert_line("heap\r", CLI_HEAP, 0);
+    assert_line("tasks\r", CLI_TASKS, 0);
+    assert_line("osbench\r", CLI_OSBENCH, 0);
     TEST_ASSERT_EQUAL_STRING("", last.name);
 }
 
@@ -88,6 +90,8 @@ static void test_perf_commands_bad(void)
     assert_line("load 1\r", CLI_CMD_BAD, 0);
     assert_line("stack now\r", CLI_CMD_BAD, 0);
     assert_line("heap 2\r", CLI_CMD_BAD, 0);
+    assert_line("tasks all\r", CLI_CMD_BAD, 0);
+    assert_line("osbench 5\r", CLI_CMD_BAD, 0);
 }
 
 /* hist <задача>: назву лише копіюємо — які задачі мають гістограму, знає main.c */
@@ -153,6 +157,8 @@ static void test_perf_commands_rejected(void)
     assert_line("heap\r", CLI_CMD_BAD, 0);
     assert_line("hist gate\r", CLI_CMD_BAD, 0);
     assert_line("set lcd_ms 100\r", CLI_CMD_BAD, 0);
+    assert_line("tasks\r", CLI_CMD_BAD, 0);
+    assert_line("osbench\r", CLI_CMD_BAD, 0);
 }
 #endif
 

@@ -18,18 +18,33 @@
 #if SIM_CRIT
 #include "port_sim.h"
 #endif
+#ifdef OSMETRICS
+#include "rtos_osm.h"
+#endif
+#if PERF
+#include "board.h"
+#endif
 
 /* Пріоритети й стеки - docs/rtos-design.md, розділ 6. Стек у словах (4 B):
  * стартова оцінка за tools/stack_graph.py, перевірена командою stack після
  * посилок і збоїв I2C (sort: рядок SORT із сімома аргументами - 440 B з 512, тому
  * 160 слів; imu: I2C_RECOVER у глибині транзакції - 560 B з 640, тому 192) */
-enum { T_ESTOP = 0, T_GATE, T_SORT, T_IMU, T_CLI, T_LOGGER, T_LCD, T_COUNT };
+enum {
+    T_ESTOP = 0, T_GATE, T_SORT, T_IMU, T_CLI, T_LOGGER, T_LCD,
+#ifdef TEST_INVERSION
+    T_HOG,
+#endif
+    T_COUNT
+};
 
 #define QLOG_LEN        16u     /* записів журналу в черзі */
 #define QPARCEL_LEN     2u      /* PARCEL_IN, що чекають на sort */
 #define SB_RX_BYTES     64u     /* потоковий буфер прийому UART */
-#define USART2_IRQ_PRIO 2u      /* нижче за EXTI (0), вище за SysTick і TIM17 (3) */
+#define USART2_IRQ_PRIO 3u
 #define SECOND_MS       1000u   /* logger: LOAD і EVT ready_* */
+#ifdef TEST_INVERSION
+#define HOG_MS          50u
+#endif
 
 typedef struct {
     const char *event;
@@ -42,6 +57,9 @@ typedef struct {
 typedef struct {
     uint32_t ms;
     uint32_t cyc;
+#ifdef OSMETRICS
+    rtos_osm_mark_t sent;
+#endif
 } parcel_t;
 
 typedef struct {
@@ -57,6 +75,9 @@ static void imu_task(void *arg);
 static void cli_task(void *arg);
 static void logger_task(void *arg);
 static void lcd_task(void *arg);
+#ifdef TEST_INVERSION
+static void hog_task(void *arg);
+#endif
 
 static const struct {
     const char *name;
@@ -71,6 +92,9 @@ static const struct {
     [T_CLI]    = { "cli",    cli_task,    192u, 2u },
     [T_LOGGER] = { "logger", logger_task, 160u, 2u },
     [T_LCD]    = { "lcd",    lcd_task,    160u, 1u },
+#ifdef TEST_INVERSION
+    [T_HOG]    = { "hog",    hog_task,     64u, 2u },
+#endif
 };
 
 /* Тайм-аут одного очікування м'ютекса, мс: I2C - довше за транзакцію з трьома
@@ -94,10 +118,13 @@ static StreamBufferHandle_t sb_rx;
 static SemaphoreHandle_t mtx[TASKS_LOCK_COUNT];
 static volatile uint8_t running;
 
-#if !defined(TEST_KSTRESS) && !defined(TEST_CRITCOST)
-/* UART: рядок і вкладений uart_hal_write з тієї самої задачі - одне взяття */
-static TaskHandle_t uart_owner;
-static uint8_t uart_depth;
+static TaskHandle_t lock_owner[TASKS_LOCK_COUNT];
+static uint8_t lock_depth[TASKS_LOCK_COUNT];
+#ifdef OSMETRICS
+static volatile uint8_t estop_waiting;
+#endif
+#if defined(TEST_INVERSION) && PERF
+static perf_stat_t inv_wait = { .name = "inv_imu_wait" };
 #endif
 
 static uint32_t log_drop;       /* черга повна */
@@ -129,57 +156,57 @@ int tasks_running(void)
 
 void tasks_lock(tasks_lock_t l)
 {
+    TaskHandle_t me;
 #if PERF
     uint32_t t0;
 #endif
 
     if (!running)
         return;
+    me = xTaskGetCurrentTaskHandle();
+    if (lock_owner[l] == me) {
+        lock_depth[l]++;
+        return;
+    }
 #if PERF
     t0 = perf_now();
 #endif
     while (xSemaphoreTake(mtx[l], ms_ticks(lock_timeout_ms[l])) != pdPASS)
         lock_stat[l].timeouts++;   /* лише лічильник: усі, хто чекає, рахують тут */
-#if PERF
     /* далі - під м'ютексом */
+    lock_owner[l] = me;
+    lock_depth[l] = 1;
+#if PERF
     uint32_t w = perf_now() - t0;
     lock_stat[l].takes++;
     if (w > lock_stat[l].wait_max_cyc)
         lock_stat[l].wait_max_cyc = w;
+#ifdef TEST_INVERSION
+    if (l == TASKS_LOCK_I2C && me == th[T_IMU])
+        perf_add(&inv_wait, w);
+#endif
 #endif
 }
 
 void tasks_unlock(tasks_lock_t l)
 {
-    if (running)
+    if (!running || lock_depth[l] == 0u || lock_owner[l] != xTaskGetCurrentTaskHandle())
+        return;
+    if (--lock_depth[l] == 0u) {
+        lock_owner[l] = NULL;
         (void)xSemaphoreGive(mtx[l]);
+    }
 }
 
 #if !defined(TEST_KSTRESS) && !defined(TEST_CRITCOST)
 static void uart_lock(void)
 {
-    TaskHandle_t me;
-
-    if (!running)
-        return;
-    me = xTaskGetCurrentTaskHandle();
-    if (uart_owner == me) {
-        uart_depth++;
-        return;
-    }
     tasks_lock(TASKS_LOCK_UART);
-    uart_owner = me;
-    uart_depth = 1;
 }
 
 static void uart_unlock(void)
 {
-    if (!running || uart_depth == 0u)
-        return;
-    if (--uart_depth == 0u) {
-        uart_owner = NULL;
-        tasks_unlock(TASKS_LOCK_UART);
-    }
+    tasks_unlock(TASKS_LOCK_UART);
 }
 #endif
 
@@ -220,8 +247,11 @@ void tasks_log(const char *event, const char *fmt, va_list ap)
 
 void tasks_parcel(uint32_t in_ms, uint32_t in_cyc)
 {
-    parcel_t p = { in_ms, in_cyc };
+    parcel_t p = { .ms = in_ms, .cyc = in_cyc };
 
+#ifdef OSMETRICS
+    rtos_osm_stamp(&p.sent);
+#endif
     (void)xQueueSend(q_parcel, &p, 0);
 }
 
@@ -231,6 +261,9 @@ void tasks_estop_from_isr(void)
 
     if (!running)
         return;
+#ifdef OSMETRICS
+    rtos_osm_set(OSM_ISR_ESTOP);
+#endif
     vTaskNotifyGiveFromISR(th[T_ESTOP], &woken);
     portYIELD_FROM_ISR(woken);
 }
@@ -258,6 +291,9 @@ void USART2_IRQHandler(void)
         if (xStreamBufferSendFromISR(sb_rx, &b, 1u, &woken) != 1u)
             rx_drop++;
     }
+#ifdef OSMETRICS
+    rtos_osm_set(OSM_ISR_CLI);
+#endif
     portYIELD_FROM_ISR(woken);
 }
 
@@ -269,8 +305,6 @@ static void sleep_forever(void)
         (void)ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 }
 
-/* Фронт PC13 -> чекаємо антибрязкіт (EXTI вимкнений до кінця estop) -> рішення.
- * Перший виклик - одразу: фронт міг прийти ще до старту ядра */
 static void estop_task(void *arg)
 {
     (void)arg;
@@ -279,7 +313,19 @@ static void estop_task(void *arg)
 
         xTaskDelayUntil(&t, ms_ticks(ops->estop_debounce_ms));
         ops->estop();
-        (void)ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        for (;;) {
+#ifdef OSMETRICS
+            estop_waiting = 1;
+#endif
+            (void)ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+#ifdef OSMETRICS
+            estop_waiting = 0;
+            if (rtos_osm_take(OSM_CTXSW) && !rtos_osm_pending(OSM_ISR_ESTOP))
+                continue;
+            (void)rtos_osm_take(OSM_ISR_ESTOP);
+#endif
+            break;
+        }
     }
 }
 
@@ -300,8 +346,12 @@ static void sort_task(void *arg)
 
     (void)arg;
     for (;;)
-        if (xQueueReceive(q_parcel, &p, portMAX_DELAY) == pdPASS)
+        if (xQueueReceive(q_parcel, &p, portMAX_DELAY) == pdPASS) {
+#ifdef OSMETRICS
+            rtos_osm_add(OSM_QUEUE, &p.sent);
+#endif
             ops->sort(p.ms, p.cyc);
+        }
 }
 
 static void imu_task(void *arg)
@@ -326,9 +376,19 @@ static void cli_task(void *arg)
     NVIC_SetPriority(USART2_IRQn, USART2_IRQ_PRIO);
     NVIC_EnableIRQ(USART2_IRQn);
     uart_hal_rx_irq_enable();
-    for (;;)
-        if (xStreamBufferReceive(sb_rx, &b, 1u, portMAX_DELAY) == 1u)
+    for (;;) {
+#ifdef OSMETRICS
+        rtos_osm_clear(OSM_ISR_CLI);
+        int idle = xStreamBufferIsEmpty(sb_rx) == pdTRUE;
+#endif
+        if (xStreamBufferReceive(sb_rx, &b, 1u, portMAX_DELAY) == 1u) {
+#ifdef OSMETRICS
+            if (idle)
+                (void)rtos_osm_take(OSM_ISR_CLI);
+#endif
             ops->cli(b);
+        }
+    }
 }
 
 /* Друкує записи qLog; раз на SECOND_MS - ops->second, навіть якщо черга не
@@ -363,9 +423,31 @@ static void lcd_task(void *arg)
         sleep_forever();
     for (;;) {
         xTaskDelayUntil(&last, ms_ticks(*ops->lcd_ms));
+#ifdef TEST_INVERSION
+        tasks_lock(TASKS_LOCK_I2C);
+        xTaskNotifyGive(th[T_HOG]);
         ops->lcd();
+        tasks_unlock(TASKS_LOCK_I2C);
+#else
+        ops->lcd();
+#endif
     }
 }
+
+#ifdef TEST_INVERSION
+static void hog_task(void *arg)
+{
+    (void)arg;
+    for (;;) {
+        uint32_t t0;
+
+        (void)ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        t0 = HAL_GetTick();
+        while (HAL_GetTick() - t0 < HOG_MS) {
+        }
+    }
+}
+#endif
 
 /* ---- старт ------------------------------------------------------------------- */
 
@@ -386,10 +468,11 @@ void tasks_start(const tasks_ops_t *o)
     q_log = xQueueCreate(QLOG_LEN, sizeof(log_rec_t));
     q_parcel = xQueueCreate(QPARCEL_LEN, sizeof(parcel_t));
     sb_rx = xStreamBufferCreate(SB_RX_BYTES, 1u);
+#ifdef OSMETRICS
+    rtos_osm_init();
+#endif
     for (unsigned i = 0; i < TASKS_LOCK_COUNT; i++) {
-#ifdef TEST_INVERSION
-        /* Дослід методички 7.2, п. 1: шина I2C під двійковим семафором - без
-         * успадкування пріоритету (docs/rtos-design.md, розділ 6) */
+#if TEST_INVERSION == 1
         if (i == TASKS_LOCK_I2C) {
             mtx[i] = xSemaphoreCreateBinary();
             (void)xSemaphoreGive(mtx[i]);
@@ -402,7 +485,11 @@ void tasks_start(const tasks_ops_t *o)
         (void)xTaskCreate(task_def[i].fn, task_def[i].name, task_def[i].words, NULL,
                           task_def[i].prio, &th[i]);
 #if PERF
-    rtos_hal_trace_lcd(th[T_LCD]);
+    rtos_hal_trace_task(0u, th[T_LCD], BOARD_PROBE_LCD_PIN);
+#ifdef TEST_INVERSION
+    rtos_hal_trace_task(1u, th[T_IMU], BOARD_PROBE_GATE_PIN);
+    rtos_hal_trace_task(2u, th[T_HOG], BOARD_PROBE_ESTOP_PIN);
+#endif
 #endif
     uart_hal_set_lock(uart_lock, uart_unlock);
     running = 1;
@@ -421,20 +508,37 @@ static uint32_t per_mille(uint64_t part, uint64_t total)
     return (k == 0u) ? 0u : perf_udiv64(part, k, NULL);
 }
 
-void tasks_report(tasks_out_fn out)
+void tasks_list(tasks_out_fn out)
 {
+    static const char *const state_name[] = {
+        [eRunning] = "run", [eReady] = "ready", [eBlocked] = "blocked",
+        [eSuspended] = "suspended", [eDeleted] = "deleted",
+    };
     uint64_t total = rtos_hal_runtime_now() - rt_total_base;
 
     for (unsigned i = 0; i <= T_COUNT; i++) {
         TaskHandle_t h = (i < T_COUNT) ? th[i] : xTaskGetIdleTaskHandle();
         TaskStatus_t s;
+        uint64_t rt;
 
         vTaskGetInfo(h, &s, pdTRUE, eInvalid);
-        out("TASK", "name=%s prio=%lu cpu_pm=%lu stack_free=%u", s.pcTaskName,
-            (unsigned long)s.uxBasePriority,
-            (unsigned long)per_mille(s.ulRunTimeCounter - rt_base[i], total),
-            (unsigned)(s.usStackHighWaterMark * sizeof(StackType_t)));
+        rt = s.ulRunTimeCounter - rt_base[i];
+        out("TASK", "name=%s prio=%lu cpu_pm=%lu stack_free=%u state=%s run_ms=%lu",
+            s.pcTaskName, (unsigned long)s.uxBasePriority,
+            (unsigned long)per_mille(rt, total),
+            (unsigned)(s.usStackHighWaterMark * sizeof(StackType_t)),
+            (s.eCurrentState <= eDeleted) ? state_name[s.eCurrentState] : "?",
+            (unsigned long)perf_udiv64(rt, perf_hal_cpu_hz() / 1000u, NULL));
     }
+}
+
+void tasks_report(tasks_out_fn out)
+{
+#if SIM_CRIT
+    uint64_t total = rtos_hal_runtime_now() - rt_total_base;
+#endif
+
+    tasks_list(out);
     for (unsigned i = 0; i < TASKS_LOCK_COUNT; i++)
         out("MTX", "name=%s takes=%lu timeouts=%lu wait_max_us=%lu", lock_name[i],
             (unsigned long)lock_stat[i].takes, (unsigned long)lock_stat[i].timeouts,
@@ -482,7 +586,39 @@ void tasks_stats_reset(void)
     log_trunc = 0;
     log_lines = 0;
     rx_drop = 0;
+#ifdef OSMETRICS
+    rtos_osm_reset();
+#endif
+#ifdef TEST_INVERSION
+    perf_stat_reset(&inv_wait);
+#endif
 }
+
+#ifdef TEST_INVERSION
+const perf_stat_t *tasks_inv_wait(void)
+{
+    return &inv_wait;
+}
+#endif
+
+#ifdef OSMETRICS
+void tasks_osbench(unsigned n)
+{
+    for (unsigned i = 0; i < n; i++) {
+        rtos_osm_mark_t m;
+
+        rtos_osm_clear(OSM_CTXSW);
+        if (estop_waiting) {
+            rtos_osm_set(OSM_CTXSW);
+            xTaskNotifyGive(th[T_ESTOP]);
+        }
+        rtos_osm_stamp(&m);
+        (void)xSemaphoreTake(mtx[TASKS_LOCK_SORTER], portMAX_DELAY);
+        (void)xSemaphoreGive(mtx[TASKS_LOCK_SORTER]);
+        rtos_osm_add(OSM_MUTEX, &m);
+    }
+}
+#endif
 
 void tasks_stack_report(tasks_out_fn out)
 {

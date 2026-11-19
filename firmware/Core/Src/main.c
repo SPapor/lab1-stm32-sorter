@@ -56,6 +56,9 @@
 #include "rtos_hal.h"
 #include "sorter_tasks.h"
 #endif
+#ifdef OSMETRICS
+#include "rtos_osm.h"
+#endif
 #if defined(TEST_PRIMASK) || defined(TEST_BOOTMARK)
 #include "perf_hal.h"
 #include "perf_tick.h"
@@ -101,6 +104,14 @@ enum {
 #define ESTOP_DEBOUNCE_MS   20u     /* estop_task: EXTI кнопки вимкнено на цей час після першого фронту */
 
 #define PERF_WIN_MS         1000u   /* вікно завантаження CPU, docs/perf.md */
+#ifdef OSMETRICS
+#define OSBENCH_N           1000u
+#endif
+#if defined(OSMETRICS) || defined(TEST_APIPROBE) || RTOS_ASSERT
+#define HIST_CMD            0
+#else
+#define HIST_CMD            1
+#endif
 #define IMU_READY_MG        500     /* |a| від 0,5 g — MPU справді міряє (у SLEEP на залізі дає нулі) */
 
 /* Архітектура (app.mk: ARCH, LTO, TICK_HZ) — у рядках BOOT і PERF */
@@ -279,8 +290,14 @@ static uint8_t stream_on = 1;   /* періодичний рядок accel (ко
 static const char *const help_lines[] = {
   "help | status | reset | log on|off",
 #if PERF
+#if ARCH_RTOS
+  "stats [reset] | load | stack | heap | tasks",
+#else
   "stats [reset] | load | stack | heap",
+#endif
+#if HIST_CMD
   "hist gate|imu|lcd",
+#endif
   "set lcd_ms|lcd_chars|imu_ms|log <n>",
 #endif
 #ifdef LAB2_CAP
@@ -371,7 +388,9 @@ static void stats_report(void);
 static void stats_reset(void);
 static void load_line(void (*out)(const char *, const char *, ...));
 static void load_report(void);
+#if HIST_CMD
 static void hist_report(const char *name);
+#endif
 static void knobs_line(void);
 static void set_knob(const char *name, int32_t v);
 static void ready_mark(unsigned what);
@@ -452,6 +471,9 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   BOOTMARK('m');               /* після MX_*_Init */
+#if ARCH_RTOS
+  HAL_NVIC_SetPriority(BOARD_ESTOP_IRQ, 3, 0);
+#endif
 #if PERF
   perf_hal_init();
   perf_setup();
@@ -1332,9 +1354,10 @@ static void perf_setup(void)
 #endif
 }
 
-/* Окремі канали робіт estop (D1) і gate (D0), в обох ARCH */
 static const uint16_t probe_pin[PT_COUNT] = {
+#ifndef TEST_INVERSION
   [PT_ESTOP] = BOARD_PROBE_ESTOP_PIN, [PT_GATE] = BOARD_PROBE_GATE_PIN,
+#endif
 };
 
 /* D6 (PB13) = 1, поки працює будь-яка задача: на аналізаторі ширина імпульсу —
@@ -1513,6 +1536,19 @@ static void stats_report(void)
   if (tasks_running())
     tasks_report(cli_reply);
 #endif
+#ifdef OSMETRICS
+  for (unsigned i = 0; i < OSM_COUNT; i++) {
+    const perf_stat_t *raw, *nosim;
+
+    rtos_osm_stats((rtos_osm_id_t)i, &raw, &nosim);
+    stat_line(raw, NULL);
+    if (nosim != NULL)
+      stat_line(nosim, NULL);
+  }
+#endif
+#ifdef TEST_INVERSION
+  stat_line(tasks_inv_wait(), NULL);
+#endif
 }
 
 /* stats reset: усі STAT, джитер, гістограми й лічильники UART у нуль.
@@ -1553,6 +1589,7 @@ static void load_report(void)
   load_line(cli_reply);
 }
 
+#if HIST_CMD
 /* Команда hist <задача>: шапка і по рядку на кожен непорожній кошик 100 мкс.
  * Крайні кошики — «нижче за -1000 мкс» і «від 2000 мкс» */
 static void hist_report(const char *name)
@@ -1583,6 +1620,7 @@ static void hist_report(const char *name)
                 lo + PERF_HIST_STEP_US, (unsigned long)p->hist[b]);
   }
 }
+#endif
 
 /* Перший коректний вимір сенсора (лише раз): мітка часу для рядка STARTUP у
  * stats і EVT ready_<сенсор>. STARTUP не загубиться, навіть якщо скрипт підключився до
@@ -1867,8 +1905,19 @@ static void cmd_run(const cli_cmd_t *cmd)
   case CLI_LOAD:        load_report(); break;
   case CLI_STACK:       stack_report(); break;
   case CLI_HEAP:        heap_report(); break;
+#if HIST_CMD
   case CLI_HIST:        hist_report(cmd->name); break;
+#endif
   case CLI_SET:         set_knob(cmd->name, cmd->arg); break;
+#if ARCH_RTOS
+  case CLI_TASKS:       tasks_list(cli_reply); break;
+#endif
+#ifdef OSMETRICS
+  case CLI_OSBENCH:
+    tasks_osbench(OSBENCH_N);
+    cli_reply("OSBENCH", "n=%u", (unsigned)OSBENCH_N);
+    break;
+#endif
 #endif
 #ifdef LAB2_CAP
   case CLI_STREAM:

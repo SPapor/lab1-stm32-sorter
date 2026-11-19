@@ -47,8 +47,15 @@ endif
 ifeq ($(TEST_CRITCOST)$(ARCH_ON),1superloop)
 $(error TEST_CRITCOST=1 лише для ARCH=rtos)
 endif
-ifeq ($(TEST_INVERSION)$(ARCH_ON),1superloop)
-$(error TEST_INVERSION=1 лише для ARCH=rtos)
+INV_ON := $(if $(filter 1 sem,$(TEST_INVERSION)),1,$(if $(filter mutex,$(TEST_INVERSION)),2,0))
+INV_NAME := $(if $(filter 1,$(INV_ON)),sem,$(if $(filter 2,$(INV_ON)),mutex))
+ifneq ($(INV_ON)$(ARCH_ON),0superloop)
+ifeq ($(ARCH_ON),superloop)
+$(error TEST_INVERSION лише для ARCH=rtos)
+endif
+endif
+ifeq ($(OSMETRICS)$(ARCH_ON),1superloop)
+$(error OSMETRICS=1 лише для ARCH=rtos)
 endif
 
 # Platform/<arch>/ — те, що в двох архітектурах різне: обробники SVC, PendSV,
@@ -142,13 +149,12 @@ C_DEFS += -DBUILD_LTO=$(LTO_ON)
 #   TEST_APIPROBE=1  — зонд бюджету flash: посилання на все API ядра кроків 2-3 (лише rtos)
 #   TEST_KSTRESS=1   — стрес-тест ядра в Wokwi замість задачі app (лише rtos)
 #   TEST_CRITCOST=1  — ціна входу й виходу критичної секції ядра (лише rtos, PERF=1)
-#   TEST_INVERSION=1 — шина I2C під двійковим семафором замість м'ютекса: інверсія
-#                      пріоритетів без успадкування (методичка 7.2, п. 1; лише rtos)
 #   PERF=0           — без вимірювального модуля ЛР3 (docs/perf.md); за замовчуванням 1
 # TEST_* у продукт не входять; docs/rtos-design.md, розділи 2 і 5
 BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE TEST_KSTRESS \
-              TEST_CRITCOST TEST_INVERSION
+              TEST_CRITCOST OSMETRICS
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
+C_DEFS += $(if $(filter-out 0,$(INV_ON)),-DTEST_INVERSION=$(INV_ON))
 
 # PERF завжди визначений (#if PERF): 0 лише явно, порожнє значення = 1.
 # Harness ЛР2 і вимірювальний модуль разом не вміщаються в 32 КБ flash
@@ -165,6 +171,9 @@ C_DEFS += -DPERF=$(PERF_ON)
 ifeq ($(TEST_CRITCOST)$(PERF_ON),10)
 $(error TEST_CRITCOST=1 міряє perf_now, потрібен PERF=1)
 endif
+ifeq ($(OSMETRICS)$(PERF_ON),10)
+$(error OSMETRICS=1 міряє perf_now, потрібен PERF=1)
+endif
 
 # Об'єкти в Makefile залежать лише від .c і Makefile, тож після зміни варіанта
 # make узяв би старі .o. Варіант пишемо у файл, лише коли він змінився, і всі
@@ -173,7 +182,8 @@ endif
 # попередньої збірки, не лінкуються — до ELF ідуть лише $(OBJECTS).
 BUILD_CFG  = $(BUILD_DIR)/build.cfg
 BUILD_LINE = ARCH=$(ARCH_ON) LTO=$(LTO_ON) TICK_HZ=$(TICK_HZ_ON) SIM_CRIT=$(SIM_CRIT_ON) ASSERT=$(ASSERT_ON) \
-             $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0)) PERF=$(PERF_ON)
+             $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0)) \
+             TEST_INVERSION=$(if $(INV_NAME),$(INV_NAME),0) PERF=$(PERF_ON)
 
 # Версія прошивки в банері й першому рядку журналу (методичка 5.2, 6): git-хеш,
 # з «-dirty», якщо збирали з незакоміченими змінами. Теги (lab3, ...) не беремо:

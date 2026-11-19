@@ -3,6 +3,7 @@
 
     tools/stats_table.py --s1 S1.log --s2 S2.log --s3 S3.log [--vcd S3=run.vcd ...]
     tools/stats_table.py --blocks 6.2.5.log
+    tools/stats_table.py --os OSMETRICS.log
 
 Береться останній блок stats у кожному лозі (PERF git=... -> KNOBS -> STARTUP ->
 STAT ... -> UART), рядки LOAD/STACK/HEAP за весь прогін і події EVT
@@ -11,6 +12,11 @@ STAT ... -> UART), рядки LOAD/STACK/HEAP за весь прогін і по
 --vcd додає рядки з запису аналізатора (tools/vcd_timing.py) - так одну метрику видно
 трьома способами: лічильник у прошивці, журнал і аналізатор.
 --blocks: по рядку на кожен блок stats одного логу (сценарій 6.2.5, точка зламу).
+--os: метрики ОС з останнього блоку stats (ARCH=rtos, ЛР4): STAT os_* - виміряне і
+без ціни обходу SIM_CRIT, TASK по задачах, MTX, SIMCRIT, OSHEAP (docs/perf.md, розділ 10).
+У rtos після рядка UART у тому самому блоці йдуть TASK, MTX, LOGQ, SIMCRIT і STAT os_*;
+STACK name=<задача> - стеки задач, окремо від STACK стека MSP. Рядки TASK від
+команди tasks після stats блок не змінюють (лишаються значення вікна stats).
 Усі часи з Wokwi - симуляційні (методичка 2.2).
 """
 import argparse
@@ -50,7 +56,7 @@ def _int(d, k, default=0):
 
 def parse_lines(lines):
     run = {'git': '?', 'scenario': '?', 'build': '?', 'blocks': [], 'load': [], 'stack': [],
-           'heap': [], 'bad_cmds': 0, 'knobs': None, 'events': []}
+           'heap': [], 'task_stack': {}, 'osheap': [], 'bad_cmds': 0, 'knobs': None, 'events': []}
     block, sent, in_stream, reset = None, 0, False, False
     lines = list(lines)
     for line in lines:
@@ -80,7 +86,8 @@ def parse_lines(lines):
             reset = True                       # МК стартував у цьому лозі: лічильники з нуля
         elif ev == 'PERF' and 'git' in kv:
             block = {'knobs': None, 'startup': None, 'stat': {}, 'uart': None,
-                     'load': run['load'][-1] if run['load'] else None, 'reset': reset}
+                     'load': run['load'][-1] if run['load'] else None, 'reset': reset,
+                     'tasks': {}, 'mtx': {}, 'logq': None, 'simcrit': None}
             run['blocks'].append(block)
         elif ev == 'KNOBS':
             run['knobs'] = kv
@@ -91,10 +98,19 @@ def parse_lines(lines):
         elif ev == 'STAT' and block is not None:
             block['stat'][kv.get('name', '?')] = {k: (v if k == 'name' else _int(kv, k))
                                                   for k, v in kv.items()}
-        elif ev == 'UART' and block is not None:
+        elif ev == 'UART' and block is not None and block['uart'] is None:
             block['uart'] = {'rx': _int(kv, 'rx'), 'ore': _int(kv, 'ore'),
                              'sent': None if in_stream else sent}
-            block = None
+        elif ev in ('TASK', 'MTX') and block is not None:
+            dst = block['tasks' if ev == 'TASK' else 'mtx']
+            dst.setdefault(kv.get('name', '?'), {
+                k: (v if k in ('name', 'state') else _int(kv, k)) for k, v in kv.items()})
+        elif ev in ('LOGQ', 'SIMCRIT') and block is not None:
+            block[ev.lower()] = {k: _int(kv, k) for k in kv}
+        elif ev == 'STACK' and 'name' in kv:
+            run['task_stack'][kv['name']] = {k: _int(kv, k) for k in kv if k != 'name'}
+        elif ev == 'OSHEAP':
+            run['osheap'].append({k: _int(kv, k) for k in kv})
         elif ev == 'LOAD':
             run['load'].append({'pct': _int(kv, 'pct'), 'pm': _int(kv, 'pm')})
         elif ev == 'STACK':
@@ -271,6 +287,64 @@ def blocks_table(run):
     return '\n'.join(lines)
 
 
+
+OS_ROWS = [
+    ('os_tick', 'обробник тіку: SysTick -> xTaskIncrementTick'),
+    ('os_select', 'вибір задачі: traceTASK_SWITCHED_OUT -> _IN'),
+    ('os_ctxsw', 'перемикання: xTaskNotifyGive -> після ulTaskNotifyTake (вищий пріоритет)'),
+    ('os_isr_estop', 'ISR -> задача: EXTI E-STOP -> estop'),
+    ('os_isr_cli', 'ISR -> задача: USART2 RXNE -> cli'),
+    ('os_queue', 'черга: gate xQueueSend -> sort після xQueueReceive'),
+    ('os_mutex', "м'ютекс: take + give без конкуренції"),
+    ('inv_imu_wait', 'дослід інверсії: imu чекає шину I2C'),
+]
+
+
+def fmt_us(v):
+    return '-' if v is None else f'{v} мкс'
+
+
+def os_table(run):
+    """Таблиця вартості ОС і задач з останнього блоку stats логу."""
+    b = last_block(run)
+    if b is None:
+        return 'у лозі немає блоку stats'
+    out = []
+    for name, title in OS_ROWS:
+        raw, net = b['stat'].get(name), b['stat'].get(name + '_nosim')
+        if not raw:
+            continue
+        n = raw.get('n', 0)
+        if not out:
+            out = ['| Метрика | n | avg | max | avg без обходу | max без обходу |',
+                   '|---|---|---|---|---|---|']
+        out.append(f'| {title} | {n} | {fmt_us(raw.get("avg_us") if n else None)} | '
+                   f'{fmt_us(raw.get("max_us") if n else None)} | '
+                   f'{fmt_us(net.get("avg_us") if net and n else None)} | '
+                   f'{fmt_us(net.get("max_us") if net and n else None)} |')
+    if b['tasks']:
+        out += ['' if out else '', '| Задача | Пріоритет | Стан | CPU, ‰ | Час, мс | Стек вільно, B |',
+                '|---|---|---|---|---|---|']
+        for t in b['tasks'].values():
+            out.append(f'| {t["name"]} | {t.get("prio", "?")} | {t.get("state", "?")} | '
+                       f'{t.get("cpu_pm", "?")} | {t.get("run_ms", "-")} | {t.get("stack_free", "?")} |')
+    if b['mtx']:
+        out += ['', "| М'ютекс | Взять | Тайм-аутів | Найдовше очікування |", '|---|---|---|---|']
+        for m in b['mtx'].values():
+            out.append(f'| {m["name"]} | {m.get("takes")} | {m.get("timeouts")} | '
+                       f'{fmt_us(m.get("wait_max_us"))} |')
+    sc = b['simcrit']
+    if sc and sc.get('win_ms'):
+        sec = sc['win_ms'] / 1000
+        out += ['', f'Критичні секції (SIMCRIT, вікно {sc["win_ms"]} мс): '
+                    f'{sc.get("task_n", 0) / sec:.0f} задач і {sc.get("isr_n", 0) / sec:.0f} ISR на секунду.']
+    if run['osheap']:
+        h = run['osheap'][-1]
+        out += ['', f'Купа ОС: {h.get("total")} B, використано {h.get("total", 0) - h.get("min_free", 0)} B '
+                    f'(total - min_free), вільно щонайменше {h.get("min_free")} B.']
+    return '\n'.join(out)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument('--s1')
@@ -278,8 +352,12 @@ def main(argv=None):
     ap.add_argument('--s3')
     ap.add_argument('--vcd', action='append', default=[], help='S3=run.vcd (мітка=файл)')
     ap.add_argument('--blocks', help='лог з кількома блоками stats (6.2.5)')
+    ap.add_argument('--os', help='лог rtos: метрики ОС з останнього блоку stats')
     args = ap.parse_args(argv)
 
+    if args.os:
+        print(os_table(parse_log(args.os)))
+        return
     if args.blocks:
         print(blocks_table(parse_log(args.blocks)))
         return

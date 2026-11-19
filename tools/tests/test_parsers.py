@@ -242,6 +242,61 @@ class MapSummaryTest(unittest.TestCase):
         self.assertEqual((ld_flash, ld_ram), (0x44, 0x110))
 
 
+RTOS_LOG = """# git=abcd1234 (з BOOT) scenario=MANUAL build="ARCH=rtos OSMETRICS=1" perf=1
+2 BOOT fw=lab4-rtos git=abcd1234 perf=1 arch=rtos
+229 STACK used=616 reserved=1024 free=408 overflow=0
+1000 PERF git=abcd1234 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+1001 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+1002 STAT name=gate n=10 min_us=195 avg_us=198 max_us=613 period_us=5000 jit_min_us=-5 jit_max_us=5 miss=0
+1003 UART rx=6 ore=0
+1004 TASK name=estop prio=6 cpu_pm=0 stack_free=152 state=blocked run_ms=3
+1005 TASK name=IDLE prio=0 cpu_pm=639 stack_free=108 state=ready run_ms=6390
+1006 MTX name=i2c takes=46606 timeouts=0 wait_max_us=1063
+1007 LOGQ len=16 max_used=4 lines=43 drop=0 trunc=0 rx_drop=0
+1008 SIMCRIT win_ms=20000 task_n=36000 isr_n=18000 deferred_tick=1 deferred_pendsv=2 deferred_irq=3
+1009 STAT name=os_tick n=1000 min_us=20 avg_us=30 max_us=90 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1010 STAT name=os_tick_nosim n=1000 min_us=6 avg_us=16 max_us=60 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1011 STAT name=os_mutex n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1012 STAT name=os_mutex_nosim n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+1500 TASK name=estop prio=6 cpu_pm=999 stack_free=1 state=run run_ms=9999
+2000 STACK used=616 reserved=1024 free=408 overflow=0
+2001 STACK name=estop used=360 reserved=512 free=152
+2002 STACK name=IDLE used=84 reserved=192 free=108
+2003 OSHEAP total=7424 free=480 min_free=480
+"""
+
+
+class RtosLogTest(unittest.TestCase):
+    def run_of(self):
+        return st.parse_lines(RTOS_LOG.splitlines(True))
+
+    def test_lines_after_uart_stay_in_block(self):
+        b = st.last_block(self.run_of())
+        self.assertEqual(b['uart']['rx'], 6)
+        self.assertEqual(b['stat']['os_tick']['avg_us'], 30)
+        self.assertEqual(b['tasks']['estop']['state'], 'blocked')
+        self.assertEqual(b['tasks']['estop']['cpu_pm'], 0)
+        self.assertEqual(b['tasks']['IDLE']['cpu_pm'], 639)
+        self.assertEqual(b['mtx']['i2c']['wait_max_us'], 1063)
+        self.assertEqual(b['simcrit']['task_n'], 36000)
+        self.assertEqual(b['logq']['drop'], 0)
+
+    def test_task_stacks_apart_from_msp(self):
+        r = self.run_of()
+        self.assertEqual([x['used'] for x in r['stack']], [616, 616])
+        self.assertEqual(r['task_stack']['estop'], {'used': 360, 'reserved': 512, 'free': 152})
+        self.assertEqual(r['osheap'][-1]['min_free'], 480)
+
+    def test_os_table(self):
+        t = st.os_table(self.run_of())
+        self.assertIn('| обробник тіку: SysTick -> xTaskIncrementTick | 1000 | 30 мкс | 90 мкс | 16 мкс | 60 мкс |', t)
+        self.assertIn("| м'ютекс: take + give без конкуренції | 0 | - | - | - | - |", t)
+        self.assertIn('| estop | 6 | blocked | 0 | 3 | 152 |', t)
+        self.assertIn('1800 задач і 900 ISR на секунду', t)
+        self.assertIn('використано 6944 B', t)
+        self.assertEqual(st.os_table(st.parse_lines([])), 'у лозі немає блоку stats')
+
+
 class VcdTimingTest(unittest.TestCase):
     def test_measurements(self):
         ch = []

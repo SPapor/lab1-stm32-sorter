@@ -93,6 +93,8 @@ static cli_cmd_id_t parse_words(char *w[], unsigned n, cli_cmd_t *out)
         { "load",   CLI_LOAD },
         { "stack",  CLI_STACK },
         { "heap",   CLI_HEAP },
+        { "tasks",  CLI_TASKS },
+        { "osbench", CLI_OSBENCH },
 #endif
     };
     int32_t *arg = &out->arg;

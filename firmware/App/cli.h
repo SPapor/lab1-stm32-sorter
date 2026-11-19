@@ -28,6 +28,8 @@ typedef enum {
     CLI_HEAP,         /* heap: купа (mallinfo) */
     CLI_HIST,         /* hist <задача>: гістограма джитера; name = задача */
     CLI_SET,          /* set <ручка> <0..65535>: name = ручка, arg = значення */
+    CLI_TASKS,
+    CLI_OSBENCH,
 #endif
 #ifdef LAB2_CAP
     CLI_STREAM,       /* stream on|off; arg = 1 / 0 */

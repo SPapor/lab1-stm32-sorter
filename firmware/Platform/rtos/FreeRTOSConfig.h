@@ -134,6 +134,10 @@ void rtos_hal_assert_failed(uint32_t line) __attribute__((noreturn, noinline));
 void rtos_hal_trace_in(const void *tcb);
 #define traceTASK_SWITCHED_IN()             rtos_hal_trace_in((const void *)pxCurrentTCB)
 #endif
+#ifdef OSMETRICS
+void rtos_osm_switch_out(void);
+#define traceTASK_SWITCHED_OUT()            rtos_osm_switch_out()
+#endif
 
 /* Стрес-тест ядра в Wokwi (збірка TEST_KSTRESS=1, Tasks/kstress.c, у продукт не
  * входить): контрольні значення в кожному списку ядра (configASSERT, якщо список
