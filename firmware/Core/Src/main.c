@@ -295,7 +295,9 @@ static const char *const help_lines[] = {
 #else
   "stats [reset] | load | stack | heap",
 #endif
+#if HIST_CMD
   "hist gate|imu|lcd",
+#endif
   "set lcd_ms|lcd_chars|imu_ms|log <n>",
 #endif
 #ifdef LAB2_CAP

@@ -86,6 +86,11 @@ void rtos_osm_clear(rtos_osm_id_t id)
     slot_on[id] = 0;
 }
 
+int rtos_osm_pending(rtos_osm_id_t id)
+{
+    return slot_on[id];
+}
+
 static uint32_t sel_val;
 static volatile uint8_t sel_on;
 

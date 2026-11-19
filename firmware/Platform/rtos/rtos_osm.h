@@ -28,6 +28,7 @@ void rtos_osm_add(rtos_osm_id_t id, const rtos_osm_mark_t *m);
 void rtos_osm_set(rtos_osm_id_t id);
 int rtos_osm_take(rtos_osm_id_t id);
 void rtos_osm_clear(rtos_osm_id_t id);
+int rtos_osm_pending(rtos_osm_id_t id);
 void rtos_osm_switch_out(void);
 void rtos_osm_switch_in(void);
 

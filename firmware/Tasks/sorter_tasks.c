@@ -40,11 +40,7 @@ enum {
 #define QLOG_LEN        16u     /* записів журналу в черзі */
 #define QPARCEL_LEN     2u      /* PARCEL_IN, що чекають на sort */
 #define SB_RX_BYTES     64u     /* потоковий буфер прийому UART */
-#ifdef OSMETRICS
-#define USART2_IRQ_PRIO 2u
-#else
 #define USART2_IRQ_PRIO 3u
-#endif
 #define SECOND_MS       1000u   /* logger: LOAD і EVT ready_* */
 #ifdef TEST_INVERSION
 #define HOG_MS          50u
@@ -124,6 +120,9 @@ static volatile uint8_t running;
 
 static TaskHandle_t lock_owner[TASKS_LOCK_COUNT];
 static uint8_t lock_depth[TASKS_LOCK_COUNT];
+#ifdef OSMETRICS
+static volatile uint8_t estop_waiting;
+#endif
 #if defined(TEST_INVERSION) && PERF
 static perf_stat_t inv_wait = { .name = "inv_imu_wait" };
 #endif
@@ -191,7 +190,7 @@ void tasks_lock(tasks_lock_t l)
 
 void tasks_unlock(tasks_lock_t l)
 {
-    if (!running || lock_depth[l] == 0u)
+    if (!running || lock_depth[l] == 0u || lock_owner[l] != xTaskGetCurrentTaskHandle())
         return;
     if (--lock_depth[l] == 0u) {
         lock_owner[l] = NULL;
@@ -315,9 +314,13 @@ static void estop_task(void *arg)
         xTaskDelayUntil(&t, ms_ticks(ops->estop_debounce_ms));
         ops->estop();
         for (;;) {
+#ifdef OSMETRICS
+            estop_waiting = 1;
+#endif
             (void)ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 #ifdef OSMETRICS
-            if (rtos_osm_take(OSM_CTXSW))
+            estop_waiting = 0;
+            if (rtos_osm_take(OSM_CTXSW) && !rtos_osm_pending(OSM_ISR_ESTOP))
                 continue;
             (void)rtos_osm_take(OSM_ISR_ESTOP);
 #endif
@@ -605,8 +608,10 @@ void tasks_osbench(unsigned n)
         rtos_osm_mark_t m;
 
         rtos_osm_clear(OSM_CTXSW);
-        rtos_osm_set(OSM_CTXSW);
-        xTaskNotifyGive(th[T_ESTOP]);
+        if (estop_waiting) {
+            rtos_osm_set(OSM_CTXSW);
+            xTaskNotifyGive(th[T_ESTOP]);
+        }
         rtos_osm_stamp(&m);
         (void)xSemaphoreTake(mtx[TASKS_LOCK_SORTER], portMAX_DELAY);
         (void)xSemaphoreGive(mtx[TASKS_LOCK_SORTER]);
