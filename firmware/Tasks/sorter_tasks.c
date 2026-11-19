@@ -97,7 +97,7 @@ static const struct {
     [T_LOGGER] = { "logger", logger_task, 160u, 2u },
     [T_LCD]    = { "lcd",    lcd_task,    160u, 1u },
 #ifdef TEST_INVERSION
-    [T_HOG]    = { "hog",    hog_task,     96u, 2u },
+    [T_HOG]    = { "hog",    hog_task,     64u, 2u },
 #endif
 };
 
