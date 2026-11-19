@@ -1,0 +1,119 @@
+# git=b6e72123 (з BOOT) scenario=6.2.7 build="ARCH=rtos LTO=1 TICK_HZ=1000 SIM_CRIT=1 ASSERT=0 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=0 TEST_APIPROBE=0 TEST_KSTRESS=0 TEST_CRITCOST=0 OSMETRICS=0 TEST_INVERSION=0 PERF=1" perf=1 arch=rtos lto=1 tick_hz=1000 port=rfc2217://localhost:4000 host_start=2026-11-19T19:22:23
+# сценарій 6.2.7: Старт: BOOT -> ready_gate/class/imu/lcd
+# > stats
+2 BOOT fw=lab4-rtos git=b6e72123 perf=1 arch=rtos lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=7424       
+12 EVT t_us=12240 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=517 pair_cyc=1322
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+40 EVT t_us=39935 name=i2c_fail
+44 EVT t_us=43982 name=i2c_ok
+54 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+61 EVT t_us=60918 name=i2c_fail
+65 EVT t_us=64966 name=i2c_ok
+75 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+82 EVT t_us=81935 name=i2c_fail
+86 EVT t_us=85982 name=i2c_ok
+90 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+166 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+171 SELFTEST dev=ldr_gate status=OK raw=1001
+176 SELFTEST dev=ldr_class status=OK raw=1001
+180 SELFTEST dev=servo status=OK pulse_us=1500
+185 SELFTEST_END ok=4 warn=1 fail=0
+226 STATE state=READY
+229 STACK used=616 reserved=1024 free=408 overflow=0
+234 HEAP arena=0 used=0 free=0
+ta1243 EVT t_us=176070 name=ready_gate
+1244 EVT t_us=180756 name=ready_class
+1246 EVT t_us=252401 name=ready_imu
+1247 EVT t_us=818827 name=ready_lcd
+ts
+1688 CLI st=BAD
+1693 EVT t_us=1688813 name=cmd_rx
+1697 EVT t_us=1692866 name=cmd_reply
+# "stats": без ехо 1 байт
+# "stats": CLI st=BAD, спроба 1 з 4
+# > stats (повтор: CR + команда)
+
+s2243 LOAD pct=39 pm=389 win_cyc=48000272 busy_cyc=18657862 windows=1
+tats
+3093 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+3105 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+3113 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+3130 STAT name=uart_rx n=11 min_us=174 avg_us=1140 max_us=9099 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3147 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3160 STAT name=gate n=583 min_us=204 avg_us=204 max_us=278 period_us=5000 jit_min_us=-309 jit_max_us=309 miss=0
+3177 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3193 STAT name=imu n=294 min_us=1245 avg_us=1313 max_us=2018 period_us=10000 jit_min_us=-41 jit_max_us=41 miss=0
+3208 STAT name=lcd n=5 min_us=75213 avg_us=76410 max_us=78055 period_us=500000 jit_min_us=-26867 jit_max_us=26867 miss=0
+3227 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3243 STAT name=logger n=6 min_us=4566 avg_us=5616 max_us=6726 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3258 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3274 LOAD pct=48 pm=477 win_cyc=47999956 busy_cyc=22890084 windows=2
+3285 STAT name=i2c_xfer n=1460 min_us=60 avg_us=389 max_us=12882 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3300 STAT name=uart_line n=38 min_us=2266 avg_us=8250 max_us=18207 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3318 STAT name=lcd_update n=5 min_us=74844 avg_us=76060 max_us=77727 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3334 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3349 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3364 UART rx=12 ore=0
+3370 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+3385 TASK name=gate prio=5 cpu_pm=85 stack_free=352 state=blocked run_ms=268
+3399 TASK name=sort prio=4 cpu_pm=4294967295 stack_free=496 state=blocked run_ms=4294967295
+3416 TASK name=imu prio=3 cpu_pm=152 stack_free=392 state=blocked run_ms=478
+3429 TASK name=cli prio=2 cpu_pm=82 stack_free=156 state=run run_ms=258
+3444 TASK name=logger prio=2 cpu_pm=15 stack_free=180 state=blocked run_ms=48
+3457 TASK name=lcd prio=1 cpu_pm=91 stack_free=228 state=ready run_ms=286
+3470 TASK name=IDLE prio=0 cpu_pm=588 stack_free=108 state=ready run_ms=1841
+3483 MTX name=adc takes=648 timeouts=0 wait_max_us=55
+3489 MTX name=i2c takes=1328 timeouts=0 wait_max_us=1669
+3498 MTX name=sorter takes=5 timeouts=0 wait_max_us=55
+3506 MTX name=uart takes=50 timeouts=0 wait_max_us=30027
+3514 LOGQ len=16 max_used=4 lines=6 drop=0 trunc=0 rx_drop=0
+3524 SIMCRIT win_ms=3127 task_n=5545 isr_n=3258 deferred_tick=49 deferred_pendsv=40 deferred_irq=754
+3538 EVT t_us=3093047 name=cmd_rx
+3543 EVT t_us=3538036 name=cmd_reply
+# чекаю 5 с часу МК після старту
+4243 LOAD pct=59 pm=591 win_cyc=48000376 busy_cyc=28361445 windows=3
+5243 LOAD pct=36 pm=362 win_cyc=48000016 busy_cyc=17377030 windows=4
+6243 LOAD pct=36 pm=363 win_cyc=47999632 busy_cyc=17445577 windows=5
+7243 LOAD pct=36 pm=365 win_cyc=48000351 busy_cyc=17512338 windows=6
+8242 LOAD pct=36 pm=363 win_cyc=48000029 busy_cyc=17409570 windows=7
+9242 LOAD pct=36 pm=363 win_cyc=47999932 busy_cyc=17422686 windows=8
+# > stats
+stats10242 LOAD pct=37 pm=366 win_cyc=47999691 busy_cyc=17546813 windows=9
+
+10358 PERF git=b6e72123 now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+10373 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+10379 STARTUP boot_us=12240 gate_us=176070 class_us=180756 imu_us=252401 lcd_us=818827 os_api_us=237744 os_start_us=240465
+10398 STAT name=uart_rx n=17 min_us=174 avg_us=27320 max_us=451018 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10415 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10428 STAT name=gate n=2037 min_us=204 avg_us=204 max_us=278 period_us=5000 jit_min_us=-309 jit_max_us=309 miss=0
+10446 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10459 STAT name=imu n=1021 min_us=1245 avg_us=1335 max_us=2026 period_us=10000 jit_min_us=-302 jit_max_us=302 miss=0
+10478 STAT name=lcd n=20 min_us=75213 avg_us=76306 max_us=78055 period_us=500000 jit_min_us=-310976 jit_max_us=310984 miss=0
+10497 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10512 STAT name=logger n=8 min_us=4566 avg_us=5967 max_us=7831 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10527 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10543 STAT name=i2c_xfer n=4952 min_us=60 avg_us=373 max_us=12882 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10558 STAT name=uart_line n=79 min_us=2266 avg_us=10068 max_us=18627 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10576 STAT name=lcd_update n=20 min_us=74844 avg_us=75964 max_us=77727 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10593 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10607 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+10623 UART rx=18 ore=0
+10628 TASK name=estop prio=6 cpu_pm=0 stack_free=404 state=blocked run_ms=0
+10643 TASK name=gate prio=5 cpu_pm=86 stack_free=352 state=blocked run_ms=899
+10657 TASK name=sort prio=4 cpu_pm=4294967295 stack_free=496 state=blocked run_ms=4294967295
+10675 TASK name=imu prio=3 cpu_pm=153 stack_free=392 state=blocked run_ms=1592
+10688 TASK name=cli prio=2 cpu_pm=57 stack_free=148 state=run run_ms=599
+10703 TASK name=logger prio=2 cpu_pm=11 stack_free=180 state=blocked run_ms=116
+10716 TASK name=lcd prio=1 cpu_pm=109 stack_free=228 state=blocked run_ms=1141
+10729 TASK name=IDLE prio=0 cpu_pm=586 stack_free=108 state=ready run_ms=6091
+10742 MTX name=adc takes=2100 timeouts=0 wait_max_us=55
+10749 MTX name=i2c takes=4820 timeouts=0 wait_max_us=1669
+10758 MTX name=sorter takes=20 timeouts=0 wait_max_us=55
+10766 MTX name=uart takes=97 timeouts=0 wait_max_us=30027
+10775 LOGQ len=16 max_used=4 lines=8 drop=0 trunc=0 rx_drop=0
+10784 SIMCRIT win_ms=10386 task_n=18768 isr_n=10386 deferred_tick=194 deferred_pendsv=174 deferred_irq=1985
+10799 EVT t_us=10358845 name=cmd_rx
+10803 EVT t_us=10799378 name=cmd_reply
+11242 LOAD pct=71 pm=711 win_cyc=48000005 busy_cyc=34147175 windows=10
