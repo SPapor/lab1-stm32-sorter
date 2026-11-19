@@ -294,3 +294,12 @@ python3 tools/evt_latency.py run.log      # затримки по журналу
 
 Канали аналізатора в rtos: D0 і D1 - роботи `gate` і `estop` (`perf_begin`/`perf_end`, в обох ARCH), D6 - процесор не в idle, D7 - процесор у задачі `lcd` (обидва веде `traceTASK_SWITCHED_IN`), решта - як у розділі 6. Затримка E-STOP на аналізаторі в ЛР4 - від спаду D5 до фронту D1 (`tools/vcd_timing.py`).
 
+### Крок 3: команда tasks і збірка OSMETRICS
+
+- **`TASK`** (команда `tasks` і `stats`): `name= prio= cpu_pm= stack_free= state= run_ms=` - стан (`run`, `ready`, `blocked`, `suspended`) і час у задачі в мс від `stats reset` додано в кінець рядка кроку 2.
+- **`STAT name=os_*` і `os_*_nosim`** (збірка `OSMETRICS=1`, у `stats` після `SIMCRIT`): вартість ОС, формат той самий, що в ЛР3; `_nosim` - за вирахуванням ціни обходу `SIM_CRIT` (docs/rtos-design.md, розділ 7). Команда `osbench` - 1 000 перемикань і пар take/give м'ютекса, відповідь `OSBENCH n=1000`.
+- **`STAT name=inv_imu_wait`** (збірка `TEST_INVERSION=sem|mutex`): скільки задача `imu` чекала шину I2C.
+- У збірках `OSMETRICS`, `TEST_APIPROBE` і `ASSERT=1` команди `hist` немає (flash).
+- `tools/stats_table.py --os <лог>` - таблиця вартості ОС (виміряне і без обходу), задачі, м'ютекси, критичні секції за секунду і купа ОС з останнього блоку `stats`.
+- Пріоритети в rtos: EXTI E-STOP і USART2 - 3, як SysTick (у ЛР3 EXTI - 0): мітка `perf_now` в обробнику тепер не буває на тік ранішою (docs/journal.md, проблема 45).
+
