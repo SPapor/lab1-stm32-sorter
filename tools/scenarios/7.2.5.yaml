@@ -1,0 +1,6 @@
+name: "7.2.5"
+title: "Вичерпання купи ОС: збірка TEST_OS=heap або heap_nohook"
+knobs_reset: false
+steps:
+  - wait_mcu: 3
+final: [heap, tasks, stats]
