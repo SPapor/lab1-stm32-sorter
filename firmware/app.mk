@@ -57,6 +57,23 @@ endif
 ifeq ($(OSMETRICS)$(ARCH_ON),1superloop)
 $(error OSMETRICS=1 лише для ARCH=rtos)
 endif
+TEST_OS_NAMES := heap heap_nohook stack stack_nocheck starve qflood_drop qflood_wait
+TEST_OS_ON := $(if $(TEST_OS),$(TEST_OS),0)
+ifneq ($(TEST_OS_ON),0)
+ifeq ($(filter $(TEST_OS_ON),$(TEST_OS_NAMES)),)
+$(error TEST_OS=$(TEST_OS_ON): має бути одне з $(TEST_OS_NAMES))
+endif
+ifeq ($(ARCH_ON),superloop)
+$(error TEST_OS лише для ARCH=rtos)
+endif
+endif
+TEST_OS_DEFS := $(if $(filter heap,$(TEST_OS_ON)),-DTEST_HEAP=1) \
+                $(if $(filter heap_nohook,$(TEST_OS_ON)),-DTEST_HEAP=2) \
+                $(if $(filter stack,$(TEST_OS_ON)),-DTEST_STACKOVF=1) \
+                $(if $(filter stack_nocheck,$(TEST_OS_ON)),-DTEST_STACKOVF=2) \
+                $(if $(filter starve,$(TEST_OS_ON)),-DTEST_STARVE=1) \
+                $(if $(filter qflood_drop,$(TEST_OS_ON)),-DTEST_QFLOOD=1) \
+                $(if $(filter qflood_wait,$(TEST_OS_ON)),-DTEST_QFLOOD=2)
 
 # Platform/<arch>/ — те, що в двох архітектурах різне: обробники SVC, PendSV,
 # SysTick, база часу HAL, лічильник тіків для perf_now (perf_tick.h)
@@ -155,6 +172,7 @@ BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE T
               TEST_CRITCOST OSMETRICS
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
 C_DEFS += $(if $(filter-out 0,$(INV_ON)),-DTEST_INVERSION=$(INV_ON))
+C_DEFS += $(TEST_OS_DEFS)
 
 # PERF завжди визначений (#if PERF): 0 лише явно, порожнє значення = 1.
 # Harness ЛР2 і вимірювальний модуль разом не вміщаються в 32 КБ flash
@@ -174,6 +192,11 @@ endif
 ifeq ($(OSMETRICS)$(PERF_ON),10)
 $(error OSMETRICS=1 міряє perf_now, потрібен PERF=1)
 endif
+ifneq ($(filter qflood_drop qflood_wait,$(TEST_OS_ON)),)
+ifeq ($(PERF_ON),0)
+$(error TEST_OS=$(TEST_OS_ON) міряє perf_now, потрібен PERF=1)
+endif
+endif
 
 # Об'єкти в Makefile залежать лише від .c і Makefile, тож після зміни варіанта
 # make узяв би старі .o. Варіант пишемо у файл, лише коли він змінився, і всі
@@ -183,7 +206,7 @@ endif
 BUILD_CFG  = $(BUILD_DIR)/build.cfg
 BUILD_LINE = ARCH=$(ARCH_ON) LTO=$(LTO_ON) TICK_HZ=$(TICK_HZ_ON) SIM_CRIT=$(SIM_CRIT_ON) ASSERT=$(ASSERT_ON) \
              $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0)) \
-             TEST_INVERSION=$(if $(INV_NAME),$(INV_NAME),0) PERF=$(PERF_ON)
+             TEST_INVERSION=$(if $(INV_NAME),$(INV_NAME),0) TEST_OS=$(TEST_OS_ON) PERF=$(PERF_ON)
 
 # Версія прошивки в банері й першому рядку журналу (методичка 5.2, 6): git-хеш,
 # з «-dirty», якщо збирали з незакоміченими змінами. Теги (lab3, ...) не беремо:

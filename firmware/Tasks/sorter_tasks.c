@@ -34,6 +34,9 @@ enum {
 #ifdef TEST_INVERSION
     T_HOG,
 #endif
+#ifdef TEST_STARVE
+    T_SPIN,
+#endif
     T_COUNT
 };
 
@@ -44,6 +47,22 @@ enum {
 #define SECOND_MS       1000u   /* logger: LOAD і EVT ready_* */
 #ifdef TEST_INVERSION
 #define HOG_MS          50u
+#endif
+#ifdef TEST_STACKOVF
+#define CLI_WORDS       96u
+#else
+#define CLI_WORDS       192u
+#endif
+#ifdef TEST_STARVE
+#define SPIN_PERIOD_MS  20000u
+#define SPIN_GATE_RUNS  1000u
+#endif
+#ifdef TEST_QFLOOD
+#define QF_EVERY        200u
+#define QF_BURST        40u
+#if TEST_QFLOOD == 2
+#define QF_WAIT_MS      20u
+#endif
 #endif
 
 typedef struct {
@@ -78,6 +97,9 @@ static void lcd_task(void *arg);
 #ifdef TEST_INVERSION
 static void hog_task(void *arg);
 #endif
+#ifdef TEST_STARVE
+static void spin_task(void *arg);
+#endif
 
 static const struct {
     const char *name;
@@ -89,11 +111,14 @@ static const struct {
     [T_GATE]   = { "gate",   gate_task,   128u, 5u },
     [T_SORT]   = { "sort",   sort_task,   160u, 4u },
     [T_IMU]    = { "imu",    imu_task,    192u, 3u },
-    [T_CLI]    = { "cli",    cli_task,    192u, 2u },
+    [T_CLI]    = { "cli",    cli_task,    CLI_WORDS, 2u },
     [T_LOGGER] = { "logger", logger_task, 160u, 2u },
     [T_LCD]    = { "lcd",    lcd_task,    160u, 1u },
 #ifdef TEST_INVERSION
     [T_HOG]    = { "hog",    hog_task,     64u, 2u },
+#endif
+#ifdef TEST_STARVE
+    [T_SPIN]   = { "spin",   spin_task,    64u, 4u },
 #endif
 };
 
@@ -329,6 +354,79 @@ static void estop_task(void *arg)
     }
 }
 
+#ifdef TEST_STARVE
+static volatile uint8_t spin_armed;
+static volatile uint8_t spin_release;
+static uint32_t spin_windows;
+
+static void gate_starve(void)
+{
+    static uint32_t runs;
+
+    if (!spin_armed)
+        return;
+    if (++runs >= SPIN_GATE_RUNS) {
+        runs = 0;
+        spin_armed = 0;
+        spin_release = 1;
+    }
+}
+
+static void spin_task(void *arg)
+{
+    TickType_t last = xTaskGetTickCount();
+
+    (void)arg;
+    for (;;) {
+        xTaskDelayUntil(&last, ms_ticks(SPIN_PERIOD_MS));
+        spin_release = 0;
+        spin_armed = 1;
+        while (!spin_release) {
+        }
+        spin_windows++;
+    }
+}
+#endif
+
+#ifdef TEST_QFLOOD
+static uint32_t qf_sent;
+static uint32_t qf_ok;
+static uint32_t qf_lost;
+static uint32_t qf_wait_max_cyc;
+
+static void gate_qflood(void)
+{
+    static uint32_t runs;
+    static uint32_t seq;
+#if TEST_QFLOOD == 2
+    const TickType_t wait = ms_ticks(QF_WAIT_MS);
+#else
+    const TickType_t wait = 0;
+#endif
+
+    if (++runs < QF_EVERY)
+        return;
+    runs = 0;
+    for (unsigned i = 0; i < QF_BURST; i++) {
+        log_rec_t r = { .event = "QFLOOD", .fmt = "n=%lu", .ms = HAL_GetTick(), .n = 1u };
+        uint32_t t0 = perf_now();
+        uint32_t w;
+
+        r.arg[0] = (fmt_arg_t)++seq;
+        qf_sent++;
+        if (xQueueSend(q_log, &r, wait) == pdPASS) {
+            qf_ok++;
+        } else {
+            qf_lost++;
+            log_drop++;
+        }
+        w = perf_now() - t0;
+        if (w > qf_wait_max_cyc)
+            qf_wait_max_cyc = w;
+    }
+}
+#endif
+
 static void gate_task(void *arg)
 {
     TickType_t last = xTaskGetTickCount();
@@ -337,6 +435,12 @@ static void gate_task(void *arg)
     for (;;) {
         xTaskDelayUntil(&last, ms_ticks(ops->gate_ms));
         ops->gate();
+#ifdef TEST_STARVE
+        gate_starve();
+#endif
+#ifdef TEST_QFLOOD
+        gate_qflood();
+#endif
     }
 }
 
@@ -546,6 +650,16 @@ void tasks_report(tasks_out_fn out)
     out("LOGQ", "len=%u max_used=%lu lines=%lu drop=%lu trunc=%lu rx_drop=%lu",
         (unsigned)QLOG_LEN, (unsigned long)log_max_used, (unsigned long)log_lines,
         (unsigned long)log_drop, (unsigned long)log_trunc, (unsigned long)rx_drop);
+#ifdef TEST_QFLOOD
+    out("QFLOOD", "burst=%u every_ms=%lu sent=%lu ok=%lu lost=%lu wait_max_us=%lu", (unsigned)QF_BURST,
+        (unsigned long)(QF_EVERY * ops->gate_ms), (unsigned long)qf_sent, (unsigned long)qf_ok,
+        (unsigned long)qf_lost,
+        (unsigned long)perf_cyc_to_us(qf_wait_max_cyc, perf_hal_cpu_hz() / 1000000u));
+#endif
+#ifdef TEST_STARVE
+    out("STARVE", "windows=%lu period_ms=%lu spin_ms=%lu", (unsigned long)spin_windows,
+        (unsigned long)SPIN_PERIOD_MS, (unsigned long)(SPIN_GATE_RUNS * ops->gate_ms));
+#endif
 #if SIM_CRIT
     {
         /* Обхід PRIMASK для Wokwi (docs/rtos-design.md, розділ 2): скільки

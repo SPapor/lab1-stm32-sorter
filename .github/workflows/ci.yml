@@ -54,7 +54,7 @@ jobs:
       - name: Firmware build (ARCH=rtos, LTO=1, ASSERT=1 - configASSERT is not in the product)
         run: make build ARCH=rtos LTO=1 ASSERT=1
 
-      - name: Firmware builds (ARCH=rtos, LTO=1) - test builds TEST_KSTRESS, TEST_APIPROBE, TEST_CRITCOST, TEST_INVERSION, OSMETRICS
+      - name: Firmware builds (ARCH=rtos, LTO=1) - test builds TEST_KSTRESS, TEST_APIPROBE, TEST_CRITCOST, TEST_INVERSION, OSMETRICS, TEST_OS
         run: |
           make build ARCH=rtos LTO=1 TEST_KSTRESS=1
           make build ARCH=rtos LTO=1 TEST_KSTRESS=1 SIM_CRIT=0
@@ -64,6 +64,13 @@ jobs:
           make build ARCH=rtos LTO=1 TEST_INVERSION=mutex
           make build ARCH=rtos LTO=1 OSMETRICS=1
           make build ARCH=rtos LTO=1 OSMETRICS=1 SIM_CRIT=0
+          make build ARCH=rtos LTO=1 TEST_OS=heap
+          make build ARCH=rtos LTO=1 TEST_OS=heap_nohook
+          make build ARCH=rtos LTO=1 TEST_OS=stack
+          make build ARCH=rtos LTO=1 TEST_OS=stack_nocheck
+          make build ARCH=rtos LTO=1 TEST_OS=starve
+          make build ARCH=rtos LTO=1 TEST_OS=qflood_drop
+          make build ARCH=rtos LTO=1 TEST_OS=qflood_wait
 
       - name: Firmware build (ARCH=rtos, LTO=1) for upload
         run: |
