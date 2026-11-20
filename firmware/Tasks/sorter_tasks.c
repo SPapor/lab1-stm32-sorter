@@ -248,11 +248,26 @@ void tasks_snapshot(void *dst, const void *src, size_t n)
     taskEXIT_CRITICAL();
 }
 
+static BaseType_t log_send(const log_rec_t *r, TickType_t wait)
+{
+    UBaseType_t used;
+
+    if (xQueueSend(q_log, r, wait) != pdPASS) {
+        taskENTER_CRITICAL();
+        log_drop++;
+        taskEXIT_CRITICAL();
+        return pdFAIL;
+    }
+    used = uxQueueMessagesWaiting(q_log);
+    if (used > log_max_used)
+        log_max_used = used;
+    return pdPASS;
+}
+
 void tasks_log(const char *event, const char *fmt, va_list ap)
 {
     log_rec_t r;
     unsigned n;
-    UBaseType_t used;
 
     r.event = event;
     r.fmt = fmt;
@@ -263,13 +278,7 @@ void tasks_log(const char *event, const char *fmt, va_list ap)
         n = TASKS_LOG_ARGS;
     }
     r.n = (uint8_t)n;
-    if (xQueueSend(q_log, &r, 0) != pdPASS) {
-        log_drop++;
-        return;
-    }
-    used = uxQueueMessagesWaiting(q_log);
-    if (used > log_max_used)
-        log_max_used = used;
+    (void)log_send(&r, 0);
 }
 
 void tasks_parcel(uint32_t in_ms, uint32_t in_cyc)
@@ -356,6 +365,13 @@ static void estop_task(void *arg)
     }
 }
 
+#if defined(TEST_STARVE) || defined(TEST_QFLOOD)
+static uint32_t gate_real_ms(void)
+{
+    return (uint32_t)ms_ticks(ops->gate_ms) * 1000u / (uint32_t)configTICK_RATE_HZ;
+}
+#endif
+
 #ifdef TEST_STARVE
 static volatile uint8_t spin_armed;
 static volatile uint8_t spin_release;
@@ -416,12 +432,10 @@ static void gate_qflood(void)
 
         r.arg[0] = (fmt_arg_t)++seq;
         qf_sent++;
-        if (xQueueSend(q_log, &r, wait) == pdPASS) {
+        if (log_send(&r, wait) == pdPASS)
             qf_ok++;
-        } else {
+        else
             qf_lost++;
-            log_drop++;
-        }
         w = perf_now() - t0;
         if (w > qf_wait_max_cyc)
             qf_wait_max_cyc = w;
@@ -514,11 +528,10 @@ static void logger_task(void *arg)
             log_lines++;
         }
         now = xTaskGetTickCount();
-        if ((TickType_t)(now - next) <= ms_ticks(SECOND_MS)) {
+        if ((int32_t)(now - next) >= 0) {
             next += ms_ticks(SECOND_MS);
-            ops->second();
-        } else if ((TickType_t)(next - now) > ms_ticks(SECOND_MS)) {
-            next = now + ms_ticks(SECOND_MS);
+            if ((int32_t)(now - next) >= 0)
+                next = now + ms_ticks(SECOND_MS);
             ops->second();
         }
     }
@@ -591,9 +604,15 @@ void tasks_start(const tasks_ops_t *o)
 #endif
         mtx[i] = xSemaphoreCreateMutex();
     }
+    if (q_log == NULL || q_parcel == NULL || sb_rx == NULL)
+        rtos_hal_fatal_create("queue");
+    for (unsigned i = 0; i < TASKS_LOCK_COUNT; i++)
+        if (mtx[i] == NULL)
+            rtos_hal_fatal_create("mutex");
     for (unsigned i = 0; i < T_COUNT; i++)
-        (void)xTaskCreate(task_def[i].fn, task_def[i].name, task_def[i].words, NULL,
-                          task_def[i].prio, &th[i]);
+        if (xTaskCreate(task_def[i].fn, task_def[i].name, task_def[i].words, NULL,
+                        task_def[i].prio, &th[i]) != pdPASS)
+            rtos_hal_fatal_create(task_def[i].name);
 #if PERF
     rtos_hal_trace_task(0u, th[T_LCD], BOARD_PROBE_LCD_PIN);
 #ifdef TEST_INVERSION
@@ -658,13 +677,13 @@ void tasks_report(tasks_out_fn out)
         (unsigned long)log_drop, (unsigned long)log_trunc, (unsigned long)rx_drop);
 #ifdef TEST_QFLOOD
     out("QFLOOD", "burst=%u every_ms=%lu sent=%lu ok=%lu lost=%lu wait_max_us=%lu", (unsigned)QF_BURST,
-        (unsigned long)(QF_EVERY * ops->gate_ms), (unsigned long)qf_sent, (unsigned long)qf_ok,
+        (unsigned long)(QF_EVERY * gate_real_ms()), (unsigned long)qf_sent, (unsigned long)qf_ok,
         (unsigned long)qf_lost,
         (unsigned long)perf_cyc_to_us(qf_wait_max_cyc, perf_hal_cpu_hz() / 1000000u));
 #endif
 #ifdef TEST_STARVE
     out("STARVE", "windows=%lu period_ms=%lu spin_ms=%lu", (unsigned long)spin_windows,
-        (unsigned long)SPIN_PERIOD_MS, (unsigned long)(SPIN_GATE_RUNS * ops->gate_ms));
+        (unsigned long)SPIN_PERIOD_MS, (unsigned long)(SPIN_GATE_RUNS * gate_real_ms()));
 #endif
 #if SIM_CRIT
     {
@@ -706,6 +725,15 @@ void tasks_stats_reset(void)
     log_trunc = 0;
     log_lines = 0;
     rx_drop = 0;
+#ifdef TEST_QFLOOD
+    qf_sent = 0;
+    qf_ok = 0;
+    qf_lost = 0;
+    qf_wait_max_cyc = 0;
+#endif
+#ifdef TEST_STARVE
+    spin_windows = 0;
+#endif
 #ifdef OSMETRICS
     rtos_osm_reset();
 #endif

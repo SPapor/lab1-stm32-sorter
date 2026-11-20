@@ -50,4 +50,6 @@ void rtos_hal_raw_putu(uint32_t v, unsigned base);
  * CubeMX - функція C, і зсув її кадру на MSP невідомий. */
 void rtos_hal_hardfault(uint32_t exc_return) __attribute__((noreturn));
 
+void rtos_hal_fatal_create(const char *name) __attribute__((noreturn));
+
 #endif /* RTOS_HAL_H */

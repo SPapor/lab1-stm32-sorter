@@ -57,26 +57,32 @@ endif
 ifeq ($(OSMETRICS)$(ARCH_ON),1superloop)
 $(error OSMETRICS=1 лише для ARCH=rtos)
 endif
-TEST_OS_NAMES := heap heap_nohook stack stack_nocheck stack_near stack_near_nocheck starve qflood_drop \
-                 qflood_wait
+TEST_OS_DEF_heap               := -DTEST_HEAP=1
+TEST_OS_DEF_heap_nohook        := -DTEST_HEAP=2
+TEST_OS_DEF_stack              := -DTEST_STACKOVF=1
+TEST_OS_DEF_stack_nocheck      := -DTEST_STACKOVF=2
+TEST_OS_DEF_stack_near         := -DTEST_STACKOVF=3
+TEST_OS_DEF_stack_near_nocheck := -DTEST_STACKOVF=4
+TEST_OS_DEF_starve             := -DTEST_STARVE=1
+TEST_OS_DEF_qflood_drop        := -DTEST_QFLOOD=1
+TEST_OS_DEF_qflood_wait        := -DTEST_QFLOOD=2
 TEST_OS_ON := $(if $(TEST_OS),$(TEST_OS),0)
+TEST_OS_DEFS :=
 ifneq ($(TEST_OS_ON),0)
-ifeq ($(filter $(TEST_OS_ON),$(TEST_OS_NAMES)),)
-$(error TEST_OS=$(TEST_OS_ON): має бути одне з $(TEST_OS_NAMES))
+ifneq ($(words $(TEST_OS_ON)),1)
+$(error TEST_OS=$(TEST_OS_ON): лише одна назва)
+endif
+TEST_OS_DEFS := $(TEST_OS_DEF_$(TEST_OS_ON))
+ifeq ($(TEST_OS_DEFS),)
+$(error TEST_OS=$(TEST_OS_ON): має бути одне з $(patsubst TEST_OS_DEF_%,%,$(filter TEST_OS_DEF_%,$(.VARIABLES))))
 endif
 ifeq ($(ARCH_ON),superloop)
 $(error TEST_OS лише для ARCH=rtos)
 endif
+ifneq ($(filter 1,$(TEST_KSTRESS) $(TEST_CRITCOST) $(TEST_APIPROBE) $(OSMETRICS))$(filter-out 0,$(INV_ON)),)
+$(error TEST_OS не поєднується з TEST_KSTRESS, TEST_CRITCOST, TEST_APIPROBE, OSMETRICS і TEST_INVERSION)
 endif
-TEST_OS_DEFS := $(if $(filter heap,$(TEST_OS_ON)),-DTEST_HEAP=1) \
-                $(if $(filter heap_nohook,$(TEST_OS_ON)),-DTEST_HEAP=2) \
-                $(if $(filter stack,$(TEST_OS_ON)),-DTEST_STACKOVF=1) \
-                $(if $(filter stack_nocheck,$(TEST_OS_ON)),-DTEST_STACKOVF=2) \
-                $(if $(filter stack_near,$(TEST_OS_ON)),-DTEST_STACKOVF=3) \
-                $(if $(filter stack_near_nocheck,$(TEST_OS_ON)),-DTEST_STACKOVF=4) \
-                $(if $(filter starve,$(TEST_OS_ON)),-DTEST_STARVE=1) \
-                $(if $(filter qflood_drop,$(TEST_OS_ON)),-DTEST_QFLOOD=1) \
-                $(if $(filter qflood_wait,$(TEST_OS_ON)),-DTEST_QFLOOD=2)
+endif
 
 # Platform/<arch>/ — те, що в двох архітектурах різне: обробники SVC, PendSV,
 # SysTick, база часу HAL, лічильник тіків для perf_now (perf_tick.h)
