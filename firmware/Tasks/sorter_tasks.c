@@ -513,8 +513,12 @@ static void logger_task(void *arg)
             ops->log_line(r.ms, r.event, r.fmt, r.arg, r.n);
             log_lines++;
         }
-        if ((TickType_t)(xTaskGetTickCount() - next) <= ms_ticks(SECOND_MS)) {
+        now = xTaskGetTickCount();
+        if ((TickType_t)(now - next) <= ms_ticks(SECOND_MS)) {
             next += ms_ticks(SECOND_MS);
+            ops->second();
+        } else if ((TickType_t)(next - now) > ms_ticks(SECOND_MS)) {
+            next = now + ms_ticks(SECOND_MS);
             ops->second();
         }
     }
