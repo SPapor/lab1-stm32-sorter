@@ -68,6 +68,8 @@ jobs:
           make build ARCH=rtos LTO=1 TEST_OS=heap_nohook
           make build ARCH=rtos LTO=1 TEST_OS=stack
           make build ARCH=rtos LTO=1 TEST_OS=stack_nocheck
+          make build ARCH=rtos LTO=1 TEST_OS=stack_near
+          make build ARCH=rtos LTO=1 TEST_OS=stack_near_nocheck
           make build ARCH=rtos LTO=1 TEST_OS=starve
           make build ARCH=rtos LTO=1 TEST_OS=qflood_drop
           make build ARCH=rtos LTO=1 TEST_OS=qflood_wait

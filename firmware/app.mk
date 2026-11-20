@@ -57,7 +57,8 @@ endif
 ifeq ($(OSMETRICS)$(ARCH_ON),1superloop)
 $(error OSMETRICS=1 лише для ARCH=rtos)
 endif
-TEST_OS_NAMES := heap heap_nohook stack stack_nocheck starve qflood_drop qflood_wait
+TEST_OS_NAMES := heap heap_nohook stack stack_nocheck stack_near stack_near_nocheck starve qflood_drop \
+                 qflood_wait
 TEST_OS_ON := $(if $(TEST_OS),$(TEST_OS),0)
 ifneq ($(TEST_OS_ON),0)
 ifeq ($(filter $(TEST_OS_ON),$(TEST_OS_NAMES)),)
@@ -71,6 +72,8 @@ TEST_OS_DEFS := $(if $(filter heap,$(TEST_OS_ON)),-DTEST_HEAP=1) \
                 $(if $(filter heap_nohook,$(TEST_OS_ON)),-DTEST_HEAP=2) \
                 $(if $(filter stack,$(TEST_OS_ON)),-DTEST_STACKOVF=1) \
                 $(if $(filter stack_nocheck,$(TEST_OS_ON)),-DTEST_STACKOVF=2) \
+                $(if $(filter stack_near,$(TEST_OS_ON)),-DTEST_STACKOVF=3) \
+                $(if $(filter stack_near_nocheck,$(TEST_OS_ON)),-DTEST_STACKOVF=4) \
                 $(if $(filter starve,$(TEST_OS_ON)),-DTEST_STARVE=1) \
                 $(if $(filter qflood_drop,$(TEST_OS_ON)),-DTEST_QFLOOD=1) \
                 $(if $(filter qflood_wait,$(TEST_OS_ON)),-DTEST_QFLOOD=2)

@@ -97,7 +97,7 @@ extern uint32_t SystemCoreClock;
 #endif
 /* Метод 2: при кожному перемиканні — і вказівник стека, і 16 байтів шаблону на
  * дні стека задачі. Рядок FATAL stack overflow in <ім'я> (методичка 7.2, п. 2) */
-#if defined(TEST_STACKOVF) && TEST_STACKOVF == 2
+#if defined(TEST_STACKOVF) && (TEST_STACKOVF == 2 || TEST_STACKOVF == 4)
 #define configCHECK_FOR_STACK_OVERFLOW      0
 #else
 #define configCHECK_FOR_STACK_OVERFLOW      2

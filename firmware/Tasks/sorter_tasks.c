@@ -48,7 +48,9 @@ enum {
 #ifdef TEST_INVERSION
 #define HOG_MS          50u
 #endif
-#ifdef TEST_STACKOVF
+#if defined(TEST_STACKOVF) && TEST_STACKOVF >= 3
+#define CLI_WORDS       144u
+#elif defined(TEST_STACKOVF)
 #define CLI_WORDS       96u
 #else
 #define CLI_WORDS       192u
