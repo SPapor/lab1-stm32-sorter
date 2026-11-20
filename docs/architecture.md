@@ -187,7 +187,7 @@ RAM включає резерв купи 512 B і стека 1 024 B зі скр
 | Задача | Пріоритет | Запуск | Стек, слів (найбільше використано, кроки 2-4) | Що робить |
 |---|---|---|---|---|
 | `estop` | 6 | сповіщення з ISR EXTI4_15, потім 20 мс антибрязкоту (`xTaskDelayUntil`) | 128 (360 B) | FR-07: рівень PC13 -> стан E-STOP, EXTI знову |
-| `gate` | 5 | `xTaskDelayUntil` 5 мс | 128 (352 B) | FR-01: АЦП gate під `adcMutex`, PARCEL_IN -> черга `qParcel` |
+| `gate` | 5 | `xTaskDelayUntil` 5 мс | 128 (360 B) | FR-01: АЦП gate під `adcMutex`, PARCEL_IN -> черга `qParcel` |
 | `sort` | 4 | повідомлення з `qParcel` | 160 (448 B) | FR-02, FR-03, FR-05: АЦП class, лоток, CCR серво, лічильники під `sorterMutex` |
 | `imu` | 3 | `xTaskDelayUntil` 10 мс | 192 (560 B після 4 `I2C_RECOVER`) | FR-04, FR-09: читання MPU під `i2cMutex` на кожну транзакцію, удар -> `sorter_impact` |
 | `cli` | 2 | потоковий буфер `sbUartRx` (64 B) з ISR USART2 | 192 (620 B) | команди, відповіді друкує сама під `uartMutex` |
@@ -226,7 +226,7 @@ RAM включає резерв купи 512 B і стека 1 024 B зі скр
 |---|---|---|
 | тік ядра | SysTick, `TICK_HZ` (1 000 Гц) | `xTaskDelayUntil`, тайм-аути черг і м'ютексів (`ms_ticks` округлює вгору до цілого тіку) |
 | `HAL_GetTick` | TIM17, 1 кГц | тайм-аути I²C і UART у HAL, мітки `<мс>` у рядках FR-10 |
-| `perf_now` | номер тіку SysTick × LOAD + (LOAD - VAL), з `HAL_Init` | усі вимірювання ЛР3 і ЛР4 тим самим кодом; 64-бітна версія - лічильник run-time stats ядра |
+| `perf_now` | номер тіку SysTick × (LOAD + 1) + (LOAD - VAL), з `HAL_Init` | усі вимірювання ЛР3 і ЛР4 тим самим кодом; 64-бітна версія - лічильник run-time stats ядра |
 
 ### 10.5. Де живе код
 
@@ -235,8 +235,8 @@ RAM включає резерв купи 512 B і стека 1 024 B зі скр
 | `firmware/Middlewares/FreeRTOS/` | ядро FreeRTOS-Kernel V11.3.3 (сабмодуль, не редагується): `tasks.c`, `queue.c`, `list.c`, `stream_buffer.c`, `heap_4.c`, порт `portable/GCC/ARM_CM0` |
 | `firmware/Platform/rtos/` | `FreeRTOSConfig.h`; `rtos_hal.c` - база часу (TIM17 для HAL, SysTick для ядра), лічильник run-time stats, канали трасування; `rtos_diag.c` - хуки `FATAL` (стек, malloc, створення, assert, HardFault); `rtos_osm.c` - вимірювання вартості ОС (`OSMETRICS=1`) |
 | `firmware/Platform/rtos/port_sim/` | копія порту `ARM_CM0` з обходом PRIMASK для Wokwi (`SIM_CRIT=1`, за замовчуванням): критична секція відкладає тік, PendSV і переривання; відмінності - `docs/port_sim-V11.3.3.patch`. `SIM_CRIT=0` - порт із сабмодуля без змін, для плати |
-| `firmware/Platform/rtos/kstress/` | стрес-тест ядра (`TEST_KSTRESS=1`) |
-| `firmware/Tasks/` | `sorter_tasks.c` - задачі, черги, м'ютекси, ISR USART2, звіти; `app_task.c` - задача для `TEST_KSTRESS` і `TEST_CRITCOST` |
+| `firmware/Platform/rtos/kstress/` | обгортки порту для стрес-тесту ядра (`TEST_KSTRESS=1`) |
+| `firmware/Tasks/` | `sorter_tasks.c` - задачі, черги, м'ютекси, ISR USART2, звіти; `app_task.c` - задача для `TEST_KSTRESS` і `TEST_CRITCOST`; задачі самих тестів - `kstress.c` (`TEST_KSTRESS`), `critcost.c` (`TEST_CRITCOST`), `api_probe.c` (`TEST_APIPROBE`) |
 | `firmware/Core/Src/main.c` | ті самі `*_run`, що й у super loop, плюс `*_work` з обліком `TASK_RUN`; `tasks_ops_t` передає їх у `Tasks/` |
 
 ### 10.6. Службові піни
