@@ -34,6 +34,9 @@ enum {
 #ifdef TEST_INVERSION
     T_HOG,
 #endif
+#ifdef TEST_STARVE
+    T_SPIN,
+#endif
     T_COUNT
 };
 
@@ -44,6 +47,24 @@ enum {
 #define SECOND_MS       1000u   /* logger: LOAD і EVT ready_* */
 #ifdef TEST_INVERSION
 #define HOG_MS          50u
+#endif
+#if defined(TEST_STACKOVF) && TEST_STACKOVF >= 3
+#define CLI_WORDS       144u
+#elif defined(TEST_STACKOVF)
+#define CLI_WORDS       96u
+#else
+#define CLI_WORDS       192u
+#endif
+#ifdef TEST_STARVE
+#define SPIN_PERIOD_MS  20000u
+#define SPIN_GATE_RUNS  1000u
+#endif
+#ifdef TEST_QFLOOD
+#define QF_EVERY        200u
+#define QF_BURST        40u
+#if TEST_QFLOOD == 2
+#define QF_WAIT_MS      20u
+#endif
 #endif
 
 typedef struct {
@@ -78,6 +99,9 @@ static void lcd_task(void *arg);
 #ifdef TEST_INVERSION
 static void hog_task(void *arg);
 #endif
+#ifdef TEST_STARVE
+static void spin_task(void *arg);
+#endif
 
 static const struct {
     const char *name;
@@ -89,11 +113,14 @@ static const struct {
     [T_GATE]   = { "gate",   gate_task,   128u, 5u },
     [T_SORT]   = { "sort",   sort_task,   160u, 4u },
     [T_IMU]    = { "imu",    imu_task,    192u, 3u },
-    [T_CLI]    = { "cli",    cli_task,    192u, 2u },
+    [T_CLI]    = { "cli",    cli_task,    CLI_WORDS, 2u },
     [T_LOGGER] = { "logger", logger_task, 160u, 2u },
     [T_LCD]    = { "lcd",    lcd_task,    160u, 1u },
 #ifdef TEST_INVERSION
     [T_HOG]    = { "hog",    hog_task,     64u, 2u },
+#endif
+#ifdef TEST_STARVE
+    [T_SPIN]   = { "spin",   spin_task,    64u, 4u },
 #endif
 };
 
@@ -221,11 +248,26 @@ void tasks_snapshot(void *dst, const void *src, size_t n)
     taskEXIT_CRITICAL();
 }
 
+static BaseType_t log_send(const log_rec_t *r, TickType_t wait)
+{
+    UBaseType_t used;
+
+    if (xQueueSend(q_log, r, wait) != pdPASS) {
+        taskENTER_CRITICAL();
+        log_drop++;
+        taskEXIT_CRITICAL();
+        return pdFAIL;
+    }
+    used = uxQueueMessagesWaiting(q_log);
+    if (used > log_max_used)
+        log_max_used = used;
+    return pdPASS;
+}
+
 void tasks_log(const char *event, const char *fmt, va_list ap)
 {
     log_rec_t r;
     unsigned n;
-    UBaseType_t used;
 
     r.event = event;
     r.fmt = fmt;
@@ -236,13 +278,7 @@ void tasks_log(const char *event, const char *fmt, va_list ap)
         n = TASKS_LOG_ARGS;
     }
     r.n = (uint8_t)n;
-    if (xQueueSend(q_log, &r, 0) != pdPASS) {
-        log_drop++;
-        return;
-    }
-    used = uxQueueMessagesWaiting(q_log);
-    if (used > log_max_used)
-        log_max_used = used;
+    (void)log_send(&r, 0);
 }
 
 void tasks_parcel(uint32_t in_ms, uint32_t in_cyc)
@@ -329,6 +365,84 @@ static void estop_task(void *arg)
     }
 }
 
+#if defined(TEST_STARVE) || defined(TEST_QFLOOD)
+static uint32_t gate_real_ms(void)
+{
+    return (uint32_t)ms_ticks(ops->gate_ms) * 1000u / (uint32_t)configTICK_RATE_HZ;
+}
+#endif
+
+#ifdef TEST_STARVE
+static volatile uint8_t spin_armed;
+static volatile uint8_t spin_release;
+static uint32_t spin_windows;
+
+static void gate_starve(void)
+{
+    static uint32_t runs;
+
+    if (!spin_armed)
+        return;
+    if (++runs >= SPIN_GATE_RUNS) {
+        runs = 0;
+        spin_armed = 0;
+        spin_release = 1;
+    }
+}
+
+static void spin_task(void *arg)
+{
+    TickType_t last = xTaskGetTickCount();
+
+    (void)arg;
+    for (;;) {
+        xTaskDelayUntil(&last, ms_ticks(SPIN_PERIOD_MS));
+        spin_release = 0;
+        spin_armed = 1;
+        while (!spin_release) {
+        }
+        spin_windows++;
+    }
+}
+#endif
+
+#ifdef TEST_QFLOOD
+static uint32_t qf_sent;
+static uint32_t qf_ok;
+static uint32_t qf_lost;
+static uint32_t qf_wait_max_cyc;
+
+static void gate_qflood(void)
+{
+    static uint32_t runs;
+    static uint32_t seq;
+#if TEST_QFLOOD == 2
+    const TickType_t wait = ms_ticks(QF_WAIT_MS);
+#else
+    const TickType_t wait = 0;
+#endif
+
+    if (++runs < QF_EVERY)
+        return;
+    runs = 0;
+    for (unsigned i = 0; i < QF_BURST; i++) {
+        log_rec_t r = { .event = "QFLOOD", .fmt = "n=%lu", .ms = HAL_GetTick(), .n = 1u };
+        uint32_t t0 = perf_now();
+        uint32_t w;
+
+        r.arg[0] = (fmt_arg_t)++seq;
+        qf_sent++;
+        if (log_send(&r, wait) == pdPASS)
+            qf_ok++;
+        else
+            qf_lost++;
+        w = perf_now() - t0;
+        if (w > qf_wait_max_cyc)
+            qf_wait_max_cyc = w;
+    }
+}
+#endif
+
 static void gate_task(void *arg)
 {
     TickType_t last = xTaskGetTickCount();
@@ -337,6 +451,12 @@ static void gate_task(void *arg)
     for (;;) {
         xTaskDelayUntil(&last, ms_ticks(ops->gate_ms));
         ops->gate();
+#ifdef TEST_STARVE
+        gate_starve();
+#endif
+#ifdef TEST_QFLOOD
+        gate_qflood();
+#endif
     }
 }
 
@@ -407,8 +527,11 @@ static void logger_task(void *arg)
             ops->log_line(r.ms, r.event, r.fmt, r.arg, r.n);
             log_lines++;
         }
-        if ((TickType_t)(xTaskGetTickCount() - next) <= ms_ticks(SECOND_MS)) {
+        now = xTaskGetTickCount();
+        if ((int32_t)(now - next) >= 0) {
             next += ms_ticks(SECOND_MS);
+            if ((int32_t)(now - next) >= 0)
+                next = now + ms_ticks(SECOND_MS);
             ops->second();
         }
     }
@@ -481,9 +604,15 @@ void tasks_start(const tasks_ops_t *o)
 #endif
         mtx[i] = xSemaphoreCreateMutex();
     }
+    if (q_log == NULL || q_parcel == NULL || sb_rx == NULL)
+        rtos_hal_fatal_create("queue");
+    for (unsigned i = 0; i < TASKS_LOCK_COUNT; i++)
+        if (mtx[i] == NULL)
+            rtos_hal_fatal_create("mutex");
     for (unsigned i = 0; i < T_COUNT; i++)
-        (void)xTaskCreate(task_def[i].fn, task_def[i].name, task_def[i].words, NULL,
-                          task_def[i].prio, &th[i]);
+        if (xTaskCreate(task_def[i].fn, task_def[i].name, task_def[i].words, NULL,
+                        task_def[i].prio, &th[i]) != pdPASS)
+            rtos_hal_fatal_create(task_def[i].name);
 #if PERF
     rtos_hal_trace_task(0u, th[T_LCD], BOARD_PROBE_LCD_PIN);
 #ifdef TEST_INVERSION
@@ -546,6 +675,16 @@ void tasks_report(tasks_out_fn out)
     out("LOGQ", "len=%u max_used=%lu lines=%lu drop=%lu trunc=%lu rx_drop=%lu",
         (unsigned)QLOG_LEN, (unsigned long)log_max_used, (unsigned long)log_lines,
         (unsigned long)log_drop, (unsigned long)log_trunc, (unsigned long)rx_drop);
+#ifdef TEST_QFLOOD
+    out("QFLOOD", "burst=%u every_ms=%lu sent=%lu ok=%lu lost=%lu wait_max_us=%lu", (unsigned)QF_BURST,
+        (unsigned long)(QF_EVERY * gate_real_ms()), (unsigned long)qf_sent, (unsigned long)qf_ok,
+        (unsigned long)qf_lost,
+        (unsigned long)perf_cyc_to_us(qf_wait_max_cyc, perf_hal_cpu_hz() / 1000000u));
+#endif
+#ifdef TEST_STARVE
+    out("STARVE", "windows=%lu period_ms=%lu spin_ms=%lu", (unsigned long)spin_windows,
+        (unsigned long)SPIN_PERIOD_MS, (unsigned long)(SPIN_GATE_RUNS * gate_real_ms()));
+#endif
 #if SIM_CRIT
     {
         /* Обхід PRIMASK для Wokwi (docs/rtos-design.md, розділ 2): скільки
@@ -586,6 +725,15 @@ void tasks_stats_reset(void)
     log_trunc = 0;
     log_lines = 0;
     rx_drop = 0;
+#ifdef TEST_QFLOOD
+    qf_sent = 0;
+    qf_ok = 0;
+    qf_lost = 0;
+    qf_wait_max_cyc = 0;
+#endif
+#ifdef TEST_STARVE
+    spin_windows = 0;
+#endif
 #ifdef OSMETRICS
     rtos_osm_reset();
 #endif

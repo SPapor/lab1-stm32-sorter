@@ -155,6 +155,16 @@ void rtos_hal_hardfault(uint32_t exc_return)
     fatal_halt();
 }
 
+void rtos_hal_fatal_create(const char *name)
+{
+    fatal_stop();
+    fatal_begin();
+    rtos_hal_raw_puts("create ");
+    rtos_hal_raw_puts(name);
+    rtos_hal_raw_puts("\r\n");
+    fatal_halt();
+}
+
 /* configUSE_MALLOC_FAILED_HOOK: pvPortMalloc повернув би NULL */
 void vApplicationMallocFailedHook(void)
 {

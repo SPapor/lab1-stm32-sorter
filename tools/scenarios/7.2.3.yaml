@@ -1,0 +1,7 @@
+name: "7.2.3"
+title: "Голодування: збірка TEST_OS=starve, spin з пріоритетом 4 крутиться 5 с з кожних 20"
+setup: [stats reset, log on]
+steps:
+  - comment: "вікна spin - 20-25 с, 40-45 с, 60-65 с часу МК; команди - лише між ними"
+  - wait_mcu: 48
+final: [stats, load, stack]

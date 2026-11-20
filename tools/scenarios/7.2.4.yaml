@@ -1,0 +1,6 @@
+name: "7.2.4"
+title: "Вичерпання черги qLog: збірка TEST_OS=qflood_drop або qflood_wait"
+setup: [stats reset, log on]
+steps:
+  - wait_mcu: 10
+final: [stats, load]

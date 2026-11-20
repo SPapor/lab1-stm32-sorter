@@ -1,0 +1,85 @@
+# git=6afde07a (з BOOT) scenario=7.2.2 build="ARCH=rtos LTO=1 TICK_HZ=1000 SIM_CRIT=1 ASSERT=0 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_PRIMASK=0 TEST_BOOTMARK=0 TEST_APIPROBE=0 TEST_KSTRESS=0 TEST_CRITCOST=0 OSMETRICS=0 TEST_INVERSION=0 TEST_OS=stack_near PERF=1" perf=1 arch=rtos lto=1 tick_hz=1000 port=rfc2217://localhost:4000 host_start=2026-11-20T13:50:39
+# сценарій 7.2.2: Переповнення стека cli: збірка TEST_OS=stack або stack_nocheck
+4242 LOAD pct=36 pm=359 win_cyc=47999598 busy_cyc=17222218 windows=3
+5242 LOAD pct=36 pm=357 win_cyc=47999884 busy_cyc=17140707 windows=4
+2 BOOT fw=lab4-rtos git=6afde07a perf=1 arch=rtos lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=7424       
+12 EVT t_us=12240 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=517 pair_cyc=1322
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+40 EVT t_us=39935 name=i2c_fail
+44 EVT t_us=43982 name=i2c_ok
+54 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+61 EVT t_us=60918 name=i2c_fail
+65 EVT t_us=64966 name=i2c_ok
+75 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+82 EVT t_us=81935 name=i2c_fail
+86 EVT t_us=85982 name=i2c_ok
+90 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+166 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+171 SELFTEST dev=ldr_gate status=OK raw=999
+176 SELFTEST dev=ldr_class status=OK raw=1001
+180 SELFTEST dev=servo status=OK pulse_us=1500
+185 SELFTEST_END ok=4 warn=1 fail=0
+226 STATE state=READY
+229 STACK used=616 reserved=1024 free=408 overflow=0
+234 HEAP arena=0 used=0 free=0
+1242 EVT t_us=175969 name=ready_gate
+1243 EVT t_us=180659 name=ready_class
+1244 EVT t_us=251875 name=ready_imu
+1246 EVT t_us=815660 name=ready_lcd
+2242 LOAD pct=37 pm=373 win_cyc=48000250 busy_cyc=17919022 windows=1
+# > status
+stat3242 LOAD pct=36 pm=363 win_cyc=48000831 busy_cyc=17447568 windows=2
+us
+3672 STATUS state=READY a=0 b=0 reject=0 total=0 impact=0 log=1 fault=NONE
+3683 EVT t_us=3672490 name=cmd_rx
+3684 EVT t_us=3683115 name=cmd_reply
+# > stats
+sta4243 LOAD pct=38 pm=381 win_cyc=47999622 busy_cyc=18297616 windows=3
+ts
+4844 PERF git=6afde07a now_cyc=517 pair_cyc=1322 cyc_per_us=48 arch=rtos lto=1 tick_hz=1000
+4857 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+4864 STARTUP boot_us=12240 gate_us=175969 class_us=180659 imu_us=251875 lcd_us=815660 os_api_us=237646 os_start_us=240338
+4883 STAT name=uart_rx n=12 min_us=174 avg_us=2018 max_us=14102 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4898 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+4914 STAT name=gate n=934 min_us=204 avg_us=204 max_us=282 period_us=5000 jit_min_us=-183 jit_max_us=183 miss=0
+4930 FATAL stack overflow in cli
+# "stats": немає відповіді, спроба 1 з 4
+# > stats (повтор: CR + команда)
+# "stats": без ехо 7 байт
+# "stats": немає відповіді, спроба 2 з 4
+# > stats (повтор: CR + команда)
+# "stats": без ехо 7 байт
+# "stats": немає відповіді, спроба 3 з 4
+# > stats (повтор: CR + команда)
+# "stats": без ехо 7 байт
+# "stats": немає відповіді, спроба 4 з 4
+# "stats" так і не виконалась
+# wait_mcu 3 с: час МК не дійшов (немає рядків з <мс>? увімкніть log on)
+# > stack
+# "stack": без ехо 6 байт
+# "stack": немає відповіді, спроба 1 з 4
+# > stack (повтор: CR + команда)
+# "stack": без ехо 7 байт
+# "stack": немає відповіді, спроба 2 з 4
+# > stack (повтор: CR + команда)
+# "stack": без ехо 7 байт
+# "stack": немає відповіді, спроба 3 з 4
+# > stack (повтор: CR + команда)
+# "stack": без ехо 7 байт
+# "stack": немає відповіді, спроба 4 з 4
+# "stack" так і не виконалась
+# > tasks
+# "tasks": без ехо 6 байт
+# "tasks": немає відповіді, спроба 1 з 4
+# > tasks (повтор: CR + команда)
+# "tasks": без ехо 7 байт
+# "tasks": немає відповіді, спроба 2 з 4
+# > tasks (повтор: CR + команда)
+# "tasks": без ехо 7 байт
+# "tasks": немає відповіді, спроба 3 з 4
+# > tasks (повтор: CR + команда)
+# "tasks": без ехо 7 байт
+# "tasks": немає відповіді, спроба 4 з 4
+# "tasks" так і не виконалась

@@ -1,0 +1,9 @@
+name: "7.2.2"
+title: "Переповнення стека cli: збірка TEST_OS=stack або stack_nocheck"
+knobs_reset: false
+steps:
+  - wait_mcu: 2
+  - send: status
+  - send: stats
+  - wait_mcu: 3
+final: [stack, tasks]

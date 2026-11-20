@@ -58,7 +58,11 @@ extern uint32_t SystemCoreClock;
 /* Масив ucHeap у .bss: сім задач (стеки 4 480 B), TCB, черги qLog і qParcel,
  * потоковий буфер і чотири м'ютекси (docs/rtos-design.md, розділ 6). Справжній
  * запас - OSHEAP min_free (команда heap) після S1-S3 */
+#ifdef TEST_HEAP
+#define configTOTAL_HEAP_SIZE               ((size_t)6400u)
+#else
 #define configTOTAL_HEAP_SIZE               ((size_t)(7u * 1024u + 256u))
+#endif
 /* stdio newlib у прошивці немає (форматер App/fmt.c), а strcmp, memcpy і memset
  * не мають стану: окрема struct _reent на задачу (~100 Б RAM кожна) не потрібна */
 #define configUSE_NEWLIB_REENTRANT          0
@@ -86,10 +90,18 @@ extern uint32_t SystemCoreClock;
  * (docs/rtos-design.md, розділ 3) */
 #define configUSE_TICK_HOOK                 0
 /* Вичерпання heap ОС — рядок FATAL malloc і зупинка (методичка 7.2, п. 5) */
+#if defined(TEST_HEAP) && TEST_HEAP == 2
+#define configUSE_MALLOC_FAILED_HOOK        0
+#else
 #define configUSE_MALLOC_FAILED_HOOK        1
+#endif
 /* Метод 2: при кожному перемиканні — і вказівник стека, і 16 байтів шаблону на
  * дні стека задачі. Рядок FATAL stack overflow in <ім'я> (методичка 7.2, п. 2) */
+#if defined(TEST_STACKOVF) && (TEST_STACKOVF == 2 || TEST_STACKOVF == 4)
+#define configCHECK_FOR_STACK_OVERFLOW      0
+#else
 #define configCHECK_FOR_STACK_OVERFLOW      2
+#endif
 /* Обробники SVC і PendSV мають бути саме з порту: ядро перевіряє таблицю
  * векторів при старті (configASSERT). Так ловиться обробник, згенерований CubeMX.
  * Лише в збірці ASSERT=1, як і сам configASSERT (нижче) */
