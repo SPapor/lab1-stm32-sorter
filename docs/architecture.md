@@ -76,7 +76,7 @@ L_max = T_gate + (C_uart + C_estop + C_imu + C_lcd) + C_gate_in + C_sort_ccr + T
 | Platform | `firmware/Platform/` | `board.h` і обгортки над HAL | HAL, `Devices/i2c_bus.h`, арифметика `App/perf.h` |
 | Platform/superloop | `firmware/Platform/superloop/` | ЛР4: лише `ARCH=superloop` - обробники SVC, PendSV, SysTick (`HAL_IncTick`) і лічильник тіків для `perf_now` (`uwTick`) | HAL |
 | Platform/rtos | `firmware/Platform/rtos/` | ЛР4: лише `ARCH=rtos` - `FreeRTOSConfig.h`, база часу (SysTick - ядро, HAL - TIM17), хуки і діагностика ядра | HAL, FreeRTOS |
-| Tasks | `firmware/Tasks/` | ЛР4: задачі FreeRTOS (на кроці 1 - одна задача `app` з усім циклом) | App, Devices, Platform, FreeRTOS |
+| Tasks | `firmware/Tasks/` | ЛР4: сім задач FreeRTOS, черги, м'ютекси, обробник USART2, рядки `TASK`/`MTX`/`LOGQ` (`sorter_tasks.c`); `app_task.c` - лише для тестових збірок ядра (розділ 10) | App, Devices, Platform, FreeRTOS |
 | Middlewares | `firmware/Middlewares/FreeRTOS/` | ЛР4: ядро FreeRTOS-Kernel V11.3.3, сабмодуль, не редагується | - |
 | Devices | `firmware/Devices/` | драйвери пристроїв та інтерфейс шини | лише стандартна бібліотека C |
 | App | `firmware/App/` | логіка продукту і вимірювань без заліза | стандартна бібліотека C, Devices |
@@ -173,3 +173,97 @@ RAM включає резерв купи 512 B і стека 1 024 B зі скр
 - **Інтерфейс шини в Devices/.** Інтерфейс належить споживачеві, Platform його реалізує, тому драйвери тестуються без HAL.
 - **Задачі - у `main.c`, а не окремими модулями.** Їм потрібні HAL, `printf` і піни, а абстракцій часу, журналу і маркерів для App/ я не вводив. Логіку всередині задач винесено в App/ і покрито тестами.
 - **Збірка через `app.mk`.** Проєкт можна перегенерувати з CubeMX без втрати своїх налаштувань.
+
+## 10. ARCH=rtos (ЛР4)
+
+Друга прошивка з того самого дерева: `make build ARCH=rtos LTO=1`. Логіка продукту (App/, Devices/) і робота кожної задачі (`*_run` у `main.c`) - ті самі, що в super loop; інший лише спосіб, яким робота запускається. Подробиці і числа - docs/rtos-design.md, тут - карта.
+
+![Задачі і механізми взаємодії](lab_4/img/tasks.png)
+
+*Рисунок 3 - задачі, переривання і механізми взаємодії ARCH=rtos. Джерело: [`lab_4/img/tasks.drawio`](lab_4/img/tasks.drawio).*
+
+### 10.1. Задачі
+
+| Задача | Пріоритет | Запуск | Стек, слів (найбільше використано, кроки 2-4) | Що робить |
+|---|---|---|---|---|
+| `estop` | 6 | сповіщення з ISR EXTI4_15, потім 20 мс антибрязкоту (`xTaskDelayUntil`) | 128 (360 B) | FR-07: рівень PC13 -> стан E-STOP, EXTI знову |
+| `gate` | 5 | `xTaskDelayUntil` 5 мс | 128 (352 B) | FR-01: АЦП gate під `adcMutex`, PARCEL_IN -> черга `qParcel` |
+| `sort` | 4 | повідомлення з `qParcel` | 160 (448 B) | FR-02, FR-03, FR-05: АЦП class, лоток, CCR серво, лічильники під `sorterMutex` |
+| `imu` | 3 | `xTaskDelayUntil` 10 мс | 192 (560 B після 4 `I2C_RECOVER`) | FR-04, FR-09: читання MPU під `i2cMutex` на кожну транзакцію, удар -> `sorter_impact` |
+| `cli` | 2 | потоковий буфер `sbUartRx` (64 B) з ISR USART2 | 192 (620 B) | команди, відповіді друкує сама під `uartMutex` |
+| `logger` | 2 | черга `qLog` (16 записів) | 160 (472 B) | FR-10: форматує і друкує рядки задач, раз на секунду `LOAD` |
+| `lcd` | 1 | `xTaskDelayUntil` 500 мс | 160 (412 B) | FR-06: перемальовка LCD під `i2cMutex` |
+| idle | 0 | ядро | 48 (84 B) | LOAD = 100 % - частка idle |
+
+Пріоритети - за жорсткістю дедлайну: E-STOP, далі періодичні за періодом (rate-monotonic), `sort` одразу під `gate`, бо отримує від неї подію і має вкластися в FR-03; фонові `cli` і `logger`; найдовша операція LCD - найнижче. Задачі з пріоритетом ≥ 3 не друкують, а кладуть запис у `qLog` з тайм-аутом 0.
+
+### 10.2. Механізми
+
+| Об'єкт | Тип | Хто -> кому | Втрата видна в |
+|---|---|---|---|
+| `qParcel` | черга, 2 записи | `gate` -> `sort` | ніде (журнал, проблема 63) |
+| `qLog` | черга, 16 записів по 44 B | задачі, `i2c_hal` -> `logger` | `LOGQ drop` |
+| `sbUartRx` | потоковий буфер, 64 B | ISR USART2 -> `cli` | `LOGQ rx_drop` |
+| сповіщення `estop` | сповіщення задачі | ISR EXTI4_15 -> `estop` | - |
+| `adcMutex`, `i2cMutex`, `sorterMutex`, `uartMutex` | м'ютекси з успадкуванням пріоритету, тайм-аут і повтор; рекурсивні з власником | спільні АЦП, шина I²C, стан сортувальника, рядок UART | `MTX timeouts`, `wait_max_us` |
+
+### 10.3. Переривання
+
+| Переривання | Пріоритет NVIC | Що робить |
+|---|---|---|
+| SysTick | 3 (192, найнижчий) | тік ядра (`TICK_HZ`, 1 кГц) і номер тіку для `perf_now` (`SysTick_Handler` у `Platform/rtos/rtos_hal.c` -> `xPortSysTickHandler`) |
+| PendSV | 3 | перемикання контексту (порт) |
+| SVC | 0 | старт першої задачі (порт) |
+| TIM17 | 3 | `HAL_IncTick`: `HAL_GetTick` для тайм-аутів HAL і міток `<мс>` |
+| EXTI4_15 (PC13) | 3 | перший фронт B1: вимикає свій EXTI, мітка часу, `vTaskNotifyGiveFromISR` |
+| USART2 | 3 | байти з RDR у `sbUartRx` (`xStreamBufferSendFromISR`), переповнення - `rx_drop` |
+
+На Cortex-M0+ немає BASEPRI: критична секція ядра вимикає всі переривання, тож `configMAX_SYSCALL_INTERRUPT_PRIORITY` не діє, а FromISR-функції можна кликати з будь-якого пріоритету. EXTI і USART2 стоять на рівні SysTick, щоб не перебивати тік посеред `xTaskIncrementTick` (журнал, проблема 45). Wokwi на C0 PRIMASK не враховує, тому в симуляції працює обхід `SIM_CRIT` (нижче).
+
+### 10.4. База часу
+
+| Лічильник | Від чого | Для чого |
+|---|---|---|
+| тік ядра | SysTick, `TICK_HZ` (1 000 Гц) | `xTaskDelayUntil`, тайм-аути черг і м'ютексів (`ms_ticks` округлює вгору до цілого тіку) |
+| `HAL_GetTick` | TIM17, 1 кГц | тайм-аути I²C і UART у HAL, мітки `<мс>` у рядках FR-10 |
+| `perf_now` | номер тіку SysTick × LOAD + (LOAD - VAL), з `HAL_Init` | усі вимірювання ЛР3 і ЛР4 тим самим кодом; 64-бітна версія - лічильник run-time stats ядра |
+
+### 10.5. Де живе код
+
+| Каталог | Що там |
+|---|---|
+| `firmware/Middlewares/FreeRTOS/` | ядро FreeRTOS-Kernel V11.3.3 (сабмодуль, не редагується): `tasks.c`, `queue.c`, `list.c`, `stream_buffer.c`, `heap_4.c`, порт `portable/GCC/ARM_CM0` |
+| `firmware/Platform/rtos/` | `FreeRTOSConfig.h`; `rtos_hal.c` - база часу (TIM17 для HAL, SysTick для ядра), лічильник run-time stats, канали трасування; `rtos_diag.c` - хуки `FATAL` (стек, malloc, створення, assert, HardFault); `rtos_osm.c` - вимірювання вартості ОС (`OSMETRICS=1`) |
+| `firmware/Platform/rtos/port_sim/` | копія порту `ARM_CM0` з обходом PRIMASK для Wokwi (`SIM_CRIT=1`, за замовчуванням): критична секція відкладає тік, PendSV і переривання; відмінності - `docs/port_sim-V11.3.3.patch`. `SIM_CRIT=0` - порт із сабмодуля без змін, для плати |
+| `firmware/Platform/rtos/kstress/` | стрес-тест ядра (`TEST_KSTRESS=1`) |
+| `firmware/Tasks/` | `sorter_tasks.c` - задачі, черги, м'ютекси, ISR USART2, звіти; `app_task.c` - задача для `TEST_KSTRESS` і `TEST_CRITCOST` |
+| `firmware/Core/Src/main.c` | ті самі `*_run`, що й у super loop, плюс `*_work` з обліком `TASK_RUN`; `tasks_ops_t` передає їх у `Tasks/` |
+
+### 10.6. Службові піни
+
+| Канал | Пін | ARCH=superloop | ARCH=rtos |
+|---|---|---|---|
+| D0 | PB12 | робота `gate` | робота `gate` (замість I²C SDA у ЛР3) |
+| D1 | PB15 | робота `estop` | робота `estop` (замість I²C SCL) |
+| D2 | PA6 | ШІМ серво | те саме |
+| D3 | PA2 | USART2 TX | те саме |
+| D4 | PA5 (LD4) | PARCEL_IN -> CCR | те саме |
+| D5 | PC13 | кнопка B1 | те саме |
+| D6 | PB13 | працює будь-яка задача (`TASK_RUN`) | працює будь-яка задача, крім idle (`traceTASK_SWITCHED_IN`) |
+| D7 | PB14 | перемальовка LCD | задача `lcd` у процесорі (трасування ядра) |
+
+У тестових збірках канали D0, D1, D7 перепризначаються (наприклад, `TEST_INVERSION`: D0 - `imu`, D1 - `hog`, D7 - `lcd`), розділ 7 docs/rtos-design.md.
+
+### 10.7. Збірки rtos
+
+| Збірка | Що вмикає | Flash / RAM, B |
+|---|---|---|
+| `make build ARCH=rtos LTO=1` | продукт у Wokwi (`SIM_CRIT=1`, `PERF=1`) | 31 988 / 11 832 |
+| `... SIM_CRIT=0` | порт без змін, для плати | rtos-design.md, розділ 7 |
+| `... OSMETRICS=1` | вартість ОС (`STAT os_*`, `osbench`), без `hist` | 32 708 / 12 240 |
+| `... TEST_INVERSION=sem\|mutex` | дослід інверсії пріоритетів | 32 312 / 11 872 |
+| `... TEST_OS=<назва>` | сценарії 7.2: `heap`, `stack`, `starve`, `qflood_drop`, ... | до 32 344 / 11 864 |
+| `... TICK_HZ=100` | тік 100 Гц (7.2 п. 6) | 31 972 / 11 832 |
+| `... ASSERT=1` | `configASSERT`, без `hist` | 32 584 / 11 832 |
+
+Числа - чисті збірки `1a03385` (rtos-design.md, розділ 8, «Бюджет кроку 5»). Super loop того самого коміту - 21 668 / 3 488 B.
