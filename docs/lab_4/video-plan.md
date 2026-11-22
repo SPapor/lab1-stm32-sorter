@@ -10,10 +10,10 @@
    make build ARCH=rtos LTO=1 && cp firmware/build/firmware.elf ~/lr4-rtos.elf
    ```
 2. VS Code: зліва вкладка Wokwi (стенд), справа два термінали - для `run_scenario.py` і для команди копіювання ELF. Вкладка симулятора весь час видима, інакше Wokwi ставить симуляцію на паузу.
-3. Запис аналізатора rtos для фрагмента хронології - знімаю заздалегідь, не у відео: `cp ~/lr4-rtos.elf firmware/build/firmware.elf`, ~15 с роботи, Stop у вкладці Wokwi, перейменувати `wokwi.vcd` на `docs/captures/vscode_rtos_<дата>.vcd` і попросити Claude вирізати вікно навколо перемальовки LCD (`tools/vcd_window.py`, як `docs/lab_4/captures/05-gate-superloop-s1.vcd`).
+3. Запис аналізатора rtos для фрагмента хронології вже є: вікно `docs/lab_4/captures/06-preemption-rtos-s2.vcd` (S2, перемальовка LCD 74,6 мс з 15 стартами gate, рисунок 6 звіту). Нового запису не треба.
 4. PulseView - дві вкладки з готовими курсорами (Import Value Change Dump, Downsampling factor 100, як у ЛР3):
    - `docs/lab_4/captures/05-gate-superloop-s1.vcd` - D6, D7, курсори на фронтах D7 (37,4 мс);
-   - вікно rtos з п. 3 - D0, D1, D6, D7, курсори на двох сусідніх фронтах D0 посеред D7 (5,00 мс).
+   - `docs/lab_4/captures/06-preemption-rtos-s2.vcd` - D0, D6, D7, курсори на двох сусідніх фронтах D0 посеред D7 (5,02 мс).
 5. Запис екрана - OBS, 1920 × 1080, звук з мікрофона. Кожен S3 - 60 с часу МК (~1,5-2 хв реального), тож у монтажі потік прискорити ×2-3 і лишити моменти з кнопкою.
 6. Логи, які `run_scenario.py` запише під час відео в `docs/metrics/lab4/`, у звіт не йдуть (числа звіту - з прогонів частини А і Б), їх не комічу.
 
