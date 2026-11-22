@@ -1,0 +1,577 @@
+# git=6f5fd394 (з BOOT) scenario=6.2.4 build="ARCH=superloop LTO=1 TICK_HZ=1000 SIM_CRIT=1 ASSERT=0 LAB2_CAP=0 TEST_I2C_FAULT=1 TEST_PRIMASK=0 TEST_BOOTMARK=0 TEST_APIPROBE=0 TEST_KSTRESS=0 TEST_CRITCOST=0 OSMETRICS=0 TEST_INVERSION=0 TEST_OS=0 PERF=1" perf=1 arch=superloop lto=1 tick_hz=1000 port=rfc2217://localhost:4000 host_start=2026-11-22T16:22:28
+# сценарій 6.2.4: Відмова I2C: TEST_I2C_FAULT=1 і затиснута SDA
+dr=0x69 err=0x24 isr=0x00000001
+1102 EVT t_us=1102040 name=i2c_fail
+1106 I2C_FAULT_TEST addr=0x69 st=NACK
+1110 EVT t_us=1110376 name=i2c_ok
+1259 LOAD pct=28 pm=281 win_cyc=49266995 busy_cyc=13833586 windows=1
+2035 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+2068 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+2101 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+2108 EVT t_us=2108047 name=i2c_fail
+2112 I2C_FAULT_TEST addr=0x69 st=NACK
+2116 EVT t_us=2116409 name=i2c_ok
+2259 LOAD pct=29 pm=286 win_cyc=48014281 busy_cyc=13712320 windows=2
+3035 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+1 BOOT fw=lab3-superloop git=6f5fd394 perf=1 arch=superloop lto=1 tick_hz=1000                         
+12 EVT t_us=12007 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=517 pair_cyc=1328
+# > set log 2
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+40 EVT t_us=39867 name=i2c_fail
+44 EVT t_us=43743 name=i2c_ok
+53 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+60 EVT t_us=59864 name=i2c_fail
+64 EVT t_us=63746 name=i2c_ok
+73 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+80 EVT t_us=79861 name=i2c_fail
+84 EVT t_us=83745 name=i2c_ok
+87 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+163 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+168 SELFTEST dev=ldr_gate status=OK raw=1001
+173 SELFTEST dev=ldr_class status=OK raw=1001
+177 SELFTEST dev=servo status=OK pulse_us=1500
+182 SELFTEST_END ok=4 warn=1 fail=0
+222 STATE state=READY
+224 STACK used=640 reserved=1024 free=384 overflow=0
+229 HEAP arena=0 used=0 free=0
+s234 EVT t_us=172969 name=ready_gate
+239 EVT t_us=177639 name=ready_class
+243 EVT t_us=234351 name=ready_imu
+et759 EVT t_us=759416 name=ready_lcd
+ lo1029 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+1062 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+1095 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+1102 EVT t_us=1102040 name=i2c_fail
+1106 I2C_FAULT_TEST addr=0x69 st=NACK
+1110 EVT t_us=1110376 name=i2c_ok
+g1259 LOAD pct=28 pm=281 win_cyc=49268219 busy_cyc=13850591 windows=1
+ 2
+1566 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+1571 EVT t_us=1565926 name=cmd_rx
+1575 EVT t_us=1571056 name=cmd_reply
+# > set lcd_ms 500
+set 2035 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+2068 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+2101 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+2108 EVT t_us=2108048 name=i2c_fail
+2112 I2C_FAULT_TEST addr=0x69 st=NACK
+2116 EVT t_us=2116410 name=i2c_ok
+lc2259 LOAD pct=30 pm=298 win_cyc=48004057 busy_cyc=14325993 windows=2
+d_ms 53035 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+3068 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+3101 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+3108 EVT t_us=3108053 name=i2c_fail
+3112 I2C_FAULT_TEST addr=0x69 st=NACK
+3116 EVT t_us=3116434 name=i2c_ok
+03261 LOAD pct=29 pm=287 win_cyc=48062649 busy_cyc=13783056 windows=3
+0
+3466 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+3471 EVT t_us=3466024 name=cmd_rx
+3475 EVT t_us=3471174 name=cmd_reply
+# > set lcd_chars 0
+set 4035 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+4068 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+4101 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+4108 EVT t_us=4108052 name=i2c_fail
+4112 I2C_FAULT_TEST addr=0x69 st=NACK
+4116 EVT t_us=4116433 name=i2c_ok
+l4261 LOAD pct=30 pm=300 win_cyc=48002028 busy_cyc=14381281 windows=4
+cd_cha5035 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+5068 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+5101 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+5108 EVT t_us=5108056 name=i2c_fail
+5112 I2C_FAULT_TEST addr=0x69 st=NACK
+5116 EVT t_us=5116448 name=i2c_ok
+r5261 LOAD pct=29 pm=287 win_cyc=48002304 busy_cyc=13780103 windows=5
+s 0
+5766 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+5771 EVT t_us=5766080 name=cmd_rx
+5775 EVT t_us=5771239 name=cmd_reply
+# > set imu_ms 10
+se6035 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+6068 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+6101 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+6108 EVT t_us=6108053 name=i2c_fail
+6112 I2C_FAULT_TEST addr=0x69 st=NACK
+6116 EVT t_us=6116442 name=i2c_ok
+t 6261 LOAD pct=30 pm=300 win_cyc=48001705 busy_cyc=14378811 windows=6
+imu_m7035 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+7068 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+7101 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+7108 EVT t_us=7108054 name=i2c_fail
+7112 I2C_FAULT_TEST addr=0x69 st=NACK
+7116 EVT t_us=7116448 name=i2c_ok
+s7261 LOAD pct=29 pm=287 win_cyc=48003648 busy_cyc=13783839 windows=7
+ 10
+7766 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+7771 EVT t_us=7766107 name=cmd_rx
+7775 EVT t_us=7771263 name=cmd_reply
+# > stats reset
+st8035 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+8068 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+8101 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+8108 EVT t_us=8108054 name=i2c_fail
+8112 I2C_FAULT_TEST addr=0x69 st=NACK
+8116 EVT t_us=8116449 name=i2c_ok
+at8261 LOAD pct=30 pm=300 win_cyc=48000396 busy_cyc=14385296 windows=8
+s res9035 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+9068 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+9101 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+9108 EVT t_us=9108055 name=i2c_fail
+9112 I2C_FAULT_TEST addr=0x69 st=NACK
+9116 EVT t_us=9116452 name=i2c_ok
+e9261 LOAD pct=29 pm=287 win_cyc=48001848 busy_cyc=13781928 windows=9
+t
+9432 STATS reset=1
+9435 EVT t_us=9432779 name=cmd_rx
+9439 EVT t_us=9434929 name=cmd_reply
+# > log on
+log 10035 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+10068 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+10101 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+10108 EVT t_us=10108155 name=i2c_fail
+10112 I2C_FAULT_TEST addr=0x69 st=NACK
+10117 EVT t_us=10116858 name=i2c_ok
+o10262 LOAD pct=30 pm=297 win_cyc=48046036 busy_cyc=14273244 windows=10
+n
+10432 LOG on=1
+10434 EVT t_us=10432801 name=cmd_rx
+10439 EVT t_us=10434487 name=cmd_reply
+# 20 с з TEST_I2C_FAULT: I2C_RECOVER try=n/3, EVT i2c_fail/i2c_ok
+11037 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+11070 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+11103 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+11110 EVT t_us=11110155 name=i2c_fail
+11114 I2C_FAULT_TEST addr=0x69 st=NACK
+11119 EVT t_us=11118861 name=i2c_ok
+11262 LOAD pct=30 pm=297 win_cyc=48023974 busy_cyc=14253763 windows=11
+12038 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+12071 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+12104 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+12111 EVT t_us=12111157 name=i2c_fail
+12115 I2C_FAULT_TEST addr=0x69 st=NACK
+12120 EVT t_us=12119862 name=i2c_ok
+12263 LOAD pct=29 pm=286 win_cyc=48047112 busy_cyc=13746332 windows=12
+13039 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+13072 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+13105 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+13112 EVT t_us=13112155 name=i2c_fail
+13116 I2C_FAULT_TEST addr=0x69 st=NACK
+13121 EVT t_us=13120851 name=i2c_ok
+13264 LOAD pct=29 pm=286 win_cyc=48050124 busy_cyc=13749347 windows=13
+14040 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+14073 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+14106 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+14113 EVT t_us=14113155 name=i2c_fail
+14117 I2C_FAULT_TEST addr=0x69 st=NACK
+14122 EVT t_us=14121854 name=i2c_ok
+14265 LOAD pct=29 pm=286 win_cyc=48046212 busy_cyc=13744171 windows=14
+15041 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+15074 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+15107 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+15114 EVT t_us=15114156 name=i2c_fail
+15118 I2C_FAULT_TEST addr=0x69 st=NACK
+15123 EVT t_us=15122864 name=i2c_ok
+15266 LOAD pct=29 pm=286 win_cyc=48048456 busy_cyc=13751135 windows=15
+16042 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+16075 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+16108 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+16115 EVT t_us=16115157 name=i2c_fail
+16119 I2C_FAULT_TEST addr=0x69 st=NACK
+16124 EVT t_us=16123873 name=i2c_ok
+16267 LOAD pct=29 pm=286 win_cyc=48047292 busy_cyc=13745056 windows=16
+17043 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+17076 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+17109 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+17116 EVT t_us=17116160 name=i2c_fail
+17120 I2C_FAULT_TEST addr=0x69 st=NACK
+17125 EVT t_us=17124875 name=i2c_ok
+17268 LOAD pct=29 pm=286 win_cyc=48049812 busy_cyc=13750042 windows=17
+18044 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+18077 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+18110 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+18117 EVT t_us=18117160 name=i2c_fail
+18121 I2C_FAULT_TEST addr=0x69 st=NACK
+18126 EVT t_us=18125876 name=i2c_ok
+18269 LOAD pct=29 pm=286 win_cyc=48045684 busy_cyc=13744848 windows=18
+19045 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+19078 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+19111 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+19118 EVT t_us=19118161 name=i2c_fail
+19122 I2C_FAULT_TEST addr=0x69 st=NACK
+19127 EVT t_us=19126884 name=i2c_ok
+19270 LOAD pct=29 pm=286 win_cyc=48048444 busy_cyc=13746040 windows=19
+20046 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+20079 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+20112 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+20119 EVT t_us=20119163 name=i2c_fail
+20123 I2C_FAULT_TEST addr=0x69 st=NACK
+20128 EVT t_us=20127897 name=i2c_ok
+20271 LOAD pct=29 pm=286 win_cyc=48057552 busy_cyc=13748267 windows=20
+21047 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+21080 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+21113 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+21120 EVT t_us=21120163 name=i2c_fail
+21124 I2C_FAULT_TEST addr=0x69 st=NACK
+21129 EVT t_us=21128884 name=i2c_ok
+21272 LOAD pct=29 pm=286 win_cyc=48048167 busy_cyc=13753069 windows=21
+22047 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+22080 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+22113 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+22120 EVT t_us=22120163 name=i2c_fail
+22124 I2C_FAULT_TEST addr=0x69 st=NACK
+22129 EVT t_us=22128893 name=i2c_ok
+22274 LOAD pct=29 pm=287 win_cyc=48053182 busy_cyc=13792617 windows=22
+23048 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+23081 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+23114 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+23121 EVT t_us=23121163 name=i2c_fail
+23125 I2C_FAULT_TEST addr=0x69 st=NACK
+23130 EVT t_us=23129893 name=i2c_ok
+23275 LOAD pct=29 pm=287 win_cyc=48058025 busy_cyc=13802643 windows=23
+24049 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+24082 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+24115 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+24122 EVT t_us=24122164 name=i2c_fail
+24126 I2C_FAULT_TEST addr=0x69 st=NACK
+24131 EVT t_us=24130898 name=i2c_ok
+24276 LOAD pct=29 pm=287 win_cyc=48037867 busy_cyc=13796387 windows=24
+25050 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+25083 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+25116 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+25123 EVT t_us=25123164 name=i2c_fail
+25127 I2C_FAULT_TEST addr=0x69 st=NACK
+25132 EVT t_us=25131900 name=i2c_ok
+25276 LOAD pct=29 pm=286 win_cyc=48001982 busy_cyc=13747865 windows=25
+26050 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+26083 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+26116 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+26123 EVT t_us=26123169 name=i2c_fail
+26127 I2C_FAULT_TEST addr=0x69 st=NACK
+26132 EVT t_us=26131917 name=i2c_ok
+26276 LOAD pct=29 pm=286 win_cyc=48002328 busy_cyc=13750827 windows=26
+27050 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+27083 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+27116 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+27123 EVT t_us=27123170 name=i2c_fail
+27127 I2C_FAULT_TEST addr=0x69 st=NACK
+27132 EVT t_us=27131918 name=i2c_ok
+27277 LOAD pct=29 pm=287 win_cyc=48053847 busy_cyc=13803565 windows=27
+28051 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+28084 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+28117 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+28124 EVT t_us=28124170 name=i2c_fail
+28128 I2C_FAULT_TEST addr=0x69 st=NACK
+28133 EVT t_us=28132920 name=i2c_ok
+28278 LOAD pct=29 pm=287 win_cyc=48040183 busy_cyc=13797844 windows=28
+29052 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+29085 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+29118 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+29125 EVT t_us=29125169 name=i2c_fail
+29129 I2C_FAULT_TEST addr=0x69 st=NACK
+29134 EVT t_us=29133913 name=i2c_ok
+29278 LOAD pct=29 pm=286 win_cyc=48001850 busy_cyc=13748330 windows=29
+30052 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+30085 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+30118 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+30125 EVT t_us=30125170 name=i2c_fail
+30129 I2C_FAULT_TEST addr=0x69 st=NACK
+30134 EVT t_us=30133922 name=i2c_ok
+30278 LOAD pct=29 pm=286 win_cyc=48000168 busy_cyc=13751018 windows=30
+31052 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+31085 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+31118 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+31125 EVT t_us=31125170 name=i2c_fail
+# ! sda_gnd (SDA на GND) - 2 с, мишею
+31129 I2C_FAULT_TEST addr=0x69 st=NACK
+31134 EVT t_us=31133921 name=i2c_ok
+31272 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x20 isr=0x00008000
+31285 I2C_RECOVER try=2/3 where=wr addr=0x27 err=0x20 isr=0x00008000
+31298 I2C_RECOVER try=3/3 where=wr addr=0x27 err=0x20 isr=0x00008000
+31305 EVT t_us=31305207 name=i2c_fail
+31309 LCD_ERR isr=0x00008000
+31312 LOAD pct=31 pm=311 win_cyc=49673983 busy_cyc=15436620 windows=31
+31326 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31339 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31352 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31359 EVT t_us=31359212 name=i2c_fail
+31363 IMU_ERR st=BUS
+31372 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31385 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31398 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31405 EVT t_us=31405213 name=i2c_fail
+31409 IMU_ERR st=BUS
+31418 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31431 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31444 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31451 EVT t_us=31451209 name=i2c_fail
+31455 IMU_ERR st=BUS
+31464 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31477 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31490 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31497 EVT t_us=31497211 name=i2c_fail
+31501 IMU_ERR st=BUS
+31510 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31523 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31536 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31543 EVT t_us=31543213 name=i2c_fail
+31547 IMU_ERR st=BUS
+31556 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31569 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31582 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31589 EVT t_us=31589215 name=i2c_fail
+31593 IMU_ERR st=BUS
+31602 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31615 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31628 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31635 EVT t_us=31635212 name=i2c_fail
+31639 IMU_ERR st=BUS
+31648 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31661 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31674 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31681 EVT t_us=31681207 name=i2c_fail
+31685 IMU_ERR st=BUS
+31694 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31707 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31720 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31727 EVT t_us=31727210 name=i2c_fail
+31731 IMU_ERR st=BUS
+31740 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31753 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31766 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31773 EVT t_us=31773215 name=i2c_fail
+31777 IMU_ERR st=BUS
+31786 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x20 isr=0x00008000
+31799 I2C_RECOVER try=2/3 where=wr addr=0x27 err=0x20 isr=0x00008000
+31812 I2C_RECOVER try=3/3 where=wr addr=0x27 err=0x20 isr=0x00008000
+31819 EVT t_us=31819209 name=i2c_fail
+31823 LCD_ERR isr=0x00008000
+31833 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31846 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31859 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31866 EVT t_us=31866211 name=i2c_fail
+31870 IMU_ERR st=BUS
+31879 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31892 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31905 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31912 EVT t_us=31912210 name=i2c_fail
+31916 IMU_ERR st=BUS
+31925 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31938 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31951 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31958 EVT t_us=31958212 name=i2c_fail
+31962 IMU_ERR st=BUS
+31971 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31984 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+31997 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32004 EVT t_us=32004209 name=i2c_fail
+32008 IMU_ERR st=BUS
+32017 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32030 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32043 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32050 EVT t_us=32050209 name=i2c_fail
+32054 IMU_ERR st=BUS
+32063 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x20 isr=0x00008001
+32076 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x20 isr=0x00008001
+32089 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x20 isr=0x00008001
+32096 EVT t_us=32096203 name=i2c_fail
+32100 I2C_FAULT_TEST addr=0x69 st=TIMEOUT
+32110 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32123 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32136 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32143 EVT t_us=32143202 name=i2c_fail
+32147 IMU_ERR st=BUS
+32156 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32169 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32182 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32189 EVT t_us=32189202 name=i2c_fail
+32193 IMU_ERR st=BUS
+32202 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32215 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32228 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32235 EVT t_us=32235202 name=i2c_fail
+32239 IMU_ERR st=BUS
+32248 I2C_RECOVER try=1/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32261 I2C_RECOVER try=2/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32274 I2C_RECOVER try=3/3 where=wr addr=0x68 err=0x20 isr=0x00008000
+32281 EVT t_us=32281208 name=i2c_fail
+32285 IMU_ERR st=BUS
+32294 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x20 isr=0x00008000
+32307 I2C_RECOVER try=2/3 where=wr addr=0x27 err=0x20 isr=0x00008000
+32320 I2C_RECOVER try=3/3 where=wr addr=0x27 err=0x20 isr=0x00008000
+32327 EVT t_us=32327211 name=i2c_fail
+32331 LCD_ERR isr=0x00008000
+32334 LOAD pct=99 pm=989 win_cyc=49055951 busy_cyc=48497894 windows=32
+32343 EVT t_us=32342977 name=i2c_ok
+33090 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+33123 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+33156 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+33163 EVT t_us=33163169 name=i2c_fail
+33167 I2C_FAULT_TEST addr=0x69 st=NACK
+33172 EVT t_us=33171916 name=i2c_ok
+33334 LOAD pct=29 pm=291 win_cyc=48001169 busy_cyc=13951618 windows=33
+34091 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+34124 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+34157 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+34164 EVT t_us=34164169 name=i2c_fail
+34168 I2C_FAULT_TEST addr=0x69 st=NACK
+34173 EVT t_us=34172914 name=i2c_ok
+34335 LOAD pct=29 pm=286 win_cyc=48002328 busy_cyc=13748426 windows=34
+35092 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+35125 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+35158 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+35165 EVT t_us=35165170 name=i2c_fail
+35169 I2C_FAULT_TEST addr=0x69 st=NACK
+35174 EVT t_us=35173922 name=i2c_ok
+35335 LOAD pct=29 pm=287 win_cyc=48000696 busy_cyc=13753683 windows=35
+36093 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+36126 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+36159 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+36166 EVT t_us=36166170 name=i2c_fail
+36170 I2C_FAULT_TEST addr=0x69 st=NACK
+36175 EVT t_us=36174916 name=i2c_ok
+36335 LOAD pct=29 pm=286 win_cyc=48001236 busy_cyc=13745141 windows=36
+37094 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+37127 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+37160 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+37167 EVT t_us=37167169 name=i2c_fail
+37171 I2C_FAULT_TEST addr=0x69 st=NACK
+37176 EVT t_us=37175917 name=i2c_ok
+37335 LOAD pct=29 pm=286 win_cyc=48000101 busy_cyc=13748368 windows=37
+38096 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+38129 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+38162 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+38169 EVT t_us=38169171 name=i2c_fail
+38173 I2C_FAULT_TEST addr=0x69 st=NACK
+38178 EVT t_us=38177926 name=i2c_ok
+38335 LOAD pct=29 pm=287 win_cyc=48002419 busy_cyc=13799039 windows=38
+39097 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+39130 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+39163 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+39170 EVT t_us=39170170 name=i2c_fail
+39174 I2C_FAULT_TEST addr=0x69 st=NACK
+39179 EVT t_us=39178918 name=i2c_ok
+39335 LOAD pct=29 pm=287 win_cyc=48002304 busy_cyc=13795059 windows=39
+40098 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+40131 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+40164 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+40171 EVT t_us=40171170 name=i2c_fail
+40175 I2C_FAULT_TEST addr=0x69 st=NACK
+40180 EVT t_us=40179918 name=i2c_ok
+40335 LOAD pct=29 pm=288 win_cyc=48002584 busy_cyc=13802222 windows=40
+41099 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+41132 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+41165 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+41172 EVT t_us=41172171 name=i2c_fail
+41176 I2C_FAULT_TEST addr=0x69 st=NACK
+41181 EVT t_us=41180928 name=i2c_ok
+41336 LOAD pct=29 pm=287 win_cyc=48039114 busy_cyc=13798659 windows=41
+42100 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+42133 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+42166 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+42173 EVT t_us=42173173 name=i2c_fail
+42177 I2C_FAULT_TEST addr=0x69 st=NACK
+42182 EVT t_us=42181935 name=i2c_ok
+42337 LOAD pct=29 pm=287 win_cyc=48055660 busy_cyc=13800294 windows=42
+43101 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+43134 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+43167 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+43174 EVT t_us=43174176 name=i2c_fail
+43178 I2C_FAULT_TEST addr=0x69 st=NACK
+43183 EVT t_us=43182941 name=i2c_ok
+43338 LOAD pct=29 pm=287 win_cyc=48048134 busy_cyc=13800342 windows=43
+# > stats
+stats44102 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+44135 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+44168 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+44175 EVT t_us=44175172 name=i2c_fail
+44179 I2C_FAULT_TEST addr=0x69 st=NACK
+44184 EVT t_us=44183935 name=i2c_ok
+
+44189 PERF git=6f5fd394 now_cyc=517 pair_cyc=1328 cyc_per_us=48 arch=superloop lto=1 tick_hz=1000
+44199 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+44204 STARTUP boot_us=12007 gate_us=172969 class_us=177639 imu_us=234351 lcd_us=759416
+44214 STAT name=uart_rx n=13 min_us=47 avg_us=1694 max_us=10784 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44224 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44235 STAT name=gate n=5483 min_us=93 avg_us=94 max_us=95 period_us=5000 jit_min_us=-957 jit_max_us=112056 miss=125
+44247 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44257 STAT name=imu n=2823 min_us=1020 avg_us=2686 max_us=112920 period_us=10000 jit_min_us=-973 jit_max_us=103232 miss=119
+44271 STAT name=lcd n=69 min_us=37330 avg_us=38118 max_us=72574 period_us=500000 jit_min_us=-929 jit_max_us=39825 miss=0
+44283 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44294 STAT name=loop n=466969 min_us=31 avg_us=57 max_us=113040 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44306 STAT name=i2c_xfer n=14737 min_us=82 avg_us=619 max_us=99064 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44318 STAT name=uart_line n=201 min_us=1626 avg_us=4702 max_us=12653 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44330 STAT name=lcd_update n=69 min_us=37109 avg_us=37765 max_us=69299 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44342 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44352 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+44363 UART rx=13 ore=0
+44366 EVT t_us=44189266 name=cmd_rx
+44370 EVT t_us=44365582 name=cmd_reply
+44413 LOAD pct=43 pm=427 win_cyc=51608923 busy_cyc=22025310 windows=44
+# > hist imu
+hist 45108 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+45141 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+45174 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+45181 EVT t_us=45181173 name=i2c_fail
+45185 I2C_FAULT_TEST addr=0x69 st=NACK
+45190 EVT t_us=45189937 name=i2c_ok
+im45413 LOAD pct=29 pm=287 win_cyc=48023055 busy_cyc=13771769 windows=45
+u
+45633 HIST name=imu period_us=10000 n=2928 step_us=100
+45639 HIST name=imu lo_us=-1000 hi_us=-900 n=6
+45644 HIST name=imu lo_us=-800 hi_us=-700 n=6
+45649 HIST name=imu lo_us=-700 hi_us=-600 n=15
+45654 HIST name=imu lo_us=-600 hi_us=-500 n=3
+45658 HIST name=imu lo_us=-500 hi_us=-400 n=28
+45663 HIST name=imu lo_us=-400 hi_us=-300 n=4
+45668 HIST name=imu lo_us=-300 hi_us=-200 n=35
+45673 HIST name=imu lo_us=-200 hi_us=-100 n=32
+45678 HIST name=imu lo_us=-100 hi_us=0 n=1097
+45682 HIST name=imu lo_us=0 hi_us=100 n=1571
+45687 HIST name=imu lo_us=1000 hi_us=1100 n=1
+45692 HIST name=imu lo_us=2000 hi_us=inf n=130
+45697 EVT t_us=45633692 name=cmd_rx
+45702 EVT t_us=45697312 name=cmd_reply
+# > hist gate
+hi46109 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+46142 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+46175 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+46182 EVT t_us=46182174 name=i2c_fail
+46186 I2C_FAULT_TEST addr=0x69 st=NACK
+46191 EVT t_us=46190941 name=i2c_ok
+st46414 LOAD pct=35 pm=351 win_cyc=48039948 busy_cyc=16846153 windows=46
+ gate47110 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+47143 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+47176 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+47183 EVT t_us=47183175 name=i2c_fail
+47187 I2C_FAULT_TEST addr=0x69 st=NACK
+47192 EVT t_us=47191948 name=i2c_ok
+
+47197 HIST name=gate period_us=5000 n=5918 step_us=100
+47203 HIST name=gate lo_us=-1000 hi_us=-900 n=10
+47208 HIST name=gate lo_us=-900 hi_us=-800 n=1
+47213 HIST name=gate lo_us=-800 hi_us=-700 n=4
+47217 HIST name=gate lo_us=-700 hi_us=-600 n=10
+47222 HIST name=gate lo_us=-600 hi_us=-500 n=11
+47227 HIST name=gate lo_us=-500 hi_us=-400 n=38
+47232 HIST name=gate lo_us=-400 hi_us=-300 n=5
+47237 HIST name=gate lo_us=-300 hi_us=-200 n=3
+47242 HIST name=gate lo_us=-200 hi_us=-100 n=1031
+47247 HIST name=gate lo_us=-100 hi_us=0 n=1786
+47252 HIST name=gate lo_us=0 hi_us=100 n=1836
+47257 HIST name=gate lo_us=100 hi_us=200 n=972
+47262 HIST name=gate lo_us=200 hi_us=300 n=2
+47266 HIST name=gate lo_us=600 hi_us=700 n=1
+47271 HIST name=gate lo_us=1100 hi_us=1200 n=56
+47276 HIST name=gate lo_us=2000 hi_us=inf n=152
+47282 EVT t_us=47197298 name=cmd_rx
+47286 EVT t_us=47281607 name=cmd_reply
+47415 LOAD pct=37 pm=369 win_cyc=48056879 busy_cyc=17725777 windows=47
+48110 I2C_RECOVER try=1/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+48143 I2C_RECOVER try=2/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+48176 I2C_RECOVER try=3/3 where=rd addr=0x69 err=0x24 isr=0x00000001
+48183 EVT t_us=48183173 name=i2c_fail
+48187 I2C_FAULT_TEST addr=0x69 st=NACK
+48192 EVT t_us=48191936 name=i2c_ok
