@@ -191,3 +191,29 @@
 | три спроби I²C в одному виклику | стан `recovering` у Bus, одна спроба - один крок |
 | купа ОС `heap_4` (7 424 B) | немає: AO, стеки, черги, пули - статичні масиви |
 | `tasks_snapshot` (критична секція для `stats`) | лишається: вимірювальний код (виняток п. 4.1, правило 4) |
+
+### 3. QP/C 8.1.6 і приклад dpp_nucleo-c031c6
+
+Склонував у `/tmp`, у репозиторій не додавав: `qpc` на тезі `v8.1.6` (`1a078e8`, 2026-11-11), `qpc-examples` (`cda413c`, коміт «8.1.6»; саме на нього вказує сабмодуль `examples` тегу) і сабмодуль `3rd_party` тегу (`ae18ffa`) - у ньому FreeRTOS V11.2.0, CMSIS і файли плати для прикладу.
+
+**Файли з методички 7.5 на тезі.** У `src/qf/` 12 файлів: 11 зі списку методички (`qep_hsm`, `qep_msm`, `qf_act`, `qf_defer`, `qf_dyn`, `qf_mem`, `qf_ps`, `qf_qact`, `qf_qeq`, `qf_qmact`, `qf_time`) і `qf_actq.c`, який у порт FreeRTOS не додають. `ports/freertos/` - `qf_port.c`, `qp_port.h`, `qs_port.h`, `syscalls.c`. У `src/qs/` лише `qstamp.c`: QS у GPL-версії справді немає. Список методички збігається з тегом. `qep_msm.c` і `qf_qmact.c` потрібні лише для `QMsm`/`QMActive` (код із QM); у зонді, де їх не кличуть, `--gc-sections` викидає їх повністю (0 B у map, `logs/03_probe.txt`).
+
+**Що в прикладі** (`freertos/arm-cm/dpp_nucleo-c031c6`):
+
+| Що | У прикладі | У нас (чернетка) |
+|---|---|---|
+| FreeRTOS | V11.2.0 з `3rd_party`, порт `GCC/ARM_CM0` | V11.3.3, копія порту `port_sim` (SIM_CRIT) |
+| `configMAX_PRIORITIES` | 32 (списки готовності 32 × 20 B = 640 B) | 8 (160 B) |
+| `configSUPPORT_STATIC_ALLOCATION` / `DYNAMIC` | 1 / 0, `configTOTAL_HEAP_SIZE` 0 | так само |
+| `configUSE_TICK_HOOK` / `IDLE_HOOK` | 1 / 1 (в idle - вивід QS у UART) | 1 / 0 |
+| м'ютекси, рекурсивні, лічильні семафори | 1, 1, 1 | 0, 0, 0 |
+| `configMINIMAL_STACK_SIZE` | 128 слів | 48 слів (як у ЛР4) |
+| `configCHECK_FOR_STACK_OVERFLOW` | 2 | 2 |
+| тік | 1000 Гц | 1000 Гц (`TICK_HZ`) |
+| `qp_config.h` | `QF_MAX_ACTIVE` = `configMAX_PRIORITIES`, `QF_MAX_EPOOL` 3, `QF_MAX_TICK_RATE` 1, `QF_TIMEEVT_CTR_SIZE` 4, `QF_EQUEUE_CTR_SIZE` 1, `QF_MPOOL_CTR_SIZE` 2 | 7, 3, 1, 2, 1, 1 (`probe/qp_config.h`) |
+| AO | 6: 5 Philo (черга 10) і Table (черга 5) | 7 |
+| стеки AO | `configMINIMAL_STACK_SIZE` = 512 B кожен, 3 072 B | 3 968 B (розділ 4) |
+| пули | один, `TableEvt` × 10 | три (розділ 2) |
+| `QF_onStartup` | лише пріоритет SysTick | пріоритети і ввімкнення EXTI та USART2 |
+
+Приклад я зібрав його ж Makefile (`make CONF=rel`, -O2, `-DNDEBUG`) локальним gcc 14.2.1 (`logs/06_dpp_example.txt`): text 14 200 B, data 8 B, bss 8 312 B (з них 2 048 B - стек MSP у секції `.stack`). По об'єктах: QP разом 5 723 B (`qep_hsm` 1 240, `qf_port` 1 324, `qep_msm` 684, `qf_ps` 542, `qf_dyn` 483, `qf_mem` 455, `qf_qact` 412, `qf_time` 376, `qf_act` 119, `qf_qmact` 88), ядро 5 208 B (`tasks` 2 584, `queue` 1 620, `port` 632, `portasm` 216, `list` 156); RAM - `bsp.o` 4 048 B (стеки, черги, пул), `philo.o` 1 020 B (5 AO), `tasks.o` 752 B. Що я з цього беру: AO з вбудованими `StaticTask_t` і `StaticQueue_t` займає ~190 B (у зонді рівно 192 B), а 32 пріоритети без потреби коштують 480 B RAM.
