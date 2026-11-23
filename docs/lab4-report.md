@@ -12,7 +12,7 @@
 
 PR-и ЛР4: [#19](https://github.com/SPapor/lab1-stm32-sorter/pull/19), [#20](https://github.com/SPapor/lab1-stm32-sorter/pull/20), [#21](https://github.com/SPapor/lab1-stm32-sorter/pull/21), [#22](https://github.com/SPapor/lab1-stm32-sorter/pull/22), [#23](https://github.com/SPapor/lab1-stm32-sorter/pull/23), [#24](https://github.com/SPapor/lab1-stm32-sorter/pull/24), ⟨частина Б: PR частини Б⟩
 
-Відео: ⟨посилання на відео⟩
+Відео: https://drive.google.com/file/d/1mFOMtUlL71s9ZkQRrh79D0JZcDdzL22I/view?usp=sharing
 
 ## 2. Завдання
 
@@ -455,7 +455,7 @@ Super loop робить краще саме те, що я й передбача�
 
 22.11 у Wokwi для VS Code зняті й уже внесені: 6.2.2, 6.2.4, 6.2.7-fault, S2 і удар на обох ARCH (журнал, проблема 68). Лишилися прогони під потоком `stats` - через `wokwi-cli` (~14 хв квоти, docs/metrics/lab4/results.md, «План частини Б»). Місця в цьому звіті:
 
-1. Шапка - PR частини Б; посилання на відео.
+1. Шапка - PR частини Б з `wokwi-cli`.
 2. 4.1 - рядки частини Б (дати, PR).
 3. 4.5, порівняльна таблиця - рядки S3 (E-STOP max і зараховано, FR-03 від появи, джитер gate, джитер imu) і удар 20 мс; колонка «Хто кращий» для них.
 4. 4.5 - таблиця `stats_table.py`: колонка S3 (лог і VCD S3 у командах вище).
