@@ -1,0 +1,50 @@
+# qpc-examples cda413c, freertos/arm-cm/dpp_nucleo-c031c6, make CONF=rel (QP 8.1.6, 3rd_party ae18ffa: FreeRTOS V11.2.0), локальний gcc 14.2.1, -O2
+   text	   data	    bss	    dec	    hex	filename
+  14200	      8	   8312	  22520	   57f8	dpp/gnu/rel/dpp.elf
+dpp/gnu/rel/dpp.elf  :
+section            size        addr
+.isr_vector         192   134217728
+.text             13292   134217920
+.rodata             708   134231212
+.ARM.extab            0   134231920
+.ARM                  0   134231920
+.preinit_array        0   134231920
+.init_array           4   134231920
+.fini_array           4   134231924
+.stack             2048   536870912
+.data                 8   536872960
+.bss               6264   536872968
+.heap                 0   536879232
+Total             28201
+
+
+bsp.o                                        945    4048
+tasks.o                                     2540     752
+philo.o                                      623    1020
+queue.o                                     1576       0
+qf_port.o                                   1280       0
+table.o                                     1055     184
+qep_hsm.o                                   1196       0
+qep_msm.o                                    640       0
+port.o                                       588       4
+qf_qact.o                                    368     196
+qf_ps.o                                      498       6
+qf_dyn.o                                     439       0
+qf_mem.o                                     411       0
+startup_stm32c031xx.o                        376       0
+qf_time.o                                    332      28
+libgcc.a(_udivsi3.o)                         276       0
+crtbegin.o                                   160      28
+portasm.o                                    172       0
+libc_nano.a(libc_a-memcpy-stub.o)            168       0
+libc_nano.a(libc_a-memset.o)                 148       0
+list.o                                       112       0
+qf_act.o                                      75       0
+libc_nano.a(libc_a-init.o)                    72       0
+qf_qmact.o                                    44       0
+system_stm32c0xx.o                            20       4
+main.o                                        20       0
+crtn.o                                        16       0
+crti.o                                         8       0
+libgcc.a(_dvmd_tls.o)                          4       0
+TOTAL                                      14162    6270

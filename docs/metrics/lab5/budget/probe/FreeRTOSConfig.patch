@@ -1,0 +1,69 @@
+--- a/firmware/Platform/rtos/FreeRTOSConfig.h
++++ b/firmware/Platform/rtos/FreeRTOSConfig.h
+@@ -38,7 +38,7 @@
+ #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
+ /* 7 рівнів: idle 0 і шість робочих (lcd < logger < cli < imu < sort < gate < estop,
+  * крок 2 — docs/rtos-design.md). Кожен рівень — список у RAM, тож не більше, ніж треба */
+-#define configMAX_PRIORITIES                7
++#define configMAX_PRIORITIES                8
+ /* Стек idle, у словах: прологи prvIdleTask і vPortYield (~6 слів), кадр винятку і
+  * контекст, який зберігає PendSV (17 слів), 4 слова контрольного шаблону перевірки
+  * стека (метод 2) і запас. Хука idle немає, тож більше idle не потрібно.
+@@ -53,8 +53,8 @@
+ /* --- Пам'ять ------------------------------------------------------------ */
+ /* Лише динамічне виділення з heap_4: стеки й TCB задач, черги. Статичне
+  * (xTaskCreateStatic) вимагало б ще й vApplicationGetIdleTaskMemory */
+-#define configSUPPORT_STATIC_ALLOCATION     0
+-#define configSUPPORT_DYNAMIC_ALLOCATION    1
++#define configSUPPORT_STATIC_ALLOCATION     1
++#define configSUPPORT_DYNAMIC_ALLOCATION    0
+ /* Масив ucHeap у .bss: сім задач (стеки 4 480 B), TCB, черги qLog і qParcel,
+  * потоковий буфер і чотири м'ютекси (docs/rtos-design.md, розділ 6). Справжній
+  * запас - OSHEAP min_free (команда heap) після S1-S3 */
+@@ -68,13 +68,13 @@
+ #define configUSE_NEWLIB_REENTRANT          0
+ 
+ /* --- Механізми, які потрібні продукту (docs/rtos-design.md) -------------- */
+-#define configUSE_MUTEXES                   1   /* шина I2C: imu і lcd */
++#define configUSE_MUTEXES                   0   /* шина I2C: imu і lcd */
+ #define configUSE_RECURSIVE_MUTEXES         0
+-#define configUSE_COUNTING_SEMAPHORES       1   /* облік кількох подій до обробки (методичка 4.4) */
+-#define configUSE_TASK_NOTIFICATIONS        1   /* EXTI E-STOP -> задача estop */
++#define configUSE_COUNTING_SEMAPHORES       0   /* облік кількох подій до обробки (методичка 4.4) */
++#define configUSE_TASK_NOTIFICATIONS        0   /* EXTI E-STOP -> задача estop */
+ #define configTASK_NOTIFICATION_ARRAY_ENTRIES 1
+ #define configUSE_QUEUE_SETS                0
+-#define configUSE_STREAM_BUFFERS            1   /* UART RX у перериванні -> задача cli */
++#define configUSE_STREAM_BUFFERS            0   /* UART RX у перериванні -> задача cli */
+ /* Програмних таймерів і груп подій продукт не потребує: timers.c і
+  * event_groups.c не збираються (app.mk). Типово групи подій увімкнені */
+ #define configUSE_TIMERS                    0
+@@ -88,12 +88,12 @@
+  * (Platform/rtos/rtos_hal.c). Хук ядро не викликає, поки xTaskResumeAll доганяє
+  * відкладені тіки, тож тік, що прийшов саме тоді, хук пропустив би
+  * (docs/rtos-design.md, розділ 3) */
+-#define configUSE_TICK_HOOK                 0
++#define configUSE_TICK_HOOK                 1
+ /* Вичерпання heap ОС — рядок FATAL malloc і зупинка (методичка 7.2, п. 5) */
+ #if defined(TEST_HEAP) && TEST_HEAP == 2
+ #define configUSE_MALLOC_FAILED_HOOK        0
+ #else
+-#define configUSE_MALLOC_FAILED_HOOK        1
++#define configUSE_MALLOC_FAILED_HOOK        0
+ #endif
+ /* Метод 2: при кожному перемиканні — і вказівник стека, і 16 байтів шаблону на
+  * дні стека задачі. Рядок FATAL stack overflow in <ім'я> (методичка 7.2, п. 2) */
+@@ -170,11 +170,11 @@
+ /* vTaskDelayUntil — періодичні задачі без накопичення похибки (gate 5 мс,
+  * imu 10 мс). У V11 це INCLUDE_xTaskDelayUntil, INCLUDE_vTaskDelayUntil ядро
+  * вважає застарілим і з обома разом не збирається */
+-#define INCLUDE_xTaskDelayUntil             1
++#define INCLUDE_xTaskDelayUntil             0
+ #define INCLUDE_uxTaskGetStackHighWaterMark 1   /* stack по задачах (крок 3) */
+ #define INCLUDE_xTaskGetIdleTaskHandle      1   /* run-time і стек idle (крок 3) */
+ /* stream_buffer.c без неї не збирається (#error): буфер запам'ятовує задачу-читача */
+-#define INCLUDE_xTaskGetCurrentTaskHandle   1
++#define INCLUDE_xTaskGetCurrentTaskHandle   0
+ /* Решта вимкнена (типово кілька з них 1). Без INCLUDE_vTaskSuspend очікування
+  * portMAX_DELAY — не «назавжди», а 2^32 - 1 тіків (49,7 доби при 1 кГц) */
+ #define INCLUDE_vTaskPrioritySet            0

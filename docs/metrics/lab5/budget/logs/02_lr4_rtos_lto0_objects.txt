@@ -1,0 +1,303 @@
+# ЛР4 rtos, LTO=0, той самий коміт, FLASH у скрипті лінкера 64K (інакше не лінкується), лише для розкладу по об'єктах
+fw0/firmware/build/firmware.elf  :
+section               size        addr
+.isr_vector            192   134217728
+.text                34144   134217920
+.rodata               3184   134252064
+.ARM.extab               0   134255248
+.ARM                     0   134255248
+.preinit_array           0   134255248
+.init_array              4   134255248
+.fini_array              4   134255252
+.data                  128   536870912
+.bss                 10152   536871040
+.noinit                 12   536881192
+._user_heap_stack     1540   536881204
+Total               695322
+
+
+модуль            flash, B      %   RAM, B      %
+Core                  9774  26.0%     1769  15.0%
+Drivers               9264  24.6%        9   0.1%
+Middlewares           6343  16.8%     7728  65.3%
+Platform              3853  10.2%      323   2.7%
+App                   2961   7.9%        0   0.0%
+Tasks                 2759   7.3%      241   2.0%
+libc_nano              900   2.4%      152   1.3%
+libgcc                 900   2.4%        0   0.0%
+Devices                650   1.7%        0   0.0%
+crt                    184   0.5%       28   0.2%
+fill                    75   0.2%       42   0.4%
+heap+stack (ld)          0   0.0%     1540  13.0%
+разом                37663           11832
+підсумок ld          37656           11832   (порівняти з --print-memory-usage; RAM може бути на кілька байтів меншою через вирівнювання між секціями)
+
+об'єкт                       модуль        flash, B   RAM, B
+main.o                       Core              8132     1353
+tasks.o                      Middlewares       3793      276
+sorter_tasks.o               Tasks             2759      241
+stm32c0xx_hal_adc.o          Drivers           1834        0
+stm32c0xx_hal_i2c.o          Drivers           1652        0
+stm32c0xx_hal_tim.o          Drivers           1430        0
+stm32c0xx_hal_uart.o         Drivers           1397        0
+queue.o                      Middlewares       1370        0
+stm32c0xx_hal_rcc.o          Drivers           1120        0
+fmt.o                        App                991        0
+port.o                       Platform           852       48
+stm32c0xx_hal_gpio.o         Drivers            678        0
+stream_buffer.o              Middlewares        656        0
+rtos_hal.o                   Platform           630       39
+cli.o                        App                596        0
+perf.o                       App                578        0
+rtos_diag.o                  Platform           569       12
+uart_hal.o                   Platform           528      212
+i2c_hal.o                    Platform           487        0
+libgcc.a(_divsi3.o)          libgcc             468        0
+lcd1602.o                    Devices            428        0
+heap_4.o                     Middlewares        420     7452
+stm32c0xx_hal_adc_ex.o       Drivers            364        0
+perf_hal.o                   Platform           356       12
+sorter.o                     App                291        0
+i2c.o                        Core               284       84
+libgcc.a(_udivsi3.o)         libgcc             276        0
+stm32c0xx_hal_rcc_ex.o       Drivers            276        0
+startup_stm32c031xx.o        Core               274        0
+adc.o                        Core               268      100
+tim.o                        Core               248       76
+mpu6050.o                    Devices            222        0
+portasm.o                    Platform           180        0
+libc_nano.a(lib_a-memset.o)  libc_nano          168        0
+stm32c0xx_hal_cortex.o       Drivers            168        0
+libc_nano.a(lib_a-memcpy-stub.o) libc_nano          164        0
+crtbegin.o                   crt                160       28
+gpio.o                       Core               156        0
+usart.o                      Core               152      148
+stm32c0xx_hal_i2c_ex.o       Drivers            148        0
+lcdfmt.o                     App                142        0
+libc_nano.a(lib_a-strcmp.o)  libc_nano          136        0
+adc_hal.o                    Platform           132        0
+impact.o                     App                122        0
+libc_nano.a(lib_a-nano-mallinfor.o) libc_nano          116       40
+system_stm32c0xx.o           Core               116        4
+list.o                       Middlewares        104        0
+stm32c0xx_hal.o              Drivers            101        9
+libc_nano.a(lib_a-impure.o)  libc_nano          100      100
+stm32c0xx_hal_tim_ex.o       Drivers             96        0
+libc_nano.a(lib_a-strlen-stub.o) libc_nano           92        0
+libgcc.a(_muldi3.o)          libgcc              92        0
+health.o                     App                 89        0
+servo_hal.o                  Platform            81        0
+classify.o                   App                 80        0
+libc_nano.a(lib_a-init.o)    libc_nano           68        0
+sysmem.o                     Core                64        4
+stm32c0xx_hal_msp.o          Core                48        0
+gate.o                       App                 44        0
+libc_nano.a(lib_a-sbrkr.o)   libc_nano           36        0
+stm32c0xx_it.o               Core                32        0
+mem_hal.o                    Platform            30        0
+memmark.o                    App                 28        0
+libgcc.a(_thumb1_case_sqi.o) libgcc              20        0
+libgcc.a(_thumb1_case_uqi.o) libgcc              20        0
+libgcc.a(_thumb1_case_uhi.o) libgcc              20        0
+crtn.o                       crt                 16        0
+libc_nano.a(lib_a-errno.o)   libc_nano           12        0
+libc_nano.a(lib_a-mlock.o)   libc_nano            8        0
+platform.o                   Platform             8        0
+crti.o                       crt                  8        0
+libgcc.a(_dvmd_tls.o)        libgcc               4        0
+libc_nano.a(lib_a-nano-mallocr.o) libc_nano            0        8
+libc_nano.a(lib_a-reent.o)   libc_nano            0        4
+разом                                         37588    10250
+
+Найбільші символи (топ 15):
+  байт  регіон    модуль     символ
+  7424  RAM       Middlewares ucHeap
+  1632  FLASH     Core       main
+  1248  FLASH     Core       cli_work
+   671  FLASH     Core       рядкові константи main.o
+   624  FLASH     Drivers    HAL_RCC_OscConfig
+   608  FLASH     App        fmt_core.constprop.0
+   556  FLASH     Drivers    HAL_ADC_ConfigChannel
+   552  FLASH     Drivers    HAL_ADC_Init
+   503  FLASH     Core       рядкові константи main.o
+   468  FLASH     libgcc     .text libgcc.a(_divsi3.o)
+   456  FLASH     App        cli_feed
+   412  FLASH     Core       lcd_work
+   404  FLASH     Middlewares xTaskCreate
+   380  FLASH     Drivers    UART_SetConfig
+   364  FLASH     Drivers    HAL_ADCEx_Calibration_Start
+
+# функції ядра (map, LTO=0)
+heap_4.o             7424 .bss.ucHeap
+heap_4.o              264 .text.pvPortMalloc
+heap_4.o              132 .text.vPortFree
+heap_4.o               12 .text.xPortGetFreeHeapSize
+heap_4.o               12 .text.xPortGetMinimumEverFreeHeapSize
+heap_4.o                8 .bss.xStart
+heap_4.o                4 .bss.pxEnd
+heap_4.o                4 .bss.xFreeBytesRemaining
+heap_4.o                4 .bss.xMinimumEverFreeBytesRemaining
+heap_4.o                4 .bss.xNumberOfSuccessfulAllocations
+heap_4.o                4 .bss.xNumberOfSuccessfulFrees
+list.o                 46 .text.vListInsert
+list.o                 30 .text.uxListRemove
+list.o                 22 .text.vListInitialise
+list.o                  6 .text.vListInitialiseItem
+portasm.o              92 .text.PendSV_Handler
+portasm.o              36 .text.SVC_Handler
+portasm.o              36 .text.vRestoreContextOfFirstTask
+portasm.o              16 .text.vStartFirstTask
+port.o                160 .text.pxPortInitialiseStack
+port.o                140 .text.prvSimExit.part.0
+port.o                 68 .text.xPortStartScheduler
+port.o                 60 .text.vPortEnterCritical
+port.o                 52 .text.vPortSimSwitchContext
+port.o                 48 .text.vClearInterruptMask
+port.o                 44 .text.port_sim_defer_irq
+port.o                 44 .text.ulSetInterruptMask
+port.o                 44 .text.vPortExitCritical
+port.o                 40 .text.port_sim_defer_tick
+port.o                 36 .text.xPortSysTickHandler
+port.o                 32 .text.prvSimEnter
+port.o                 24 .text.vPortYield
+port.o                 20 .bss.xSimCounters
+port.o                 20 .text.port_sim_counters
+port.o                 18 .text.prvTaskExitError
+port.o                 18 .text.vPortSVCHandler_C
+port.o                  4 .bss.ulPortSimBlock
+port.o                  4 .bss.ulPortSimPendSVPending
+port.o                  4 .bss.ulSimBlockIrq
+port.o                  4 .bss.ulSimIrqPending
+port.o                  4 .bss.ulSimTaskDepth
+port.o                  4 .bss.ulSimTicksPending
+port.o                  4 .data.ulCriticalNesting
+queue.o               282 .text.xQueueSemaphoreTake
+queue.o               232 .text.xQueueGenericSend
+queue.o               226 .text.xQueueReceive
+queue.o               164 .text.xQueueGenericReset
+queue.o               118 .text.prvCopyDataToQueue
+queue.o               112 .text.xQueueGenericCreate
+queue.o               106 .text.prvUnlockQueue
+queue.o                56 .text.xQueueCreateMutex
+queue.o                36 .text.prvCopyDataFromQueue
+queue.o                20 .text.prvIsQueueEmpty
+queue.o                18 .text.uxQueueMessagesWaiting
+sorter_tasks.o        288 .text.tasks_report
+sorter_tasks.o        252 .text.tasks_start
+sorter_tasks.o        228 .text.tasks_list
+sorter_tasks.o        212 .rodata.tasks_report.str1.1
+sorter_tasks.o        156 .text.tasks_lock
+sorter_tasks.o        152 .text.tasks_stats_reset
+sorter_tasks.o        120 .text.tasks_log
+sorter_tasks.o        116 .text.logger_task
+sorter_tasks.o        100 .text.tasks_stack_report
+sorter_tasks.o         84 .rodata.task_def
+sorter_tasks.o         84 .text.USART2_IRQHandler
+sorter_tasks.o         84 .text.cli_task
+sorter_tasks.o         84 .text.tasks_unlock
+sorter_tasks.o         69 .rodata.tasks_list.str1.1
+sorter_tasks.o         68 .text.imu_task
+sorter_tasks.o         68 .text.lcd_task
+sorter_tasks.o         64 .bss.rt_base
+sorter_tasks.o         60 .rodata.str1.1
+sorter_tasks.o         52 .text.estop_task
+sorter_tasks.o         52 .text.tasks_estop_from_isr
+sorter_tasks.o         48 .bss.lock_stat
+sorter_tasks.o         44 .text.sort_task
+sorter_tasks.o         40 .text.gate_task
+sorter_tasks.o         40 .text.tasks_heap_report
+sorter_tasks.o         40 .text.tasks_rx_getc
+sorter_tasks.o         39 .rodata.tasks_heap_report.str1.1
+sorter_tasks.o         39 .rodata.tasks_stack_report.str1.1
+sorter_tasks.o         32 .text.ms_ticks
+sorter_tasks.o         32 .text.tasks_snapshot
+sorter_tasks.o         28 .bss.th
+sorter_tasks.o         28 .text.tasks_parcel
+sorter_tasks.o         20 .bss.sim_base
+sorter_tasks.o         20 .rodata.state_name.0
+sorter_tasks.o         16 .bss.lock_owner
+sorter_tasks.o         16 .bss.mtx
+sorter_tasks.o         16 .rodata.lock_name
+sorter_tasks.o         12 .rodata.tasks_start.str1.1
+sorter_tasks.o         12 .text.tasks_running
+sorter_tasks.o         10 .text.uart_lock
+sorter_tasks.o         10 .text.uart_unlock
+sorter_tasks.o          8 .bss.rt_total_base
+sorter_tasks.o          8 .rodata.lock_timeout_ms
+sorter_tasks.o          8 .text.tasks_idle_cyc
+sorter_tasks.o          4 .bss.lock_depth
+sorter_tasks.o          4 .bss.log_drop
+sorter_tasks.o          4 .bss.log_lines
+sorter_tasks.o          4 .bss.log_max_used
+sorter_tasks.o          4 .bss.log_trunc
+sorter_tasks.o          4 .bss.ops
+sorter_tasks.o          4 .bss.q_log
+sorter_tasks.o          4 .bss.q_parcel
+sorter_tasks.o          4 .bss.rx_drop
+sorter_tasks.o          4 .bss.sb_rx
+sorter_tasks.o          1 .bss.running
+stream_buffer.o       166 .text.xStreamBufferReceive
+stream_buffer.o       116 .text.xStreamBufferSendFromISR
+stream_buffer.o        72 .text.xStreamBufferGenericCreate
+stream_buffer.o        68 .text.prvWriteMessageToBuffer
+stream_buffer.o        64 .text.prvReadMessageFromBuffer
+stream_buffer.o        60 .text.prvReadBytesFromBuffer
+stream_buffer.o        60 .text.prvWriteBytesToBuffer
+stream_buffer.o        32 .text.xStreamBufferSpacesAvailable
+stream_buffer.o        18 .text.prvBytesInBuffer
+tasks.o               404 .text.xTaskCreate
+tasks.o               320 .text.xTaskIncrementTick
+tasks.o               272 .text.xTaskGenericNotifyFromISR
+tasks.o               264 .text.xTaskResumeAll
+tasks.o               252 .text.vTaskSwitchContext
+tasks.o               204 .text.xTaskGenericNotify
+tasks.o               200 .text.vTaskGenericNotifyGiveFromISR
+tasks.o               188 .text.xTaskRemoveFromEventList
+tasks.o               180 .text.xTaskGenericNotifyWait
+tasks.o               152 .text.ulTaskGenericNotifyTake
+tasks.o               140 .bss.pxReadyTasksLists
+tasks.o               140 .text.xTaskPriorityInherit
+tasks.o               136 .text.vTaskGetInfo
+tasks.o               120 .text.vTaskStartScheduler
+tasks.o               112 .text.vTaskPriorityDisinheritAfterTimeout
+tasks.o               100 .text.xTaskPriorityDisinherit
+tasks.o                88 .text.prvAddCurrentTaskToDelayedList.constprop.0
+tasks.o                76 .text.eTaskGetState
+tasks.o                76 .text.ulTaskGetIdleRunTimeCounter
+tasks.o                76 .text.xTaskCheckForTimeOut
+tasks.o                68 .text.ulTaskGetRunTimeCounter
+tasks.o                68 .text.xTaskDelayUntil
+tasks.o                48 .text.xTaskGenericNotifyStateClear
+tasks.o                36 .text.prvResetNextTaskUnblockTime
+tasks.o                32 .text.uxTaskGetStackHighWaterMark
+tasks.o                28 .text.vTaskPlaceOnEventList
+tasks.o                24 .text.vTaskInternalSetTimeOutState
+tasks.o                20 .bss.xDelayedTaskList1
+tasks.o                20 .bss.xDelayedTaskList2
+tasks.o                20 .bss.xPendingReadyList
+tasks.o                20 .text.prvIdleTask
+tasks.o                20 .text.pvTaskIncrementMutexHeldCount
+tasks.o                16 .text.pcTaskGetName
+tasks.o                16 .text.vTaskSuspendAll
+tasks.o                12 .text.vTaskMissedYield
+tasks.o                12 .text.xTaskGetCurrentTaskHandle
+tasks.o                12 .text.xTaskGetIdleTaskHandle
+tasks.o                12 .text.xTaskGetTickCount
+tasks.o                 8 .bss.ulTaskSwitchedInTime
+tasks.o                 8 .bss.ulTotalRunTime
+tasks.o                 5 .rodata.vTaskStartScheduler.str1.1
+tasks.o                 4 .bss.pxCurrentTCB
+tasks.o                 4 .bss.pxDelayedTaskList
+tasks.o                 4 .bss.pxOverflowDelayedTaskList
+tasks.o                 4 .bss.uxCurrentNumberOfTasks
+tasks.o                 4 .bss.uxSchedulerSuspended
+tasks.o                 4 .bss.uxTaskNumber
+tasks.o                 4 .bss.uxTopReadyPriority
+tasks.o                 4 .bss.xIdleTaskHandles
+tasks.o                 4 .bss.xNextTaskUnblockTime
+tasks.o                 4 .bss.xNumOfOverflows
+tasks.o                 4 .bss.xPendedTicks
+tasks.o                 4 .bss.xSchedulerRunning
+tasks.o                 4 .bss.xTickCount
+tasks.o                 4 .bss.xYieldPendings
+tasks.o                 4 .data.uxTopUsedPriority

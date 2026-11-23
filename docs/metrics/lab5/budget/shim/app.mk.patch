@@ -1,0 +1,22 @@
+--- a/firmware/app.mk
++++ b/firmware/app.mk
+@@ -123,14 +123,16 @@
+ # (той самий порт плюс лічильники критичних секцій), тож окремо не збираються
+ RTOS_PORT_C  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress.c,$(RTOS_PORT_SRC)/port.c)
+ RTOS_PORT_S  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress_asm.c,$(RTOS_PORT_SRC)/portasm.c)
+-RTOS_SOURCES = $(addprefix $(RTOS_DIR)/,tasks.c queue.c list.c stream_buffer.c) \
+-               $(RTOS_DIR)/portable/MemMang/heap_4.c \
++QPC_DIR = Middlewares/qpc
++RTOS_SOURCES = $(addprefix $(RTOS_DIR)/,tasks.c queue.c list.c) \
++               $(addprefix $(QPC_DIR)/src/qf/,qep_hsm.c qep_msm.c qf_act.c qf_defer.c qf_dyn.c qf_mem.c qf_ps.c qf_qact.c qf_qeq.c qf_qmact.c qf_time.c) \
++               $(QPC_DIR)/ports/freertos/qf_port.c \
+                $(RTOS_PORT_C) $(RTOS_PORT_S)
+ RTOS_OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(RTOS_SOURCES:.c=.o)))
+ 
+ C_SOURCES  += $(RTOS_SOURCES)
+ # port_sim раніше за порт сабмодуля: port_kstress.c включає "port.c" звідти
+-C_INCLUDES += -I$(RTOS_DIR)/include $(if $(filter 1,$(SIM_CRIT_ON)),-IPlatform/rtos/port_sim) -I$(RTOS_PORT)
++C_INCLUDES += -I$(QPC_DIR)/include -I$(QPC_DIR)/ports/freertos -I$(RTOS_DIR)/include $(if $(filter 1,$(SIM_CRIT_ON)),-IPlatform/rtos/port_sim) -I$(RTOS_PORT)
+ C_DEFS     += -DTICK_HZ=$(TICK_HZ_ON)
+ vpath %.c $(sort $(dir $(RTOS_SOURCES)))
+ 
