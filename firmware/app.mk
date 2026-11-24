@@ -243,6 +243,16 @@ $(OBJECTS): $(BUILD_CFG)
 
 # Лише компіляція, без лінкування: -Wextra -Werror і -Wstack-usage=512 для власного
 # коду, коли образ не лінкується (ARCH=rtos LTO=0 не влазить у flash)
+empty :=
+space := $(empty) $(empty)
+HEAP_ALLOC = _malloc_r _calloc_r _realloc_r _memalign_r _free_r
+
+all: $(BUILD_DIR)/heap.chk
+$(BUILD_DIR)/heap.chk: $(BUILD_DIR)/$(TARGET).elf
+	@if $(PREFIX)nm $< | grep -wE '$(subst $(space),|,$(HEAP_ALLOC))'; then \
+	  echo "heap: в образі є виділення з купи newlib, а купа 0 (docs/qp-design.md, крок 2)" >&2; exit 1; fi
+	@touch $@
+
 objects: $(OBJECTS)
 
 .PHONY: FORCE objects
