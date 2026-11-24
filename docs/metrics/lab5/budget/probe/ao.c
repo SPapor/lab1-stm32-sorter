@@ -94,7 +94,7 @@ static void publish_status(Sorter *me, uint8_t st)
     s->state = st; s->cnt[0] = me->cnt[0]; s->cnt[1] = me->cnt[1]; s->cnt[2] = me->cnt[2]; s->fault = "";
     QACTIVE_PUBLISH(&s->super, me);
 }
-static QState Sorter_init(Sorter *me, void const *par) { (void)par; QActive_subscribe(&me->super, STATUS_SIG); return Q_TRAN(&Sorter_ready); }
+static QState Sorter_init(Sorter *me, void const *par) { (void)par; (void)me; return Q_TRAN(&Sorter_ready); }
 static QState Sorter_root(Sorter *me, QEvt const *e)
 {
     switch (e->sig) {
@@ -217,6 +217,10 @@ static QState Imu_reading(Imu *me, QEvt const *e)
     switch (e->sig) {
     case BUS_DONE_SIG: {
         int16_t xyz[3];
+        if (Q_EVT_CAST(BusDoneEvt)->st != 0u) {
+            log_ev(&me->super, "IMU_ERR", "st=%s", Q_EVT_CAST(BusDoneEvt)->st);
+            return Q_TRAN(&Imu_idle);
+        }
         if (work_imu(Q_EVT_CAST(BusDoneEvt)->data, xyz)) {
             ImpactEvt *im = Q_NEW(ImpactEvt, IMPACT_SIG);
             im->x = xyz[0]; im->y = xyz[1]; im->z = xyz[2]; im->amag = 1;

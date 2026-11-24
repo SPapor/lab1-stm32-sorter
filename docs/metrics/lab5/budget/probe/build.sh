@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-LTO=$1; OUT=build$LTO; EXTRA="$2"
+LTO=$1; EXTRA="$2"; OUT=build$LTO$(echo "$EXTRA" | tr -dc "A-Za-z0-9_")
 cd "$(dirname "$0")"; rm -rf $OUT; mkdir -p $OUT
 CF="-mcpu=cortex-m0plus -mthumb -Os -Wall -fdata-sections -ffunction-sections -fstack-usage -DSTM32C031xx -DTICK_HZ=1000 -DPERF=1 -DSIM_CRIT=1 -DRTOS_ASSERT=0 -DARCH_RTOS=1 $EXTRA"
 [ "$LTO" = 1 ] && CF="$CF -flto"

@@ -1,33 +1,33 @@
 # зонд QP/C 8.1.6 + FreeRTOS V11.3.3 (статична конфігурація) + 7 AO-скелетів, probe/build.sh, gcc 10.3.1
 
-## LTO=0 
+## LTO=0  (build0)
 Memory region         Used Size  Region Size  %age Used
              RAM:        9248 B        12 KB     75.26%
-           FLASH:       13224 B        32 KB     40.36%
+           FLASH:       13240 B        32 KB     40.41%
    text	   data	    bss	    dec	    hex	filename
-  13212	     12	   9232	  22456	   57b8	build0/probe.elf
+  13228	     12	   9232	  22472	   57c8	build0/probe.elf
    text	   data	    bss	    dec	    hex	filename
-   1060	      0	      0	   1060	    424	build0/qep_hsm.o
-    618	      0	      0	    618	    26a	build0/qep_msm.o
-    101	      0	      0	    101	     65	build0/qf_act.o
-    135	      0	      0	    135	     87	build0/qf_defer.o
-    779	      0	      0	    779	    30b	build0/qf_dyn.o
-    369	      0	      0	    369	    171	build0/qf_mem.o
-    622	      0	      6	    628	    274	build0/qf_ps.o
-    378	      0	     96	    474	    1da	build0/qf_qact.o
-    421	      0	      0	    421	    1a5	build0/qf_qeq.o
-     44	      0	      0	     44	     2c	build0/qf_qmact.o
-    656	      0	     24	    680	    2a8	build0/qf_time.o
-   1509	      0	      0	   1509	    5e5	build0/qf_port.o
-   3207	      4	    292	   3503	    daf	build0/tasks.o
-   1854	      0	      0	   1854	    73e	build0/queue.o
-    128	      0	      0	    128	     80	build0/list.o
-    928	      4	     44	    976	    3d0	build0/port.o
-    240	      0	      0	    240	     f0	build0/portasm.o
+   1060	      0	      0	   1060	    424	qep_hsm.o
+    618	      0	      0	    618	    26a	qep_msm.o
+    101	      0	      0	    101	     65	qf_act.o
+    135	      0	      0	    135	     87	qf_defer.o
+    779	      0	      0	    779	    30b	qf_dyn.o
+    369	      0	      0	    369	    171	qf_mem.o
+    622	      0	      6	    628	    274	qf_ps.o
+    378	      0	     96	    474	    1da	qf_qact.o
+    421	      0	      0	    421	    1a5	qf_qeq.o
+     44	      0	      0	     44	     2c	qf_qmact.o
+    656	      0	     24	    680	    2a8	qf_time.o
+   1509	      0	      0	   1509	    5e5	qf_port.o
+   3207	      4	    292	   3503	    daf	tasks.o
+   1854	      0	      0	   1854	    73e	queue.o
+    128	      0	      0	    128	     80	list.o
+    928	      4	     44	    976	    3d0	port.o
+    240	      0	      0	    240	     f0	portasm.o
   13049	      8	    462	  13519	   34cf	(TOTALS)
 # у образі після --gc-sections (map)
 bsp.o                                       1002    5657
-ao.o                                        2236    1544
+ao.o                                        2262    1544
 tasks.o                                     2313     296
 qf_port.o                                   1189       0
 queue.o                                     1078       0
@@ -39,8 +39,8 @@ qf_qact.o                                    304      96
 qf_mem.o                                     351       0
 qf_time.o                                    300      24
 libgcc.a(_udivsi3.o)                         276       0
-work.o                                       270       4
 startup.o                                    274       0
+work.o                                       270       4
 crtbegin.o                                   160      28
 portasm.o                                    180       0
 libc_nano.a(lib_a-memset.o)                  168       0
@@ -51,52 +51,52 @@ libc_nano.a(lib_a-init.o)                     68       0
 crtn.o                                        16       0
 crti.o                                         8       0
 libgcc.a(_dvmd_tls.o)                          4       0
-TOTAL                                      13189    7703
+TOTAL                                      13215    7703
 
-## LTO=1 
+## LTO=1  (build1)
 Memory region         Used Size  Region Size  %age Used
              RAM:        9248 B        12 KB     75.26%
-           FLASH:       11700 B        32 KB     35.71%
+           FLASH:       11728 B        32 KB     35.79%
    text	   data	    bss	    dec	    hex	filename
-  11692	      8	   9240	  20940	   51cc	build1/probe.elf
+  11720	      8	   9240	  20968	   51e8	build1/probe.elf
 
-## LTO=0 -DQ_UNSAFE
+## LTO=0 -DQ_UNSAFE (build0DQ_UNSAFE)
 Memory region         Used Size  Region Size  %age Used
              RAM:        9248 B        12 KB     75.26%
-           FLASH:       11756 B        32 KB     35.88%
+           FLASH:       11772 B        32 KB     35.93%
    text	   data	    bss	    dec	    hex	filename
-  11744	     12	   9232	  20988	   51fc	build0/probe.elf
+  11760	     12	   9232	  21004	   520c	build0DQ_UNSAFE/probe.elf
    text	   data	    bss	    dec	    hex	filename
-    688	      0	      0	    688	    2b0	build0/qep_hsm.o
-    350	      0	      0	    350	    15e	build0/qep_msm.o
-     54	      0	      0	     54	     36	build0/qf_act.o
-    110	      0	      0	    110	     6e	build0/qf_defer.o
-    458	      0	      0	    458	    1ca	build0/qf_dyn.o
-    192	      0	      0	    192	     c0	build0/qf_mem.o
-    356	      0	      6	    362	    16a	build0/qf_ps.o
-    230	      0	     96	    326	    146	build0/qf_qact.o
-    318	      0	      0	    318	    13e	build0/qf_qeq.o
-     44	      0	      0	     44	     2c	build0/qf_qmact.o
-    504	      0	     24	    528	    210	build0/qf_time.o
-   1097	      0	      0	   1097	    449	build0/qf_port.o
-   3207	      4	    292	   3503	    daf	build0/tasks.o
-   1854	      0	      0	   1854	    73e	build0/queue.o
-    128	      0	      0	    128	     80	build0/list.o
-    928	      4	     44	    976	    3d0	build0/port.o
-    240	      0	      0	    240	     f0	build0/portasm.o
+    688	      0	      0	    688	    2b0	qep_hsm.o
+    350	      0	      0	    350	    15e	qep_msm.o
+     54	      0	      0	     54	     36	qf_act.o
+    110	      0	      0	    110	     6e	qf_defer.o
+    458	      0	      0	    458	    1ca	qf_dyn.o
+    192	      0	      0	    192	     c0	qf_mem.o
+    356	      0	      6	    362	    16a	qf_ps.o
+    230	      0	     96	    326	    146	qf_qact.o
+    318	      0	      0	    318	    13e	qf_qeq.o
+     44	      0	      0	     44	     2c	qf_qmact.o
+    504	      0	     24	    528	    210	qf_time.o
+   1097	      0	      0	   1097	    449	qf_port.o
+   3207	      4	    292	   3503	    daf	tasks.o
+   1854	      0	      0	   1854	    73e	queue.o
+    128	      0	      0	    128	     80	list.o
+    928	      4	     44	    976	    3d0	port.o
+    240	      0	      0	    240	     f0	portasm.o
   10758	      8	    462	  11228	   2bdc	(TOTALS)
 # у образі після --gc-sections (map)
 bsp.o                                        966    5657
-ao.o                                        2236    1544
+ao.o                                        2262    1544
 tasks.o                                     2313     296
 queue.o                                     1078       0
 qf_port.o                                    865       0
 port.o                                       804      48
 qep_hsm.o                                    648       0
-qf_qact.o                                    180      96
 libgcc.a(_udivsi3.o)                         276       0
-startup.o                                    274       0
+qf_qact.o                                    180      96
 work.o                                       270       4
+startup.o                                    274       0
 qf_dyn.o                                     272       0
 qf_ps.o                                      248       6
 qf_time.o                                    216      24
@@ -111,14 +111,14 @@ qf_act.o                                      28       0
 crtn.o                                        16       0
 crti.o                                         8       0
 libgcc.a(_dvmd_tls.o)                          4       0
-TOTAL                                      11720    7703
+TOTAL                                      11746    7703
 
-## LTO=1 -DQ_UNSAFE
+## LTO=1 -DQ_UNSAFE (build1DQ_UNSAFE)
 Memory region         Used Size  Region Size  %age Used
              RAM:        9240 B        12 KB     75.20%
-           FLASH:       10200 B        32 KB     31.13%
+           FLASH:       10180 B        32 KB     31.07%
    text	   data	    bss	    dec	    hex	filename
-  10192	      8	   9232	  19432	   4be8	build1/probe.elf
+  10172	      8	   9232	  19412	   4bd4	build1DQ_UNSAFE/probe.elf
 
 ## LTO=0: кадри стека (-fstack-usage) ланцюжка хука тіку
 bsp.c:55:6:vApplicationTickHook	16	static
