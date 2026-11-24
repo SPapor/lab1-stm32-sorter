@@ -1,0 +1,1602 @@
+9208 LOAD pct=45 pm=452 win_cyc=91944905 busy_cyc=41528858 windows=5
+2 BOOT fw=lab5-qpc git=c4d779f2-dirty perf=1 arch=qpc lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=0      
+12 EVT t_us=12193 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=517 pair_cyc=1194
+33 I2C_DIAG hal_ms=6 perf_us=5328 left=0 state=32
+38 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+47 EVT t_us=46720 name=i2c_fail
+51 EVT t_us=50763 name=i2c_ok
+54 SELFTEST dev=mpu6050 status=OK who=0x68 tries=1
+130 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+135 SELFTEST dev=ldr_gate status=OK raw=1001
+140 SELFTEST dev=ldr_class status=OK raw=1001
+144 SELFTEST dev=servo status=OK pulse_us=1500
+149 SELFTEST_END ok=5 warn=0 fail=0
+192 STATE state=READY
+194 STACK used=616 reserved=1024 free=408 overflow=0
+200 HEAP arena=0 used=0 free=0
+723 I2C_DIAG hal_ms=6 perf_us=5478 left=1 state=32
+723 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+763 I2C_DIAG hal_ms=6 perf_us=5382 left=1 state=32
+763 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+803 I2C_DIAG hal_ms=6 perf_us=5492 left=1 state=32
+803 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+843 I2C_DIAG hal_ms=6 perf_us=5382 left=1 state=32
+843 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+883 I2C_DIAG hal_ms=6 perf_us=5382 left=1 state=32
+883 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+923 I2C_DIAG hal_ms=6 perf_us=5477 left=1 state=32
+923 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+963 I2C_DIAG hal_ms=6 perf_us=5493 left=1 state=32
+963 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1003 I2C_DIAG hal_ms=6 perf_us=5493 left=1 state=32
+1003 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1034 I2C_DIAG hal_ms=6 perf_us=5673 left=1 state=32
+1034 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1055 I2C_DIAG hal_ms=6 perf_us=5672 left=1 state=32
+1055 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1086 I2C_DIAG hal_ms=6 perf_us=5451 left=2 state=32
+1086 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1209 EVT t_us=140141 name=ready_gate
+1210 EVT t_us=144820 name=ready_class
+1212 EVT t_us=218219 name=ready_imu
+1213 EVT t_us=1125844 name=ready_lcd
+1253 I2C_DIAG hal_ms=6 perf_us=5508 left=1 state=32
+1253 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1284 I2C_DIAG hal_ms=6 perf_us=5673 left=1 state=32
+1284 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1305 I2C_DIAG hal_ms=6 perf_us=5688 left=1 state=32
+1305 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1328 I2C_DIAG hal_ms=6 perf_us=5673 left=1 state=32
+1328 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1337 I2C_DIAG hal_ms=6 perf_us=5498 left=1 state=32
+1337 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+1346 I2C_DIAG hal_ms=6 perf_us=5689 left=1 state=32
+1346 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+1350 EVT t_us=1349677 name=i2c_fail
+1352 IMU_ERR st=BUS
+1353 EVT t_us=1353137 name=i2c_ok
+1361 I2C_DIAG hal_ms=6 perf_us=5457 left=2 state=32
+1361 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1370 I2C_DIAG hal_ms=6 perf_us=5513 left=1 state=32
+1370 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+1424 I2C_DIAG hal_ms=6 perf_us=5313 left=1 state=32
+1424 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1445 I2C_DIAG hal_ms=6 perf_us=5688 left=1 state=32
+1445 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1476 I2C_DIAG hal_ms=6 perf_us=5450 left=2 state=32
+1476 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1505 I2C_DIAG hal_ms=6 perf_us=5418 left=1 state=32
+1505 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1556 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+1556 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1568 I2C_DIAG hal_ms=6 perf_us=5598 left=1 state=32
+1568 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1577 I2C_DIAG hal_ms=6 perf_us=5499 left=1 state=32
+1577 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+1644 I2C_DIAG hal_ms=6 perf_us=5687 left=1 state=32
+1644 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1665 I2C_DIAG hal_ms=6 perf_us=5688 left=1 state=32
+1665 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1696 I2C_DIAG hal_ms=6 perf_us=5450 left=2 state=32
+1696 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1766 I2C_DIAG hal_ms=6 perf_us=5451 left=2 state=32
+1766 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1816 I2C_DIAG hal_ms=6 perf_us=5450 left=2 state=32
+1816 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1858 I2C_DIAG hal_ms=6 perf_us=5673 left=1 state=32
+1858 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+1867 I2C_DIAG hal_ms=6 perf_us=5513 left=1 state=32
+1867 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+1876 I2C_DIAG hal_ms=6 perf_us=5689 left=1 state=32
+1876 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+1880 EVT t_us=1879687 name=i2c_fail
+1882 IMU_ERR st=BUS
+1883 EVT t_us=1883133 name=i2c_ok
+1999 I2C_DIAG hal_ms=6 perf_us=5433 left=1 state=32
+1999 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2008 I2C_DIAG hal_ms=6 perf_us=5513 left=1 state=32
+2008 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+2017 I2C_DIAG hal_ms=6 perf_us=5523 left=1 state=32
+2017 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+2021 EVT t_us=2020581 name=i2c_fail
+2023 IMU_ERR st=BUS
+2024 EVT t_us=2023970 name=i2c_ok
+2033 I2C_DIAG hal_ms=6 perf_us=5508 left=1 state=32
+2148 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+2148 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2157 I2C_DIAG hal_ms=6 perf_us=5513 left=1 state=32
+2157 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+2166 I2C_DIAG hal_ms=6 perf_us=5674 left=1 state=32
+2166 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+2170 EVT t_us=2169686 name=i2c_fail
+2353 LOAD pct=100 pm=1000 win_cyc=54935659 busy_cyc=54935659 windows=1
+2266 I2C_DIAG hal_ms=6 perf_us=5822 left=1 state=32
+2266 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2316 I2C_DIAG hal_ms=6 perf_us=5465 left=2 state=32
+2316 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2345 I2C_DIAG hal_ms=6 perf_us=5433 left=1 state=32
+2345 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2378 I2C_DIAG hal_ms=6 perf_us=5688 left=1 state=32
+2378 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2387 I2C_DIAG hal_ms=6 perf_us=5498 left=1 state=32
+2387 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+2396 I2C_DIAG hal_ms=6 perf_us=5689 left=1 state=32
+2396 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+2400 EVT t_us=2399693 name=i2c_fail
+2402 IMU_ERR st=BUS
+2403 EVT t_us=2403133 name=i2c_ok
+2411 I2C_DIAG hal_ms=6 perf_us=5471 left=2 state=32
+2454 I2C_DIAG hal_ms=6 perf_us=5687 left=1 state=32
+2454 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2475 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+2475 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2506 I2C_DIAG hal_ms=6 perf_us=5465 left=2 state=32
+2506 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2556 I2C_DIAG hal_ms=6 perf_us=5466 left=2 state=32
+2556 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2585 I2C_DIAG hal_ms=6 perf_us=5433 left=1 state=32
+2585 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2783 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+2783 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2792 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+2792 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+2801 I2C_DIAG hal_ms=6 perf_us=5595 left=1 state=32
+2801 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+2805 EVT t_us=2804661 name=i2c_fail
+2807 IMU_ERR st=BUS
+2808 EVT t_us=2808148 name=i2c_ok
+2816 I2C_DIAG hal_ms=6 perf_us=5524 left=2 state=32
+2816 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2825 I2C_DIAG hal_ms=6 perf_us=5438 left=1 state=32
+2825 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+2834 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+2834 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+2859 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+2893 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+2893 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2975 I2C_DIAG hal_ms=6 perf_us=5433 left=1 state=32
+2975 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+2984 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+2984 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+3014 I2C_DIAG hal_ms=6 perf_us=5343 left=1 state=32
+3066 I2C_DIAG hal_ms=6 perf_us=5368 left=1 state=32
+3136 I2C_DIAG hal_ms=6 perf_us=5369 left=1 state=32
+3136 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3145 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+3145 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+3154 I2C_DIAG hal_ms=6 perf_us=5438 left=1 state=32
+3428 LOAD pct=100 pm=1000 win_cyc=51483043 busy_cyc=51483043 windows=2
+3209 I2C_DIAG hal_ms=6 perf_us=5433 left=1 state=32
+3209 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3249 I2C_DIAG hal_ms=6 perf_us=5702 left=1 state=32
+3249 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3263 I2C_DIAG hal_ms=6 perf_us=5523 left=1 state=32
+3263 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3328 I2C_DIAG hal_ms=6 perf_us=5538 left=1 state=32
+3328 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3396 I2C_DIAG hal_ms=6 perf_us=5464 left=2 state=32
+3396 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3405 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+3405 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+3414 I2C_DIAG hal_ms=6 perf_us=5438 left=1 state=32
+3414 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+3483 I2C_DIAG hal_ms=6 perf_us=5539 left=1 state=32
+3483 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3492 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+3492 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+3501 I2C_DIAG hal_ms=6 perf_us=5609 left=1 state=32
+3576 I2C_DIAG hal_ms=6 perf_us=5464 left=2 state=32
+3576 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3585 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+3585 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+3594 I2C_DIAG hal_ms=6 perf_us=5438 left=1 state=32
+3623 I2C_DIAG hal_ms=6 perf_us=5538 left=1 state=32
+3703 I2C_DIAG hal_ms=6 perf_us=5628 left=1 state=32
+3703 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3734 I2C_DIAG hal_ms=6 perf_us=5523 left=1 state=32
+3734 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3743 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+3743 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+3752 I2C_DIAG hal_ms=6 perf_us=5438 left=1 state=32
+3752 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+3756 EVT t_us=3755613 name=i2c_fail
+3796 I2C_DIAG hal_ms=6 perf_us=5465 left=2 state=32
+3796 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3805 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+3843 I2C_DIAG hal_ms=6 perf_us=5539 left=1 state=32
+3873 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+3873 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3966 I2C_DIAG hal_ms=6 perf_us=5464 left=2 state=32
+3966 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3975 I2C_DIAG hal_ms=6 perf_us=5424 left=1 state=32
+3975 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+3984 I2C_DIAG hal_ms=6 perf_us=5438 left=1 state=32
+4013 I2C_DIAG hal_ms=6 perf_us=5538 left=1 state=32
+4086 I2C_DIAG hal_ms=6 perf_us=5464 left=2 state=32
+4086 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4095 I2C_DIAG hal_ms=6 perf_us=5424 left=1 state=32
+4095 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+4104 I2C_DIAG hal_ms=6 perf_us=5438 left=1 state=32
+4104 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+4108 EVT t_us=4107724 name=i2c_fail
+4129 I2C_DIAG hal_ms=6 perf_us=5702 left=1 state=32
+4216 I2C_DIAG hal_ms=6 perf_us=5369 left=1 state=32
+4216 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4225 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+4225 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+4234 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+4234 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+4238 EVT t_us=4237712 name=i2c_fail
+4263 I2C_DIAG hal_ms=6 perf_us=5539 left=1 state=32
+4309 I2C_DIAG hal_ms=0 perf_us=700 left=6 state=32
+4309 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+4344 I2C_DIAG hal_ms=6 perf_us=5628 left=1 state=32
+4344 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4353 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+4353 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+4362 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+4362 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+4419 I2C_DIAG hal_ms=6 perf_us=5434 left=1 state=32
+4419 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4466 I2C_DIAG hal_ms=6 perf_us=5554 left=2 state=32
+4466 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4475 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+4475 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+4484 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+4519 I2C_DIAG hal_ms=6 perf_us=5448 left=1 state=32
+4519 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4559 I2C_DIAG hal_ms=6 perf_us=5701 left=1 state=32
+4559 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4593 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+4593 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4602 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+4696 I2C_DIAG hal_ms=6 perf_us=5369 left=1 state=32
+4696 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4705 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+4705 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+4758 I2C_DIAG hal_ms=6 perf_us=5343 left=1 state=32
+4758 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4789 I2C_DIAG hal_ms=6 perf_us=5523 left=1 state=32
+4789 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4829 I2C_DIAG hal_ms=6 perf_us=5702 left=1 state=32
+4829 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4869 I2C_DIAG hal_ms=6 perf_us=5701 left=1 state=32
+4869 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4913 I2C_DIAG hal_ms=6 perf_us=5538 left=1 state=32
+4913 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4922 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+4922 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+4931 I2C_DIAG hal_ms=6 perf_us=5594 left=1 state=32
+4931 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+4935 EVT t_us=4934658 name=i2c_fail
+4937 IMU_ERR st=BUS
+4938 EVT t_us=4938146 name=i2c_ok
+4986 I2C_DIAG hal_ms=6 perf_us=5464 left=2 state=32
+4986 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+4995 I2C_DIAG hal_ms=6 perf_us=5424 left=1 state=32
+5033 I2C_DIAG hal_ms=6 perf_us=5538 left=1 state=32
+5113 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+5113 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5122 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+5122 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+5131 I2C_DIAG hal_ms=6 perf_us=5609 left=1 state=32
+5131 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+5135 EVT t_us=5134664 name=i2c_fail
+5176 I2C_DIAG hal_ms=6 perf_us=5644 left=2 state=32
+5176 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5395 LOAD pct=100 pm=1000 win_cyc=94543883 busy_cyc=94543883 windows=3
+5218 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+5218 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5266 I2C_DIAG hal_ms=6 perf_us=5554 left=2 state=32
+5266 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5275 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+5275 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+5313 I2C_DIAG hal_ms=6 perf_us=5538 left=1 state=32
+5388 I2C_DIAG hal_ms=6 perf_us=5343 left=1 state=32
+5388 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5411 I2C_DIAG hal_ms=6 perf_us=5531 left=2 state=32
+5411 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5473 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+5473 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5482 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+5482 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+5491 I2C_DIAG hal_ms=6 perf_us=5609 left=1 state=32
+5491 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+5495 EVT t_us=5494665 name=i2c_fail
+5497 IMU_ERR st=BUS
+5498 EVT t_us=5498141 name=i2c_ok
+5568 I2C_DIAG hal_ms=6 perf_us=5328 left=1 state=32
+5568 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5599 I2C_DIAG hal_ms=6 perf_us=5433 left=1 state=32
+5599 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5639 I2C_DIAG hal_ms=6 perf_us=5701 left=1 state=32
+5639 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5673 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+5673 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5682 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+5682 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+5691 I2C_DIAG hal_ms=6 perf_us=5610 left=1 state=32
+5736 I2C_DIAG hal_ms=6 perf_us=5629 left=2 state=32
+5736 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5788 I2C_DIAG hal_ms=6 perf_us=5328 left=1 state=32
+5788 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5819 I2C_DIAG hal_ms=6 perf_us=5433 left=1 state=32
+5819 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5859 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+5859 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5893 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+5893 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5902 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+5902 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+5911 I2C_DIAG hal_ms=6 perf_us=5609 left=1 state=32
+5958 I2C_DIAG hal_ms=6 perf_us=5538 left=1 state=32
+5958 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+5989 I2C_DIAG hal_ms=6 perf_us=5433 left=1 state=32
+5989 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+6029 I2C_DIAG hal_ms=6 perf_us=5702 left=1 state=32
+6029 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+6063 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+6063 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+6072 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+6128 I2C_DIAG hal_ms=6 perf_us=5538 left=1 state=32
+6128 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+6206 I2C_DIAG hal_ms=6 perf_us=5579 left=2 state=32
+6207 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+6218 I2C_DIAG hal_ms=6 perf_us=5434 left=1 state=32
+6218 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+6296 I2C_DIAG hal_ms=6 perf_us=5464 left=2 state=32
+6296 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+6305 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+6305 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+6314 I2C_DIAG hal_ms=6 perf_us=5438 left=1 state=32
+6314 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+6318 EVT t_us=6317723 name=i2c_fail
+6320 IMU_ERR st=BUS
+6321 EVT t_us=6321235 name=i2c_ok
+6343 I2C_DIAG hal_ms=6 perf_us=5538 left=1 state=32
+6423 I2C_DIAG hal_ms=6 perf_us=5628 left=1 state=32
+6423 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+6432 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+6432 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+6441 I2C_DIAG hal_ms=6 perf_us=5594 left=1 state=32
+6441 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+6445 EVT t_us=6444659 name=i2c_fail
+6447 IMU_ERR st=BUS
+6516 I2C_DIAG hal_ms=6 perf_us=5554 left=2 state=32
+6516 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+6525 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+6525 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+6569 I2C_DIAG hal_ms=6 perf_us=5606 left=1 state=32
+6569 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+6578 I2C_DIAG hal_ms=6 perf_us=5505 left=1 state=32
+6678 I2C_DIAG hal_ms=6 perf_us=5709 left=1 state=32
+6768 I2C_DIAG hal_ms=6 perf_us=5441 left=1 state=32
+6768 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+6777 I2C_DIAG hal_ms=6 perf_us=5505 left=1 state=32
+6777 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+6786 I2C_DIAG hal_ms=6 perf_us=5689 left=1 state=32
+6786 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+6790 EVT t_us=6789700 name=i2c_fail
+6792 IMU_ERR st=BUS
+6793 EVT t_us=6793138 name=i2c_ok
+6918 I2C_DIAG hal_ms=6 perf_us=5606 left=1 state=32
+6918 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+6956 I2C_DIAG hal_ms=6 perf_us=5540 left=2 state=32
+6956 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+7006 I2C_DIAG hal_ms=6 perf_us=5384 left=1 state=32
+7006 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+7113 I2C_DIAG hal_ms=6 perf_us=5515 left=1 state=32
+7113 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+7122 I2C_DIAG hal_ms=6 perf_us=5430 left=1 state=32
+7122 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+7131 I2C_DIAG hal_ms=6 perf_us=5611 left=1 state=32
+7131 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+7135 EVT t_us=7134634 name=i2c_fail
+7137 IMU_ERR st=BUS
+7138 EVT t_us=7138139 name=i2c_ok
+7146 I2C_DIAG hal_ms=6 perf_us=5540 left=2 state=32
+7146 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+7166 I2C_DIAG hal_ms=6 perf_us=5370 left=1 state=32
+7166 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+7293 LOAD pct=100 pm=1000 win_cyc=91093118 busy_cyc=91093118 windows=4
+7228 I2C_DIAG hal_ms=6 perf_us=5710 left=1 state=32
+7228 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+9208 LOAD pct=45 pm=452 win_cyc=91944905 busy_cyc=41528858 windows=5
+10208 LOAD pct=39 pm=393 win_cyc=47999668 busy_cyc=18866676 windows=6
+11208 LOAD pct=39 pm=393 win_cyc=48000389 busy_cyc=18861728 windows=7
+11233 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+11233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+11242 I2C_DIAG hal_ms=6 perf_us=5423 left=1 state=32
+11242 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+11251 I2C_DIAG hal_ms=6 perf_us=5581 left=2 state=32
+11251 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+11255 EVT t_us=11254679 name=i2c_fail
+11257 IMU_ERR st=BUS
+11258 EVT t_us=11258179 name=i2c_ok
+11266 I2C_DIAG hal_ms=6 perf_us=5495 left=1 state=32
+11266 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+11306 I2C_DIAG hal_ms=6 perf_us=5376 left=1 state=32
+11306 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+11395 I2C_DIAG hal_ms=6 perf_us=5718 left=1 state=32
+11395 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+11404 I2C_DIAG hal_ms=6 perf_us=5438 left=1 state=32
+11404 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+11413 I2C_DIAG hal_ms=6 perf_us=5438 left=1 state=32
+11413 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+11417 EVT t_us=11416789 name=i2c_fail
+11419 IMU_ERR st=BUS
+11420 EVT t_us=11420182 name=i2c_ok
+11429 I2C_DIAG hal_ms=6 perf_us=5531 left=1 state=32
+11429 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+11553 I2C_DIAG hal_ms=6 perf_us=5613 left=1 state=32
+11553 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12208 LOAD pct=65 pm=646 win_cyc=47999943 busy_cyc=30992713 windows=8
+12233 I2C_DIAG hal_ms=6 perf_us=5628 left=1 state=32
+12233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12273 I2C_DIAG hal_ms=6 perf_us=5628 left=1 state=32
+12273 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12313 I2C_DIAG hal_ms=6 perf_us=5628 left=1 state=32
+12313 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12353 I2C_DIAG hal_ms=6 perf_us=5643 left=1 state=32
+12353 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12393 I2C_DIAG hal_ms=6 perf_us=5628 left=1 state=32
+12393 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12433 I2C_DIAG hal_ms=6 perf_us=5644 left=1 state=32
+12433 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12473 I2C_DIAG hal_ms=6 perf_us=5643 left=1 state=32
+12473 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12513 I2C_DIAG hal_ms=6 perf_us=5643 left=1 state=32
+12513 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+12553 I2C_DIAG hal_ms=6 perf_us=5643 left=1 state=32
+12553 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13208 LOAD pct=60 pm=604 win_cyc=47999668 busy_cyc=28983317 windows=9
+13233 I2C_DIAG hal_ms=6 perf_us=5658 left=1 state=32
+13233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13273 I2C_DIAG hal_ms=6 perf_us=5658 left=1 state=32
+13273 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13753 I2C_DIAG hal_ms=6 perf_us=5658 left=1 state=32
+13753 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13793 I2C_DIAG hal_ms=6 perf_us=5673 left=1 state=32
+13793 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13805 I2C_DIAG hal_ms=6 perf_us=5852 left=1 state=32
+13805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13846 I2C_DIAG hal_ms=6 perf_us=5384 left=1 state=32
+13846 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13855 I2C_DIAG hal_ms=6 perf_us=5573 left=1 state=32
+13855 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+13899 I2C_DIAG hal_ms=6 perf_us=5494 left=1 state=32
+13899 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+13950 I2C_DIAG hal_ms=6 perf_us=5658 left=1 state=32
+13950 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14208 LOAD pct=60 pm=601 win_cyc=48000005 busy_cyc=28838399 windows=10
+14233 I2C_DIAG hal_ms=6 perf_us=5673 left=1 state=32
+14233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14245 I2C_DIAG hal_ms=6 perf_us=5853 left=1 state=32
+14245 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14266 I2C_DIAG hal_ms=6 perf_us=5571 left=2 state=32
+14266 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14328 I2C_DIAG hal_ms=6 perf_us=5493 left=1 state=32
+14328 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14359 I2C_DIAG hal_ms=6 perf_us=5508 left=1 state=32
+14359 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14368 I2C_DIAG hal_ms=6 perf_us=5499 left=1 state=32
+14368 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+14380 I2C_DIAG hal_ms=6 perf_us=5867 left=1 state=32
+14380 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14389 I2C_DIAG hal_ms=6 perf_us=5508 left=1 state=32
+14389 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+14401 I2C_DIAG hal_ms=6 perf_us=5867 left=1 state=32
+14401 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14473 I2C_DIAG hal_ms=6 perf_us=5778 left=1 state=32
+14473 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14573 I2C_DIAG hal_ms=6 perf_us=5673 left=1 state=32
+14573 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14585 I2C_DIAG hal_ms=6 perf_us=5867 left=1 state=32
+14585 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14606 I2C_DIAG hal_ms=6 perf_us=5564 left=1 state=32
+14606 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14668 I2C_DIAG hal_ms=6 perf_us=5509 left=1 state=32
+14668 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14677 I2C_DIAG hal_ms=6 perf_us=5513 left=1 state=32
+14677 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+14686 I2C_DIAG hal_ms=6 perf_us=5568 left=1 state=32
+14686 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+14690 EVT t_us=14689748 name=i2c_fail
+14692 IMU_ERR st=BUS
+14693 EVT t_us=14693186 name=i2c_ok
+14701 I2C_DIAG hal_ms=6 perf_us=5532 left=2 state=32
+14701 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14813 I2C_DIAG hal_ms=6 perf_us=5688 left=1 state=32
+14813 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14825 I2C_DIAG hal_ms=6 perf_us=5867 left=1 state=32
+14825 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14846 I2C_DIAG hal_ms=6 perf_us=5496 left=2 state=32
+14846 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14913 I2C_DIAG hal_ms=6 perf_us=5688 left=1 state=32
+14913 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14953 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+14953 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+14993 I2C_DIAG hal_ms=6 perf_us=5688 left=1 state=32
+14993 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15005 I2C_DIAG hal_ms=6 perf_us=5868 left=1 state=32
+15005 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15026 I2C_DIAG hal_ms=6 perf_us=5601 left=2 state=32
+15026 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15058 I2C_DIAG hal_ms=6 perf_us=5882 left=1 state=32
+15058 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15100 I2C_DIAG hal_ms=6 perf_us=5599 left=1 state=32
+15100 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15233 LOAD pct=100 pm=1000 win_cyc=49185103 busy_cyc=49185103 windows=11
+15213 I2C_DIAG hal_ms=6 perf_us=5523 left=1 state=32
+15213 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15225 I2C_DIAG hal_ms=6 perf_us=5881 left=1 state=32
+15225 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15293 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15293 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15333 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15333 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15373 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15373 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15413 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15413 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15453 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15453 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15493 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15493 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15533 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15533 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15573 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15573 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15613 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15613 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15653 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15653 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15693 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15693 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15733 I2C_DIAG hal_ms=6 perf_us=5718 left=1 state=32
+15733 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15773 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15773 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15813 I2C_DIAG hal_ms=6 perf_us=5718 left=1 state=32
+15813 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15853 I2C_DIAG hal_ms=6 perf_us=5718 left=1 state=32
+15853 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15893 I2C_DIAG hal_ms=6 perf_us=5718 left=1 state=32
+15893 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15933 I2C_DIAG hal_ms=6 perf_us=5718 left=1 state=32
+15933 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+15973 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+15973 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+16013 I2C_DIAG hal_ms=6 perf_us=5718 left=1 state=32
+16013 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+16053 I2C_DIAG hal_ms=6 perf_us=5718 left=1 state=32
+16053 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+16093 I2C_DIAG hal_ms=6 perf_us=5718 left=1 state=32
+16093 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+16133 I2C_DIAG hal_ms=6 perf_us=5718 left=1 state=32
+16133 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+17208 LOAD pct=67 pm=674 win_cyc=94814947 busy_cyc=63909652 windows=12
+18208 LOAD pct=40 pm=395 win_cyc=47999886 busy_cyc=18963875 windows=13
+18233 I2C_DIAG hal_ms=6 perf_us=5763 left=1 state=32
+18233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+18273 I2C_DIAG hal_ms=6 perf_us=5763 left=1 state=32
+18273 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+18313 I2C_DIAG hal_ms=6 perf_us=5748 left=1 state=32
+18313 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+18353 I2C_DIAG hal_ms=6 perf_us=5763 left=1 state=32
+18353 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19208 LOAD pct=49 pm=487 win_cyc=48000025 busy_cyc=23370195 windows=14
+19233 I2C_DIAG hal_ms=6 perf_us=5778 left=1 state=32
+19233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19245 I2C_DIAG hal_ms=6 perf_us=5868 left=1 state=32
+19245 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19266 I2C_DIAG hal_ms=6 perf_us=5675 left=2 state=32
+19266 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19278 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+19278 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19290 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+19290 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19334 I2C_DIAG hal_ms=6 perf_us=5598 left=1 state=32
+19334 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19346 I2C_DIAG hal_ms=6 perf_us=5918 left=1 state=32
+19346 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19378 I2C_DIAG hal_ms=6 perf_us=5778 left=1 state=32
+19378 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19390 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+19390 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19404 I2C_DIAG hal_ms=6 perf_us=5688 left=1 state=32
+19404 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19416 I2C_DIAG hal_ms=6 perf_us=5918 left=1 state=32
+19448 I2C_DIAG hal_ms=6 perf_us=5778 left=1 state=32
+19448 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19538 I2C_DIAG hal_ms=6 perf_us=5614 left=1 state=32
+19538 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19606 I2C_DIAG hal_ms=6 perf_us=5518 left=1 state=32
+19606 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19618 I2C_DIAG hal_ms=6 perf_us=5688 left=1 state=32
+19618 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19630 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+19630 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19644 I2C_DIAG hal_ms=6 perf_us=5703 left=1 state=32
+19644 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19656 I2C_DIAG hal_ms=6 perf_us=5891 left=1 state=32
+19656 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19803 I2C_DIAG hal_ms=6 perf_us=5793 left=1 state=32
+19803 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19824 I2C_DIAG hal_ms=6 perf_us=5972 left=1 state=32
+19824 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19836 I2C_DIAG hal_ms=6 perf_us=5933 left=1 state=32
+19836 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+19898 I2C_DIAG hal_ms=6 perf_us=5629 left=1 state=32
+19898 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20208 LOAD pct=89 pm=894 win_cyc=48000329 busy_cyc=42908835 windows=15
+20233 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+20233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20273 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+20273 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20313 I2C_DIAG hal_ms=6 perf_us=5793 left=1 state=32
+20313 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20353 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+20353 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20393 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+20393 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20433 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+20433 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20473 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+20473 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20513 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+20513 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+20553 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+20553 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+21208 LOAD pct=61 pm=605 win_cyc=48000016 busy_cyc=29051515 windows=16
+22208 LOAD pct=39 pm=394 win_cyc=47999343 busy_cyc=18906080 windows=17
+23208 LOAD pct=39 pm=394 win_cyc=48000292 busy_cyc=18923667 windows=18
+24208 LOAD pct=39 pm=395 win_cyc=47999993 busy_cyc=18949627 windows=19
+24233 I2C_DIAG hal_ms=6 perf_us=5883 left=1 state=32
+24233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+24245 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+24245 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+24266 I2C_DIAG hal_ms=6 perf_us=5609 left=1 state=32
+24266 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+24333 I2C_DIAG hal_ms=6 perf_us=5883 left=1 state=32
+24333 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+24345 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+24345 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+24366 I2C_DIAG hal_ms=6 perf_us=5623 left=1 state=32
+24366 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+24428 I2C_DIAG hal_ms=6 perf_us=5718 left=1 state=32
+24428 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+25208 LOAD pct=56 pm=557 win_cyc=48000339 busy_cyc=26749916 windows=20
+25263 I2C_DIAG hal_ms=6 perf_us=5898 left=1 state=32
+25263 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+26208 LOAD pct=42 pm=418 win_cyc=48000016 busy_cyc=20059522 windows=21
+26263 I2C_DIAG hal_ms=6 perf_us=5928 left=1 state=32
+26263 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+26303 I2C_DIAG hal_ms=6 perf_us=5928 left=1 state=32
+26303 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+26353 I2C_DIAG hal_ms=6 perf_us=5928 left=1 state=32
+26353 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+26393 I2C_DIAG hal_ms=6 perf_us=5928 left=1 state=32
+26393 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+26773 I2C_DIAG hal_ms=6 perf_us=5928 left=1 state=32
+26773 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+26813 I2C_DIAG hal_ms=6 perf_us=5943 left=1 state=32
+26813 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27208 LOAD pct=53 pm=535 win_cyc=47999693 busy_cyc=25661417 windows=22
+27233 I2C_DIAG hal_ms=6 perf_us=5943 left=1 state=32
+27233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27273 I2C_DIAG hal_ms=6 perf_us=5957 left=1 state=32
+27273 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27313 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+27313 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27353 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+27353 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27393 I2C_DIAG hal_ms=6 perf_us=5942 left=1 state=32
+27393 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27433 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+27433 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27473 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+27473 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27513 I2C_DIAG hal_ms=6 perf_us=5957 left=1 state=32
+27513 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27553 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+27553 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27733 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+27733 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27773 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+27773 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27813 I2C_DIAG hal_ms=6 perf_us=5957 left=1 state=32
+27813 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27853 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+27853 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27893 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+27893 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27933 I2C_DIAG hal_ms=6 perf_us=5957 left=1 state=32
+27933 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+27973 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+27973 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+28013 I2C_DIAG hal_ms=6 perf_us=5958 left=1 state=32
+28013 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+28208 LOAD pct=79 pm=793 win_cyc=47999955 busy_cyc=38077614 windows=23
+28233 I2C_DIAG hal_ms=6 perf_us=5972 left=1 state=32
+28233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+28245 I2C_DIAG hal_ms=6 perf_us=5793 left=1 state=32
+28245 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+28266 I2C_DIAG hal_ms=6 perf_us=5698 left=1 state=32
+28266 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+28328 I2C_DIAG hal_ms=6 perf_us=5793 left=1 state=32
+28328 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+28340 I2C_DIAG hal_ms=6 perf_us=5883 left=1 state=32
+28340 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+28433 I2C_DIAG hal_ms=6 perf_us=5973 left=1 state=32
+28433 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+28473 I2C_DIAG hal_ms=6 perf_us=5973 left=1 state=32
+28473 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+28485 I2C_DIAG hal_ms=6 perf_us=5793 left=1 state=32
+28485 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+28506 I2C_DIAG hal_ms=6 perf_us=5698 left=1 state=32
+28506 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+28568 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+28568 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29208 LOAD pct=63 pm=626 win_cyc=47999596 busy_cyc=30064592 windows=24
+29233 I2C_DIAG hal_ms=6 perf_us=5988 left=1 state=32
+29233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29245 I2C_DIAG hal_ms=6 perf_us=5808 left=1 state=32
+29245 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29266 I2C_DIAG hal_ms=6 perf_us=5713 left=1 state=32
+29266 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29333 I2C_DIAG hal_ms=6 perf_us=5988 left=1 state=32
+29333 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29345 I2C_DIAG hal_ms=6 perf_us=5809 left=1 state=32
+29345 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29366 I2C_DIAG hal_ms=6 perf_us=5714 left=1 state=32
+29366 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29433 I2C_DIAG hal_ms=6 perf_us=6002 left=1 state=32
+29433 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29473 I2C_DIAG hal_ms=6 perf_us=5988 left=1 state=32
+29473 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29485 I2C_DIAG hal_ms=6 perf_us=5823 left=1 state=32
+29485 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29497 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+29497 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29573 I2C_DIAG hal_ms=6 perf_us=5988 left=1 state=32
+29573 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29585 I2C_DIAG hal_ms=6 perf_us=5823 left=1 state=32
+29585 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29597 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+29597 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29673 I2C_DIAG hal_ms=6 perf_us=6002 left=1 state=32
+29673 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29773 I2C_DIAG hal_ms=6 perf_us=6003 left=1 state=32
+29773 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29813 I2C_DIAG hal_ms=6 perf_us=6003 left=1 state=32
+29813 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29853 I2C_DIAG hal_ms=6 perf_us=6002 left=1 state=32
+29853 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29893 I2C_DIAG hal_ms=6 perf_us=6003 left=1 state=32
+29893 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29933 I2C_DIAG hal_ms=6 perf_us=6003 left=1 state=32
+29933 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+29973 I2C_DIAG hal_ms=6 perf_us=6002 left=1 state=32
+29973 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+30013 I2C_DIAG hal_ms=6 perf_us=6003 left=1 state=32
+30013 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+30053 I2C_DIAG hal_ms=6 perf_us=6003 left=1 state=32
+30053 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+30208 LOAD pct=91 pm=909 win_cyc=48000377 busy_cyc=43608292 windows=25
+30233 I2C_DIAG hal_ms=6 perf_us=6018 left=1 state=32
+30233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+30273 I2C_DIAG hal_ms=6 perf_us=6002 left=1 state=32
+30273 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+30313 I2C_DIAG hal_ms=6 perf_us=6003 left=1 state=32
+30313 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+30353 I2C_DIAG hal_ms=6 perf_us=6018 left=1 state=32
+30353 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+30393 I2C_DIAG hal_ms=6 perf_us=6017 left=1 state=32
+30393 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+30433 I2C_DIAG hal_ms=6 perf_us=6018 left=1 state=32
+30433 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+30473 I2C_DIAG hal_ms=6 perf_us=6018 left=1 state=32
+30473 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+30513 I2C_DIAG hal_ms=6 perf_us=6017 left=1 state=32
+30513 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+30553 I2C_DIAG hal_ms=6 perf_us=6018 left=1 state=32
+30553 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+30593 I2C_DIAG hal_ms=6 perf_us=6018 left=1 state=32
+30593 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31208 LOAD pct=63 pm=631 win_cyc=48000003 busy_cyc=30286209 windows=26
+31233 I2C_DIAG hal_ms=7 perf_us=6038 left=1 state=32
+31233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31273 I2C_DIAG hal_ms=7 perf_us=6038 left=1 state=32
+31273 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31313 I2C_DIAG hal_ms=7 perf_us=6038 left=1 state=32
+31313 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31353 I2C_DIAG hal_ms=7 perf_us=6038 left=1 state=32
+31353 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31393 I2C_DIAG hal_ms=7 perf_us=6038 left=1 state=32
+31393 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31433 I2C_DIAG hal_ms=7 perf_us=6054 left=1 state=32
+31433 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31473 I2C_DIAG hal_ms=7 perf_us=6038 left=1 state=32
+31473 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31513 I2C_DIAG hal_ms=7 perf_us=6038 left=1 state=32
+31513 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31553 I2C_DIAG hal_ms=7 perf_us=6039 left=1 state=32
+31553 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31593 I2C_DIAG hal_ms=7 perf_us=6038 left=1 state=32
+31593 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31633 I2C_DIAG hal_ms=7 perf_us=6038 left=1 state=32
+31633 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31733 I2C_DIAG hal_ms=7 perf_us=6039 left=1 state=32
+31733 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31773 I2C_DIAG hal_ms=7 perf_us=6038 left=1 state=32
+31773 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31812 I2C_DIAG hal_ms=6 perf_us=5051 left=1 state=32
+31812 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+31883 I2C_DIAG hal_ms=7 perf_us=6038 left=1 state=32
+31883 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+32208 LOAD pct=76 pm=756 win_cyc=48000077 busy_cyc=36294668 windows=27
+32232 I2C_DIAG hal_ms=6 perf_us=5051 left=1 state=32
+32232 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+32282 I2C_DIAG hal_ms=6 perf_us=5053 left=1 state=32
+32282 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+32322 I2C_DIAG hal_ms=6 perf_us=5052 left=1 state=32
+32322 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33208 LOAD pct=46 pm=462 win_cyc=47999537 busy_cyc=22178501 windows=28
+33232 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+33232 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33272 I2C_DIAG hal_ms=6 perf_us=5067 left=1 state=32
+33272 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33312 I2C_DIAG hal_ms=6 perf_us=5066 left=1 state=32
+33312 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33352 I2C_DIAG hal_ms=6 perf_us=5067 left=1 state=32
+33352 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33392 I2C_DIAG hal_ms=6 perf_us=5067 left=1 state=32
+33392 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33432 I2C_DIAG hal_ms=6 perf_us=5081 left=1 state=32
+33432 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33472 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+33472 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33512 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+33512 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33722 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+33722 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33762 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+33762 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33802 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+33802 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33842 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+33842 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33882 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+33882 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33922 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+33922 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+33962 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+33962 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34002 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+34002 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34208 LOAD pct=76 pm=757 win_cyc=48000363 busy_cyc=36348668 windows=29
+34242 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+34242 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34282 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+34282 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34322 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+34322 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34362 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+34362 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34402 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+34402 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34442 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+34442 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34482 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+34482 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34722 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+34722 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34762 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+34762 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34802 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+34802 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34842 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+34842 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34892 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+34892 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34932 I2C_DIAG hal_ms=6 perf_us=5096 left=1 state=32
+34932 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+34972 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+34972 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35208 LOAD pct=71 pm=712 win_cyc=48000064 busy_cyc=34180676 windows=30
+35232 I2C_DIAG hal_ms=6 perf_us=5111 left=1 state=32
+35232 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35272 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+35272 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35322 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+35322 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35362 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+35362 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35402 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+35402 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35442 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+35442 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35482 I2C_DIAG hal_ms=6 perf_us=5112 left=1 state=32
+35482 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35722 I2C_DIAG hal_ms=6 perf_us=5112 left=1 state=32
+35722 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35762 I2C_DIAG hal_ms=6 perf_us=5112 left=1 state=32
+35762 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35802 I2C_DIAG hal_ms=6 perf_us=5127 left=1 state=32
+35802 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35842 I2C_DIAG hal_ms=6 perf_us=5127 left=1 state=32
+35842 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35882 I2C_DIAG hal_ms=6 perf_us=5127 left=1 state=32
+35882 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35922 I2C_DIAG hal_ms=6 perf_us=5127 left=1 state=32
+35922 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+35962 I2C_DIAG hal_ms=6 perf_us=5127 left=1 state=32
+35962 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36002 I2C_DIAG hal_ms=6 perf_us=5127 left=1 state=32
+36002 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36208 LOAD pct=73 pm=735 win_cyc=48000016 busy_cyc=35270934 windows=31
+36242 I2C_DIAG hal_ms=6 perf_us=5127 left=1 state=32
+36242 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36282 I2C_DIAG hal_ms=6 perf_us=5127 left=1 state=32
+36282 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36322 I2C_DIAG hal_ms=6 perf_us=5127 left=1 state=32
+36322 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36362 I2C_DIAG hal_ms=6 perf_us=5127 left=1 state=32
+36362 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36402 I2C_DIAG hal_ms=6 perf_us=5127 left=1 state=32
+36402 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36442 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+36442 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36482 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+36482 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36722 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+36722 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36762 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+36762 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36802 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+36802 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36842 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+36842 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36882 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+36882 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36922 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+36922 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+36962 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+36962 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37002 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+37002 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37208 LOAD pct=73 pm=735 win_cyc=47999668 busy_cyc=35265671 windows=32
+37232 I2C_DIAG hal_ms=6 perf_us=5157 left=1 state=32
+37232 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37272 I2C_DIAG hal_ms=6 perf_us=5156 left=1 state=32
+37272 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37281 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+37281 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+37294 I2C_DIAG hal_ms=6 perf_us=5247 left=1 state=32
+37294 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37306 I2C_DIAG hal_ms=6 perf_us=5893 left=1 state=32
+37306 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37402 I2C_DIAG hal_ms=6 perf_us=5157 left=1 state=32
+37402 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37411 I2C_DIAG hal_ms=6 perf_us=5356 left=1 state=32
+37411 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+37433 I2C_DIAG hal_ms=6 perf_us=5337 left=1 state=32
+37433 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37456 I2C_DIAG hal_ms=6 perf_us=5939 left=1 state=32
+37456 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37532 I2C_DIAG hal_ms=6 perf_us=5157 left=1 state=32
+37532 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37541 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+37541 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+37554 I2C_DIAG hal_ms=6 perf_us=5247 left=1 state=32
+37554 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37566 I2C_DIAG hal_ms=6 perf_us=5908 left=1 state=32
+37566 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37662 I2C_DIAG hal_ms=6 perf_us=5157 left=1 state=32
+37662 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37671 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+37671 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+37693 I2C_DIAG hal_ms=6 perf_us=5337 left=1 state=32
+37693 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37745 I2C_DIAG hal_ms=6 perf_us=5270 left=1 state=32
+37745 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37788 I2C_DIAG hal_ms=6 perf_us=5988 left=1 state=32
+37788 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37819 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+37819 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37831 I2C_DIAG hal_ms=6 perf_us=5899 left=1 state=32
+37831 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37872 I2C_DIAG hal_ms=6 perf_us=5156 left=1 state=32
+37872 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37881 I2C_DIAG hal_ms=6 perf_us=5355 left=1 state=32
+37881 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+37894 I2C_DIAG hal_ms=6 perf_us=5262 left=1 state=32
+37894 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+37903 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+37903 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+37912 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+37912 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+37916 EVT t_us=37916434 name=i2c_fail
+37918 IMU_ERR st=BUS
+37919 EVT t_us=37919827 name=i2c_ok
+37998 I2C_DIAG hal_ms=6 perf_us=6003 left=1 state=32
+37998 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38087 I2C_DIAG hal_ms=6 perf_us=5173 left=1 state=32
+38087 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38122 I2C_DIAG hal_ms=6 perf_us=5187 left=1 state=32
+38122 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38162 I2C_DIAG hal_ms=6 perf_us=5172 left=1 state=32
+38162 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38202 I2C_DIAG hal_ms=6 perf_us=5172 left=1 state=32
+38202 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38274 LOAD pct=100 pm=1000 win_cyc=51191704 busy_cyc=51191704 windows=33
+38233 I2C_DIAG hal_ms=6 perf_us=5172 left=1 state=32
+38233 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38242 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+38242 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+38251 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+38251 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+38255 EVT t_us=38255333 name=i2c_fail
+38257 IMU_ERR st=BUS
+38258 EVT t_us=38258839 name=i2c_ok
+38267 I2C_DIAG hal_ms=6 perf_us=5352 left=1 state=32
+38267 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38290 I2C_DIAG hal_ms=6 perf_us=5222 left=2 state=32
+38290 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38407 I2C_DIAG hal_ms=6 perf_us=5366 left=1 state=32
+38407 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38438 I2C_DIAG hal_ms=6 perf_us=5368 left=1 state=32
+38438 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38492 I2C_DIAG hal_ms=6 perf_us=5172 left=1 state=32
+38492 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38532 I2C_DIAG hal_ms=6 perf_us=5171 left=1 state=32
+38532 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38572 I2C_DIAG hal_ms=6 perf_us=5172 left=1 state=32
+38572 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38632 I2C_DIAG hal_ms=6 perf_us=5172 left=1 state=32
+38632 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38641 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+38641 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+38663 I2C_DIAG hal_ms=6 perf_us=5367 left=1 state=32
+38663 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38672 I2C_DIAG hal_ms=6 perf_us=5356 left=1 state=32
+38672 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+38681 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+38681 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+38685 EVT t_us=38685343 name=i2c_fail
+38687 IMU_ERR st=BUS
+38688 EVT t_us=38688845 name=i2c_ok
+38697 I2C_DIAG hal_ms=6 perf_us=5367 left=1 state=32
+38697 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38842 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+38842 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38862 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+38862 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38871 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+38871 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+38904 I2C_DIAG hal_ms=6 perf_us=5367 left=1 state=32
+38904 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+38947 I2C_DIAG hal_ms=6 perf_us=5278 left=1 state=32
+38947 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39002 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+39002 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39052 I2C_DIAG hal_ms=6 perf_us=5187 left=1 state=32
+39052 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39072 I2C_DIAG hal_ms=6 perf_us=5096 left=1 state=32
+39072 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39122 I2C_DIAG hal_ms=6 perf_us=5187 left=1 state=32
+39122 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39142 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+39142 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39192 I2C_DIAG hal_ms=6 perf_us=5201 left=1 state=32
+39192 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39242 I2C_DIAG hal_ms=6 perf_us=5187 left=1 state=32
+39242 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39262 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+39262 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39312 I2C_DIAG hal_ms=6 perf_us=5201 left=1 state=32
+39312 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39332 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+39332 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39382 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+39382 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39402 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+39402 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39452 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+39452 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39472 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+39472 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39522 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+39522 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39542 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+39542 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39592 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+39592 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39612 I2C_DIAG hal_ms=6 perf_us=5096 left=1 state=32
+39612 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39662 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+39662 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39702 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+39702 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39733 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+39733 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39772 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+39772 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39792 I2C_DIAG hal_ms=6 perf_us=5111 left=1 state=32
+39792 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39842 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+39842 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39882 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+39882 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39922 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+39922 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+39962 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+39962 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40002 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40002 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40042 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40042 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40082 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40082 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40152 I2C_DIAG hal_ms=6 perf_us=5216 left=1 state=32
+40152 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40192 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40192 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40218 LOAD pct=100 pm=1000 win_cyc=93325356 busy_cyc=93325356 windows=34
+40242 I2C_DIAG hal_ms=6 perf_us=5232 left=1 state=32
+40242 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40292 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40292 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40332 I2C_DIAG hal_ms=6 perf_us=5216 left=1 state=32
+40332 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40382 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40382 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40422 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40422 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40462 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40462 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40502 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40502 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40542 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40542 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40582 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40582 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40622 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40622 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40662 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40662 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40722 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40722 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40772 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40772 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40812 I2C_DIAG hal_ms=6 perf_us=5216 left=1 state=32
+40812 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40852 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40852 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40892 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40892 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40932 I2C_DIAG hal_ms=6 perf_us=5216 left=1 state=32
+40932 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+40972 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+40972 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41222 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+41222 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41262 I2C_DIAG hal_ms=6 perf_us=5232 left=1 state=32
+41262 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41271 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+41271 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+41293 I2C_DIAG hal_ms=6 perf_us=5427 left=1 state=32
+41293 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41345 I2C_DIAG hal_ms=6 perf_us=5317 left=1 state=32
+41345 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41392 I2C_DIAG hal_ms=6 perf_us=5247 left=1 state=32
+41392 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41412 I2C_DIAG hal_ms=6 perf_us=5066 left=1 state=32
+41412 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41443 I2C_DIAG hal_ms=6 perf_us=5262 left=1 state=32
+41443 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41492 I2C_DIAG hal_ms=6 perf_us=5247 left=1 state=32
+41492 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41501 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+41501 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+41542 I2C_DIAG hal_ms=6 perf_us=5067 left=1 state=32
+41542 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41592 I2C_DIAG hal_ms=6 perf_us=5246 left=1 state=32
+41592 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41601 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+41601 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+41623 I2C_DIAG hal_ms=6 perf_us=5427 left=1 state=32
+41623 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41675 I2C_DIAG hal_ms=6 perf_us=5324 left=2 state=32
+41675 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41722 I2C_DIAG hal_ms=6 perf_us=5247 left=1 state=32
+41722 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41731 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+41731 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+41753 I2C_DIAG hal_ms=6 perf_us=5427 left=1 state=32
+41753 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41805 I2C_DIAG hal_ms=6 perf_us=5359 left=1 state=32
+41805 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41814 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+41814 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+41882 I2C_DIAG hal_ms=6 perf_us=5247 left=1 state=32
+41882 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41891 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+41891 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+41913 I2C_DIAG hal_ms=6 perf_us=5440 left=1 state=32
+41913 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+41922 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+41922 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+41931 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+41931 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+41935 EVT t_us=41935408 name=i2c_fail
+41937 IMU_ERR st=BUS
+41938 EVT t_us=41938918 name=i2c_ok
+41997 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+41997 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42074 I2C_DIAG hal_ms=6 perf_us=5083 left=1 state=32
+42074 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42083 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+42083 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+42152 I2C_DIAG hal_ms=6 perf_us=5262 left=1 state=32
+42152 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42161 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+42161 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+42183 I2C_DIAG hal_ms=6 perf_us=5442 left=1 state=32
+42183 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42192 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+42192 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+42201 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+42201 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+42393 LOAD pct=93 pm=926 win_cyc=104383488 busy_cyc=96693962 windows=35
+42205 EVT t_us=42205416 name=i2c_fail
+42207 IMU_ERR st=BUS
+42208 EVT t_us=42209126 name=i2c_ok
+42215 I2C_DIAG hal_ms=6 perf_us=5427 left=1 state=32
+42215 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42299 I2C_DIAG hal_ms=6 perf_us=5082 left=1 state=32
+42299 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42311 I2C_DIAG hal_ms=6 perf_us=5960 left=1 state=32
+42311 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42333 I2C_DIAG hal_ms=6 perf_us=5442 left=1 state=32
+42333 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42447 I2C_DIAG hal_ms=6 perf_us=5262 left=1 state=32
+42447 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42517 I2C_DIAG hal_ms=6 perf_us=5097 left=1 state=32
+42517 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42548 I2C_DIAG hal_ms=6 perf_us=5427 left=1 state=32
+42548 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42579 I2C_DIAG hal_ms=6 perf_us=5098 left=1 state=32
+42579 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42591 I2C_DIAG hal_ms=6 perf_us=5960 left=1 state=32
+42591 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42613 I2C_DIAG hal_ms=6 perf_us=5442 left=1 state=32
+42613 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42622 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+42622 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+42631 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+42631 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+42635 EVT t_us=42635419 name=i2c_fail
+42637 IMU_ERR st=BUS
+42638 EVT t_us=42638918 name=i2c_ok
+42667 I2C_DIAG hal_ms=6 perf_us=5428 left=1 state=32
+42667 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42728 I2C_DIAG hal_ms=6 perf_us=5098 left=1 state=32
+42728 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42759 I2C_DIAG hal_ms=6 perf_us=5098 left=1 state=32
+42759 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42771 I2C_DIAG hal_ms=6 perf_us=5960 left=1 state=32
+42771 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42793 I2C_DIAG hal_ms=6 perf_us=5442 left=1 state=32
+42793 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42802 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+42855 I2C_DIAG hal_ms=6 perf_us=5280 left=2 state=32
+42855 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+42864 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+42864 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+43075 I2C_DIAG hal_ms=6 perf_us=5100 left=2 state=32
+43075 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43087 I2C_DIAG hal_ms=6 perf_us=5457 left=1 state=32
+43087 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43148 I2C_DIAG hal_ms=6 perf_us=5112 left=1 state=32
+43148 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43179 I2C_DIAG hal_ms=6 perf_us=5098 left=1 state=32
+43179 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43191 I2C_DIAG hal_ms=6 perf_us=5974 left=1 state=32
+43191 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43213 I2C_DIAG hal_ms=6 perf_us=5352 left=1 state=32
+43213 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43222 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+43222 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+43231 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+43231 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+43235 EVT t_us=43235433 name=i2c_fail
+43237 IMU_ERR st=BUS
+43238 EVT t_us=43238944 name=i2c_ok
+43297 I2C_DIAG hal_ms=6 perf_us=5112 left=1 state=32
+43297 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43328 I2C_DIAG hal_ms=6 perf_us=5278 left=1 state=32
+43328 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43359 I2C_DIAG hal_ms=6 perf_us=5113 left=1 state=32
+43359 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43371 I2C_DIAG hal_ms=6 perf_us=5960 left=1 state=32
+43371 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43380 I2C_DIAG hal_ms=6 perf_us=5476 left=1 state=32
+43380 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+43455 I2C_DIAG hal_ms=6 perf_us=5383 left=2 state=32
+43455 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43467 I2C_DIAG hal_ms=6 perf_us=5473 left=1 state=32
+43498 I2C_DIAG hal_ms=6 perf_us=5471 left=1 state=32
+43498 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43532 I2C_DIAG hal_ms=6 perf_us=5382 left=1 state=32
+43532 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43554 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+43554 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43575 I2C_DIAG hal_ms=6 perf_us=5382 left=2 state=32
+43686 I2C_DIAG hal_ms=6 perf_us=6028 left=1 state=32
+43686 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43695 I2C_DIAG hal_ms=6 perf_us=5478 left=1 state=32
+43695 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+43704 I2C_DIAG hal_ms=6 perf_us=5372 left=1 state=32
+43704 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+43708 EVT t_us=43708602 name=i2c_fail
+43711 IMU_ERR st=BUS
+43712 EVT t_us=43712598 name=i2c_ok
+43742 I2C_DIAG hal_ms=6 perf_us=5382 left=1 state=32
+43742 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43764 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+43785 I2C_DIAG hal_ms=6 perf_us=5396 left=2 state=32
+43837 I2C_DIAG hal_ms=6 perf_us=5472 left=1 state=32
+43837 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43898 I2C_DIAG hal_ms=6 perf_us=5127 left=1 state=32
+43898 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43965 I2C_DIAG hal_ms=6 perf_us=5114 left=2 state=32
+43965 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+43977 I2C_DIAG hal_ms=6 perf_us=5472 left=1 state=32
+43977 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44008 I2C_DIAG hal_ms=6 perf_us=5458 left=1 state=32
+44008 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44039 I2C_DIAG hal_ms=6 perf_us=5112 left=1 state=32
+44039 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44051 I2C_DIAG hal_ms=6 perf_us=5975 left=1 state=32
+44051 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44060 I2C_DIAG hal_ms=6 perf_us=5477 left=1 state=32
+44060 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+44072 I2C_DIAG hal_ms=6 perf_us=5397 left=1 state=32
+44072 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44085 I2C_DIAG hal_ms=6 perf_us=5445 left=1 state=32
+44128 I2C_DIAG hal_ms=6 perf_us=5472 left=1 state=32
+44128 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44159 I2C_DIAG hal_ms=6 perf_us=5112 left=1 state=32
+44159 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44418 LOAD pct=100 pm=1000 win_cyc=97209204 busy_cyc=97209204 windows=36
+44237 I2C_DIAG hal_ms=6 perf_us=5382 left=1 state=32
+44307 I2C_DIAG hal_ms=6 perf_us=5143 left=1 state=32
+44307 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44356 I2C_DIAG hal_ms=7 perf_us=6035 left=1 state=32
+44356 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44365 I2C_DIAG hal_ms=6 perf_us=5491 left=1 state=32
+44365 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+44377 I2C_DIAG hal_ms=6 perf_us=5382 left=1 state=32
+44377 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44443 I2C_DIAG hal_ms=6 perf_us=5322 left=1 state=32
+44443 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44464 I2C_DIAG hal_ms=6 perf_us=5487 left=1 state=32
+44464 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44487 I2C_DIAG hal_ms=6 perf_us=5293 left=1 state=32
+44487 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44557 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+44557 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44627 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+44627 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44682 I2C_DIAG hal_ms=6 perf_us=5322 left=1 state=32
+44682 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44722 I2C_DIAG hal_ms=6 perf_us=5307 left=1 state=32
+44722 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44753 I2C_DIAG hal_ms=6 perf_us=5307 left=1 state=32
+44753 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44774 I2C_DIAG hal_ms=6 perf_us=5397 left=1 state=32
+44774 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44817 I2C_DIAG hal_ms=6 perf_us=5307 left=1 state=32
+44817 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44852 I2C_DIAG hal_ms=6 perf_us=5322 left=1 state=32
+44852 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44883 I2C_DIAG hal_ms=6 perf_us=5307 left=1 state=32
+44883 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44904 I2C_DIAG hal_ms=6 perf_us=5487 left=1 state=32
+44904 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44947 I2C_DIAG hal_ms=6 perf_us=5308 left=1 state=32
+44947 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+44982 I2C_DIAG hal_ms=6 perf_us=5322 left=1 state=32
+44982 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45013 I2C_DIAG hal_ms=6 perf_us=5307 left=1 state=32
+45013 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45034 I2C_DIAG hal_ms=6 perf_us=5501 left=1 state=32
+45034 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45077 I2C_DIAG hal_ms=6 perf_us=5307 left=1 state=32
+45077 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45108 I2C_DIAG hal_ms=6 perf_us=5397 left=1 state=32
+45108 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45139 I2C_DIAG hal_ms=6 perf_us=5142 left=1 state=32
+45139 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45151 I2C_DIAG hal_ms=6 perf_us=5990 left=1 state=32
+45151 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45160 I2C_DIAG hal_ms=6 perf_us=5480 left=1 state=32
+45160 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+45172 I2C_DIAG hal_ms=6 perf_us=5397 left=1 state=32
+45172 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45185 I2C_DIAG hal_ms=6 perf_us=5434 left=1 state=32
+45185 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45225 I2C_DIAG hal_ms=6 perf_us=5062 left=1 state=32
+45225 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45267 I2C_DIAG hal_ms=6 perf_us=5158 left=1 state=32
+45267 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45298 I2C_DIAG hal_ms=6 perf_us=5502 left=1 state=32
+45298 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45307 I2C_DIAG hal_ms=6 perf_us=5417 left=1 state=32
+45307 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+45320 I2C_DIAG hal_ms=6 perf_us=5427 left=2 state=32
+45320 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45329 I2C_DIAG hal_ms=6 perf_us=5417 left=1 state=32
+45329 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+45492 I2C_DIAG hal_ms=6 perf_us=5321 left=1 state=32
+45492 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45523 I2C_DIAG hal_ms=6 perf_us=5322 left=1 state=32
+45523 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45544 I2C_DIAG hal_ms=6 perf_us=5412 left=1 state=32
+45544 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45567 I2C_DIAG hal_ms=6 perf_us=5323 left=1 state=32
+45567 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45576 I2C_DIAG hal_ms=6 perf_us=5433 left=1 state=32
+45576 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+45585 I2C_DIAG hal_ms=6 perf_us=5466 left=1 state=32
+45585 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+45589 EVT t_us=45589581 name=i2c_fail
+45591 IMU_ERR st=BUS
+45592 EVT t_us=45593123 name=i2c_ok
+45599 I2C_DIAG hal_ms=6 perf_us=5502 left=1 state=32
+45599 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45608 I2C_DIAG hal_ms=6 perf_us=5427 left=1 state=32
+45608 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+45644 I2C_DIAG hal_ms=6 perf_us=5502 left=1 state=32
+45667 I2C_DIAG hal_ms=6 perf_us=5323 left=1 state=32
+45757 I2C_DIAG hal_ms=6 perf_us=5323 left=1 state=32
+45757 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45843 I2C_DIAG hal_ms=6 perf_us=5172 left=1 state=32
+45843 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45882 I2C_DIAG hal_ms=6 perf_us=5337 left=1 state=32
+45882 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45904 I2C_DIAG hal_ms=6 perf_us=5157 left=1 state=32
+45904 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45913 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+45913 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+45935 I2C_DIAG hal_ms=6 perf_us=5077 left=1 state=32
+45935 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+45995 I2C_DIAG hal_ms=6 perf_us=5449 left=1 state=32
+45995 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+46004 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+46004 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+46127 I2C_DIAG hal_ms=6 perf_us=5322 left=1 state=32
+46127 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+46136 I2C_DIAG hal_ms=6 perf_us=5417 left=1 state=32
+46136 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+46145 I2C_DIAG hal_ms=6 perf_us=5482 left=1 state=32
+46145 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+46149 EVT t_us=46149610 name=i2c_fail
+46151 IMU_ERR st=BUS
+46152 EVT t_us=46153136 name=i2c_ok
+46159 I2C_DIAG hal_ms=6 perf_us=5503 left=1 state=32
+46159 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+46567 LOAD pct=100 pm=1000 win_cyc=103032857 busy_cyc=103032857 windows=37
+46453 I2C_DIAG hal_ms=6 perf_us=5187 left=1 state=32
+46453 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+46462 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+46462 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+46471 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+46471 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+46475 EVT t_us=46475507 name=i2c_fail
+46477 IMU_ERR st=BUS
+46478 EVT t_us=46479107 name=i2c_ok
+46485 I2C_DIAG hal_ms=6 perf_us=5545 left=1 state=32
+46485 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+46547 I2C_DIAG hal_ms=6 perf_us=5442 left=1 state=32
+46547 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+46603 I2C_DIAG hal_ms=6 perf_us=5172 left=1 state=32
+46603 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+46612 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+46612 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+46733 I2C_DIAG hal_ms=6 perf_us=5187 left=1 state=32
+46733 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+46742 I2C_DIAG hal_ms=6 perf_us=5358 left=1 state=32
+46742 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+46751 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+46751 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+46855 I2C_DIAG hal_ms=6 perf_us=5456 left=2 state=32
+46855 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47032 I2C_DIAG hal_ms=6 perf_us=5367 left=1 state=32
+47032 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47072 I2C_DIAG hal_ms=6 perf_us=5187 left=1 state=32
+47072 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47103 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+47103 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47112 I2C_DIAG hal_ms=6 perf_us=5342 left=1 state=32
+47112 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+47121 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+47121 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+47125 EVT t_us=47125507 name=i2c_fail
+47127 IMU_ERR st=BUS
+47128 EVT t_us=47129103 name=i2c_ok
+47157 I2C_DIAG hal_ms=6 perf_us=5442 left=1 state=32
+47157 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47188 I2C_DIAG hal_ms=6 perf_us=5203 left=1 state=32
+47188 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47282 I2C_DIAG hal_ms=6 perf_us=5368 left=1 state=32
+47282 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47313 I2C_DIAG hal_ms=6 perf_us=5187 left=1 state=32
+47313 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47322 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+47322 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+47331 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+47331 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+47335 EVT t_us=47335512 name=i2c_fail
+47337 IMU_ERR st=BUS
+47338 EVT t_us=47339117 name=i2c_ok
+47345 I2C_DIAG hal_ms=6 perf_us=5547 left=1 state=32
+47345 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47354 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+47354 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+47363 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+47363 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+47488 I2C_DIAG hal_ms=6 perf_us=5547 left=1 state=32
+47488 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47559 I2C_DIAG hal_ms=6 perf_us=5188 left=1 state=32
+47559 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47602 I2C_DIAG hal_ms=6 perf_us=5367 left=1 state=32
+47602 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47633 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+47633 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47672 I2C_DIAG hal_ms=6 perf_us=5382 left=1 state=32
+47672 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47703 I2C_DIAG hal_ms=6 perf_us=5187 left=1 state=32
+47703 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47724 I2C_DIAG hal_ms=6 perf_us=5352 left=1 state=32
+47724 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47733 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+47733 I2C_RECOVER try=2/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+47742 I2C_DIAG hal_ms=6 perf_us=5357 left=1 state=32
+47742 I2C_RECOVER try=3/3 where=rd addr=0x68 err=0x20 isr=0x00000021
+47746 EVT t_us=47746632 name=i2c_fail
+47748 IMU_ERR st=BUS
+47749 EVT t_us=47750132 name=i2c_ok
+47788 I2C_DIAG hal_ms=6 perf_us=5203 left=1 state=32
+47788 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47839 I2C_DIAG hal_ms=6 perf_us=5202 left=1 state=32
+47839 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47908 I2C_DIAG hal_ms=6 perf_us=5548 left=1 state=32
+47908 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47952 I2C_DIAG hal_ms=6 perf_us=5367 left=1 state=32
+47952 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+47983 I2C_DIAG hal_ms=6 perf_us=5217 left=1 state=32
+47983 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+48022 I2C_DIAG hal_ms=6 perf_us=5382 left=1 state=32
+48022 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+48053 I2C_DIAG hal_ms=6 perf_us=5187 left=1 state=32
+48053 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+48092 I2C_DIAG hal_ms=6 perf_us=5382 left=1 state=32
+48092 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+48123 I2C_DIAG hal_ms=6 perf_us=5187 left=1 state=32
+48123 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+48162 I2C_DIAG hal_ms=6 perf_us=5382 left=1 state=32
+48162 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+48193 I2C_DIAG hal_ms=6 perf_us=5187 left=1 state=32
+48193 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+48244 LOAD pct=100 pm=1000 win_cyc=80616127 busy_cyc=80616127 windows=38
+48214 I2C_DIAG hal_ms=6 perf_us=5292 left=1 state=32
+48214 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+48237 I2C_DIAG hal_ms=6 perf_us=5367 left=1 state=32
+48237 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+48260 I2C_DIAG hal_ms=6 perf_us=5181 left=2 state=32
+48260 I2C_RECOVER try=1/3 where
