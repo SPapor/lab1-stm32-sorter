@@ -1,0 +1,25 @@
+# ЛР4 rtos LTO=1 (коміт a7a4b9f) локальним arm-none-eabi-gcc 14.2.1 замість образу stm32-build (10.3.1), FLASH 64K
+
+## OPT=-Os
+Memory region         Used Size  Region Size  %age Used
+             RAM:       12128 B        12 KB     98.70%
+           FLASH:       30576 B        64 KB     46.66%
+   text	   data	    bss	    dec	    hex	filename
+  30472	    104	  12024	  42600	   a668	build/firmware.elf
+
+## OPT=-Oz
+Memory region         Used Size  Region Size  %age Used
+             RAM:       12128 B        12 KB     98.70%
+           FLASH:       30576 B        64 KB     46.66%
+   text	   data	    bss	    dec	    hex	filename
+  30472	    104	  12024	  42600	   a668	build/firmware.elf
+
+## перевірка: обидві збірки вище - після make clean, у рядках компіляції другої стоїть -Oz; окремі файли, arm-none-eabi-gcc (15:14.2.rel1-1) 14.2.1 20241119
+App/fmt.c -Os text=1057
+App/fmt.c -Oz text=1057
+Drivers/STM32C0xx_HAL_Driver/Src/stm32c0xx_hal_i2c.c -Os text=12738
+Drivers/STM32C0xx_HAL_Driver/Src/stm32c0xx_hal_i2c.c -Oz text=12738
+Drivers/STM32C0xx_HAL_Driver/Src/stm32c0xx_hal_uart.c -Os text=8637
+Drivers/STM32C0xx_HAL_Driver/Src/stm32c0xx_hal_uart.c -Oz text=8637
+Middlewares/FreeRTOS/tasks.c -Os text=4761
+Middlewares/FreeRTOS/tasks.c -Oz text=4761

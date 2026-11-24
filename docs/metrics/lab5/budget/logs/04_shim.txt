@@ -1,0 +1,192 @@
+# тонкий шар QP замість Tasks/sorter_tasks.c (shim/), решта дерева - коміт a7a4b9f; FreeRTOSConfig.h - probe/FreeRTOSConfig.patch; app.mk - shim/app.mk.patch; Tasks/{app_task,kstress,critcost,api_probe}.c прибрано (лише тестові збірки); FLASH 64K у скрипті лінкера; gcc 10.3.1
+
+## LTO=1
+Memory region         Used Size  Region Size  %age Used
+             RAM:       12056 B        12 KB     98.11%
+           FLASH:       32056 B        64 KB     48.91%
+
+## LTO=0
+Memory region         Used Size  Region Size  %age Used
+             RAM:       12064 B        12 KB     98.18%
+           FLASH:       37936 B        64 KB     57.89%
+
+## LTO=0 по об'єктах (map; модулі тут неточні - map поза деревом firmware/)
+об'єкт                       модуль        flash, B   RAM, B
+main.o                       Core              8140     1353
+sorter_tasks.o               Tasks             2684     7783
+tasks.o                      Core              2301      296
+stm32c0xx_hal_adc.o          Drivers           1834        0
+stm32c0xx_hal_i2c.o          Drivers           1652        0
+stm32c0xx_hal_tim.o          Drivers           1430        0
+stm32c0xx_hal_uart.o         Drivers           1397        0
+stm32c0xx_hal_rcc.o          Drivers           1120        0
+queue.o                      Core              1060        0
+qep_hsm.o                    Core              1000        0
+fmt.o                        App                991        0
+qf_port.o                    Core               925        0
+port.o                       Core               852       48
+stm32c0xx_hal_gpio.o         Drivers            678        0
+rtos_hal.o                   Platform           622       39
+cli.o                        App                596        0
+perf.o                       App                578        0
+rtos_diag.o                  Platform           536       12
+uart_hal.o                   Platform           508      212
+i2c_hal.o                    Platform           487        0
+libgcc.a(_divsi3.o)          libgcc             468        0
+qf_dyn.o                     Core               443        0
+lcd1602.o                    Devices            428        0
+stm32c0xx_hal_adc_ex.o       Drivers            364        0
+perf_hal.o                   Platform           356       12
+qf_mem.o                     Core               351        0
+qf_time.o                    Core               300       24
+sorter.o                     App                291        0
+i2c.o                        Core               284       84
+libgcc.a(_udivsi3.o)         libgcc             276        0
+stm32c0xx_hal_rcc_ex.o       Drivers            276        0
+startup_stm32c031xx.o        Core               274        0
+adc.o                        Core               268      100
+tim.o                        Core               248       76
+mpu6050.o                    Devices            222        0
+qf_qact.o                    Core               200       96
+portasm.o                    Core               180        0
+libc_nano.a(lib_a-memset.o)  libc_nano          168        0
+stm32c0xx_hal_cortex.o       Drivers            168        0
+libc_nano.a(lib_a-memcpy-stub.o) libc_nano          164        0
+crtbegin.o                   crt                160       28
+gpio.o                       Core               156        0
+usart.o                      Core               152      148
+stm32c0xx_hal_i2c_ex.o       Drivers            148        0
+lcdfmt.o                     App                142        0
+libc_nano.a(lib_a-strcmp.o)  libc_nano          136        0
+adc_hal.o                    Platform           132        0
+impact.o                     App                122        0
+libc_nano.a(lib_a-nano-mallinfor.o) libc_nano          116       40
+system_stm32c0xx.o           Core               116        4
+list.o                       Core               104        0
+stm32c0xx_hal.o              Drivers            101        9
+libc_nano.a(lib_a-impure.o)  libc_nano          100      100
+stm32c0xx_hal_tim_ex.o       Drivers             96        0
+libc_nano.a(lib_a-strlen-stub.o) libc_nano           92        0
+libgcc.a(_muldi3.o)          libgcc              92        0
+health.o                     App                 89        0
+servo_hal.o                  Platform            81        0
+classify.o                   App                 80        0
+qf_act.o                     Core                75        0
+libc_nano.a(lib_a-init.o)    libc_nano           68        0
+sysmem.o                     Core                64        4
+stm32c0xx_hal_msp.o          Core                48        0
+gate.o                       App                 44        0
+libc_nano.a(lib_a-sbrkr.o)   libc_nano           36        0
+stm32c0xx_it.o               Core                32        0
+mem_hal.o                    Platform            30        0
+memmark.o                    App                 28        0
+libgcc.a(_thumb1_case_sqi.o) libgcc              20        0
+libgcc.a(_thumb1_case_uqi.o) libgcc              20        0
+libgcc.a(_thumb1_case_uhi.o) libgcc              20        0
+crtn.o                       crt                 16        0
+libc_nano.a(lib_a-errno.o)   libc_nano           12        0
+libc_nano.a(lib_a-mlock.o)   libc_nano            8        0
+platform.o                   Platform             8        0
+crti.o                       crt                  8        0
+libgcc.a(_dvmd_tls.o)        libgcc               4        0
+libc_nano.a(lib_a-nano-mallocr.o) libc_nano            0        8
+libc_nano.a(lib_a-reent.o)   libc_nano            0        4
+разом                                         37876    10480
+
+Найбільші символи (топ 15):
+  байт  регіон    модуль     символ
+  1736  RAM       Tasks      ao
+  1632  FLASH     Core       main
+  1248  FLASH     Core       cli_work
+   936  RAM       Tasks      pool_log
+   768  RAM       Tasks      stk_cli
+   768  RAM       Tasks      stk_imu
+   674  FLASH     Core       рядкові константи main.o
+   640  RAM       Tasks      stk_lcd
+   640  RAM       Tasks      stk_logger
+   640  RAM       Tasks      stk_sort
+   624  FLASH     Drivers    HAL_RCC_OscConfig
+   608  FLASH     App        fmt_core.constprop.0
+   556  FLASH     Drivers    HAL_ADC_ConfigChannel
+   552  FLASH     Drivers    HAL_ADC_Init
+   512  RAM       Tasks      stk_estop
+
+## LTO=0 функції sorter_tasks.o
+sorter_tasks.o       1736 .bss.ao
+sorter_tasks.o        936 .bss.pool_log
+sorter_tasks.o        768 .bss.stk_imu
+sorter_tasks.o        768 .bss.stk_cli
+sorter_tasks.o        640 .bss.stk_sort
+sorter_tasks.o        640 .bss.stk_logger
+sorter_tasks.o        640 .bss.stk_lcd
+sorter_tasks.o        512 .bss.stk_gate
+sorter_tasks.o        512 .bss.stk_estop
+sorter_tasks.o        212 .text.tasks_list
+sorter_tasks.o        200 .text.tasks_start
+sorter_tasks.o        196 .text.tasks_report
+sorter_tasks.o        192 .bss.idle_stk
+sorter_tasks.o        180 .text.ao_initial
+sorter_tasks.o        161 .rodata.tasks_report.str1.1
+sorter_tasks.o        152 .text.USART2_IRQHandler
+sorter_tasks.o        108 .text.tasks_stats_reset
+sorter_tasks.o        104 .text.tasks_log
+sorter_tasks.o         92 .text.estop_run
+sorter_tasks.o         84 .text.tasks_stack_report
+sorter_tasks.o         80 .text.logger_run
+sorter_tasks.o         80 .bss.idle_tcb
+sorter_tasks.o         72 .text.lcd_run
+sorter_tasks.o         72 .text.imu_run
+sorter_tasks.o         69 .rodata.tasks_list.str1.1
+sorter_tasks.o         68 .text.tasks_estop_from_isr
+sorter_tasks.o         64 .bss.rx_buf
+sorter_tasks.o         64 .bss.rt_base
+sorter_tasks.o         64 .bss.q_logger
+sorter_tasks.o         64 .bss.pool_small
+sorter_tasks.o         60 .text.tasks_rx_getc
+sorter_tasks.o         56 .rodata.task_def
+sorter_tasks.o         52 .text.tasks_heap_report
+sorter_tasks.o         52 .text.arm_period
+sorter_tasks.o         52 .text.Q_onError
+sorter_tasks.o         48 .text.cli_run
+sorter_tasks.o         44 .text.tasks_parcel
+sorter_tasks.o         44 .text.sort_run
+sorter_tasks.o         40 .text.QF_onStartup
+sorter_tasks.o         40 .rodata.str1.1
+sorter_tasks.o         39 .rodata.tasks_stack_report.str1.1
+sorter_tasks.o         36 .text.vApplicationTickHook
+sorter_tasks.o         36 .text.gate_run
+sorter_tasks.o         32 .text.tasks_snapshot
+sorter_tasks.o         28 .text.th
+sorter_tasks.o         28 .rodata.stk
+sorter_tasks.o         28 .rodata.qsto
+sorter_tasks.o         24 .text.vApplicationGetIdleTaskMemory
+sorter_tasks.o         22 .rodata.tasks_heap_report.str1.1
+sorter_tasks.o         20 .rodata.state_name.0
+sorter_tasks.o         20 .bss.sim_base
+sorter_tasks.o         13 .rodata.Q_onError.str1.1
+sorter_tasks.o         12 .text.tasks_running
+sorter_tasks.o         12 .bss.q_sort
+sorter_tasks.o          8 .text.tasks_idle_cyc
+sorter_tasks.o          8 .rodata.rx_evt
+sorter_tasks.o          8 .rodata.estop_evt
+sorter_tasks.o          8 .bss.rt_total_base
+sorter_tasks.o          8 .bss.q_lcd
+sorter_tasks.o          8 .bss.q_imu
+sorter_tasks.o          8 .bss.q_gate
+sorter_tasks.o          8 .bss.q_estop
+sorter_tasks.o          8 .bss.q_cli
+sorter_tasks.o          4 .bss.rx_drop
+sorter_tasks.o          4 .bss.ops
+sorter_tasks.o          4 .bss.log_trunc
+sorter_tasks.o          4 .bss.log_lines
+sorter_tasks.o          4 .bss.log_drop
+sorter_tasks.o          2 .text.tasks_unlock
+sorter_tasks.o          2 .text.tasks_lock
+sorter_tasks.o          1 .bss.rx_tail
+sorter_tasks.o          1 .bss.rx_head
+sorter_tasks.o          1 .bss.running
+
+## LTO=1, HIST_CMD 0 у Core/Src/main.c (рядок 113)
+Memory region         Used Size  Region Size  %age Used
+             RAM:       12056 B        12 KB     98.11%
+           FLASH:       31700 B        64 KB     48.37%

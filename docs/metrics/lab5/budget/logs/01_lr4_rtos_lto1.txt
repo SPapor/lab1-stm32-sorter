@@ -1,0 +1,3 @@
+# ЛР4 rtos, LTO=1, коміт a7a4b9f (= 1a03385 за firmware/), make build ARCH=rtos LTO=1, образ stm32-build (arm-none-eabi-gcc 10.3.1)
+   text	   data	    bss	    dec	    hex	filename
+  31860	    128	  11704	  43692	   aaac	firmware/build/firmware.elf
