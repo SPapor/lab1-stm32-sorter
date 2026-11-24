@@ -52,4 +52,6 @@ void rtos_hal_hardfault(uint32_t exc_return) __attribute__((noreturn));
 
 void rtos_hal_fatal_create(const char *name) __attribute__((noreturn));
 
+void rtos_hal_fatal_qp(const char *module, int32_t id) __attribute__((noreturn));
+
 #endif /* RTOS_HAL_H */

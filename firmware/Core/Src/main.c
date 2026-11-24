@@ -115,7 +115,10 @@ enum {
 #define IMU_READY_MG        500     /* |a| від 0,5 g — MPU справді міряє (у SLEEP на залізі дає нулі) */
 
 /* Архітектура (app.mk: ARCH, LTO, TICK_HZ) — у рядках BOOT і PERF */
-#if ARCH_RTOS
+#if ARCH_QPC
+#define FW_NAME             "lab5-qpc"
+#define ARCH_NAME           "qpc"
+#elif ARCH_RTOS
 #define FW_NAME             "lab4-rtos"
 #define ARCH_NAME           "rtos"
 #else
@@ -273,7 +276,7 @@ static uint32_t parcel_cyc;   /* perf_now() у той самий момент (P
 static volatile uint32_t estop_edge_ms;     /* час першого фронту */
 #else
 /* Робота задач для Tasks/sorter_tasks.c; imu і lcd - лише якщо пристрій пройшов самоперевірку */
-#if !defined(TEST_KSTRESS) && !defined(TEST_CRITCOST)
+#if !defined(TEST_KSTRESS) && !defined(TEST_CRITCOST) && !defined(TEST_QSTRESS)
 static tasks_ops_t task_ops;
 #endif
 static i2c_bus_t i2c1_inner;     /* шина під м'ютексом: i2c1_bus бере його на кожну транзакцію */
@@ -568,7 +571,7 @@ int main(void)
    * (ulCriticalNesting = 0xaaaaaaaa у порту), HAL_GetTick стоїть. Тому вся
    * ініціалізація з HAL_Delay і тайм-аутами HAL (LCD, самоперевірка, I2C) — вище.
    * LCD підсумку самоперевірки - ще перший період lcd (xTaskDelayUntil) */
-#if defined(TEST_KSTRESS) || defined(TEST_CRITCOST)
+#if defined(TEST_KSTRESS) || defined(TEST_CRITCOST) || defined(TEST_QSTRESS)
   /* тестові збірки ядра запускають свої задачі: робота продукту не лінкується */
   (void)estop_work;
   (void)gate_work;

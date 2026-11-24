@@ -17,8 +17,12 @@ rtos=$(for f in "$kernel"/include/*.h "$kernel"/portable/GCC/ARM_CM0/*.h; do
 done | paste -sd'|' -)
 rtos=${rtos:-'FreeRTOS\.h|task\.h|queue\.h|semphr\.h|stream_buffer\.h|message_buffer\.h|timers\.h|event_groups\.h|list\.h|portable\.h|projdefs\.h|portmacro\.h'}
 rtos="FreeRTOSConfig\\.h|$rtos"
+qp=$(for f in firmware/Middlewares/qpc/include/*.h firmware/Middlewares/qpc/ports/freertos/*.h; do
+    [ -e "$f" ] && basename "$f" | sed 's/\./\\./'
+done | paste -sd'|' -)
+rtos="$rtos|qp_config\\.h${qp:+|$qp}"
 # Заголовки шару Tasks/ (за іменами файлів)
-tasks=$(for f in firmware/Tasks/*.h; do [ -e "$f" ] && basename "$f" | sed 's/\./\\./'; done | paste -sd'|' -)
+tasks=$(for f in firmware/Tasks/*.h firmware/Active/*.h; do [ -e "$f" ] && basename "$f" | sed 's/\./\\./'; done | paste -sd'|' -)
 tasks=${tasks:-.^}
 hal='stm32[^">]*|[^">]*_hal[^">]*|board\.h|platform\.h|main\.h|i2c\.h|adc\.h|tim\.h|usart\.h|gpio\.h'
 
@@ -44,7 +48,7 @@ check() {
 check "HAL, CubeMX, Platform, FreeRTOS або Tasks у App/ чи Devices/" \
       "$hal|$rtos|$tasks" firmware/App firmware/Devices
 
-platform=$(find firmware/Platform -name '*.[ch]' -not -path 'firmware/Platform/rtos/*')
+platform=$(find firmware/Platform -name '*.[ch]' -not -path 'firmware/Platform/rtos/*' -not -path 'firmware/Platform/qpc/*')
 # shellcheck disable=SC2086
 check "FreeRTOS або Tasks у Platform/ поза Platform/rtos/" "$rtos|$tasks" $platform
 

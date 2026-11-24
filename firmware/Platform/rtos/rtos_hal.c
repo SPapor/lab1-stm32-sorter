@@ -21,7 +21,7 @@
 #if SIM_CRIT
 #include "port_sim.h"
 #endif
-#ifdef TEST_KSTRESS
+#if defined(TEST_KSTRESS) || defined(TEST_QSTRESS)
 #include "kstress_port.h"
 #endif
 #ifdef OSMETRICS
@@ -140,7 +140,7 @@ void SysTick_Handler(void);
  * момент, загубився б (docs/rtos-design.md, розділ 3) */
 void SysTick_Handler(void)
 {
-#ifdef TEST_KSTRESS
+#if defined(TEST_KSTRESS) || defined(TEST_QSTRESS)
     kstress_sample_nvic();
 #endif
     rtos_hal_ticks++;
@@ -152,7 +152,7 @@ void SysTick_Handler(void)
     if (port_sim_defer_tick())
         return;
 #endif
-#ifdef TEST_KSTRESS
+#if defined(TEST_KSTRESS) || defined(TEST_QSTRESS)
     kstress_note_isr(KSTRESS_SRC_TICK);
 #endif
 #ifdef OSMETRICS
