@@ -31,4 +31,11 @@ Wokwi для VS Code, `tools/run_scenario.py` по RFC2217 (`rfc2217://localhost
 | `12ddeaa1` (`S1_..._2116`, `_2118`, `_2120`, `BOOT_*_12ddeaa1.txt`) | `15c763d` |
 | `a5a1bfc8` | без змін (main, злиття PR #27) |
 
+## Крок 3: ядро QP/C
+
+| Файл | Прошивка | Що показує |
+|---|---|---|
+| `QSTRESS_2026-11-24.txt` | `TEST_QSTRESS=1`, коміт `248650b` (у рядку `BOOT` - `c73febbc-dirty`: зібрано до коміту, той самий код), gcc 10 | ворота QP/C - PASS (docs/qp-design.md, «Ядро») |
+| `BOOT_qpc_interim_c73febbc.txt` | `ARCH=qpc`, проміжний шар, до коміту `b44c429` (той самий код), gcc 10 | старт чистий, але в роботі 507 `I2C_RECOVER` (`rd err=0x20`), 5 вікон `LOAD pct=100` - проблема 81 |
+
 Бюджет пам'яті - `budget/` (свій README).
