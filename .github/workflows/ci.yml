@@ -12,7 +12,7 @@ jobs:
         with:
           submodules: true          # ядро FreeRTOS: firmware/Middlewares/FreeRTOS
 
-      - name: Docker image (docker/Dockerfile, gcc 14.2.1)
+      - name: Docker image (docker/gcc10/Dockerfile, gcc 10.3.1)
         run: make image
 
       - name: Layer dependencies
@@ -84,6 +84,13 @@ jobs:
 
       - name: Firmware build
         run: make build
+
+      - name: gcc 14 for comparison (docker/Dockerfile) - product builds only
+        run: |
+          make image-gcc14
+          make build LTO=1 IMAGE=stm32-build:gcc14
+          make build ARCH=rtos LTO=1 IMAGE=stm32-build:gcc14
+          make build IMAGE=stm32-build:gcc10
 
       - name: Host tests
         run: make test
