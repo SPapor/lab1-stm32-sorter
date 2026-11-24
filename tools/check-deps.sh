@@ -48,5 +48,11 @@ platform=$(find firmware/Platform -name '*.[ch]' -not -path 'firmware/Platform/r
 # shellcheck disable=SC2086
 check "FreeRTOS або Tasks у Platform/ поза Platform/rtos/" "$rtos|$tasks" $platform
 
+if ! grep -q '^_Min_Heap_Size = 0x0;' firmware/STM32C031xx_FLASH.ld ||
+   ! grep -q '^ProjectManager.HeapSize=0x0$' firmware/firmware.ioc; then
+    echo "deps FAIL: купа newlib має бути 0 у STM32C031xx_FLASH.ld і firmware.ioc (docs/qp-design.md, крок 2)" >&2
+    fail=1
+fi
+
 [ "$fail" -eq 0 ] && echo "deps OK"
 exit "$fail"

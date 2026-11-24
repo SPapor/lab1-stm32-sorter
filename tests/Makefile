@@ -48,11 +48,17 @@ test_fmt_DEFS     = -Wno-format-truncation
 
 vpath %.c . fakes unity $(FW)/Devices $(FW)/App
 
+CC_VER = $(BUILD)/cc.ver
+$(CC_VER): FORCE
+	@mkdir -p $(BUILD)
+	@{ $(CC) --version | head -1; ldd --version | head -1; } | cmp -s - $@ || \
+	  { $(CC) --version | head -1; ldd --version | head -1; } > $@
+
 define TEST_rules
 $(1)_OBJ = $$(addprefix $(BUILD)/$(1)/,$$(notdir $$($(1)_SRC:.c=.o)) unity.o)
 $(BUILD)/$(1)/$(1): $$($(1)_OBJ)
 	$$(CC) $$(LDFLAGS) -o $$@ $$^
-$(BUILD)/$(1)/%.o: %.c | $(BUILD)/$(1)
+$(BUILD)/$(1)/%.o: %.c $(CC_VER) | $(BUILD)/$(1)
 	$$(CC) $$(CFLAGS) $$(CPPFLAGS) $$($(1)_DEFS) -c -o $$@ $$<
 $(BUILD)/$(1):
 	mkdir -p $$@
@@ -81,4 +87,6 @@ coverage: test
 clean:
 	rm -rf $(BUILD) $(COV_DIR)
 
-.PHONY: test coverage clean
+.PHONY: test coverage clean FORCE
+
+FORCE:

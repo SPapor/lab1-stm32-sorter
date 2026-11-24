@@ -1,0 +1,137 @@
+# оцінка ARCH=qpc під рішення кроку 2: gcc 14.2.1 (stm32-build:gcc14), купа newlib 0, STATUS без PUBLISH
+
+## тонкий шар (shim/), купа 0, gcc14
+LTO=1: RAM: 11840 B FLASH: 30956 B 
+LTO=0: RAM: 11864 B FLASH: 38024 B 
+# LTO=0 по об'єктах
+main.o                                      8832    1353
+sorter_tasks.o                              2308    7783
+tasks.o                                     2288     292
+stm32c0xx_hal_adc.o                         1866       0
+stm32c0xx_hal_i2c.o                         1618       0
+stm32c0xx_hal_tim.o                         1438       0
+stm32c0xx_hal_uart.o                        1399       0
+stm32c0xx_hal_rcc.o                         1116       0
+queue.o                                     1054       0
+qep_hsm.o                                   1004       0
+fmt.o                                        992       0
+qf_port.o                                    938       0
+port.o                                       852      48
+uart_hal.o                                   500     212
+stm32c0xx_hal_gpio.o                         678       0
+rtos_hal.o                                   614      39
+perf.o                                       574       0
+cli.o                                        532       0
+rtos_diag.o                                  468      12
+qf_dyn.o                                     471       0
+libgcc.a(_divsi3.o)                          468       0
+i2c_hal.o                                    455       0
+lcd1602.o                                    404       0
+perf_hal.o                                   372      12
+qf_mem.o                                     371       0
+i2c.o                                        284      84
+adc.o                                        268     100
+stm32c0xx_hal_adc_ex.o                       356       0
+qf_time.o                                    320      24
+tim.o                                        248      76
+# LTO=0 функції sorter_tasks.o
+sorter_tasks.o       1736 .bss.ao
+sorter_tasks.o        936 .bss.pool_log
+sorter_tasks.o        768 .bss.stk_imu
+sorter_tasks.o        768 .bss.stk_cli
+sorter_tasks.o        640 .bss.stk_sort
+sorter_tasks.o        640 .bss.stk_logger
+sorter_tasks.o        640 .bss.stk_lcd
+sorter_tasks.o        512 .bss.stk_gate
+sorter_tasks.o        512 .bss.stk_estop
+sorter_tasks.o        216 .text.tasks_list
+sorter_tasks.o        200 .text.tasks_start
+sorter_tasks.o        200 .text.tasks_report
+sorter_tasks.o        192 .bss.idle_stk
+sorter_tasks.o        180 .text.ao_initial
+sorter_tasks.o        152 .text.USART2_IRQHandler
+sorter_tasks.o        108 .text.tasks_stats_reset
+sorter_tasks.o        104 .text.tasks_log
+sorter_tasks.o         84 .text.tasks_stack_report
+sorter_tasks.o         80 .text.logger_run
+sorter_tasks.o         80 .text.estop_run
+sorter_tasks.o         80 .bss.idle_tcb
+sorter_tasks.o         72 .text.lcd_run
+sorter_tasks.o         72 .text.imu_run
+sorter_tasks.o         68 .text.tasks_estop_from_isr
+sorter_tasks.o         64 .bss.rx_buf
+sorter_tasks.o         64 .bss.rt_base
+sorter_tasks.o         64 .bss.q_logger
+sorter_tasks.o         64 .bss.pool_small
+sorter_tasks.o         60 .text.tasks_rx_getc
+sorter_tasks.o         56 .rodata.task_def
+sorter_tasks.o         52 .text.tasks_heap_report
+sorter_tasks.o         52 .text.Q_onError
+sorter_tasks.o         44 .text.tasks_parcel
+sorter_tasks.o         44 .text.sort_run
+sorter_tasks.o         44 .text.cli_run
+sorter_tasks.o         36 .text.vApplicationTickHook
+sorter_tasks.o         36 .text.gate_run
+sorter_tasks.o         36 .text.QF_onStartup
+sorter_tasks.o         32 .text.tasks_snapshot
+sorter_tasks.o         32 .text.arm_period
+sorter_tasks.o         28 .text.th
+sorter_tasks.o         28 .rodata.stk
+sorter_tasks.o         28 .rodata.qsto
+sorter_tasks.o         24 .text.vApplicationGetIdleTaskMemory
+sorter_tasks.o         20 .rodata.state_name.0
+sorter_tasks.o         20 .bss.sim_base
+sorter_tasks.o         12 .text.tasks_running
+sorter_tasks.o         12 .bss.q_sort
+sorter_tasks.o          8 .text.tasks_idle_cyc
+sorter_tasks.o          8 .rodata.rx_evt
+sorter_tasks.o          8 .rodata.estop_evt
+sorter_tasks.o          8 .bss.rt_total_base
+sorter_tasks.o          8 .bss.q_lcd
+sorter_tasks.o          8 .bss.q_imu
+sorter_tasks.o          8 .bss.q_gate
+sorter_tasks.o          8 .bss.q_estop
+sorter_tasks.o          8 .bss.q_cli
+sorter_tasks.o          4 .bss.rx_drop
+sorter_tasks.o          4 .bss.ops
+sorter_tasks.o          4 .bss.log_trunc
+sorter_tasks.o          4 .bss.log_lines
+sorter_tasks.o          4 .bss.log_drop
+sorter_tasks.o          2 .text.tasks_unlock
+sorter_tasks.o          2 .text.tasks_lock
+sorter_tasks.o          1 .bss.rx_tail
+sorter_tasks.o          1 .bss.rx_head
+sorter_tasks.o          1 .bss.running
+
+## зонд без PUBLISH (probe/ + probe/no_publish.patch), купа 0 у скрипті лінкера, gcc14
+LTO=0 : RAM: 8728 B FLASH: 12784 B 
+LTO=1 : RAM: 8720 B FLASH: 11036 B 
+LTO=0 -DQ_UNSAFE: RAM: 8728 B FLASH: 11320 B 
+LTO=1 -DQ_UNSAFE: RAM: 8688 B FLASH: 9684 B 
+# LTO=0 по об'єктах
+bsp.o                                        948    5652
+ao.o                                        2092    1544
+tasks.o                                     2300     292
+qf_port.o                                   1405       0
+queue.o                                     1072       0
+qep_hsm.o                                   1004       0
+port.o                                       804      48
+qf_dyn.o                                     471       0
+qf_mem.o                                     371       0
+qf_time.o                                    320      24
+qf_qact.o                                    212      96
+libgcc.a(_udivsi3.o)                         276       0
+startup.o                                    274       0
+work.o                                       270       4
+crtbegin.o                                   160      28
+portasm.o                                    180       0
+libc_nano.a(libc_a-memcpy-stub.o)            168       0
+libc_nano.a(libc_a-memset.o)                 148       0
+list.o                                       104       0
+qf_act.o                                      75       0
+libc_nano.a(libc_a-init.o)                    72       0
+crtn.o                                        16       0
+crti.o                                         8       0
+libgcc.a(_dvmd_tls.o)                          4       0
+TOTAL                                      12754    7688
+bsp.o                 248 .text.probe_measure

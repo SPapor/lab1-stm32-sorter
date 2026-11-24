@@ -137,7 +137,7 @@ PB13 і PB14 налаштовує `perf_hal_init` (у `.ioc` їх немає, ч
 | `make build TEST_I2C_FAULT=1` | + читання відсутньої адреси 0x69 раз на секунду (6.2.4) | 31 196 B (95,2 %) / 3 288 B |
 | `make build LAB2_CAP=1` | harness ЛР2 (`cap ...`), PERF сам вимикається | 28 420 B (86,7 %) / 2 360 B |
 
-RAM включає резерв купи 512 B і стека 1 024 B зі скрипту лінкера. Разом `LAB2_CAP=1 PERF=1` у 32 КБ не влазить, і `app.mk` зупиняє таку збірку зрозумілою помилкою (журнал, проблема 21). CI на кожен push збирає всі чотири варіанти, ганяє `make check-deps`, `make test`, `make coverage` і тести скриптів `tools/`.
+RAM включає резерв купи 512 B і стека 1 024 B зі скрипту лінкера (з ЛР5 резерв купи 0, docs/qp-design.md, крок 2). Разом `LAB2_CAP=1 PERF=1` у 32 КБ не влазить, і `app.mk` зупиняє таку збірку зрозумілою помилкою (журнал, проблема 21). CI на кожен push збирає всі чотири варіанти, ганяє `make check-deps`, `make test`, `make coverage` і тести скриптів `tools/`.
 
 Інші цілі: `make stack-usage` (найбільші кадри з `.su`), `make stack-graph` (найглибший ланцюжок викликів за дизасемблером, разом з HAL, newlib і перериваннями), `make map-summary` (flash і RAM за модулями з map-файла), `make tools-test`. Секції `USER CODE` і CRLF у файлах `Core/` - як у ЛР2 (журнал, проблема 12).
 
@@ -161,8 +161,8 @@ RAM включає резерв купи 512 B і стека 1 024 B зі скр
 | Компонент | Версія |
 |---|---|
 | STM32CubeMX / STM32Cube FW_C0 | 6.18.1 / V1.4.1 (HAL і CMSIS Device 1.4.1, CMSIS Core 5.6, BSP 1.1.1) |
-| arm-none-eabi-gcc, binutils, newlib | 10.3.1 (`15:10.3-2021.07-4`), 2.38, 3.3.0 - у Docker, версії зафіксовані в `docker/Dockerfile` |
-| Unity / gcc для тестів / gcovr | v2.7.0 / 11.4.0 / 5.0 |
+| arm-none-eabi-gcc, binutils, newlib | з ЛР5: 14.2.1 (`15:14.2.rel1-1`), 2.45.50, 4.6.0 - образ `stm32-build:gcc14`, версії зафіксовані в `docker/Dockerfile`; ЛР2-ЛР4 (теги `lab2`-`lab4`): 10.3.1 (`15:10.3-2021.07-4`), 2.38, 3.3.0 - `docker/gcc10/Dockerfile` |
+| Unity / gcc для тестів / gcovr | v2.7.0 / з ЛР5 15.2.0 (раніше 11.4.0) / з ЛР5 7.2 (раніше 5.0) |
 | Wokwi для VS Code / `wokwi-cli` | 4.1.0 / 0.27.1 |
 | sigrok-cli / PulseView | 0.7.2 / 0.4.2 |
 | Python (скрипти `tools/`) | 3.14 |

@@ -1,0 +1,38 @@
+--- a/ao.c
++++ b/ao.c
+@@ -92,7 +92,7 @@
+ {
+     StatusEvt *s = Q_NEW(StatusEvt, STATUS_SIG);
+     s->state = st; s->cnt[0] = me->cnt[0]; s->cnt[1] = me->cnt[1]; s->cnt[2] = me->cnt[2]; s->fault = "";
+-    QACTIVE_PUBLISH(&s->super, me);
++    QACTIVE_POST(AO_Lcd, &s->super, me);
+ }
+ static QState Sorter_init(Sorter *me, void const *par) { (void)par; (void)me; return Q_TRAN(&Sorter_ready); }
+ static QState Sorter_root(Sorter *me, QEvt const *e)
+@@ -235,7 +235,7 @@
+ 
+ static QState Lcd_idle(LcdAo *me, QEvt const *e);
+ static QState Lcd_drawing(LcdAo *me, QEvt const *e);
+-static QState Lcd_init(LcdAo *me, void const *par) { (void)par; QActive_subscribe(&me->super, STATUS_SIG); QTimeEvt_armX(&me->te, 500U, 500U); return Q_TRAN(&Lcd_idle); }
++static QState Lcd_init(LcdAo *me, void const *par) { (void)par; QTimeEvt_armX(&me->te, 500U, 500U); return Q_TRAN(&Lcd_idle); }
+ static QState Lcd_common(LcdAo *me, QEvt const *e)
+ {
+     switch (e->sig) {
+--- a/bsp.c	2026-11-23 22:55:29.515662153 +0200
++++ b/bsp.c	2026-11-24 14:11:21.386360492 +0200
+@@ -13,7 +13,6 @@
+ static QF_MPOOL_EL(BusDoneEvt) smlPool[10];
+ static QF_MPOOL_EL(ParcelEvt) medPool[8];
+ static QF_MPOOL_EL(LogEvt) lrgPool[18];
+-static QSubscrList subscrSto[MAX_PUB_SIG];
+ static QEvtPtr qEstop[2], qGate[2], qSorter[6], qBus[3], qImu[3], qConsole[16], qLcd[4];
+ static StackType_t sEstop[ST_ESTOP], sGate[ST_GATE], sSorter[ST_SORTER], sBus[ST_BUS],
+     sImu[ST_IMU], sConsole[ST_CONSOLE], sLcd[ST_LCD];
+@@ -115,7 +114,6 @@
+     QF_poolInit(smlPool, sizeof smlPool, sizeof smlPool[0]);
+     QF_poolInit(medPool, sizeof medPool, sizeof medPool[0]);
+     QF_poolInit(lrgPool, sizeof lrgPool, sizeof lrgPool[0]);
+-    QActive_psInit(subscrSto, Q_DIM(subscrSto));
+     aos_ctor();
+     for (unsigned i = 0; i < Q_DIM(def); i++) {
+         QActive_setAttr(*def[i].ao, TASK_NAME_ATTR, def[i].name);
