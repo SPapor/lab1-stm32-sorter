@@ -1,0 +1,554 @@
+# ЛР4 (дерево a7a4b9f, лише прошивка, FLASH 64K у скрипті лінкера для LTO=0): gcc 10.3.1 (stm32-build:gcc10) і gcc 14.2.1 (stm32-build:gcc14), купа newlib 512 і 0
+gcc10_h512 superloop LTO=1: RAM: 3488 B FLASH: 21660 B 
+gcc10_h512 superloop LTO=0: RAM: 3496 B FLASH: 25608 B 
+gcc10_h512 rtos LTO=1: RAM: 11832 B FLASH: 31988 B 
+gcc10_h512 rtos LTO=0: RAM: 11832 B FLASH: 37656 B 
+gcc14_h512 superloop LTO=1: RAM: 3792 B FLASH: 20456 B 
+gcc14_h512 superloop LTO=0: RAM: 3792 B FLASH: 25644 B 
+gcc14_h512 rtos LTO=1: RAM: 12128 B FLASH: 30576 B 
+gcc14_h512 rtos LTO=0: RAM: 12136 B FLASH: 37616 B 
+gcc14_h0 superloop LTO=1: RAM: 3280 B FLASH: 20456 B 
+gcc14_h0 superloop LTO=0: RAM: 3280 B FLASH: 25644 B 
+gcc14_h0 rtos LTO=1: RAM: 11616 B FLASH: 30576 B 
+gcc14_h0 rtos LTO=0: RAM: 11624 B FLASH: 37616 B 
+
+## superloop LTO=0, gcc10 купа 512
+модуль            flash, B      %   RAM, B      %
+Drivers               9396  36.7%        9   0.3%
+Core                  9256  36.1%     1522  43.5%
+App                   2912  11.4%        0   0.0%
+Platform              1482   5.8%      224   6.4%
+libc_nano              900   3.5%      152   4.3%
+libgcc                 808   3.2%        0   0.0%
+Devices                650   2.5%        0   0.0%
+crt                    184   0.7%       28   0.8%
+fill                    27   0.1%       21   0.6%
+heap+stack (ld)          0   0.0%     1540  44.1%
+разом                25615            3496
+підсумок ld          25608            3496   (порівняти з --print-memory-usage; RAM може бути на кілька байтів меншою через вирівнювання між секціями)
+
+об'єкт                       модуль        flash, B   RAM, B
+main.o                       Core              7630     1106
+stm32c0xx_hal_adc.o          Drivers           1834        0
+stm32c0xx_hal_i2c.o          Drivers           1652        0
+stm32c0xx_hal_tim.o          Drivers           1430        0
+stm32c0xx_hal_uart.o         Drivers           1397        0
+stm32c0xx_hal_rcc.o          Drivers           1120        0
+fmt.o                        App                921        0
+stm32c0xx_hal_gpio.o         Drivers            678        0
+cli.o                        App                597        0
+perf.o                       App                578        0
+i2c_hal.o                    Platform           483        0
+libgcc.a(_divsi3.o)          libgcc             468        0
+lcd1602.o                    Devices            428        0
+uart_hal.o                   Platform           420      212
+stm32c0xx_hal_adc_ex.o       Drivers            364        0
+perf_hal.o                   Platform           316       12
+sorter.o                     App                291        0
+i2c.o                        Core               284       84
+libgcc.a(_udivsi3.o)         libgcc             276        0
+stm32c0xx_hal_rcc_ex.o       Drivers            276        0
+startup_stm32c031xx.o        Core               274        0
+adc.o                        Core               268      100
+tim.o                        Core               248       76
+mpu6050.o                    Devices            222        0
+stm32c0xx_hal_cortex.o       Drivers            220        0
+stm32c0xx_hal.o              Drivers            181        9
+libc_nano.a(lib_a-memset.o)  libc_nano          168        0
+libc_nano.a(lib_a-memcpy-stub.o) libc_nano          164        0
+crtbegin.o                   crt                160       28
+gpio.o                       Core               156        0
+usart.o                      Core               152      148
+stm32c0xx_hal_i2c_ex.o       Drivers            148        0
+lcdfmt.o                     App                142        0
+libc_nano.a(lib_a-strcmp.o)  libc_nano          136        0
+adc_hal.o                    Platform           132        0
+impact.o                     App                122        0
+libc_nano.a(lib_a-nano-mallinfor.o) libc_nano          116       40
+system_stm32c0xx.o           Core               116        4
+libc_nano.a(lib_a-impure.o)  libc_nano          100      100
+stm32c0xx_hal_tim_ex.o       Drivers             96        0
+libc_nano.a(lib_a-strlen-stub.o) libc_nano           92        0
+health.o                     App                 89        0
+servo_hal.o                  Platform            81        0
+classify.o                   App                 80        0
+libc_nano.a(lib_a-init.o)    libc_nano           68        0
+sysmem.o                     Core                64        4
+stm32c0xx_hal_msp.o          Core                48        0
+gate.o                       App                 44        0
+libc_nano.a(lib_a-sbrkr.o)   libc_nano           36        0
+mem_hal.o                    Platform            30        0
+memmark.o                    App                 28        0
+libgcc.a(_thumb1_case_sqi.o) libgcc              20        0
+libgcc.a(_thumb1_case_uqi.o) libgcc              20        0
+libgcc.a(_thumb1_case_uhi.o) libgcc              20        0
+period.o                     App                 20        0
+stm32c0xx_it.o               Core                16        0
+crtn.o                       crt                 16        0
+libc_nano.a(lib_a-errno.o)   libc_nano           12        0
+irq_superloop.o              Platform            12        0
+libc_nano.a(lib_a-mlock.o)   libc_nano            8        0
+platform.o                   Platform             8        0
+crti.o                       crt                  8        0
+libgcc.a(_dvmd_tls.o)        libgcc               4        0
+libc_nano.a(lib_a-nano-mallocr.o) libc_nano            0        8
+libc_nano.a(lib_a-reent.o)   libc_nano            0        4
+разом                                         25588     1935
+
+Найбільші символи (топ 15):
+  байт  регіон    модуль     символ
+  3876  FLASH     Core       main
+  1367  FLASH     Core       рядкові константи main.o
+   624  FLASH     Drivers    HAL_RCC_OscConfig
+   608  FLASH     App        fmt_core.constprop.0
+   560  FLASH     Core       lcd_run
+   556  FLASH     Drivers    HAL_ADC_ConfigChannel
+   552  FLASH     Drivers    HAL_ADC_Init
+   468  FLASH     libgcc     .text libgcc.a(_divsi3.o)
+   456  FLASH     App        cli_feed
+   380  FLASH     Drivers    UART_SetConfig
+   364  FLASH     Drivers    HAL_ADCEx_Calibration_Start
+   360  FLASH     Drivers    HAL_GPIO_Init
+   344  FLASH     Drivers    HAL_RCC_ClockConfig
+   336  FLASH     Drivers    HAL_I2C_Master_Transmit
+   292  FLASH     Drivers    HAL_I2C_Master_Receive
+
+## superloop LTO=0, gcc14 купа 0
+модуль            flash, B      %   RAM, B      %
+Core                  9521  37.1%     1522  46.4%
+Drivers               9392  36.6%        9   0.3%
+App                   2784  10.9%        0   0.0%
+Platform              1462   5.7%      224   6.8%
+libc_nano              868   3.4%      448  13.7%
+libgcc                 788   3.1%        0   0.0%
+Devices                618   2.4%        0   0.0%
+crt                    184   0.7%       28   0.9%
+fill                    27   0.1%       25   0.8%
+heap+stack (ld)          0   0.0%     1024  31.2%
+разом                25644            3280
+підсумок ld          25644            3280   (порівняти з --print-memory-usage; RAM може бути на кілька байтів меншою через вирівнювання між секціями)
+
+об'єкт                       модуль        flash, B   RAM, B
+main.o                       Core              7895     1106
+stm32c0xx_hal_adc.o          Drivers           1866        0
+stm32c0xx_hal_i2c.o          Drivers           1618        0
+stm32c0xx_hal_tim.o          Drivers           1438        0
+stm32c0xx_hal_uart.o         Drivers           1399        0
+stm32c0xx_hal_rcc.o          Drivers           1116        0
+fmt.o                        App                918        0
+stm32c0xx_hal_gpio.o         Drivers            678        0
+perf.o                       App                574        0
+cli.o                        App                532        0
+libgcc.a(_divsi3.o)          libgcc             468        0
+i2c_hal.o                    Platform           451        0
+uart_hal.o                   Platform           416      212
+lcd1602.o                    Devices            404        0
+stm32c0xx_hal_adc_ex.o       Drivers            356        0
+perf_hal.o                   Platform           332       12
+i2c.o                        Core               284       84
+libgcc.a(_udivsi3.o)         libgcc             276        0
+stm32c0xx_hal_rcc_ex.o       Drivers            276        0
+startup_stm32c031xx.o        Core               274        0
+adc.o                        Core               268      100
+sorter.o                     App                260        0
+tim.o                        Core               248       76
+stm32c0xx_hal_cortex.o       Drivers            220        0
+mpu6050.o                    Devices            214        0
+stm32c0xx_hal.o              Drivers            181        9
+libc_nano.a(libc_a-memcpy-stub.o) libc_nano          168        0
+crtbegin.o                   crt                160       28
+gpio.o                       Core               156        0
+usart.o                      Core               152      148
+libc_nano.a(libc_a-memset.o) libc_nano          148        0
+stm32c0xx_hal_i2c_ex.o       Drivers            148        0
+lcdfmt.o                     App                138        0
+libc_nano.a(libc_a-strcmp.o) libc_nano          136        0
+adc_hal.o                    Platform           132        0
+impact.o                     App                122        0
+libc_nano.a(libc_a-mallinfor.o) libc_nano          116       40
+system_stm32c0xx.o           Core               116        4
+stm32c0xx_hal_tim_ex.o       Drivers             96        0
+libc_nano.a(libc_a-strlen-stub.o) libc_nano           92        0
+servo_hal.o                  Platform            81        0
+libc_nano.a(libc_a-impure.o) libc_nano           80       80
+health.o                     App                 76        0
+libc_nano.a(libc_a-init.o)   libc_nano           72        0
+classify.o                   App                 72        0
+sysmem.o                     Core                64        4
+stm32c0xx_hal_msp.o          Core                48        0
+gate.o                       App                 44        0
+libc_nano.a(libc_a-sbrkr.o)  libc_nano           36        0
+mem_hal.o                    Platform            30        0
+memmark.o                    App                 28        0
+libgcc.a(_thumb1_case_uqi.o) libgcc              20        0
+libgcc.a(_thumb1_case_uhi.o) libgcc              20        0
+period.o                     App                 20        0
+stm32c0xx_it.o               Core                16        0
+crtn.o                       crt                 16        0
+libc_nano.a(libc_a-errno.o)  libc_nano           12        0
+irq_superloop.o              Platform            12        0
+libc_nano.a(libc_a-mlock.o)  libc_nano            8        0
+platform.o                   Platform             8        0
+crti.o                       crt                  8        0
+libgcc.a(_dvmd_tls.o)        libgcc               4        0
+libc_nano.a(libc_a-findfp.o) libc_nano            0      316
+libc_nano.a(libc_a-mallocr.o) libc_nano            0        8
+libc_nano.a(libc_a-reent.o)  libc_nano            0        4
+разом                                         25617     2231
+
+Найбільші символи (топ 15):
+  байт  регіон    модуль     символ
+  3960  FLASH     Core       main
+  2072  FLASH     Core       рядкові константи main.o
+   656  FLASH     App        fmt_core.constprop.0
+   620  FLASH     Drivers    HAL_RCC_OscConfig
+   584  FLASH     Drivers    HAL_ADC_ConfigChannel
+   560  FLASH     Core       lcd_run
+   544  FLASH     Drivers    HAL_ADC_Init
+   468  FLASH     libgcc     .text libgcc.a(_divsi3.o)
+   448  FLASH     App        cli_feed
+   388  FLASH     Drivers    UART_SetConfig
+   372  FLASH     Drivers    HAL_GPIO_Init
+   356  FLASH     Drivers    HAL_ADCEx_Calibration_Start
+   344  FLASH     Drivers    HAL_RCC_ClockConfig
+   328  FLASH     Drivers    HAL_I2C_Master_Transmit
+   316  RAM       libc_nano  .bss libc_nano.a(libc_a-findfp.o)
+
+## superloop LTO=0: найбільші зміни по об'єктах gcc10 -> gcc14
+libc_nano.a(libc_a-findfp.o)             flash      0 ->      0 (+0)  RAM     0 ->   316 (+316)
+main.o                                   flash   7630 ->   7895 (+265)  RAM  1106 ->  1106 (+0)
+libc_nano.a(lib_a-impure.o)              flash    100 ->      0 (-100)  RAM   100 ->     0 (-100)
+libc_nano.a(libc_a-memcpy-stub.o)        flash      0 ->    168 (+168)  RAM     0 ->     0 (+0)
+libc_nano.a(lib_a-memset.o)              flash    168 ->      0 (-168)  RAM     0 ->     0 (+0)
+libc_nano.a(lib_a-memcpy-stub.o)         flash    164 ->      0 (-164)  RAM     0 ->     0 (+0)
+libc_nano.a(libc_a-impure.o)             flash      0 ->     80 (+80)  RAM     0 ->    80 (+80)
+libc_nano.a(libc_a-mallinfor.o)          flash      0 ->    116 (+116)  RAM     0 ->    40 (+40)
+libc_nano.a(lib_a-nano-mallinfor.o)      flash    116 ->      0 (-116)  RAM    40 ->     0 (-40)
+libc_nano.a(libc_a-memset.o)             flash      0 ->    148 (+148)  RAM     0 ->     0 (+0)
+libc_nano.a(libc_a-strcmp.o)             flash      0 ->    136 (+136)  RAM     0 ->     0 (+0)
+libc_nano.a(lib_a-strcmp.o)              flash    136 ->      0 (-136)  RAM     0 ->     0 (+0)
+libc_nano.a(libc_a-strlen-stub.o)        flash      0 ->     92 (+92)  RAM     0 ->     0 (+0)
+libc_nano.a(lib_a-strlen-stub.o)         flash     92 ->      0 (-92)  RAM     0 ->     0 (+0)
+libc_nano.a(libc_a-init.o)               flash      0 ->     72 (+72)  RAM     0 ->     0 (+0)
+libc_nano.a(lib_a-init.o)                flash     68 ->      0 (-68)  RAM     0 ->     0 (+0)
+cli.o                                    flash    597 ->    532 (-65)  RAM     0 ->     0 (+0)
+libc_nano.a(libc_a-sbrkr.o)              flash      0 ->     36 (+36)  RAM     0 ->     0 (+0)
+libc_nano.a(lib_a-sbrkr.o)               flash     36 ->      0 (-36)  RAM     0 ->     0 (+0)
+stm32c0xx_hal_i2c.o                      flash   1652 ->   1618 (-34)  RAM     0 ->     0 (+0)
+stm32c0xx_hal_adc.o                      flash   1834 ->   1866 (+32)  RAM     0 ->     0 (+0)
+i2c_hal.o                                flash    483 ->    451 (-32)  RAM     0 ->     0 (+0)
+sorter.o                                 flash    291 ->    260 (-31)  RAM     0 ->     0 (+0)
+lcd1602.o                                flash    428 ->    404 (-24)  RAM     0 ->     0 (+0)
+libgcc.a(_thumb1_case_sqi.o)             flash     20 ->      0 (-20)  RAM     0 ->     0 (+0)
+
+## rtos LTO=0, gcc10 купа 512
+модуль            flash, B      %   RAM, B      %
+Core                  9774  26.0%     1769  15.0%
+Drivers               9264  24.6%        9   0.1%
+Middlewares           6343  16.8%     7728  65.3%
+Platform              3853  10.2%      323   2.7%
+App                   2961   7.9%        0   0.0%
+Tasks                 2759   7.3%      241   2.0%
+libc_nano              900   2.4%      152   1.3%
+libgcc                 900   2.4%        0   0.0%
+Devices                650   1.7%        0   0.0%
+crt                    184   0.5%       28   0.2%
+fill                    75   0.2%       42   0.4%
+heap+stack (ld)          0   0.0%     1540  13.0%
+разом                37663           11832
+підсумок ld          37656           11832   (порівняти з --print-memory-usage; RAM може бути на кілька байтів меншою через вирівнювання між секціями)
+
+об'єкт                       модуль        flash, B   RAM, B
+main.o                       Core              8132     1353
+tasks.o                      Middlewares       3793      276
+sorter_tasks.o               Tasks             2759      241
+stm32c0xx_hal_adc.o          Drivers           1834        0
+stm32c0xx_hal_i2c.o          Drivers           1652        0
+stm32c0xx_hal_tim.o          Drivers           1430        0
+stm32c0xx_hal_uart.o         Drivers           1397        0
+queue.o                      Middlewares       1370        0
+stm32c0xx_hal_rcc.o          Drivers           1120        0
+fmt.o                        App                991        0
+port.o                       Platform           852       48
+stm32c0xx_hal_gpio.o         Drivers            678        0
+stream_buffer.o              Middlewares        656        0
+rtos_hal.o                   Platform           630       39
+cli.o                        App                596        0
+perf.o                       App                578        0
+rtos_diag.o                  Platform           569       12
+uart_hal.o                   Platform           528      212
+i2c_hal.o                    Platform           487        0
+libgcc.a(_divsi3.o)          libgcc             468        0
+lcd1602.o                    Devices            428        0
+heap_4.o                     Middlewares        420     7452
+stm32c0xx_hal_adc_ex.o       Drivers            364        0
+perf_hal.o                   Platform           356       12
+sorter.o                     App                291        0
+i2c.o                        Core               284       84
+libgcc.a(_udivsi3.o)         libgcc             276        0
+stm32c0xx_hal_rcc_ex.o       Drivers            276        0
+startup_stm32c031xx.o        Core               274        0
+adc.o                        Core               268      100
+tim.o                        Core               248       76
+mpu6050.o                    Devices            222        0
+portasm.o                    Platform           180        0
+libc_nano.a(lib_a-memset.o)  libc_nano          168        0
+stm32c0xx_hal_cortex.o       Drivers            168        0
+libc_nano.a(lib_a-memcpy-stub.o) libc_nano          164        0
+crtbegin.o                   crt                160       28
+gpio.o                       Core               156        0
+usart.o                      Core               152      148
+stm32c0xx_hal_i2c_ex.o       Drivers            148        0
+lcdfmt.o                     App                142        0
+libc_nano.a(lib_a-strcmp.o)  libc_nano          136        0
+adc_hal.o                    Platform           132        0
+impact.o                     App                122        0
+libc_nano.a(lib_a-nano-mallinfor.o) libc_nano          116       40
+system_stm32c0xx.o           Core               116        4
+list.o                       Middlewares        104        0
+stm32c0xx_hal.o              Drivers            101        9
+libc_nano.a(lib_a-impure.o)  libc_nano          100      100
+stm32c0xx_hal_tim_ex.o       Drivers             96        0
+libc_nano.a(lib_a-strlen-stub.o) libc_nano           92        0
+libgcc.a(_muldi3.o)          libgcc              92        0
+health.o                     App                 89        0
+servo_hal.o                  Platform            81        0
+classify.o                   App                 80        0
+libc_nano.a(lib_a-init.o)    libc_nano           68        0
+sysmem.o                     Core                64        4
+stm32c0xx_hal_msp.o          Core                48        0
+gate.o                       App                 44        0
+libc_nano.a(lib_a-sbrkr.o)   libc_nano           36        0
+stm32c0xx_it.o               Core                32        0
+mem_hal.o                    Platform            30        0
+memmark.o                    App                 28        0
+libgcc.a(_thumb1_case_sqi.o) libgcc              20        0
+libgcc.a(_thumb1_case_uqi.o) libgcc              20        0
+libgcc.a(_thumb1_case_uhi.o) libgcc              20        0
+crtn.o                       crt                 16        0
+libc_nano.a(lib_a-errno.o)   libc_nano           12        0
+libc_nano.a(lib_a-mlock.o)   libc_nano            8        0
+platform.o                   Platform             8        0
+crti.o                       crt                  8        0
+libgcc.a(_dvmd_tls.o)        libgcc               4        0
+libc_nano.a(lib_a-nano-mallocr.o) libc_nano            0        8
+libc_nano.a(lib_a-reent.o)   libc_nano            0        4
+разом                                         37588    10250
+
+Найбільші символи (топ 15):
+  байт  регіон    модуль     символ
+  7424  RAM       Middlewares ucHeap
+  1632  FLASH     Core       main
+  1248  FLASH     Core       cli_work
+   671  FLASH     Core       рядкові константи main.o
+   624  FLASH     Drivers    HAL_RCC_OscConfig
+   608  FLASH     App        fmt_core.constprop.0
+   556  FLASH     Drivers    HAL_ADC_ConfigChannel
+   552  FLASH     Drivers    HAL_ADC_Init
+   503  FLASH     Core       рядкові константи main.o
+   468  FLASH     libgcc     .text libgcc.a(_divsi3.o)
+   456  FLASH     App        cli_feed
+   412  FLASH     Core       lcd_work
+   404  FLASH     Middlewares xTaskCreate
+   380  FLASH     Drivers    UART_SetConfig
+   364  FLASH     Drivers    HAL_ADCEx_Calibration_Start
+
+## rtos LTO=0, gcc14 купа 0
+модуль            flash, B      %   RAM, B      %
+Core                 10559  28.1%     1769  15.2%
+Drivers               9260  24.6%        9   0.1%
+Middlewares           6294  16.7%     7724  66.5%
+Platform              3744  10.0%      323   2.8%
+App                   2838   7.5%        0   0.0%
+Tasks                 2298   6.1%      241   2.1%
+libgcc                 880   2.3%        0   0.0%
+libc_nano              868   2.3%      448   3.9%
+Devices                618   1.6%        0   0.0%
+crt                    184   0.5%       28   0.2%
+fill                    73   0.2%       50   0.4%
+heap+stack (ld)          0   0.0%     1028   8.8%
+разом                37616           11620
+підсумок ld          37616           11620   (порівняти з --print-memory-usage; RAM може бути на кілька байтів меншою через вирівнювання між секціями)
+
+об'єкт                       модуль        flash, B   RAM, B
+main.o                       Core              8917     1353
+tasks.o                      Middlewares       3756      272
+sorter_tasks.o               Tasks             2298      241
+stm32c0xx_hal_adc.o          Drivers           1866        0
+stm32c0xx_hal_i2c.o          Drivers           1618        0
+stm32c0xx_hal_tim.o          Drivers           1438        0
+stm32c0xx_hal_uart.o         Drivers           1399        0
+queue.o                      Middlewares       1344        0
+stm32c0xx_hal_rcc.o          Drivers           1116        0
+fmt.o                        App                992        0
+port.o                       Platform           852       48
+stm32c0xx_hal_gpio.o         Drivers            678        0
+stream_buffer.o              Middlewares        670        0
+rtos_hal.o                   Platform           622       39
+perf.o                       App                574        0
+cli.o                        App                532        0
+uart_hal.o                   Platform           520      212
+rtos_diag.o                  Platform           492       12
+libgcc.a(_divsi3.o)          libgcc             468        0
+i2c_hal.o                    Platform           455        0
+heap_4.o                     Middlewares        420     7452
+lcd1602.o                    Devices            404        0
+perf_hal.o                   Platform           372       12
+stm32c0xx_hal_adc_ex.o       Drivers            356        0
+i2c.o                        Core               284       84
+libgcc.a(_udivsi3.o)         libgcc             276        0
+stm32c0xx_hal_rcc_ex.o       Drivers            276        0
+startup_stm32c031xx.o        Core               274        0
+adc.o                        Core               268      100
+sorter.o                     App                260        0
+tim.o                        Core               248       76
+mpu6050.o                    Devices            214        0
+portasm.o                    Platform           180        0
+libc_nano.a(libc_a-memcpy-stub.o) libc_nano          168        0
+stm32c0xx_hal_cortex.o       Drivers            168        0
+crtbegin.o                   crt                160       28
+gpio.o                       Core               156        0
+usart.o                      Core               152      148
+libc_nano.a(libc_a-memset.o) libc_nano          148        0
+stm32c0xx_hal_i2c_ex.o       Drivers            148        0
+lcdfmt.o                     App                138        0
+libc_nano.a(libc_a-strcmp.o) libc_nano          136        0
+adc_hal.o                    Platform           132        0
+impact.o                     App                122        0
+libc_nano.a(libc_a-mallinfor.o) libc_nano          116       40
+system_stm32c0xx.o           Core               116        4
+list.o                       Middlewares        104        0
+stm32c0xx_hal.o              Drivers            101        9
+stm32c0xx_hal_tim_ex.o       Drivers             96        0
+libc_nano.a(libc_a-strlen-stub.o) libc_nano           92        0
+libgcc.a(_muldi3.o)          libgcc              92        0
+servo_hal.o                  Platform            81        0
+libc_nano.a(libc_a-impure.o) libc_nano           80       80
+health.o                     App                 76        0
+libc_nano.a(libc_a-init.o)   libc_nano           72        0
+classify.o                   App                 72        0
+sysmem.o                     Core                64        4
+stm32c0xx_hal_msp.o          Core                48        0
+gate.o                       App                 44        0
+libc_nano.a(libc_a-sbrkr.o)  libc_nano           36        0
+stm32c0xx_it.o               Core                32        0
+mem_hal.o                    Platform            30        0
+memmark.o                    App                 28        0
+libgcc.a(_thumb1_case_uqi.o) libgcc              20        0
+libgcc.a(_thumb1_case_uhi.o) libgcc              20        0
+crtn.o                       crt                 16        0
+libc_nano.a(libc_a-errno.o)  libc_nano           12        0
+libc_nano.a(libc_a-mlock.o)  libc_nano            8        0
+platform.o                   Platform             8        0
+crti.o                       crt                  8        0
+libgcc.a(_dvmd_tls.o)        libgcc               4        0
+libc_nano.a(libc_a-findfp.o) libc_nano            0      316
+libc_nano.a(libc_a-mallocr.o) libc_nano            0        8
+libc_nano.a(libc_a-reent.o)  libc_nano            0        4
+разом                                         37543    10542
+
+Найбільші символи (топ 15):
+  байт  регіон    модуль     символ
+  7424  RAM       Middlewares ucHeap
+  2682  FLASH     Core       рядкові константи main.o
+  1712  FLASH     Core       main
+  1252  FLASH     Core       cli_work
+   656  FLASH     App        fmt_core.constprop.0
+   620  FLASH     Drivers    HAL_RCC_OscConfig
+   584  FLASH     Drivers    HAL_ADC_ConfigChannel
+   544  FLASH     Drivers    HAL_ADC_Init
+   468  FLASH     libgcc     .text libgcc.a(_divsi3.o)
+   448  FLASH     App        cli_feed
+   412  FLASH     Core       lcd_work
+   400  FLASH     Middlewares xTaskCreate
+   388  FLASH     Drivers    UART_SetConfig
+   372  FLASH     Drivers    HAL_GPIO_Init
+   356  FLASH     Drivers    HAL_ADCEx_Calibration_Start
+
+## rtos LTO=0: найбільші зміни по об'єктах gcc10 -> gcc14
+main.o                                   flash   8132 ->   8917 (+785)  RAM  1353 ->  1353 (+0)
+sorter_tasks.o                           flash   2759 ->   2298 (-461)  RAM   241 ->   241 (+0)
+libc_nano.a(libc_a-findfp.o)             flash      0 ->      0 (+0)  RAM     0 ->   316 (+316)
+libc_nano.a(lib_a-impure.o)              flash    100 ->      0 (-100)  RAM   100 ->     0 (-100)
+libc_nano.a(libc_a-memcpy-stub.o)        flash      0 ->    168 (+168)  RAM     0 ->     0 (+0)
+libc_nano.a(lib_a-memset.o)              flash    168 ->      0 (-168)  RAM     0 ->     0 (+0)
+libc_nano.a(lib_a-memcpy-stub.o)         flash    164 ->      0 (-164)  RAM     0 ->     0 (+0)
+libc_nano.a(libc_a-impure.o)             flash      0 ->     80 (+80)  RAM     0 ->    80 (+80)
+libc_nano.a(libc_a-mallinfor.o)          flash      0 ->    116 (+116)  RAM     0 ->    40 (+40)
+libc_nano.a(lib_a-nano-mallinfor.o)      flash    116 ->      0 (-116)  RAM    40 ->     0 (-40)
+libc_nano.a(libc_a-memset.o)             flash      0 ->    148 (+148)  RAM     0 ->     0 (+0)
+libc_nano.a(libc_a-strcmp.o)             flash      0 ->    136 (+136)  RAM     0 ->     0 (+0)
+libc_nano.a(lib_a-strcmp.o)              flash    136 ->      0 (-136)  RAM     0 ->     0 (+0)
+libc_nano.a(libc_a-strlen-stub.o)        flash      0 ->     92 (+92)  RAM     0 ->     0 (+0)
+libc_nano.a(lib_a-strlen-stub.o)         flash     92 ->      0 (-92)  RAM     0 ->     0 (+0)
+rtos_diag.o                              flash    569 ->    492 (-77)  RAM    12 ->    12 (+0)
+libc_nano.a(libc_a-init.o)               flash      0 ->     72 (+72)  RAM     0 ->     0 (+0)
+libc_nano.a(lib_a-init.o)                flash     68 ->      0 (-68)  RAM     0 ->     0 (+0)
+cli.o                                    flash    596 ->    532 (-64)  RAM     0 ->     0 (+0)
+tasks.o                                  flash   3793 ->   3756 (-37)  RAM   276 ->   272 (-4)
+libc_nano.a(libc_a-sbrkr.o)              flash      0 ->     36 (+36)  RAM     0 ->     0 (+0)
+libc_nano.a(lib_a-sbrkr.o)               flash     36 ->      0 (-36)  RAM     0 ->     0 (+0)
+stm32c0xx_hal_i2c.o                      flash   1652 ->   1618 (-34)  RAM     0 ->     0 (+0)
+stm32c0xx_hal_adc.o                      flash   1834 ->   1866 (+32)  RAM     0 ->     0 (+0)
+i2c_hal.o                                flash    487 ->    455 (-32)  RAM     0 ->     0 (+0)
+
+## звідки libc_a-findfp.o (__sf) у gcc14 rtos LTO=1
+libc_nano.a(libc_a-impure.o)
+                              build/main.o (symbol from plugin) (_impure_ptr)
+--
+libc_nano.a(libc_a-exit.o)
+                              crt0.o (exit)
+--
+libc_nano.a(libc_a-findfp.o)
+                              libc_nano.a(libc_a-exit.o) (__stdio_exit_handler)
+libc_nano.a(libc_a-fflush.o)
+                              libc_nano.a(libc_a-findfp.o) (_fflush_r)
+libc_nano.a(libc_a-fwalk.o)
+                              libc_nano.a(libc_a-findfp.o) (_fwalk_sglue)
+libc_nano.a(libc_a-sbrkr.o)
+--
+                              libc_nano.a(libc_a-findfp.o) (__sread)
+libc_nano.a(libc_a-mallocr.o)
+                              libc_nano.a(libc_a-findfp.o) (_malloc_r)
+libc_nano.a(libc_a-readr.o)
+--
+ .text          0x00000000        0x0 libc_nano.a(libc_a-impure.o)
+ .bss           0x00000000        0x0 libc_nano.a(libc_a-impure.o)
+ .text          0x00000000       0x28 libc_nano.a(libc_a-fini.o)
+--
+ .text          0x00000000       0x28 libc_nano.a(libc_a-exit.o)
+ .data          0x00000000        0x0 libc_nano.a(libc_a-exit.o)
+ .bss           0x00000000        0x0 libc_nano.a(libc_a-exit.o)
+ .debug_info    0x00000000      0x11b libc_nano.a(libc_a-exit.o)
+ .debug_abbrev  0x00000000       0xd8 libc_nano.a(libc_a-exit.o)
+ .debug_loclists
+                0x00000000       0x1b libc_nano.a(libc_a-exit.o)
+ .debug_aranges
+                0x00000000       0x20 libc_nano.a(libc_a-exit.o)
+ .debug_line    0x00000000      0x12b libc_nano.a(libc_a-exit.o)
+ .debug_str     0x00000000      0x1b8 libc_nano.a(libc_a-exit.o)
+ .comment       0x00000000       0x27 libc_nano.a(libc_a-exit.o)
+ .debug_frame   0x00000000       0x28 libc_nano.a(libc_a-exit.o)
+ .ARM.attributes
+                0x00000000       0x2c libc_nano.a(libc_a-exit.o)
+ .text          0x00000000       0x10 libc_nano.a(libc_a-atexit.o)
+--
+ .text          0x00000000      0x258 libc_nano.a(libc_a-findfp.o)
+ .data          0x00000000        0xc libc_nano.a(libc_a-findfp.o)
+ .text          0x00000000      0x1a8 libc_nano.a(libc_a-fflush.o)
+
+## nm gcc14 rtos LTO=1: malloc, sbrk, stdio
+20000004 0000004c D _impure_data
+20000000 00000004 D _impure_ptr
+080001f8 00000074 T _mallinfo_r
+20000084 00000028 B __malloc_current_mallinfo
+200001ec 00000004 B __malloc_free_list
+080002d8 00000002 T __malloc_lock
+200001e8 00000004 B __malloc_sbrk_start
+080002dc 00000002 T __malloc_unlock
+08001b7c 0000010c t pvPortMalloc
+08005230 00000040 T _sbrk
+20001f8c 00000004 b __sbrk_heap_end
+080002b4 00000024 T _sbrk_r
+200000b0 00000138 B __sf
+200000ac 00000004 B __stdio_exit_handler
