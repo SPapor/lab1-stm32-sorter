@@ -8,4 +8,6 @@
 /* Блокувальна затримка в мілісекундах (HAL_Delay, SysTick 1 мс). */
 void platform_delay_ms(uint32_t ms);
 
+void platform_i2c_reinit(void);
+
 #endif /* PLATFORM_H */
