@@ -145,7 +145,7 @@ def account(out, section, size, obj, mods, flash, ram, symbols, objs):
         return
     obj = obj.strip()
     if section == '*fill*':
-        # у ._user_heap_stack заповнення і є резервом купи (0x200) і стека (0x400)
+        # у ._user_heap_stack заповнення і є резервом купи і стека зі скрипту лінкера
         mod = 'heap+stack (ld)' if out == '._user_heap_stack' else 'fill'
     else:
         mod = module_of(obj, mods)
