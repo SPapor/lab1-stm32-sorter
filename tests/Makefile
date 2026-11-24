@@ -51,7 +51,8 @@ vpath %.c . fakes unity $(FW)/Devices $(FW)/App
 CC_VER = $(BUILD)/cc.ver
 $(CC_VER): FORCE
 	@mkdir -p $(BUILD)
-	@$(CC) --version | head -1 | cmp -s - $@ || $(CC) --version | head -1 > $@
+	@{ $(CC) --version | head -1; ldd --version | head -1; } | cmp -s - $@ || \
+	  { $(CC) --version | head -1; ldd --version | head -1; } > $@
 
 define TEST_rules
 $(1)_OBJ = $$(addprefix $(BUILD)/$(1)/,$$(notdir $$($(1)_SRC:.c=.o)) unity.o)

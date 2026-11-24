@@ -216,7 +216,8 @@ BUILD_CFG  = $(BUILD_DIR)/build.cfg
 BUILD_LINE = ARCH=$(ARCH_ON) LTO=$(LTO_ON) TICK_HZ=$(TICK_HZ_ON) SIM_CRIT=$(SIM_CRIT_ON) ASSERT=$(ASSERT_ON) \
              $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0)) \
              TEST_INVERSION=$(if $(INV_NAME),$(INV_NAME),0) TEST_OS=$(TEST_OS_ON) PERF=$(PERF_ON) \
-             GCC=$(shell $(CC) -dumpfullversion)
+             GCC=$(shell $(CC) -dumpfullversion) \
+             NEWLIB=$(shell printf '\043include <newlib.h>\n' | $(CC) -dM -E -x c - | sed -n 's/.*_NEWLIB_VERSION "\(.*\)"/\1/p')
 
 # Версія прошивки в банері й першому рядку журналу (методичка 5.2, 6): git-хеш,
 # з «-dirty», якщо збирали з незакоміченими змінами. Теги (lab3, ...) не беремо:
@@ -241,18 +242,25 @@ $(BUILD_CFG): FORCE | $(BUILD_DIR)
 
 $(OBJECTS): $(BUILD_CFG)
 
-# Лише компіляція, без лінкування: -Wextra -Werror і -Wstack-usage=512 для власного
-# коду, коли образ не лінкується (ARCH=rtos LTO=0 не влазить у flash)
+ifdef GCC_PATH
+NM = $(GCC_PATH)/$(PREFIX)nm
+else
+NM = $(PREFIX)nm
+endif
 empty :=
 space := $(empty) $(empty)
 HEAP_ALLOC = _malloc_r _calloc_r _realloc_r _memalign_r _free_r
 
 all: $(BUILD_DIR)/heap.chk
 $(BUILD_DIR)/heap.chk: $(BUILD_DIR)/$(TARGET).elf
-	@if $(PREFIX)nm $< | grep -wE '$(subst $(space),|,$(HEAP_ALLOC))'; then \
-	  echo "heap: в образі є виділення з купи newlib, а купа 0 (docs/qp-design.md, крок 2)" >&2; exit 1; fi
+	@$(NM) $< > $@.nm
+	@if grep -wE '$(subst $(space),|,$(HEAP_ALLOC))' $@.nm; then rm -f $@.nm; \
+	  echo "heap: в образі є виділення з купи newlib (docs/qp-design.md, крок 2)" >&2; exit 1; fi
+	@rm -f $@.nm
 	@touch $@
 
+# Лише компіляція, без лінкування: -Wextra -Werror і -Wstack-usage=512 для власного
+# коду, коли образ не лінкується (ARCH=rtos LTO=0 не влазить у flash)
 objects: $(OBJECTS)
 
 .PHONY: FORCE objects
