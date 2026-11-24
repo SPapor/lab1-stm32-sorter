@@ -13,9 +13,10 @@
 
 /* I2C1: PA9 = SCL (D8), PA10 = SDA (D2); MPU-6050 і PCF8574 на одній шині */
 #define BOARD_I2C            (&hi2c1)
-#ifdef OSMETRICS
+#if defined(OSMETRICS) || defined(LAB2_CAP)
 #define BOARD_I2C_REINIT     MX_I2C1_Init
 #else
+#include "platform.h"
 #define BOARD_I2C_REINIT     platform_i2c_reinit
 #endif
 #define BOARD_I2C_PORT       GPIOA
