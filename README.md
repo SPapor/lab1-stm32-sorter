@@ -19,7 +19,13 @@ make test && make check-deps
 ```sh
 make image-gcc10
 git checkout lab4
+make clean IMAGE=stm32-build:gcc10
 make build ARCH=rtos LTO=1 IMAGE=stm32-build:gcc10
+# назад
+git checkout main
+make clean
 ```
+
+`make clean` тут обов'язковий: на тезі `lab4` версії компілятора в штампах збірки ще немає, тож без нього make узяв би об'єкти і `.gcno` тестів, зібрані іншим gcc (docs/journal.md, проблема 76).
 
 На тезі `lab4` і раніше в `Makefile` стоїть `IMAGE ?= stm32-build`, тож там образ треба вказати явно, як вище (або `docker tag stm32-build:gcc10 stm32-build`).

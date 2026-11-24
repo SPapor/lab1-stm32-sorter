@@ -1,4 +1,6 @@
-IMAGE ?= stm32-build:gcc14
+IMAGE_GCC14 = stm32-build:gcc14
+IMAGE_GCC10 = stm32-build:gcc10
+IMAGE ?= $(IMAGE_GCC14)
 # git-хеш збірки (docs/perf.md): рахується на хості, у контейнер іде параметром.
 # Теги не беремо (--exclude): на тезі lab3 describe дав би «lab3» замість хеша
 GIT_HASH := $(shell git describe --always --dirty --abbrev=8 --exclude='*' 2>/dev/null || echo unknown)
@@ -56,10 +58,10 @@ tools-test:
 	python3 -m unittest discover -s tools/tests
 
 image:
-	docker build -t stm32-build:gcc14 docker/
+	docker build -t $(IMAGE_GCC14) docker/
 
 image-gcc10:
-	docker build -t stm32-build:gcc10 docker/gcc10/
+	docker build -t $(IMAGE_GCC10) docker/gcc10/
 
 shell:
 	docker run --rm -it -v $(PWD):/workspace -w /workspace --user $$(id -u):$$(id -g) $(IMAGE) bash
