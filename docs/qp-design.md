@@ -300,3 +300,32 @@
 Як вони складаються (від 33 588 / 33 928, ±500): лише 1 - 32 088 / 32 428, тобто вільно 680 / 340 B; 1 + 2 - ~32 088; 4 + 2 - ~32 176 (вільно ~590 B, але RAM +296); 2 + 3 - ~33 232, не влазить; 1 + 4 - ~30,7-31,0 КБ. Для RAM при обережних стеках вистачає будь-якого з 5, 6 або 7.
 
 Запас потрібен і на кроки 2-6: у ЛР4 виправлення після review додавали по 16-132 B (проблеми 62, 64), а тестові збірки 9.3 (зламаний м'ютекс, блокування в обробнику, переповнення черги) мають лінкуватися теж.
+
+### 5. Сумісність з обходом Wokwi (SIM_CRIT)
+
+Wokwi не враховує PRIMASK (rtos-design.md, розділ 2; проблеми 35, 43, 44), тож усе, що QP робить у критичній секції, має йти через функції порту, які я переписав у `Platform/rtos/port_sim/port.c`. Я пройшов `ports/freertos/qf_port.c`, `qp_port.h`, `include/` і `src/qf/` на тезі `v8.1.6`:
+
+| Де | Що | У порту ARM_CM0 це | SIM_CRIT покриває? |
+|---|---|---|---|
+| `QF_CRIT_ENTRY`/`QF_CRIT_EXIT` (`qp_port.h`) - `QActive_post_`, `QActive_postLIFO_`, `QActive_get_`, `QActive_start`, `QActive_setAttr` і всі `src/qf` (`qf_time`, `qf_dyn`, `qf_mem`, `qf_ps`, `qf_qeq`, `qf_defer`) | `taskENTER_CRITICAL` / `taskEXIT_CRITICAL` | `vPortEnterCritical` / `vPortExitCritical` | так |
+| `QF_CRIT_EST` (`qsafe.h`, перед `Q_onError`) | `taskENTER_CRITICAL`, виходу немає | `vPortEnterCritical` | так |
+| `QActive_postFromISR_`, `QActive_publishFromISR_`, `QTimeEvt_tickFromISR_`, `QF_newXFromISR_`, `QF_gcFromISR`, `QMPool_getFromISR`, `QMPool_putFromISR` | `portSET_INTERRUPT_MASK_FROM_ISR` / `portCLEAR_...` | `ulSetInterruptMask` / `vClearInterruptMask` (зберігають і відновлюють стан обходу, як PRIMASK) | так |
+| `QF_SCHED_LOCK_`/`UNLOCK_` у `QActive_publish_` | `vTaskSuspendAll` / `xTaskResumeAll` | лічильник без секції; `xTaskResumeAll` - через `taskENTER_CRITICAL` | так |
+| виклики FreeRTOS з порту: `xQueueSendToBack`/`Front`, `xQueueReceive(portMAX_DELAY)`, `xQueueCreateStatic`, `xTaskCreateStatic`, `xQueueSendToBackFromISR`, `vTaskStartScheduler` | всередині - ті самі макроси | | так |
+| `QF_INT_DISABLE`/`QF_INT_ENABLE` (`qp_port.h`) | `taskDISABLE_INTERRUPTS` | голий `cpsid i` | **ні**, але їх кличуть лише `src/qk/qk.c` і `src/qv/qv.c`, які не збираються |
+
+Прямих `cpsid`, `PRIMASK`, `__disable_irq` у `src/qf`, `ports/freertos` і `include` немає (пошук по тегу). Тобто на рівні секцій дописувати в обхід нічого не треба. Правило для кроку 2: у коді AO і BSP не викликати `QF_INT_DISABLE` і `taskDISABLE_INTERRUPTS`, як і в ЛР4.
+
+Нове з QP - **хук тіку**, на ньому тримаються всі часові події (методичка 5.6):
+
+1. **Хук виконується в контексті задачі.** З SIM_CRIT тік, що прийшов посеред критичної секції, ядро проганяє на виході з неї (`prvSimExit` -> `xTaskIncrementTick`), тобто на стеку тієї задачі, що виходить із секції. З `configUSE_TICK_HOOK 1` туди ж іде `vApplicationTickHook` -> `QTimeEvt_tickFromISR_` -> `QActive_postFromISR_` -> `xQueueGenericSendFromISR`, а `portYIELD_FROM_ISR` - з задачі (ставить PendSV, обхід його відкладає до кінця секції, як і в ЛР4). На залізі хук завжди на MSP. Глибина за `-fstack-usage` зонда: `vPortExitCritical` 8 + `prvSimExit` 16 + `xTaskIncrementTick` 32 + хук 16 + `QTimeEvt_tickFromISR_` 40 + `QActive_postFromISR_` 40 + `xQueueGenericSendFromISR` 40 + `xTaskRemoveFromEventList` 20 = 212 B, без хука було 76 B. **+136 B до стеку кожного AO, лише в Wokwi** (розділ 4, обережні стеки). Так само на MSP: у ЛР4 він зайнятий на 616 B з 1 024 (`STACK used=616`, S2, 6.2.2, 6.2.4), +136 B вміщаються.
+2. **FromISR-виклики з задачі.** `QActive_postFromISR_` усередині `vPortExitCritical` вкладає ще одну секцію `ulSetInterruptMask`: `prvSimEnter` повертає ненульовий попередній стан, і `prvSimExit` на виході нічого не проганяє - вкладення коректне за кодом. Чи не губляться при цьому тіки, перевірить тест нижче.
+3. **Хук при зупиненому планувальнику.** Під час `QActive_publish_` (`vTaskSuspendAll`) тік іде у гілку `else` `xTaskIncrementTick` і хук викликається (`tasks.c` V11.3.3, рядки 5062-5071); при доганянні відкладених тіків у `xTaskResumeAll` - ні (рядки 5000-5007). Отже, за кодом хук - рівно раз на тік. Коментар у `FreeRTOSConfig.h` ЛР4 каже, що хук «пропустив би» тік (проблема 72); для ЛР5 це важливо, бо від цього залежить точність `QTimeEvt`.
+4. **ISR продукту** (`EXTI4_15`, `USART2`) лишаються з `rtos_hal_irq_defer` на вході, як у ЛР4; `TIM17` QP не кличе.
+
+**Тест (як `TEST_KSTRESS`, ворота Б у ЛР4).** Збірка `TEST_QSTRESS=1` (лише `ARCH=qpc`), 120 с часу МК у Wokwi для VS Code, без дій:
+- AO `ping` і `pong` (різні пріоритети) ганяють один одному динамічні події з номером і контрольною сумою; AO `pub` раз на 2 мс публікує подію двом підписникам (`vTaskSuspendAll`); ISR TIM14 на 2 кГц робить `Q_NEW_X_FROM_ISR` + `QACTIVE_POST_X_FROM_ISR` і `QACTIVE_PUBLISH_FROM_ISR`;
+- у кожного AO - періодичні часові події з періодами 1, 3 і 7 тіків і одноразові з повторним запуском;
+- лічильники порту з `Platform/rtos/kstress` (події PendSV, перемикання, тіку і переривань усередині секції задачі і секції ISR).
+
+Критерії: помилок номерів і сум 0; втрати лише там, де є запас (`POST_X`), і всі пораховані; `QF_getPoolUse` після зупинки потоку - 0 (немає витоку); кількість викликів хука = приріст `xTaskGetTickCount` = тіки `perf`; кожна часова подія спрацювала `тіки / період` ± 1 раз; подій усередині секцій 0; `Q_onError`, HardFault і переповнення стека не спрацювали; найменший запас стека AO ≥ 64 B. Поки тест не пройдено, продукт на QP у Wokwi не міряю.
