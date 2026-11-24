@@ -26,10 +26,10 @@ LTO_ON     := $(if $(filter 1,$(LTO)),1,0)
 TICK_HZ_ON := $(if $(TICK_HZ),$(TICK_HZ),1000)
 SIM_CRIT_ON := $(if $(filter 0,$(SIM_CRIT)),0,1)
 # configASSERT ядра: лише ASSERT=1 або стрес-тест (він перевіряє саме ядро)
-ASSERT_ON   := $(if $(filter 1,$(ASSERT) $(TEST_KSTRESS)),1,0)
+ASSERT_ON   := $(if $(filter 1,$(ASSERT) $(TEST_KSTRESS) $(TEST_QSTRESS)),1,0)
 
-ifeq ($(filter $(ARCH_ON),superloop rtos),)
-$(error ARCH=$(ARCH_ON): має бути superloop або rtos)
+ifeq ($(filter $(ARCH_ON),superloop rtos qpc),)
+$(error ARCH=$(ARCH_ON): має бути superloop, rtos або qpc)
 endif
 # У super loop тік — це HAL_IncTick раз на 1 мс, його частота не налаштовується
 ifeq ($(ARCH_ON),superloop)
@@ -83,10 +83,26 @@ ifneq ($(filter 1,$(TEST_KSTRESS) $(TEST_CRITCOST) $(TEST_APIPROBE) $(OSMETRICS)
 $(error TEST_OS не поєднується з TEST_KSTRESS, TEST_CRITCOST, TEST_APIPROBE, OSMETRICS і TEST_INVERSION)
 endif
 endif
+ifeq ($(ARCH_ON),qpc)
+ifneq ($(filter 1,$(TEST_APIPROBE) $(TEST_KSTRESS) $(TEST_CRITCOST) $(OSMETRICS))$(filter-out 0,$(INV_ON) $(TEST_OS_ON)),)
+$(error TEST_APIPROBE, TEST_KSTRESS, TEST_CRITCOST, OSMETRICS, TEST_INVERSION і TEST_OS - лише для ARCH=rtos)
+endif
+ifeq ($(TEST_QSTRESS)$(TEST_QPCHECK),11)
+$(error TEST_QSTRESS і TEST_QPCHECK - окремі збірки)
+endif
+else
+ifneq ($(filter 1,$(TEST_QSTRESS) $(TEST_QPCHECK)),)
+$(error TEST_QSTRESS і TEST_QPCHECK - лише для ARCH=qpc)
+endif
+endif
 
 # Platform/<arch>/ — те, що в двох архітектурах різне: обробники SVC, PendSV,
 # SysTick, база часу HAL, лічильник тіків для perf_now (perf_tick.h)
+ifeq ($(ARCH_ON),qpc)
+USER_DIRS = Platform Platform/qpc Platform/rtos Devices App Active
+else
 USER_DIRS = Platform Platform/$(ARCH_ON) Devices App
+endif
 ifeq ($(ARCH_ON),rtos)
 USER_DIRS += Tasks
 endif
@@ -111,7 +127,7 @@ $(BUILD_DIR)/$(TARGET).elf: $(USER_OBJECTS)
 # Порт GCC/ARM_CM0 (Cortex-M0+), heap_4. timers.c і event_groups.c не збираються,
 # поки немає вимоги; stream_buffer.c — для прийому UART на кроці 2.
 # Чужий код, як і Drivers/, — лише -Wall.
-ifeq ($(ARCH_ON),rtos)
+ifneq ($(filter rtos qpc,$(ARCH_ON)),)
 RTOS_DIR     = Middlewares/FreeRTOS
 RTOS_PORT    = $(RTOS_DIR)/portable/GCC/ARM_CM0
 # SIM_CRIT=1 (за замовчуванням): копія порту з Platform/rtos/port_sim/ - критична
@@ -121,11 +137,23 @@ RTOS_PORT    = $(RTOS_DIR)/portable/GCC/ARM_CM0
 RTOS_PORT_SRC = $(if $(filter 1,$(SIM_CRIT_ON)),Platform/rtos/port_sim,$(RTOS_PORT))
 # У збірці TEST_KSTRESS port.c і portasm.c включаються у Platform/rtos/kstress/
 # (той самий порт плюс лічильники критичних секцій), тож окремо не збираються
-RTOS_PORT_C  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress.c,$(RTOS_PORT_SRC)/port.c)
-RTOS_PORT_S  = $(if $(filter 1,$(TEST_KSTRESS)),Platform/rtos/kstress/port_kstress_asm.c,$(RTOS_PORT_SRC)/portasm.c)
+RTOS_PORT_C  = $(if $(filter 1,$(TEST_KSTRESS) $(TEST_QSTRESS)),Platform/rtos/kstress/port_kstress.c,$(RTOS_PORT_SRC)/port.c)
+RTOS_PORT_S  = $(if $(filter 1,$(TEST_KSTRESS) $(TEST_QSTRESS)),Platform/rtos/kstress/port_kstress_asm.c,$(RTOS_PORT_SRC)/portasm.c)
+ifeq ($(ARCH_ON),qpc)
+QPC_DIR      = Middlewares/qpc
+QP_SOURCES   = $(addprefix $(QPC_DIR)/src/qf/,qep_hsm.c qep_msm.c qf_act.c qf_defer.c qf_dyn.c \
+               qf_mem.c qf_ps.c qf_qact.c qf_qeq.c qf_qmact.c qf_time.c) $(QPC_DIR)/ports/freertos/qf_port.c
+RTOS_SOURCES = $(addprefix $(RTOS_DIR)/,tasks.c queue.c list.c) $(QP_SOURCES) \
+               $(RTOS_PORT_C) $(RTOS_PORT_S)
+C_INCLUDES  += -I$(QPC_DIR)/include -I$(QPC_DIR)/ports/freertos -ITasks
+ifeq ($(filter 1,$(TEST_QSTRESS) $(TEST_QPCHECK)),)
+C_DEFS      += -DQ_UNSAFE
+endif
+else
 RTOS_SOURCES = $(addprefix $(RTOS_DIR)/,tasks.c queue.c list.c stream_buffer.c) \
                $(RTOS_DIR)/portable/MemMang/heap_4.c \
                $(RTOS_PORT_C) $(RTOS_PORT_S)
+endif
 RTOS_OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(RTOS_SOURCES:.c=.o)))
 
 C_SOURCES  += $(RTOS_SOURCES)
@@ -140,12 +168,13 @@ $(BUILD_DIR)/$(TARGET).elf: $(RTOS_OBJECTS)
 # perf_now з самого HAL_Init і лише після старту ядра викликає обробник порту.
 # Порт V11 визначає обробник під іменем CMSIS, тож у port.c його перейменовуємо
 $(BUILD_DIR)/port.o $(BUILD_DIR)/port_kstress.o: CFLAGS += -DSysTick_Handler=xPortSysTickHandler
-ifeq ($(TEST_KSTRESS),1)
+ifneq ($(filter 1,$(TEST_KSTRESS) $(TEST_QSTRESS)),)
 C_INCLUDES += -IPlatform/rtos/kstress
 endif
 endif
-C_DEFS += -DARCH_RTOS=$(if $(filter rtos,$(ARCH_ON)),1,0)
-C_DEFS += -DSIM_CRIT=$(if $(filter rtos,$(ARCH_ON)),$(SIM_CRIT_ON),0)
+C_DEFS += -DARCH_RTOS=$(if $(filter rtos qpc,$(ARCH_ON)),1,0)
+C_DEFS += -DARCH_QPC=$(if $(filter qpc,$(ARCH_ON)),1,0)
+C_DEFS += -DSIM_CRIT=$(if $(filter rtos qpc,$(ARCH_ON)),$(SIM_CRIT_ON),0)
 C_DEFS += -DRTOS_ASSERT=$(ASSERT_ON)
 
 # LTO: оптимізація всього образу на етапі лінкування (docs/rtos-design.md, бюджет
@@ -177,7 +206,7 @@ C_DEFS += -DBUILD_LTO=$(LTO_ON)
 #   TEST_CRITCOST=1  — ціна входу й виходу критичної секції ядра (лише rtos, PERF=1)
 #   PERF=0           — без вимірювального модуля ЛР3 (docs/perf.md); за замовчуванням 1
 # TEST_* у продукт не входять; docs/rtos-design.md, розділи 2 і 5
-BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE TEST_KSTRESS \
+BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE TEST_KSTRESS TEST_QSTRESS TEST_QPCHECK \
               TEST_CRITCOST OSMETRICS
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
 C_DEFS += $(if $(filter-out 0,$(INV_ON)),-DTEST_INVERSION=$(INV_ON))

@@ -1,3 +1,6 @@
 [submodule "firmware/Middlewares/FreeRTOS"]
 	path = firmware/Middlewares/FreeRTOS
 	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+[submodule "firmware/Middlewares/qpc"]
+	path = firmware/Middlewares/qpc
+	url = https://github.com/QuantumLeaps/qpc.git

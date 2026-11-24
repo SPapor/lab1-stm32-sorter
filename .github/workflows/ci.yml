@@ -85,6 +85,15 @@ jobs:
       - name: Firmware build
         run: make build
 
+      - name: Firmware builds (ARCH=qpc) - product with Q_UNSAFE, TEST_QSTRESS, TEST_QPCHECK, -Werror per file
+        run: |
+          make compile ARCH=qpc
+          make compile ARCH=qpc TEST_QSTRESS=1
+          make build ARCH=qpc LTO=1 TEST_QSTRESS=1
+          make build ARCH=qpc LTO=1 TEST_QPCHECK=1
+          make build ARCH=qpc LTO=1 TEST_QPCHECK=1 PERF=0
+          make build ARCH=qpc LTO=1
+
       - name: gcc 14 for comparison (docker/Dockerfile) - product builds only
         run: |
           make image-gcc14

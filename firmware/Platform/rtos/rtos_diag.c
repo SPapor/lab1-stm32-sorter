@@ -166,6 +166,18 @@ void rtos_hal_fatal_create(const char *name)
 }
 
 /* configUSE_MALLOC_FAILED_HOOK: pvPortMalloc повернув би NULL */
+void rtos_hal_fatal_qp(const char *module, int32_t id)
+{
+    fatal_stop();
+    fatal_begin();
+    rtos_hal_raw_puts("qp ");
+    rtos_hal_raw_puts(module);
+    rtos_hal_raw_puts(" ");
+    rtos_hal_raw_putu((uint32_t)id, 10u);
+    rtos_hal_raw_puts("\r\n");
+    fatal_halt();
+}
+
 void vApplicationMallocFailedHook(void)
 {
     fatal_stop();
