@@ -501,7 +501,7 @@ python3 tools/run_scenario.py tools/scenarios/S1.yaml --out docs/metrics/lab5
 
 ### Ядро: бюджет після ядра (gcc 10, `LTO=1`)
 
-`ARCH=qpc` (`bbe0452`, `b44c429`): QP/C 8.1.6 з портом FreeRTOS (файли методички 7.5 + `qf_port.c`), ядро V11.3.3 у статичній конфігурації (`Platform/qpc/FreeRTOSConfig.h`, без `stream_buffer.c` і `heap_4.c`), `Platform/qpc/qp_config.h` (7 AO, 3 пули), BSP `Platform/qpc/qp_bsp.c` (хук тіку -> `QTIMEEVT_TICK_FROM_ISR`, пам'ять idle, `Q_onError` -> `FATAL qp <модуль> <номер>`). Продукт поки працює через проміжний шар `Active/sorter_ao.c`: той самий API `sorter_tasks.h`, що в ЛР4, по AO на кожну задачу ЛР4, ресурси - під зупинкою планувальника (`vTaskSuspendAll`), бо м'ютексів у статичній конфігурації немає. Цей шар AO за схемою (розділ 2) замінюватимуть по одному.
+`ARCH=qpc` (`db85382`, `7cf6b4e`): QP/C 8.1.6 з портом FreeRTOS (файли методички 7.5 + `qf_port.c`), ядро V11.3.3 у статичній конфігурації (`Platform/qpc/FreeRTOSConfig.h`, без `stream_buffer.c` і `heap_4.c`), `Platform/qpc/qp_config.h` (7 AO, 3 пули), BSP `Platform/qpc/qp_bsp.c` (хук тіку -> `QTIMEEVT_TICK_FROM_ISR`, пам'ять idle, `Q_onError` -> `FATAL qp <модуль> <номер>`). Продукт поки працює через проміжний шар `Active/sorter_ao.c`: той самий API `sorter_tasks.h`, що в ЛР4, по AO на кожну задачу ЛР4, ресурси - під зупинкою планувальника (`vTaskSuspendAll`), бо м'ютексів у статичній конфігурації немає. Цей шар AO за схемою (розділ 2) замінюватимуть по одному.
 
 | Збірка | Flash, B | RAM, B | Оцінка (крок 1-2) |
 |---|---|---|---|
@@ -527,7 +527,7 @@ python3 tools/run_scenario.py tools/scenarios/S1.yaml --out docs/metrics/lab5
 
 A + B разом - -540 B, прогноз тоді ~32 260-32 360, вільно ~400-500 B.
 
-**Ворота: `TEST_QSTRESS`** (`248650b`, Wokwi для VS Code, `docs/metrics/lab5/QSTRESS_2026-11-24.txt`) - **PASS**:
+**Ворота: `TEST_QSTRESS`** (`894329f`, Wokwi для VS Code, `docs/metrics/lab5/QSTRESS_2026-11-24.txt`) - **PASS**:
 
 | Що (за 120 с часу МК) | Значення | Критерій |
 |---|---|---|
