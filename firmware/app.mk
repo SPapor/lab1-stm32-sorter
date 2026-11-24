@@ -215,7 +215,8 @@ endif
 BUILD_CFG  = $(BUILD_DIR)/build.cfg
 BUILD_LINE = ARCH=$(ARCH_ON) LTO=$(LTO_ON) TICK_HZ=$(TICK_HZ_ON) SIM_CRIT=$(SIM_CRIT_ON) ASSERT=$(ASSERT_ON) \
              $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0)) \
-             TEST_INVERSION=$(if $(INV_NAME),$(INV_NAME),0) TEST_OS=$(TEST_OS_ON) PERF=$(PERF_ON)
+             TEST_INVERSION=$(if $(INV_NAME),$(INV_NAME),0) TEST_OS=$(TEST_OS_ON) PERF=$(PERF_ON) \
+             GCC=$(shell $(CC) -dumpfullversion)
 
 # Версія прошивки в банері й першому рядку журналу (методичка 5.2, 6): git-хеш,
 # з «-dirty», якщо збирали з незакоміченими змінами. Теги (lab3, ...) не беремо:
