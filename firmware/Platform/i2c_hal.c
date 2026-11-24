@@ -1,5 +1,8 @@
 #include "i2c_hal.h"
 #include "uart_hal.h"
+#ifdef TEST_I2C_DIAG
+#include "perf_hal.h"
+#endif
 
 static bus_status_t map_status(HAL_StatusTypeDef s, uint32_t err)
 {
@@ -17,6 +20,11 @@ static void print_recover(const i2c_hal_ctx_t *c)
 {
     static const char fmt[] = "try=%u/%u where=%s addr=0x%02X err=0x%02lX isr=0x%08lX";
 
+#ifdef TEST_I2C_DIAG
+    if (c->log != NULL)
+        c->log("I2C_DIAG", "hal_ms=%lu perf_us=%lu left=%lu state=%lu", (unsigned long)c->diag_ms,
+               (unsigned long)c->diag_us, (unsigned long)c->diag_left, (unsigned long)c->h->State);
+#endif
     if (c->log != NULL) {
         c->log("I2C_RECOVER", fmt, (unsigned)c->last_try, (unsigned)c->max_tries,
                c->last_where, (unsigned)c->last_addr,
@@ -39,6 +47,11 @@ static void recover(i2c_hal_ctx_t *c, const char *where, uint8_t addr7, uint8_t 
     c->last_try = try_no;
     c->last_err = c->h->ErrorCode;
     c->last_isr = c->h->Instance->ISR;
+#ifdef TEST_I2C_DIAG
+    c->diag_ms = HAL_GetTick() - c->diag_tick_ms;
+    c->diag_us = (perf_now() - c->diag_tick_cyc) / (perf_hal_cpu_hz() / 1000000u);
+    c->diag_left = c->h->XferCount;
+#endif
     if (c->defer_log)
         c->log_pending = 1;
     else
@@ -64,6 +77,10 @@ static bus_status_t xfer(i2c_hal_ctx_t *c, xfer_fn_t fn, const char *where,
     if (len > UINT16_MAX)
         return BUS_ERR_OTHER;
     for (uint8_t n = 1; n <= c->max_tries; n++) {
+#ifdef TEST_I2C_DIAG
+        c->diag_tick_ms = HAL_GetTick();
+        c->diag_tick_cyc = perf_now();
+#endif
         HAL_StatusTypeDef s = fn(c->h, (uint16_t)(addr7 << 1), data, (uint16_t)len,
                                  I2C_HAL_TIMEOUT_MS);
         st = map_status(s, c->h->ErrorCode);

@@ -24,6 +24,13 @@ typedef struct {
     uint8_t last_try;         /*   номер спроби 1..max_tries */
     uint32_t last_err;        /*   ErrorCode HAL */
     uint32_t last_isr;        /*   регістр ISR до відновлення */
+#ifdef TEST_I2C_DIAG
+    uint32_t diag_ms;
+    uint32_t diag_us;
+    uint32_t diag_left;
+    uint32_t diag_tick_ms;
+    uint32_t diag_tick_cyc;
+#endif
     uint8_t defer_log;        /* 1 — рядок I2C_RECOVER відкладається */
     uint8_t log_pending;      /* є відкладений рядок I2C_RECOVER */
     i2c_hal_log_fn log;       /* NULL - рядок одразу в UART (uart_hal) */

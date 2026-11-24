@@ -206,7 +206,7 @@ C_DEFS += -DBUILD_LTO=$(LTO_ON)
 #   TEST_CRITCOST=1  — ціна входу й виходу критичної секції ядра (лише rtos, PERF=1)
 #   PERF=0           — без вимірювального модуля ЛР3 (docs/perf.md); за замовчуванням 1
 # TEST_* у продукт не входять; docs/rtos-design.md, розділи 2 і 5
-BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE TEST_KSTRESS TEST_QSTRESS TEST_QPCHECK \
+BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_I2C_DIAG TEST_PRIMASK TEST_BOOTMARK TEST_APIPROBE TEST_KSTRESS TEST_QSTRESS TEST_QPCHECK \
               TEST_CRITCOST OSMETRICS
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
 C_DEFS += $(if $(filter-out 0,$(INV_ON)),-DTEST_INVERSION=$(INV_ON))
