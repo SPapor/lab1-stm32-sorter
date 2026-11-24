@@ -288,22 +288,22 @@ static volatile uint8_t estop_pending;      /* був фронт PC13, EXTI ви
 static uint8_t stream_on = 1;   /* періодичний рядок accel (команда stream) */
 #endif
 
-/* Текст команди help: лише синтаксис, без описів (бюджет flash ЛР4,
- * docs/rtos-design.md, розділ 4); синтаксис розбирає App/cli.c */
-static const char *const help_lines[] = {
-  "help | status | reset | log on|off",
+/* Текст команди help: імена команд одним рядком (бюджет flash, docs/qp-design.md,
+ * крок 3); синтаксис розбирає App/cli.c */
+static const char help_line[] = "help status reset log"
 #if PERF
+  " stats load stack heap"
 #if ARCH_RTOS
-  "stats [reset] | load | stack | heap | tasks",
-#else
-  "stats [reset] | load | stack | heap",
+  " tasks"
 #endif
 #if HIST_CMD
-  "hist gate|imu|lcd",
+  " hist"
 #endif
-  "set lcd_ms|lcd_chars|imu_ms|log <n>",
+  " set"
 #endif
+  ;
 #ifdef LAB2_CAP
+static const char *const help_lines[] = {
   "stream on|off       periodic 'accel' line (default on)",
   "cap whoami          MPU-6050: write 0x75, read 1 byte",
   "cap accel           MPU-6050: write 0x3B, read 6 bytes",
@@ -313,8 +313,8 @@ static const char *const help_lines[] = {
   "cap servo <0..180>  set servo angle",
   "cap adc             one gate + one class conversion",
   "cap uart            send 0x55 and 'UART-TEST'",
-#endif
 };
+#endif
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -1871,8 +1871,11 @@ static void cmd_run(const cli_cmd_t *cmd)
 {
   switch (cmd->id) {
   case CLI_HELP:
+    uart_hal_printf("%s", help_line);
+#ifdef LAB2_CAP
     for (size_t i = 0; i < sizeof help_lines / sizeof help_lines[0]; i++)
       uart_hal_printf("%s", help_lines[i]);
+#endif
     break;
   case CLI_STATUS: {
     sorter_t s;
