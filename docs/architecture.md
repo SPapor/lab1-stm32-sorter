@@ -161,8 +161,8 @@ RAM включає резерв купи 512 B і стека 1 024 B зі скр
 | Компонент | Версія |
 |---|---|
 | STM32CubeMX / STM32Cube FW_C0 | 6.18.1 / V1.4.1 (HAL і CMSIS Device 1.4.1, CMSIS Core 5.6, BSP 1.1.1) |
-| arm-none-eabi-gcc, binutils, newlib | з ЛР5: 14.2.1 (`15:14.2.rel1-1`), 2.45.50, 4.6.0 - образ `stm32-build:gcc14`, версії зафіксовані в `docker/Dockerfile`; ЛР2-ЛР4 (теги `lab2`-`lab4`): 10.3.1 (`15:10.3-2021.07-4`), 2.38, 3.3.0 - `docker/gcc10/Dockerfile` |
-| Unity / gcc для тестів / gcovr | v2.7.0 / з ЛР5 15.2.0 (раніше 11.4.0) / з ЛР5 7.2 (раніше 5.0) |
+| arm-none-eabi-gcc, binutils, newlib | 10.3.1 (`15:10.3-2021.07-4`), 2.38, 3.3.0 - образ `stm32-build:gcc10`, версії зафіксовані в `docker/gcc10/Dockerfile`; образ з 14.2.1 (`docker/Dockerfile`) - лише для порівняння (journal.md, проблема 79) |
+| Unity / gcc для тестів / gcovr | v2.7.0 / 11.4.0 / 5.0 |
 | Wokwi для VS Code / `wokwi-cli` | 4.1.0 / 0.27.1 |
 | sigrok-cli / PulseView | 0.7.2 / 0.4.2 |
 | Python (скрипти `tools/`) | 3.14 |
