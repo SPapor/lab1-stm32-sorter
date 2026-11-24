@@ -12,8 +12,8 @@ jobs:
         with:
           submodules: true          # ядро FreeRTOS: firmware/Middlewares/FreeRTOS
 
-      - name: Docker image (docker/Dockerfile)
-        run: docker build -t stm32-build docker/
+      - name: Docker image (docker/Dockerfile, gcc 14.2.1)
+        run: make image
 
       - name: Layer dependencies
         run: make check-deps
