@@ -58,12 +58,12 @@ tools-test:
 	python3 -m unittest discover -s tools/tests
 
 image:
-	docker build -t $(IMAGE_GCC14) docker/
-
-image-gcc10:
 	docker build -t $(IMAGE_GCC10) docker/gcc10/
+
+image-gcc14:
+	docker build -t $(IMAGE_GCC14) docker/
 
 shell:
 	docker run --rm -it -v $(PWD):/workspace -w /workspace --user $$(id -u):$$(id -g) $(IMAGE) bash
 
-.PHONY: build compile clean test coverage check-deps stack-usage map-summary stack-graph tools-test image image-gcc10 shell
+.PHONY: build compile clean test coverage check-deps stack-usage map-summary stack-graph tools-test image image-gcc14 shell

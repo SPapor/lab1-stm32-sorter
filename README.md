@@ -8,13 +8,13 @@
 Прошивка збирається в Docker, образом `stm32-build:gcc10` з `docker/gcc10/Dockerfile`: Ubuntu 22.04, arm-none-eabi-gcc 10.3.1 (`15:10.3-2021.07-4`), newlib 3.3.0, binutils 2.38. Версії пакетів зафіксовані в Dockerfile. Цим самим компілятором зібрано й виміряно ЛР3 і ЛР4 (теги `lab3`, `lab4`).
 
 ```sh
-make image-gcc10                            # docker build -t stm32-build:gcc10 docker/gcc10/
+make image                                  # docker build -t stm32-build:gcc10 docker/gcc10/
 make build                                  # ARCH=superloop (ЛР3)
 make build ARCH=rtos LTO=1                  # FreeRTOS (ЛР4)
 make test && make check-deps
 ```
 
-Образ з gcc 14.2.1 (`docker/Dockerfile`, `make image`, `IMAGE=stm32-build:gcc14`) лишається для порівняння: у ЛР5 я пробував перейти на нього і повернувся (docs/journal.md, проблема 79).
+Образ з gcc 14.2.1 (`docker/Dockerfile`, `make image-gcc14`, `IMAGE=stm32-build:gcc14`; CI збирає ним лише продукт обох ARCH) лишається для порівняння: у ЛР5 я пробував перейти на нього і повернувся (docs/journal.md, проблема 79).
 
 Відтворити lab4:
 
