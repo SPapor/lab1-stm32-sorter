@@ -1,0 +1,27 @@
+1 BOOT fw=lab4-rtos git=a5a1bfc8 perf=1 arch=rtos lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=7424       
+12 EVT t_us=12263 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=517 pair_cyc=1206
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+40 EVT t_us=39969 name=i2c_fail
+44 EVT t_us=44029 name=i2c_ok
+54 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+61 EVT t_us=60976 name=i2c_fail
+65 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x04 isr=0x00000001
+72 EVT t_us=72013 name=i2c_fail
+82 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008000
+89 EVT t_us=88986 name=i2c_fail
+99 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008000
+106 EVT t_us=105978 name=i2c_fail
+110 SELFTEST dev=mpu6050 status=WARN who=0x68 tries=3 err=SLEEP
+122 I2C_RECOVER try=1/1 where=wr addr=0x27 err=0x20 isr=0x00008000
+129 EVT t_us=129077 name=i2c_fail
+133 SELFTEST dev=lcd1602 status=FAIL addr=0x27 err=BUS
+138 SELFTEST dev=ldr_gate status=OK raw=1001
+143 SELFTEST dev=ldr_class status=OK raw=1001
+148 SELFTEST dev=servo status=OK pulse_us=1500
+152 SELFTEST_END ok=3 warn=1 fail=1
+156 FAULT reason=LCD_NOT_FOUND
+159 STATE state=FAULT
+162 STACK used=664 reserved=1024 free=360 overflow=0
+167 HEAP arena=0 used=0 free=0

@@ -1,0 +1,59 @@
+2 BOOT fw=lab4-rtos git=12ddeaa1 perf=1 arch=rtos lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=7424       
+12 EVT t_us=12240 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=517 pair_cyc=1322
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+42 EVT t_us=41588 name=i2c_fail
+46 EVT t_us=45623 name=i2c_ok
+49 SELFTEST dev=mpu6050 status=OK who=0x68 tries=1
+124 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+129 SELFTEST dev=ldr_gate status=OK raw=1001
+134 SELFTEST dev=ldr_class status=OK raw=1001
+138 SELFTEST dev=servo status=OK pulse_us=1500
+143 SELFTEST_END ok=5 warn=0 fail=0
+184 STATE state=READY
+187 STACK used=616 reserved=1024 free=408 overflow=0
+192 HEAP arena=0 used=0 free=0
+2 BOOT fw=lab4-rtos git=12ddeaa1 perf=1 arch=rtos lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=7424       
+12 EVT t_us=12240 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=517 pair_cyc=1322
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+42 EVT t_us=41588 name=i2c_fail
+46 EVT t_us=45623 name=i2c_ok
+49 SELFTEST dev=mpu6050 status=OK who=0x68 tries=1
+124 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+129 SELFTEST dev=ldr_gate status=OK raw=1001
+134 SELFTEST dev=ldr_class status=OK raw=1001
+138 SELFTEST dev=servo status=OK pulse_us=1500
+143 SELFTEST_END ok=5 warn=0 fail=0
+184 STATE state=READY
+187 STACK used=616 reserved=1024 free=408 overflow=0
+192 HEAP arena=0 used=0 free=0
+1201 EVT t_us=134055 name=ready_gate
+1202 EVT t_us=138735 name=ready_class
+1204 EVT t_us=210401 name=ready_imu
+1204 EVT t_us=776806 name=ready_lcd
+2201 LOAD pct=37 pm=374 win_cyc=48000254 busy_cyc=17939080 windows=1
+3201 LOAD pct=36 pm=360 win_cyc=47999980 busy_cyc=17266754 windows=2
+4201 LOAD pct=36 pm=360 win_cyc=48000376 busy_cyc=17290859 windows=3
+5201 LOAD pct=36 pm=361 win_cyc=47999992 busy_cyc=17326022 windows=4
+6201 LOAD pct=36 pm=363 win_cyc=47999644 busy_cyc=17427057 windows=5
+7201 LOAD pct=36 pm=359 win_cyc=48000363 busy_cyc=17227490 windows=6
+8200 LOAD pct=36 pm=363 win_cyc=48000017 busy_cyc=17413726 windows=7
+9200 LOAD pct=36 pm=363 win_cyc=48000016 busy_cyc=17422976 windows=8
+10200 LOAD pct=36 pm=362 win_cyc=47999619 busy_cyc=17385810 windows=9
+11200 LOAD pct=36 pm=362 win_cyc=47999981 busy_cyc=17356670 windows=10
+12200 LOAD pct=36 pm=362 win_cyc=48000004 busy_cyc=17391072 windows=11
+13200 LOAD pct=36 pm=363 win_cyc=48000004 busy_cyc=17416280 windows=12
+14200 LOAD pct=36 pm=364 win_cyc=47999992 busy_cyc=17470784 windows=13
+15200 LOAD pct=36 pm=363 win_cyc=48000004 busy_cyc=17435620 windows=14
+16200 LOAD pct=36 pm=362 win_cyc=48000352 busy_cyc=17386265 windows=15
+17200 LOAD pct=36 pm=362 win_cyc=47999644 busy_cyc=17396029 windows=16
+18200 LOAD pct=36 pm=363 win_cyc=48000004 busy_cyc=17415591 windows=17
+19200 LOAD pct=36 pm=363 win_cyc=48000004 busy_cyc=17412752 windows=18
+20200 LOAD pct=36 pm=363 win_cyc=48000002 busy_cyc=17432831 windows=19
+21200 LOAD pct=36 pm=363 win_cyc=47999916 busy_cyc=17412806 windows=20
+22200 LOAD pct=36 pm=363 win_cyc=48000007 busy_cyc=17406961 windows=21
+23200 LOAD pct=36 pm=362 win_cyc=48000005 busy_cyc=17370370 windows=22
+24200 LOAD pct=36 pm=363 win_cyc=47999991 busy_cyc=17412484 windows=23
