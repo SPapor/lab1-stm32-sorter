@@ -27,6 +27,10 @@ uint32_t port_sim_defer_irq(uint32_t irqn);
 /* 1 - критична секція відкрита (тік і PendSV відкладаються) */
 uint32_t port_sim_blocked(void);
 
+uint32_t port_sim_tick_hold(void);
+
+void port_sim_tick_release(uint32_t prev);
+
 void port_sim_counters(port_sim_counters_t *out);
 
 #endif /* PORT_SIM_H */

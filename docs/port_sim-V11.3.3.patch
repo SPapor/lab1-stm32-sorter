@@ -1,11 +1,3 @@
-Обхід PRIMASK для Wokwi (збірка SIM_CRIT=1, docs/rtos-design.md, розділ 2):
-відмінності firmware/Platform/rtos/port_sim/ від порту FreeRTOS-Kernel V11.3.3
-(сабмодуль firmware/Middlewares/FreeRTOS, portable/GCC/ARM_CM0). Новий файл без
-відповідника в порту - port_sim/port_sim.h (лічильники і port_sim_defer_tick).
-portmacro.h і mpu_wrappers_v2_asm.c не змінені і беруться із сабмодуля.
-Перевірка, що файл актуальний: make tools-test (tools/tests/test_port_sim_patch.py).
-Застосувати до копії порту: patch -p0 < docs/port_sim-V11.3.3.patch (з firmware/).
-
 --- Middlewares/FreeRTOS/portable/GCC/ARM_CM0/port.c
 +++ Platform/rtos/port_sim/port.c
 @@ -43,6 +43,7 @@
@@ -26,7 +18,7 @@ portmacro.h і mpu_wrappers_v2_asm.c не змінені і беруться і�
  #define portNVIC_PEND_SYSTICK_SET_BIT         ( 1UL << 26UL )
  #define portMIN_INTERRUPT_PRIORITY            ( 255UL )
  #define portNVIC_PENDSV_PRI                   ( portMIN_INTERRUPT_PRIORITY << 16UL )
-@@ -787,9 +791,199 @@
+@@ -787,9 +791,240 @@
  
  /*-----------------------------------------------------------*/
  
@@ -54,6 +46,7 @@ portmacro.h і mpu_wrappers_v2_asm.c не змінені і беруться і�
 +portDONT_DISCARD volatile uint32_t ulPortSimPendSVPending = 0;  /* пише PendSV_Handler */
 +static volatile uint32_t ulSimBlockIrq = 0;                     /* переривання NVIC */
 +static volatile uint32_t ulSimTaskDepth = 0;                    /* вкладеність секцій задачі */
++static volatile uint32_t ulSimTaskSaved = 0;
 +static volatile uint32_t ulSimTicksPending = 0;
 +static volatile uint32_t ulSimIrqPending = 0;                   /* лінії NVIC, біт на лінію */
 +static volatile port_sim_counters_t xSimCounters;
@@ -90,6 +83,17 @@ portmacro.h і mpu_wrappers_v2_asm.c не змінені і беруться і�
 +    {
 +        ulSimBlockIrq = ulPrev >> 1;
 +        ulPortSimBlock = ulPrev & 1UL;
++
++        if( ( ulSimBlockIrq == 0UL ) && ( ulSimIrqPending != 0UL ) )
++        {
++            uint32_t ulLines = ulSimIrqPending;
++
++            ulSimIrqPending = 0;
++            xSimCounters.deferred_irq++;
++            portNVIC_ISPR0_REG = ulLines;
++            portNVIC_ISER0_REG = ulLines;
++        }
++
 +        return;
 +    }
 +
@@ -164,6 +168,29 @@ portmacro.h і mpu_wrappers_v2_asm.c не змінені і беруться і�
 +    return 1;
 +}
 +
++uint32_t port_sim_tick_hold( void )
++{
++    uint32_t ulPrimask;
++    uint32_t ulPrev;
++
++    __asm volatile ( "mrs %0, PRIMASK" : "=r" ( ulPrimask ) );
++    portDISABLE_INTERRUPTS();
++    ulPrev = ( ulSimBlockIrq << 1 ) | ulPortSimBlock;
++    ulPortSimBlock = 1UL;
++    __asm volatile ( "msr PRIMASK, %0" ::"r" ( ulPrimask ) : "memory" );
++    return ulPrev;
++}
++
++void port_sim_tick_release( uint32_t ulPrev )
++{
++    uint32_t ulPrimask;
++
++    __asm volatile ( "mrs %0, PRIMASK" : "=r" ( ulPrimask ) );
++    portDISABLE_INTERRUPTS();
++    prvSimExit( ulPrev );
++    __asm volatile ( "msr PRIMASK, %0" ::"r" ( ulPrimask ) : "memory" );
++}
++
 +uint32_t port_sim_blocked( void )
 +{
 +    return ulPortSimBlock;
@@ -215,8 +242,14 @@ portmacro.h і mpu_wrappers_v2_asm.c не змінені і беруться і�
  void vPortEnterCritical( void ) /* PRIVILEGED_FUNCTION */
  {
      portDISABLE_INTERRUPTS();
-+    ( void ) prvSimEnter(); /* SIM_CRIT: спершу стан, потім глибина - див. prvSimEnter */
-+    ulSimTaskDepth++;       /* SIM_CRIT */
++    {
++        uint32_t ulPrev = prvSimEnter(); /* SIM_CRIT: спершу стан, потім глибина - див. prvSimEnter */
++
++        if( ulSimTaskDepth++ == 0UL ) /* SIM_CRIT */
++        {
++            ulSimTaskSaved = ulPrev;
++        }
++    }
 +
 +    if( prvSimStarted() ) /* SIM_CRIT */
 +    {
@@ -226,15 +259,15 @@ portmacro.h і mpu_wrappers_v2_asm.c не змінені і беруться і�
      ulCriticalNesting++;
  
      /* Barriers are normally not required but do ensure the code is
-@@ -805,6 +999,13 @@
+@@ -805,6 +1040,13 @@
      configASSERT( ulCriticalNesting );
      ulCriticalNesting--;
  
-+    /* SIM_CRIT: найзовнішня секція задачі починалася зі стану 0 (перемкнути
-+     * задачу під час секції нема чим, а секції ISR свій стан відновлюють) */
++    /* SIM_CRIT: найзовнішня секція задачі відновлює стан, з якого почалась:
++     * 0 або port_sim_tick_hold (секції ISR свій стан відновлюють самі) */
 +    if( --ulSimTaskDepth == 0UL )
 +    {
-+        prvSimExit( 0UL );
++        prvSimExit( ulSimTaskSaved );
 +    }
 +
      if( ulCriticalNesting == 0 )
