@@ -92,6 +92,10 @@ jobs:
           make build ARCH=qpc LTO=1 TEST_QSTRESS=1
           make compile ARCH=qpc TEST_QPCHECK=1
           make build ARCH=qpc LTO=1 TEST_QPCHECK=1 PERF=0
+          make build ARCH=qpc LTO=1 TEST_QPCHECK=1 PERF=0 TEST_Q93=estop
+          make build ARCH=qpc LTO=1 TEST_QPCHECK=1 PERF=0 TEST_Q93=estopx
+          make build ARCH=qpc LTO=1 TEST_QPCHECK=1 PERF=0 TEST_Q93=pool
+          make build ARCH=qpc LTO=1 TEST_QPCHECK=1 PERF=0 TEST_Q93=poolx
           make build ARCH=qpc LTO=1
 
       - name: gcc 14 for comparison (docker/Dockerfile) - product builds only
