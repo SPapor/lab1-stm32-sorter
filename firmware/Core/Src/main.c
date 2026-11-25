@@ -1066,23 +1066,16 @@ static void imu_task(void)
 }
 #endif
 
-static void imu_run(void)
+static void imu_process(mpu6050_status_t st, const mpu6050_accel_raw_t *a)
 {
-  mpu6050_accel_raw_t a;
-
-#ifdef TEST_I2C_FAULT
-  i2c_fault_probe();
-#endif
-
-  mpu6050_status_t st = mpu6050_read_accel_raw(&imu, &a);
   if (st != MPU6050_OK) {
     ev_log("IMU_ERR", "st=%s", mpu_err_name(st));
     return;
   }
 
-  int32_t x = mpu6050_raw_to_mg(a.x);
-  int32_t y = mpu6050_raw_to_mg(a.y);
-  int32_t z = mpu6050_raw_to_mg(a.z);
+  int32_t x = mpu6050_raw_to_mg(a->x);
+  int32_t y = mpu6050_raw_to_mg(a->y);
+  int32_t z = mpu6050_raw_to_mg(a->z);
   uint32_t m2 = impact_mag2(x, y, z);
   READY_IF(m2 >= (uint32_t)IMU_READY_MG * IMU_READY_MG, RDY_IMU);
   int first = 0;
@@ -1094,6 +1087,22 @@ static void imu_run(void)
   if (first)
     ev_log("IMPACT", "amag_mg=%lu x_mg=%ld y_mg=%ld z_mg=%ld",
            (unsigned long)impact_isqrt(m2), (long)x, (long)y, (long)z);
+}
+
+static mpu6050_status_t imu_read(mpu6050_accel_raw_t *a)
+{
+#ifdef TEST_I2C_FAULT
+  i2c_fault_probe();
+#endif
+  return mpu6050_read_accel_raw(&imu, a);
+}
+
+static void imu_run(void)
+{
+  mpu6050_accel_raw_t a;
+  mpu6050_status_t st = imu_read(&a);
+
+  imu_process(st, &a);
 }
 
 /* Кожні LCD_PERIOD_MS: стан і лічильники A/B/REJECT (FR-06) або причина FAULT
@@ -1125,14 +1134,12 @@ static void lcd_task(void)
 /* due = 1 — настав період: новий текст рядків. lcd_chars = 0 — обидва рядки
  * повністю (34 записи HD44780, ~31,5 мс); N > 0 — лише символи, що змінилися,
  * не більше N за прохід, решта — на наступних проходах циклу (STAT lcd_part) */
-static void lcd_run(uint8_t due)
+static void lcd_format(void)
 {
   char *row0 = lcd_want[0];
   char *row1 = lcd_want[1];
   const size_t cap = sizeof lcd_want[0];
-  lcd_status_t st;
 
-  if (due) {
   /* Той самий текст, що давали "%-16s", "%-8s n=%-5lu" і "A%-4lu B%-4lu R%-3lu" */
   LOCK(SORTER);
   if (sorter.state == SORTER_FAULT) {
@@ -1150,33 +1157,49 @@ static void lcd_run(uint8_t due)
     lcdfmt_u32(row1, n, cap, sorter.count[BIN_REJECT], 3);
   }
   UNLOCK(SORTER);
-  }
+}
 
-#if PERF
-  uint32_t t0 = perf_now();
-#endif
-  /* У rtos - завжди повна перемальовка: порції lcd_chars - обхід обмеження 1 super
-   * loop, а задачу lcd і так витісняють (docs/rtos-design.md, розділ 6) */
-  if (lcd_chars == 0u || ARCH_RTOS) {
-    st = lcd1602_set_cursor(&lcd, 0, 0);
-    if (st == LCD_OK)
-      st = lcd1602_print(&lcd, row0);
-    if (st == LCD_OK)
-      st = lcd1602_set_cursor(&lcd, 0, 1);
-    if (st == LCD_OK)
-      st = lcd1602_print(&lcd, row1);
-  } else {
-    st = lcd_write_changed();
-  }
-#if PERF
-  perf_add(&st_lcd_update, perf_now() - t0);
-#endif
+static lcd_status_t lcd_write_row(uint8_t row, const char *text)
+{
+  lcd_status_t st = lcd1602_set_cursor(&lcd, 0, row);
+
+  if (st == LCD_OK)
+    st = lcd1602_print(&lcd, text);
+  return st;
+}
+
+static void lcd_finish(lcd_status_t st)
+{
   READY_IF(st == LCD_OK, RDY_LCD);
   if (st != LCD_OK) {
     memset(lcd_shown, 0, sizeof lcd_shown);   /* що на екрані — невідомо: наступний період перепише все */
     lcd_pending = 0;
     ev_log("LCD_ERR", "isr=0x%08lX", (unsigned long)i2c1_ctx.last_isr);
   }
+}
+
+static void lcd_run(uint8_t due)
+{
+  lcd_status_t st;
+
+  if (due)
+    lcd_format();
+#if PERF
+  uint32_t t0 = perf_now();
+#endif
+  /* У rtos - завжди повна перемальовка: порції lcd_chars - обхід обмеження 1 super
+   * loop, а задачу lcd і так витісняють (docs/rtos-design.md, розділ 6) */
+  if (lcd_chars == 0u || ARCH_RTOS) {
+    st = lcd_write_row(0, lcd_want[0]);
+    if (st == LCD_OK)
+      st = lcd_write_row(1, lcd_want[1]);
+  } else {
+    st = lcd_write_changed();
+  }
+#if PERF
+  perf_add(&st_lcd_update, perf_now() - t0);
+#endif
+  lcd_finish(st);
 }
 
 /* lcd_chars > 0: не більше lcd_chars символів, що відрізняються від показаних.
