@@ -108,6 +108,7 @@ static QF_MPOOL_EL(LogEvt) pool_log[QLOG_LEN + 2u];
 static volatile uint8_t running;
 static uint8_t rx_buf[SB_RX_BYTES];
 static volatile uint8_t rx_head, rx_tail;
+static volatile uint8_t rx_posted;
 
 static const QEvt estop_evt = QEVT_INITIALIZER(ESTOP_SIG);
 static const QEvt estop_press_evt = QEVT_INITIALIZER(ESTOP_PRESS_SIG);
@@ -334,11 +335,9 @@ void USART2_IRQHandler(void)
 {
     BaseType_t woken = pdFALSE;
     int ch;
-    int was_empty;
 
     if (rtos_hal_irq_defer(USART2_IRQn))
         return;
-    was_empty = rx_head == rx_tail;
     while ((ch = uart_hal_getc()) >= 0) {
         uint8_t next = (uint8_t)((rx_head + 1u) % SB_RX_BYTES);
 
@@ -349,8 +348,9 @@ void USART2_IRQHandler(void)
         rx_buf[rx_head] = (uint8_t)ch;
         rx_head = next;
     }
-    if (was_empty && rx_head != rx_tail)
-        (void)QACTIVE_POST_X_FROM_ISR(&ao[T_CONSOLE].super, &rx_evt, 0U, &woken, NULL);
+    if (!rx_posted && rx_head != rx_tail
+        && QACTIVE_POST_X_FROM_ISR(&ao[T_CONSOLE].super, &rx_evt, 0U, &woken, NULL))
+        rx_posted = 1u;
     portYIELD_FROM_ISR(woken);
 }
 
@@ -634,6 +634,7 @@ static QState console_run(Ao *me, QEvt const *e)
     (void)me;
     switch (e->sig) {
     case RX_SIG:
+        rx_posted = 0u;
         if ((ch = tasks_rx_getc()) >= 0)
             ops->cli(ch);
         return Q_HANDLED();
