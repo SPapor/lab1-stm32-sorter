@@ -114,3 +114,15 @@ Wokwi для VS Code, `tools/run_scenario.py` по RFC2217 (`rfc2217://localhost
 | `310070da` | `S3_2026-11-25_1104.log` | `f3dcb26` |
 | `81fdcbac` | `Q93_estop_81fdcbac.txt`, `Q93_estopx_81fdcbac.txt`, `Q93_pool_81fdcbac.txt`, `Q93_poolx_81fdcbac.txt` | `38658f5` |
 | `25bc3429` | `Q93_pool_25bc3429.txt`, `Q93_poolx_25bc3429.txt` | `1a46fb0` |
+
+## Доробка кроку 4
+
+| Файл | Прошивка | Що показує |
+|---|---|---|
+| `S1_2026-11-25_1209.log`, `_1211`, `_1213` | `2e12fef1`, Lcd шматками по 4 символи | пропуски imu 0 / 0 / 0, `BUSQ skip` 2 / 3 / 127 (до шматків - 252) |
+| `S2_2026-11-25_1258.log`, `S3_2026-11-25_1313.log` | `3adf5ff6` (код `2e12fef`), qpc | S2 і S3 для таблиці; S3 - 24 E-STOP з 30 |
+| `S3_2026-11-25_1320.log`, `S3_2026-11-25_1327.log` | `3adf5ff6`, rtos і super loop | S3 з виправленим скриптом E-STOP (проблема 92) |
+| `S1E_2026-11-25_1302`, `_1315`, `_1322` | `3adf5ff6`, qpc / rtos / super loop | S1 + 30 натискань E-STOP мишею |
+| `S2E_2026-11-25_1310`, `_1317`, `_1324` | `3adf5ff6`, qpc / rtos / super loop | S2 + 30 натискань E-STOP мишею |
+| `impact_2026-11-25_1330`, `_1331`, `_1334` | `3adf5ff6`, qpc / rtos / super loop | удар 0,3 с: 3 / 2 / 3 з 3; у rtos з 6,26 с - втрати байтів при читанні MPU |
+
