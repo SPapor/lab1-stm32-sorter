@@ -150,3 +150,15 @@ Wokwi для VS Code, `tools/run_scenario.py` по RFC2217 (`rfc2217://localhost
 | `6.2.7-fault_2026-11-25_qpc.log` | `397b7739`, qpc, `diagram.json` без MPU (тимчасово) | `FAULT reason=MPU_NOT_FOUND` на 208 мс, консоль жива |
 | `6.2.4_2026-11-25_1955.log` | `872ae254` (код `5c96530`), `TEST_I2C_FAULT=1`, `sda_gnd` мишею | після рев'ю: gate 8,46 мс / 1 пропуск |
 | `S1_2026-11-25_1956.log` | `872ae254`, продукт | перевірка: 6 `I2C_RECOVER`, gate 0,61 мс, `skip=0` |
+
+## Крок 5: сценарії 9.2 і 9.3 (тестові збірки `TEST_L5`)
+
+| Файл | Прошивка | Що показує |
+|---|---|---|
+| `S3_2026-11-25_2014.log` | `2fd84df1`, продукт | S3 для порівняння з `mutex` |
+| `L5_mutex_S3_2026-11-25_2052.log` | `9832b6eb`, `TEST_L5=mutex` | 9.3 п. 1: очікування шини 64,1 мс |
+| `L5_busblock_S1_2026-11-25_2004.log`, `L5_late_S1_2026-11-25_2007.log`, `L5_starve_S1_2026-11-25_2009.log`, `L5_tick200_S1_2026-11-25_2012.log` | `2fd84df1` | 9.3 п. 2 і 6, 9.2 голодування і тік 200 Гц |
+| `L5_logblock_S2_2026-11-25_2025.log` | `2fd84df1`, `TEST_L5=logblock` | 9.3 п. 2 (Console) |
+| `L5_sensor_S2_2026-11-25_2047.log` | `fd5a038f`, `TEST_L5=sensor` | 9.3 п. 7 |
+| `L5_stack_boot_2026-11-25.txt` | `9832b6eb`, `TEST_L5=stack` | 9.2: `FATAL stack overflow in gate` |
+

@@ -1,0 +1,40 @@
+# git=9832b6eb build="ARCH=qpc LTO=1 TEST_L5=stack" (стек gate 280 B, у S1-S3 використано до 404 B), 95 с від перезапуску без жодних дій
+2 BOOT fw=lab5-qpc git=9832b6eb perf=1 arch=qpc lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=0            
+12 EVT t_us=12146 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=517 pair_cyc=1315
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+42 EVT t_us=41573 name=i2c_fail
+46 EVT t_us=45594 name=i2c_ok
+49 SELFTEST dev=mpu6050 status=OK who=0x68 tries=1
+125 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+130 SELFTEST dev=ldr_gate status=OK raw=999
+135 SELFTEST dev=ldr_class status=OK raw=999
+139 SELFTEST dev=servo status=OK pulse_us=1500
+144 SELFTEST_END ok=5 warn=0 fail=0
+187 STATE state=READY
+190 STACK used=592 reserved=1024 free=432 overflow=0
+195 HEAP arena=0 used=0 free=0
+1205 EVT t_us=135068 name=ready_gate
+1207 EVT t_us=139639 name=ready_class
+1209 EVT t_us=214561 name=ready_imu
+1210 EVT t_us=808877 name=ready_lcd
+2205 LOAD pct=57 pm=567 win_cyc=47999708 busy_cyc=27222197 windows=1
+3205 LOAD pct=55 pm=551 win_cyc=48000700 busy_cyc=26448684 windows=2
+4205 LOAD pct=55 pm=552 win_cyc=47999969 busy_cyc=26493184 windows=3
+5205 LOAD pct=55 pm=552 win_cyc=48000015 busy_cyc=26491350 windows=4
+6205 LOAD pct=55 pm=552 win_cyc=48000148 busy_cyc=26491986 windows=5
+7205 LOAD pct=55 pm=551 win_cyc=48000773 busy_cyc=26444120 windows=6
+8205 LOAD pct=55 pm=551 win_cyc=47999571 busy_cyc=26463755 windows=7
+9205 LOAD pct=55 pm=551 win_cyc=48000988 busy_cyc=26464138 windows=8
+10205 LOAD pct=54 pm=544 win_cyc=47994036 busy_cyc=26119856 windows=9
+11205 LOAD pct=55 pm=552 win_cyc=48005396 busy_cyc=26500985 windows=10
+12205 LOAD pct=55 pm=553 win_cyc=48000052 busy_cyc=26532454 windows=11
+13205 LOAD pct=55 pm=553 win_cyc=47999597 busy_cyc=26553740 windows=12
+14205 LOAD pct=55 pm=553 win_cyc=47998651 busy_cyc=26564669 windows=13
+15205 LOAD pct=56 pm=556 win_cyc=48000804 busy_cyc=26702942 windows=14
+16205 LOAD pct=55 pm=553 win_cyc=48000384 busy_cyc=26566884 windows=15
+17205 LOAD pct=55 pm=554 win_cyc=47998848 busy_cyc=26594470 windows=16
+18205 LOAD pct=55 pm=553 win_cyc=48000780 busy_cyc=26562037 windows=17
+19205 LOAD pct=55 pm=553 win_cyc=47999280 busy_cyc=26555624 windows=18
+19307 FATAL stack overflow in gate
