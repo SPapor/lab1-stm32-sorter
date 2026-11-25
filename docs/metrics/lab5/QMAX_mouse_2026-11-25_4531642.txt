@@ -1,0 +1,32 @@
+# git=4531642f build="ARCH=qpc LTO=1 TEST_QPCHECK=1 PERF=0", черги за QMAX - той самий сценарій мишею, що QMAX_mouse_2026-11-25_9390efd.txt
+1 BOOT fw=lab5-qpc git=4531642f perf=0 arch=qpc lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=0            
+18 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+26 SELFTEST dev=mpu6050 status=OK who=0x68 tries=1
+100 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+106 SELFTEST dev=ldr_gate status=OK raw=999
+110 SELFTEST dev=ldr_class status=OK raw=1001
+115 SELFTEST dev=servo status=OK pulse_us=1500
+119 SELFTEST_END ok=5 warn=0 fail=0
+156 STATE state=READY
+1162 QMAX estop=1 gate=1 sort=0 bus=1 imu=2 console=1 lcd=1
+7421 PARCEL_IN gate=3413
+7422 SORT n=1 class=A raw=1001 impact=0 route=A angle=0 lat_ms=1
+8161 QMAX estop=1 gate=1 sort=1 bus=1 imu=2 console=2 lcd=1
+10992 PARCEL_OUT gate=999 state=READY
+19527 IMPACT amag_mg=2235 x_mg=1999 y_mg=0 z_mg=1000
+27041 PARCEL_IN gate=3413
+27042 SORT n=2 class=A raw=1001 impact=1 route=REJECT angle=180 lat_ms=2
+27047 IMPACT amag_mg=2235 x_mg=1999 y_mg=0 z_mg=1000
+32702 ESTOP n=1 state=ESTOP
+38626 PARCEL_OUT gate=999 state=ESTOP
+44292 ESTOP n=2 state=READY
+50205 PARCEL_IN gate=3413
+50206 SORT n=3 class=A raw=1001 impact=1 route=REJECT angle=180 lat_ms=1
+50218 IMPACT amag_mg=2235 x_mg=1999 y_mg=0 z_mg=1000
+51161 QMAX estop=1 gate=1 sort=1 bus=1 imu=2 console=3 lcd=1
+51792 ESTOP n=3 state=ESTOP
+58716 PARCEL_OUT gate=999 state=ESTOP
+67235 PARCEL_IN gate=3413
+67236 SORT_SKIP state=ESTOP class=A
+70800 PARCEL_OUT gate=999 state=ESTOP
+91685 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005

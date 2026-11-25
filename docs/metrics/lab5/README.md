@@ -57,6 +57,8 @@ Wokwi для VS Code, `tools/run_scenario.py` по RFC2217 (`rfc2217://localhost
 | `S1_2026-11-25_0151.log`, `S1_2026-11-25_0153.log` | `73a76747`, після рев'ю | без `FATAL`, gate - 0 пропусків; у `_0151` 21 `I2C_RECOVER` підряд на 54 с, у `_0153` - 3 |
 | `SORTER_QPCHECK_2026-11-25_73a7674.txt` | `73a76747`, `TEST_QPCHECK=1 PERF=0`, мишею | усі переходи Sorter, без `FATAL` |
 | `LCDMS_2026-11-25.txt` | `73a76747` | `set lcd_ms 40000` - одна перемальовка за 23 с (проблема 89) |
+| `QMAX_mouse_2026-11-25_9390efd.txt`, `S1_2026-11-25_0207.log` | `9390efdd`, `TEST_QPCHECK=1 PERF=0`, `q_sort[3]` | максимуми черг AO (`QMAX`), без `FATAL` |
+| `QMAX_mouse_2026-11-25_4531642.txt`, `S1_2026-11-25_0303.log` | `4531642f`, черги за виміром | без `FATAL`, `QMAX` той самий |
 | `QSTRESS_2026-11-25.txt` | `TEST_QSTRESS=1` з виправленим `port_sim` (до коміту `e2bf64f`, той самий код) | ворота знову PASS, найменший запас стека 84 B |
 
 Бюджет пам'яті - `budget/` (свій README).
