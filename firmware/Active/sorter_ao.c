@@ -79,41 +79,56 @@ static const struct {
     uint8_t prio;
     uint8_t qlen;
 } task_def[T_COUNT] = {
-    [T_ESTOP]   = { "estop",   128u, 7u, 2u },
-    [T_GATE]    = { "gate",    128u, 6u, 2u },
-    [T_SORT]    = { "sort",    160u, 5u, 3u },
-    [T_BUS]     = { "bus",     176u, 4u, 2u },
-    [T_IMU]     = { "imu",     112u, 3u, 3u },
-    [T_CONSOLE] = { "console", 192u, 2u, QLOG_LEN + 3u },
-    [T_LCD]     = { "lcd",     128u, 1u, 2u },
+    [T_ESTOP]   = { "estop",   102u, 7u, 2u },
+    [T_GATE]    = { "gate",    126u, 6u, 2u },
+    [T_SORT]    = { "sort",    158u, 5u, 3u },
+#if defined(TEST_Q93) && TEST_Q93 >= 3
+    [T_BUS]     = { "bus",     178u, 1u, 2u },
+#else
+    [T_BUS]     = { "bus",     178u, 4u, 2u },
+#endif
+    [T_IMU]     = { "imu",     116u, 3u, 3u },
+    [T_CONSOLE] = { "console", 208u, 2u, QLOG_LEN + 3u },
+#if defined(TEST_Q93) && TEST_Q93 >= 3
+    [T_LCD]     = { "lcd",     116u, 4u, 2u },
+#else
+    [T_LCD]     = { "lcd",     116u, 1u, 2u },
+#endif
 };
 
 static const tasks_ops_t *ops;
 static Ao ao[T_COUNT];
-static StackType_t stk_estop[128], stk_gate[128], stk_sort[160], stk_bus[176], stk_imu[112],
-    stk_console[192], stk_lcd[128];
+static StackType_t stk_estop[102], stk_gate[126], stk_sort[158], stk_bus[178], stk_imu[116],
+    stk_console[208], stk_lcd[116];
 static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_console,
                                            stk_lcd };
 static QEvtPtr q_estop[2], q_gate[2], q_sort[3], q_bus[2], q_imu[3], q_console[QLOG_LEN + 3u], q_lcd[2];
 static QEvtPtr *const qsto[T_COUNT] = { q_estop, q_gate, q_sort, q_bus, q_imu, q_console, q_lcd };
 static QF_MPOOL_EL(ParcelEvt) pool_small[8];
+#if defined(TEST_Q93) && TEST_Q93 >= 3
+static QF_MPOOL_EL(BusReqEvt) pool_mid[1];
+#else
 static QF_MPOOL_EL(BusReqEvt) pool_mid[3];
+#endif
 static QTimeEvt logger_second;
 static char lcd_rows[2][TASKS_LCD_ROW];
 static QF_MPOOL_EL(LogEvt) pool_log[QLOG_LEN + 2u];
 static volatile uint8_t running;
 static uint8_t rx_buf[SB_RX_BYTES];
 static volatile uint8_t rx_head, rx_tail;
+static volatile uint8_t rx_posted;
 
 static const QEvt estop_evt = QEVT_INITIALIZER(ESTOP_SIG);
 static const QEvt estop_press_evt = QEVT_INITIALIZER(ESTOP_PRESS_SIG);
 static const QEvt rx_evt = QEVT_INITIALIZER(RX_SIG);
 
 static uint32_t parcel_drop;
+volatile uint32_t qp_post_fail;
 static uint32_t bus_skip;
 #ifdef TEST_QPCHECK
 static uint8_t qmax[T_COUNT];
 static volatile uint8_t qmax_new;
+static volatile uint32_t q93_drop;
 
 void qmax_note(const void *queue, uint32_t waiting)
 {
@@ -133,6 +148,22 @@ static void qmax_print(void)
     static const char *const key[T_COUNT] = { " estop=", " gate=", " sort=", " bus=", " imu=",
                                               " console=", " lcd=" };
 
+    static uint16_t pool_seen[3] = { 0xFFFFu, 0xFFFFu, 0xFFFFu };
+    static uint32_t drop_seen;
+    uint16_t pool[3];
+    uint32_t drop = q93_drop;
+
+    for (unsigned i = 0; i < 3u; i++) {
+        pool[i] = (uint16_t)QF_getPoolMin((uint_fast8_t)(i + 1u));
+        if (pool[i] != pool_seen[i]) {
+            pool_seen[i] = pool[i];
+            qmax_new = 1u;
+        }
+    }
+    if (drop != drop_seen) {
+        drop_seen = drop;
+        qmax_new = 1u;
+    }
     if (!qmax_new)
         return;
     qmax_new = 0u;
@@ -142,6 +173,13 @@ static void qmax_print(void)
         rtos_hal_raw_puts(key[i]);
         rtos_hal_raw_putu(qmax[i], 10u);
     }
+    rtos_hal_raw_puts(" pool_min=");
+    for (unsigned i = 0; i < 3u; i++) {
+        rtos_hal_raw_putu(pool[i], 10u);
+        rtos_hal_raw_puts(i < 2u ? "/" : "");
+    }
+    rtos_hal_raw_puts(" drop=");
+    rtos_hal_raw_putu(drop, 10u);
     rtos_hal_raw_puts("\r\n");
 }
 #endif
@@ -279,7 +317,12 @@ void tasks_estop_from_isr(void)
 
     if (!running)
         return;
+#if defined(TEST_Q93) && TEST_Q93 == 2
+    if (!QACTIVE_POST_X_FROM_ISR(&ao[T_ESTOP].super, &estop_evt, 1U, &woken, NULL))
+        q93_drop++;
+#else
     QACTIVE_POST_FROM_ISR(&ao[T_ESTOP].super, &estop_evt, &woken, NULL);
+#endif
     portYIELD_FROM_ISR(woken);
 }
 
@@ -300,11 +343,9 @@ void USART2_IRQHandler(void)
 {
     BaseType_t woken = pdFALSE;
     int ch;
-    int was_empty;
 
     if (rtos_hal_irq_defer(USART2_IRQn))
         return;
-    was_empty = rx_head == rx_tail;
     while ((ch = uart_hal_getc()) >= 0) {
         uint8_t next = (uint8_t)((rx_head + 1u) % SB_RX_BYTES);
 
@@ -315,8 +356,9 @@ void USART2_IRQHandler(void)
         rx_buf[rx_head] = (uint8_t)ch;
         rx_head = next;
     }
-    if (was_empty && rx_head != rx_tail)
-        (void)QACTIVE_POST_X_FROM_ISR(&ao[T_CONSOLE].super, &rx_evt, 0U, &woken, NULL);
+    if (!rx_posted && rx_head != rx_tail
+        && QACTIVE_POST_X_FROM_ISR(&ao[T_CONSOLE].super, &rx_evt, 0U, &woken, NULL))
+        rx_posted = 1u;
     portYIELD_FROM_ISR(woken);
 }
 
@@ -515,7 +557,21 @@ static uint32_t now_cyc(void)
 
 static void bus_request(Ao *me, uint8_t op, uint8_t row)
 {
+#if defined(TEST_Q93) && TEST_Q93 == 4
+    BusReqEvt *r = Q_NEW_X(BusReqEvt, 0U, BUS_REQ_SIG);
+
+    if (r == NULL) {
+        BusDoneEvt *d = Q_NEW(BusDoneEvt, BUS_DONE_SIG);
+
+        q93_drop++;
+        d->op = op;
+        d->st = 3u;
+        QACTIVE_POST(&me->super, &d->super, &me->super);
+        return;
+    }
+#else
     BusReqEvt *r = Q_NEW(BusReqEvt, BUS_REQ_SIG);
+#endif
 
     r->reply_to = &me->super;
     r->op = op;
@@ -583,11 +639,13 @@ static QState console_run(Ao *me, QEvt const *e)
 {
     int ch;
 
-    (void)me;
     switch (e->sig) {
     case RX_SIG:
+        rx_posted = 0u;
         if ((ch = tasks_rx_getc()) >= 0)
             ops->cli(ch);
+        if (rx_head != rx_tail && !rx_posted && QACTIVE_POST_X(&me->super, &rx_evt, 0U, &me->super))
+            rx_posted = 1u;
         return Q_HANDLED();
     case LOG_SIG: {
         LogEvt const *l = Q_EVT_CAST(LogEvt);
@@ -617,6 +675,9 @@ static QState lcd_idle(Ao *me, QEvt const *e)
         ops->lcd_begin(lcd_rows);
         me->step = 0u;
         bus_request(me, BUS_LCD_ROW, 0u);
+#if defined(TEST_Q93) && TEST_Q93 >= 3
+        bus_request(me, BUS_LCD_ROW, 1u);
+#endif
         return Q_TRAN(&lcd_drawing);
     default:
         return Q_SUPER(&QHsm_top);
@@ -634,7 +695,9 @@ static QState lcd_drawing(Ao *me, QEvt const *e)
             return Q_TRAN(&lcd_idle);
         }
         me->step = 1u;
+#if !defined(TEST_Q93) || TEST_Q93 < 3
         bus_request(me, BUS_LCD_ROW, 1u);
+#endif
         return Q_HANDLED();
     }
     case TICK_SIG:
@@ -766,7 +829,8 @@ void tasks_report(tasks_out_fn out)
 #endif
 
     tasks_list(out);
-    out("BUSQ", "skip=%lu parcel_drop=%lu", (unsigned long)bus_skip, (unsigned long)parcel_drop);
+    out("BUSQ", "skip=%lu parcel_drop=%lu post_fail=%lu", (unsigned long)bus_skip, (unsigned long)parcel_drop,
+        (unsigned long)qp_post_fail);
     out("LOGQ", "len=%u max_used=%lu lines=%lu drop=%lu trunc=%lu rx_drop=%lu",
         (unsigned)QLOG_LEN, (unsigned long)(QLOG_LEN + 2u - QF_getPoolMin(3U)), (unsigned long)log_lines,
         (unsigned long)log_drop, (unsigned long)log_trunc, (unsigned long)rx_drop);

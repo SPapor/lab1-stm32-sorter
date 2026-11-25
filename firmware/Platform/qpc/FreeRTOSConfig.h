@@ -77,6 +77,12 @@ void qmax_note(const void *queue, uint32_t waiting);
 #define traceQUEUE_SEND_FROM_ISR(q)         qmax_note((q), (q)->uxMessagesWaiting + 1u)
 #endif
 
+#ifndef TEST_QSTRESS
+extern volatile uint32_t qp_post_fail;
+#define traceQUEUE_SEND_FAILED(q)           (qp_post_fail++)
+#define traceQUEUE_SEND_FROM_ISR_FAILED(q)  (qp_post_fail++)
+#endif
+
 #define configENABLE_MPU                    0
 
 #define INCLUDE_xTaskDelayUntil             0
