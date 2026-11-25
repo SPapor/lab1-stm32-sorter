@@ -161,4 +161,5 @@ Wokwi для VS Code, `tools/run_scenario.py` по RFC2217 (`rfc2217://localhost
 | `L5_logblock_S2_2026-11-25_2025.log` | `2fd84df1`, `TEST_L5=logblock` | 9.3 п. 2 (Console) |
 | `L5_sensor_S2_2026-11-25_2047.log` | `fd5a038f`, `TEST_L5=sensor` | 9.3 п. 7 |
 | `L5_stack_boot_2026-11-25.txt` | `9832b6eb`, `TEST_L5=stack` | 9.2: `FATAL stack overflow in gate` |
+| `S3cap_2026-11-25_2102.log`, `docs/captures/S3_2026-11-25_qpc_parcel.vcd` | `7c37c042`, продукт, посилка мишею під потоком `stats` одразу після перезапуску, Stop - вручну | запис аналізатора для діаграми послідовності S3 (рисунок 4 звіту); VCD - вирізка 3,0-3,4 с з повного запису (157 с, 1 млн змін) |
 
