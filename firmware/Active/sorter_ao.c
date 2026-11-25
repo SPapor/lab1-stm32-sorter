@@ -18,6 +18,12 @@
 
 Q_DEFINE_THIS_MODULE("sorter_ao")
 
+#if defined(TEST_L5) && (TEST_L5 == 1 || TEST_L5 == 5)
+#define IMU_STACK_WORDS 178
+#else
+#define IMU_STACK_WORDS 116
+#endif
+
 #if defined(TEST_L5) && TEST_L5 == 1
 #define L5_UNUSED __attribute__((unused))
 #else
@@ -97,7 +103,11 @@ static const struct {
 #else
     [T_BUS]     = { "bus",     178u, 4u, 2u },
 #endif
+#if defined(TEST_L5) && (TEST_L5 == 1 || TEST_L5 == 5)
+    [T_IMU]     = { "imu",     178u, 3u, 3u },
+#else
     [T_IMU]     = { "imu",     116u, 3u, 3u },
+#endif
     [T_CONSOLE] = { "console", 208u, 2u, QLOG_LEN + 3u },
 #if defined(TEST_Q93) && TEST_Q93 >= 3
     [T_LCD]     = { "lcd",     116u, 4u, 2u },
@@ -108,7 +118,7 @@ static const struct {
 
 static const tasks_ops_t *ops;
 static Ao ao[T_COUNT];
-static StackType_t stk_estop[102], stk_gate[126], stk_sort[158], stk_bus[178], stk_imu[116],
+static StackType_t stk_estop[102], stk_gate[126], stk_sort[158], stk_bus[178], stk_imu[IMU_STACK_WORDS],
     stk_console[208], stk_lcd[116];
 static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_console,
                                            stk_lcd };
