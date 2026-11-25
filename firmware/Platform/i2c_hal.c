@@ -82,10 +82,7 @@ static bus_status_t xfer(i2c_hal_ctx_t *c, xfer_fn_t fn, const char *where,
         c->diag_tick_cyc = perf_now();
 #endif
 #if ARCH_QPC && SIM_CRIT
-        uint8_t held = c->hold != NULL && !__HAL_I2C_GET_FLAG(c->h, I2C_FLAG_BUSY);
-
-        if (held)
-            c->hold(1u);
+        uint8_t held = c->hold != NULL && c->hold(1u);
 #endif
         HAL_StatusTypeDef s = fn(c->h, (uint16_t)(addr7 << 1), data, (uint16_t)len,
                                  I2C_HAL_TIMEOUT_MS);
