@@ -90,7 +90,6 @@ jobs:
           make compile ARCH=qpc
           make compile ARCH=qpc TEST_QSTRESS=1
           make build ARCH=qpc LTO=1 TEST_QSTRESS=1
-          make build ARCH=qpc LTO=1 TEST_QPCHECK=1
           make build ARCH=qpc LTO=1 TEST_QPCHECK=1 PERF=0
           make build ARCH=qpc LTO=1
 

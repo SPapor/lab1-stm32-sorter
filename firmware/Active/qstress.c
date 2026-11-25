@@ -45,7 +45,7 @@ typedef struct {
     uint32_t n[4];
 } Ao;
 
-static StackType_t stk_report[192], stk_sub2[104], stk_pub[128], stk_ping[104], stk_sub1[104], stk_pong[104],
+static StackType_t stk_report[176], stk_sub2[104], stk_pub[128], stk_ping[112], stk_sub1[104], stk_pong[112],
     stk_timer[104];
 
 static const struct {
@@ -55,12 +55,12 @@ static const struct {
     uint8_t prio;
     uint8_t qlen;
 } def[A_COUNT] = {
-    [A_REPORT] = { "report", stk_report, 192u, 1u, 4u },
+    [A_REPORT] = { "report", stk_report, 176u, 1u, 4u },
     [A_SUB2]   = { "sub2",   stk_sub2,   104u, 2u, 8u },
     [A_PUB]    = { "pub",    stk_pub,    128u, 3u, 4u },
-    [A_PING]   = { "ping",   stk_ping,   104u, 4u, 6u },
+    [A_PING]   = { "ping",   stk_ping,   112u, 4u, 6u },
     [A_SUB1]   = { "sub1",   stk_sub1,   104u, 5u, 8u },
-    [A_PONG]   = { "pong",   stk_pong,   104u, 6u, 12u },
+    [A_PONG]   = { "pong",   stk_pong,   112u, 6u, 12u },
     [A_TIMER]  = { "timer",  stk_timer,  104u, 7u, 8u },
 };
 
