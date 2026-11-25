@@ -82,10 +82,10 @@ static const struct {
     [T_ESTOP]   = { "estop",   128u, 7u, 2u },
     [T_GATE]    = { "gate",    128u, 6u, 2u },
     [T_SORT]    = { "sort",    160u, 5u, 3u },
-    [T_BUS]     = { "bus",     176u, 4u, 3u },
-    [T_IMU]     = { "imu",     112u, 3u, 4u },
+    [T_BUS]     = { "bus",     176u, 4u, 2u },
+    [T_IMU]     = { "imu",     112u, 3u, 3u },
     [T_CONSOLE] = { "console", 192u, 2u, QLOG_LEN + 3u },
-    [T_LCD]     = { "lcd",     128u, 1u, 4u },
+    [T_LCD]     = { "lcd",     128u, 1u, 2u },
 };
 
 static const tasks_ops_t *ops;
@@ -94,7 +94,7 @@ static StackType_t stk_estop[128], stk_gate[128], stk_sort[160], stk_bus[176], s
     stk_console[192], stk_lcd[128];
 static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_console,
                                            stk_lcd };
-static QEvtPtr q_estop[2], q_gate[2], q_sort[3], q_bus[3], q_imu[4], q_console[QLOG_LEN + 3u], q_lcd[4];
+static QEvtPtr q_estop[2], q_gate[2], q_sort[3], q_bus[2], q_imu[3], q_console[QLOG_LEN + 3u], q_lcd[2];
 static QEvtPtr *const qsto[T_COUNT] = { q_estop, q_gate, q_sort, q_bus, q_imu, q_console, q_lcd };
 static QF_MPOOL_EL(ParcelEvt) pool_small[8];
 static QF_MPOOL_EL(BusReqEvt) pool_mid[3];
