@@ -54,6 +54,9 @@ Wokwi для VS Code, `tools/run_scenario.py` по RFC2217 (`rfc2217://localhost
 | `SORTER_QPCHECK_2026-11-25.txt` | `a2b2372c`, `TEST_QPCHECK=1 PERF=0`, мишею | усі переходи Sorter, твердження «стан QP == `sorter.state`» не спрацювали |
 | `S1_2026-11-25_0136.log` | `8fab6f2-dirty` = код `23a889a4` до коміту, AO Console | `i2c_xfer` max 4,0 мс, джитер gate 3,5 мс, 0 пропусків |
 | `S1_2026-11-25_0138.log` | `23a889a4`, AO Console | gate - 1 пропуск, джитер 8,5 мс = найдовша транзакція I²C; 7 `I2C_RECOVER` |
+| `S1_2026-11-25_0151.log`, `S1_2026-11-25_0153.log` | `73a76747`, після рев'ю | без `FATAL`, gate - 0 пропусків; у `_0151` 21 `I2C_RECOVER` підряд на 54 с, у `_0153` - 3 |
+| `SORTER_QPCHECK_2026-11-25_73a7674.txt` | `73a76747`, `TEST_QPCHECK=1 PERF=0`, мишею | усі переходи Sorter, без `FATAL` |
+| `LCDMS_2026-11-25.txt` | `73a76747` | `set lcd_ms 40000` - одна перемальовка за 23 с (проблема 89) |
 | `QSTRESS_2026-11-25.txt` | `TEST_QSTRESS=1` з виправленим `port_sim` (до коміту `e2bf64f`, той самий код) | ворота знову PASS, найменший запас стека 84 B |
 
 Бюджет пам'яті - `budget/` (свій README).
