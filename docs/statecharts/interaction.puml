@@ -1,0 +1,50 @@
+@startuml interaction
+!include style.iuml
+skinparam componentStyle rectangle
+skinparam rectangle {
+  BackgroundColor #F7F9FC
+  BorderColor #4A6A8A
+}
+title Взаємодія AO (QP/C на FreeRTOS): події, черги, пули, ISR
+left to right direction
+
+rectangle "ISR EXTI PC13\n(E-STOP)" as isr_exti #FDEDEC
+rectangle "ISR USART2 RX\n(кільце 64 B)" as isr_uart #FDEDEC
+rectangle "SysTick + хук тіку QP\n(QTIMEEVT_TICK_FROM_ISR)" as tick #FDEDEC
+
+rectangle "Estop (7)\nчерга 2" as estop
+rectangle "Gate (6)\nчерга 2\nАЦП gate" as gate
+rectangle "Sorter (5)\nчерга 3\nsorter_t, ШІМ" as sorter
+rectangle "Bus (4)\nчерга 2\nшина I2C1" as bus
+rectangle "Imu (3)\nчерга 3" as imu
+rectangle "Console (2)\nчерга 19\nUART TX" as console
+rectangle "Lcd (1)\nчерга 2" as lcd
+
+isr_exti --> estop : ESTOP\n(POST_FROM_ISR, без запасу)
+isr_uart --> console : RX (POST_X_FROM_ISR, запас 0;\nщонайбільше один у черзі)
+tick ..> gate : TICK 5 мс
+tick ..> imu : TICK 10 мс
+tick ..> lcd : TICK 500 мс
+tick ..> estop : TICK 20 мс (антибрязкіт)
+tick ..> console : SECOND 1 с
+
+estop --> sorter : ESTOP_PRESS (статична)
+gate --> sorter : PARCEL_IN (пул малий, запас 1)\nPARCEL_OUT (запас 0)
+imu --> sorter : IMPACT (пул малий, запас 1)
+imu --> bus : BUS_REQ(MPU_READ)\n(пул запитів, 3 блоки)
+lcd --> bus : BUS_REQ(LCD_ROW, шматок 4 символи)
+bus --> imu : BUS_DONE(st, 6 B)\n(пул малий)
+bus --> lcd : BUS_DONE(st)
+sorter --> console : LOG
+gate --> console : LOG
+imu --> console : LOG
+bus --> console : LOG (I2C_RECOVER)
+estop --> console : LOG
+console --> console : RX (решта команд)
+
+note bottom of console
+  LOG: пул 18 x 52 B, Q_NEW_X запас 1, POST_X запас 3,
+  втрата -> LOGQ drop. Пули: малий 8 (PARCEL_*, BUS_DONE, IMPACT),
+  запити Bus 3, LOG 18. Втрати post без запасу -> BUSQ post_fail.
+end note
+@enduml

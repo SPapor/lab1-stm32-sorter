@@ -1,0 +1,16 @@
+@startuml gate
+!include style.iuml
+title AO Gate (пріоритет 6)
+[*] --> clear : init / arm_next(gate_ms)
+state clear
+state occupied
+clear --> occupied : TICK [gate() == IN] /\narm_next; post PARCEL_IN -> Sorter
+clear --> clear : TICK [інакше] / arm_next
+occupied --> clear : TICK [gate() == OUT] /\narm_next; post PARCEL_OUT -> Sorter
+occupied --> occupied : TICK [інакше] / arm_next
+note bottom of clear
+  TICK - одноразова часова подія, перезапуск
+  на due += gate_ms (без дрейфу, проблема 86).
+  Поріг і гістерезис - App/gate.c
+end note
+@enduml

@@ -1,0 +1,14 @@
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam ArrowColor #333333
+skinparam state {
+  BackgroundColor #F7F9FC
+  BorderColor #4A6A8A
+  FontStyle bold
+  AttributeFontStyle plain
+}
+skinparam note {
+  BackgroundColor #FFFBEA
+  BorderColor #C9B458
+}

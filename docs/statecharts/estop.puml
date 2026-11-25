@@ -1,0 +1,13 @@
+@startuml estop
+!include style.iuml
+title AO Estop (пріоритет 7)
+[*] --> debouncing : init
+state armed
+state debouncing : entry / armX(te, estop_debounce_ms)\nexit / disarm(te)\nESTOP / (ігнорується)
+armed --> debouncing : ESTOP\n(ISR EXTI PC13)
+debouncing --> armed : TICK / estop(): прочитати PC13,\nзнову ввімкнути EXTI;\n[натиснуто] post ESTOP_PRESS -> Sorter
+note right of armed
+  IMPACT, PARCEL_* сюди не надходять;
+  інші сигнали -> QHsm_top (ігноруються)
+end note
+@enduml

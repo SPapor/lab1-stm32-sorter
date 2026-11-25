@@ -1,0 +1,13 @@
+@startuml console
+!include style.iuml
+title AO Console (пріоритет 2) - власник UART TX і рядка команди
+[*] --> run : init / armX(SECOND, 1 с, 1 с)
+state run : RX / rx_posted = 0; одна команда CLI (cli());\n    [ще є байти] post RX -> себе (rx_posted = 1)
+state run : LOG / log_line(): рядок журналу в UART
+state run : SECOND / LOAD, EVT ready_* (second())
+note right of run
+  Одна команда за подію RX - інакше під потоком
+  stats крок тривав десятки секунд, і SECOND
+  губились (проблема 90).
+end note
+@enduml
