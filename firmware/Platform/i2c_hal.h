@@ -37,7 +37,7 @@ typedef struct {
 #if ARCH_QPC && SIM_CRIT
     uint8_t (*hold)(uint8_t on);
     uint8_t stuck;
-    uint8_t bad_addr;
+    uint8_t bad_addr[2];
 #endif
 } i2c_hal_ctx_t;
 

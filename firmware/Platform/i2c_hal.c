@@ -82,7 +82,8 @@ static bus_status_t xfer(i2c_hal_ctx_t *c, xfer_fn_t fn, const char *where,
         c->diag_tick_cyc = perf_now();
 #endif
 #if ARCH_QPC && SIM_CRIT
-        uint8_t held = c->hold != NULL && !c->stuck && addr7 != c->bad_addr && c->hold(1u);
+        uint8_t held = c->hold != NULL && !c->stuck && addr7 != c->bad_addr[0] && addr7 != c->bad_addr[1]
+                       && c->hold(1u);
 #endif
         HAL_StatusTypeDef s = fn(c->h, (uint16_t)(addr7 << 1), data, (uint16_t)len,
                                  I2C_HAL_TIMEOUT_MS);
@@ -98,10 +99,14 @@ static bus_status_t xfer(i2c_hal_ctx_t *c, xfer_fn_t fn, const char *where,
             break;
     }
 #if ARCH_QPC && SIM_CRIT
-    if (st != BUS_OK)
-        c->bad_addr = addr7;
-    else if (addr7 == c->bad_addr)
-        c->bad_addr = 0;
+    if (st != BUS_OK && addr7 != c->bad_addr[0]) {
+        c->bad_addr[1] = c->bad_addr[0];
+        c->bad_addr[0] = addr7;
+    } else if (st == BUS_OK) {
+        for (unsigned i = 0; i < 2u; i++)
+            if (c->bad_addr[i] == addr7)
+                c->bad_addr[i] = 0;
+    }
 #endif
     return st;
 }
@@ -133,7 +138,8 @@ void i2c_hal_bus_init(i2c_bus_t *bus, i2c_hal_ctx_t *ctx, I2C_HandleTypeDef *h, 
 #if ARCH_QPC && SIM_CRIT
     ctx->hold = NULL;
     ctx->stuck = 0;
-    ctx->bad_addr = 0;
+    ctx->bad_addr[0] = 0;
+    ctx->bad_addr[1] = 0;
 #endif
 
     bus->write = hal_write;
