@@ -956,6 +956,12 @@ void port_sim_tick_release( uint32_t ulPrev )
 
     __asm volatile ( "mrs %0, PRIMASK" : "=r" ( ulPrimask ) );
     portDISABLE_INTERRUPTS();
+
+    if( ulPrev == 0UL )
+    {
+        ulSimBlockIrq = 1UL;
+    }
+
     prvSimExit( ulPrev );
     __asm volatile ( "msr PRIMASK, %0" ::"r" ( ulPrimask ) : "memory" );
 }
