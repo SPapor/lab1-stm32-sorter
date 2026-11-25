@@ -14,6 +14,8 @@
 /* Скільки аргументів формату несе запис черги журналу (найбільше - рядок SORT) */
 #define TASKS_LOG_ARGS 7u
 #define TASKS_LCD_ROW 17u
+#define TASKS_LCD_PART 4u
+#define TASKS_LCD_PARTS 4u
 #define TASKS_GATE_IN 1u
 #define TASKS_GATE_OUT 2u
 #define TASKS_ST_READY 0u
@@ -51,7 +53,7 @@ typedef struct {
     uint8_t (*bus_imu_read)(uint8_t raw[6]);
     void (*imu_end)(uint8_t st, const uint8_t raw[6]);
     void (*lcd_begin)(char rows[2][TASKS_LCD_ROW]);
-    uint8_t (*bus_lcd_row)(uint8_t row, const char *text);
+    uint8_t (*bus_lcd_row)(uint8_t part, const char *text);
     void (*lcd_end)(uint8_t st);
     void (*bus_wait)(uint32_t cyc);
     void (*estop_apply)(void);

@@ -56,7 +56,7 @@ typedef struct {
     uint32_t t_post;
     uint8_t op;
     uint8_t row;
-    char text[TASKS_LCD_ROW];
+    char text[TASKS_LCD_PART];
 } BusReqEvt;
 
 typedef struct {
@@ -577,8 +577,8 @@ static void bus_request(Ao *me, uint8_t op, uint8_t row)
     r->op = op;
     r->row = row;
     if (op == BUS_LCD_ROW)
-        for (unsigned i = 0; i < TASKS_LCD_ROW; i++)
-            r->text[i] = lcd_rows[row][i];
+        for (unsigned i = 0; i < TASKS_LCD_PART; i++)
+            r->text[i] = lcd_rows[row / TASKS_LCD_PARTS][(row % TASKS_LCD_PARTS) * TASKS_LCD_PART + i];
     r->t_post = now_cyc();
     QACTIVE_POST(&ao[T_BUS].super, &r->super, &me->super);
 }
@@ -675,9 +675,6 @@ static QState lcd_idle(Ao *me, QEvt const *e)
         ops->lcd_begin(lcd_rows);
         me->step = 0u;
         bus_request(me, BUS_LCD_ROW, 0u);
-#if defined(TEST_Q93) && TEST_Q93 >= 3
-        bus_request(me, BUS_LCD_ROW, 1u);
-#endif
         return Q_TRAN(&lcd_drawing);
     default:
         return Q_SUPER(&QHsm_top);
@@ -690,14 +687,12 @@ static QState lcd_drawing(Ao *me, QEvt const *e)
     case BUS_DONE_SIG: {
         uint8_t st = Q_EVT_CAST(BusDoneEvt)->st;
 
-        if (st != 0u || me->step != 0u) {
+        if (st != 0u || me->step + 1u >= 2u * TASKS_LCD_PARTS) {
             ops->lcd_end(st);
             return Q_TRAN(&lcd_idle);
         }
-        me->step = 1u;
-#if !defined(TEST_Q93) || TEST_Q93 < 3
-        bus_request(me, BUS_LCD_ROW, 1u);
-#endif
+        me->step++;
+        bus_request(me, BUS_LCD_ROW, me->step);
         return Q_HANDLED();
     }
     case TICK_SIG:
