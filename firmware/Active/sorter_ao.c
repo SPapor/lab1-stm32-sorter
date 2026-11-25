@@ -81,7 +81,7 @@ static const struct {
 } task_def[T_COUNT] = {
     [T_ESTOP]   = { "estop",   128u, 7u, 2u },
     [T_GATE]    = { "gate",    128u, 6u, 2u },
-    [T_SORT]    = { "sort",    160u, 5u, 4u },
+    [T_SORT]    = { "sort",    160u, 5u, 3u },
     [T_BUS]     = { "bus",     176u, 4u, 3u },
     [T_IMU]     = { "imu",     112u, 3u, 4u },
     [T_CONSOLE] = { "console", 192u, 2u, QLOG_LEN + 3u },
@@ -94,7 +94,7 @@ static StackType_t stk_estop[128], stk_gate[128], stk_sort[160], stk_bus[176], s
     stk_console[192], stk_lcd[128];
 static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_console,
                                            stk_lcd };
-static QEvtPtr q_estop[2], q_gate[2], q_sort[4], q_bus[3], q_imu[4], q_console[QLOG_LEN + 3u], q_lcd[4];
+static QEvtPtr q_estop[2], q_gate[2], q_sort[3], q_bus[3], q_imu[4], q_console[QLOG_LEN + 3u], q_lcd[4];
 static QEvtPtr *const qsto[T_COUNT] = { q_estop, q_gate, q_sort, q_bus, q_imu, q_console, q_lcd };
 static QF_MPOOL_EL(ParcelEvt) pool_small[8];
 static QF_MPOOL_EL(BusReqEvt) pool_mid[3];
@@ -111,6 +111,40 @@ static const QEvt rx_evt = QEVT_INITIALIZER(RX_SIG);
 
 static uint32_t parcel_drop;
 static uint32_t bus_skip;
+#ifdef TEST_QPCHECK
+static uint8_t qmax[T_COUNT];
+static volatile uint8_t qmax_new;
+
+void qmax_note(const void *queue, uint32_t waiting)
+{
+    for (unsigned i = 0; i < T_COUNT; i++) {
+        if ((const void *)ao[i].super.eQueue == queue) {
+            if (waiting > qmax[i]) {
+                qmax[i] = (uint8_t)waiting;
+                qmax_new = 1u;
+            }
+            return;
+        }
+    }
+}
+
+static void qmax_print(void)
+{
+    static const char *const key[T_COUNT] = { " estop=", " gate=", " sort=", " bus=", " imu=",
+                                              " console=", " lcd=" };
+
+    if (!qmax_new)
+        return;
+    qmax_new = 0u;
+    rtos_hal_raw_putu(HAL_GetTick(), 10u);
+    rtos_hal_raw_puts(" QMAX");
+    for (unsigned i = 0; i < T_COUNT; i++) {
+        rtos_hal_raw_puts(key[i]);
+        rtos_hal_raw_putu(qmax[i], 10u);
+    }
+    rtos_hal_raw_puts("\r\n");
+}
+#endif
 static uint32_t log_drop;
 static uint32_t log_trunc;
 static uint32_t log_lines;
@@ -563,6 +597,9 @@ static QState console_run(Ao *me, QEvt const *e)
         return Q_HANDLED();
     }
     case SECOND_SIG:
+#ifdef TEST_QPCHECK
+        qmax_print();
+#endif
         ops->second();
         return Q_HANDLED();
     default:
