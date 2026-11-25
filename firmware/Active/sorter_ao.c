@@ -268,15 +268,32 @@ static void follow_knob(Ao *me, const volatile uint16_t *knob)
     }
 }
 
-static QState estop_run(Ao *me, QEvt const *e)
+static QState estop_debouncing(Ao *me, QEvt const *e);
+
+static QState estop_armed(Ao *me, QEvt const *e)
 {
+    (void)me;
     switch (e->sig) {
     case ESTOP_SIG:
-        (void)QTimeEvt_disarm(&me->te);
+        return Q_TRAN(&estop_debouncing);
+    default:
+        return Q_SUPER(&QHsm_top);
+    }
+}
+
+static QState estop_debouncing(Ao *me, QEvt const *e)
+{
+    switch (e->sig) {
+    case Q_ENTRY_SIG:
         QTimeEvt_armX(&me->te, ms_ticks(ops->estop_debounce_ms), 0U);
+        return Q_HANDLED();
+    case Q_EXIT_SIG:
+        (void)QTimeEvt_disarm(&me->te);
         return Q_HANDLED();
     case TICK_SIG:
         ops->estop();
+        return Q_TRAN(&estop_armed);
+    case ESTOP_SIG:
         return Q_HANDLED();
     default:
         return Q_SUPER(&QHsm_top);
@@ -476,7 +493,7 @@ static QState ao_initial(Ao *me, void const *par)
     switch (me - ao) {
     case T_ESTOP:
         ops->estop();
-        return Q_TRAN(&estop_run);
+        return Q_TRAN(&estop_armed);
     case T_GATE:
         arm_period(me, ops->gate_ms);
         return Q_TRAN(&gate_run);
