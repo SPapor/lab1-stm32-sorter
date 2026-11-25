@@ -667,6 +667,9 @@ static QState lcd_idle(Ao *me, QEvt const *e)
         ops->lcd_begin(lcd_rows);
         me->step = 0u;
         bus_request(me, BUS_LCD_ROW, 0u);
+#if defined(TEST_Q93) && TEST_Q93 >= 3
+        bus_request(me, BUS_LCD_ROW, 1u);
+#endif
         return Q_TRAN(&lcd_drawing);
     default:
         return Q_SUPER(&QHsm_top);
@@ -684,7 +687,9 @@ static QState lcd_drawing(Ao *me, QEvt const *e)
             return Q_TRAN(&lcd_idle);
         }
         me->step = 1u;
+#if !defined(TEST_Q93) || TEST_Q93 < 3
         bus_request(me, BUS_LCD_ROW, 1u);
+#endif
         return Q_HANDLED();
     }
     case TICK_SIG:
