@@ -1,0 +1,549 @@
+# git=89185df5 (з PERF) scenario=S2 build="ARCH=qpc LTO=1 TICK_HZ=1000 SIM_CRIT=1 ASSERT=0 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_I2C_DIAG=0 TEST_PRIMASK=0 TEST_BOOTMARK=0 TEST_APIPROBE=0 TEST_KSTRESS=0 TEST_QSTRESS=0 TEST_QPCHECK=0 TEST_CRITCOST=0 OSMETRICS=0 TEST_INVERSION=0 TEST_Q93=0 TEST_OS=0 PERF=1 GCC=10.3.1 NEWLIB=3.3.0" perf=1 arch=qpc lto=1 tick_hz=1000 port=rfc2217://localhost:4000 host_start=2026-11-25T10:44:45
+# сценарій S2: Номінальний: 30 посилок, рідкі команди, log on
+507 win_cyc=47999296 busy_cyc=24353161 windows=10
+13199 LOAD pct=52 pm=521 win_cyc=48000665 busy_cyc=25011172 windows=11
+14199 LOAD pct=50 pm=504 win_cyc=47999727 busy_cyc=24215392 windows=12
+15199 LOAD pct=51 pm=508 win_cyc=47999614 busy_cyc=24372672 windows=13
+16199 LOAD pct=52 pm=520 win_cyc=48000084 busy_cyc=24980442 windows=14
+17199 LOAD pct=52 pm=521 win_cyc=48000000 busy_cyc=25006029 windows=15
+18199 LOAD pct=52 pm=521 win_cyc=48000000 busy_cyc=24997478 windows=16
+19199 LOAD pct=52 pm=520 win_cyc=48000048 busy_cyc=24983296 windows=17
+20199 LOAD pct=52 pm=521 win_cyc=47999988 busy_cyc=24984454 windows=18
+21199 LOAD pct=52 pm=521 win_cyc=47999964 busy_cyc=24992003 windows=19
+22199 LOAD pct=52 pm=520 win_cyc=48000012 busy_cyc=24982880 windows=20
+23198 LOAD pct=52 pm=520 win_cyc=47999436 busy_cyc=24963341 windows=21
+24198 LOAD pct=52 pm=520 win_cyc=48000552 busy_cyc=24966718 windows=22
+# > stats
+stats25198 LOAD pct=52 pm=523 win_cyc=47999940 busy_cyc=25109671 windows=23
+
+25280 PERF git=89185df5 now_cyc=517 pair_cyc=1315 cyc_per_us=48 arch=qpc lto=1 tick_hz=1000
+25296 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+25306 STARTUP boot_us=12146 gate_us=133937 class_us=138639 imu_us=211544 lcd_us=764285 os_api_us=195660 os_start_us=198779
+25334 STAT name=uart_rx n=5 min_us=66 avg_us=88 max_us=176 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25354 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25375 STAT name=gate n=5035 min_us=129 avg_us=130 max_us=229 period_us=5000 jit_min_us=-875 jit_max_us=876 miss=0
+25396 STAT name=sort n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25417 STAT name=imu n=2296 min_us=2139 avg_us=2805 max_us=3481 period_us=10000 jit_min_us=-1000 jit_max_us=27087 miss=100
+25445 STAT name=lcd n=49 min_us=48568 avg_us=63502 max_us=67813 period_us=500000 jit_min_us=-39320 jit_max_us=37413 miss=0
+25472 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25493 STAT name=logger n=4 min_us=4769 avg_us=7708 max_us=8772 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25514 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25534 STAT name=i2c_xfer n=11584 min_us=68 avg_us=519 max_us=14037 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25556 STAT name=uart_line n=50 min_us=2248 avg_us=13123 max_us=27446 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25583 STAT name=lcd_update n=49 min_us=48255 avg_us=63072 max_us=64959 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25605 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25625 STAT name=parcel_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25647 STAT name=bus_wait n=2319 min_us=295 avg_us=298 max_us=1376 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+25672 UART rx=6 ore=0
+25681 TASK name=estop prio=7 cpu_pm=0 stack_free=380 state=blocked run_ms=0
+25701 TASK name=gate prio=6 cpu_pm=126 stack_free=236 state=blocked run_ms=3227
+25722 TASK name=sort prio=5 cpu_pm=0 stack_free=528 state=blocked run_ms=0
+25741 TASK name=bus prio=4 cpu_pm=274 stack_free=204 state=blocked run_ms=7005
+25761 TASK name=imu prio=3 cpu_pm=96 stack_free=92 state=blocked run_ms=2464
+25777 TASK name=console prio=2 cpu_pm=20 stack_free=108 state=run run_ms=527
+25796 TASK name=lcd prio=1 cpu_pm=4 stack_free=196 state=ready run_ms=107
+25815 TASK name=IDLE prio=0 cpu_pm=480 stack_free=108 state=ready run_ms=12248
+25833 BUSQ skip=100 parcel_drop=0 post_fail=0
+25842 LOGQ len=16 max_used=4 lines=4 drop=0 trunc=0 rx_drop=0
+25854 SIMCRIT win_ms=25477 task_n=149866 isr_n=167364 deferred_tick=5998 deferred_pendsv=4501 deferred_irq=8895
+25876 EVT t_us=25281307 name=cmd_rx
+25881 EVT t_us=25876474 name=cmd_reply
+# > set log 2
+s26198 LOAD pct=87 pm=865 win_cyc=47999448 busy_cyc=41540650 windows=24
+et lo27198 LOAD pct=51 pm=510 win_cyc=47999928 busy_cyc=24496641 windows=25
+g27354 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ 2
+28058 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+28070 EVT t_us=28058772 name=cmd_rx
+28071 EVT t_us=28069948 name=cmd_reply
+# > set lcd_ms 500
+s28198 LOAD pct=56 pm=556 win_cyc=47960940 busy_cyc=26642971 windows=26
+et lc29198 LOAD pct=52 pm=524 win_cyc=48000000 busy_cyc=25157203 windows=27
+d_ms 30198 LOAD pct=52 pm=524 win_cyc=48000000 busy_cyc=25145830 windows=28
+500
+31060 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+31071 EVT t_us=31060612 name=cmd_rx
+31072 EVT t_us=31070938 name=cmd_reply
+# > set lcd_chars 0
+s31198 LOAD pct=54 pm=542 win_cyc=48000000 busy_cyc=26003865 windows=29
+et lc32197 LOAD pct=51 pm=512 win_cyc=48000000 busy_cyc=24578733 windows=30
+d_cha33197 LOAD pct=52 pm=523 win_cyc=48000000 busy_cyc=25117191 windows=31
+rs 034197 LOAD pct=52 pm=523 win_cyc=48000000 busy_cyc=25093017 windows=32
+
+34281 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+34292 EVT t_us=34281566 name=cmd_rx
+34294 EVT t_us=34292139 name=cmd_reply
+# > set imu_ms 10
+set i35197 LOAD pct=54 pm=544 win_cyc=48000000 busy_cyc=26101800 windows=33
+mu_ms36197 LOAD pct=52 pm=524 win_cyc=48000000 busy_cyc=25148721 windows=34
+ 10
+37066 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+37078 EVT t_us=37067504 name=cmd_rx
+37080 EVT t_us=37078225 name=cmd_reply
+# > stats reset
+s37197 LOAD pct=54 pm=543 win_cyc=48000024 busy_cyc=26062389 windows=35
+tats 38197 LOAD pct=52 pm=523 win_cyc=47999976 busy_cyc=25123981 windows=36
+reset39197 LOAD pct=52 pm=524 win_cyc=48000000 busy_cyc=25139478 windows=37
+
+39364 STATS reset=1
+39371 EVT t_us=39363671 name=cmd_rx
+39372 EVT t_us=39367579 name=cmd_reply
+# > log on
+log 40197 LOAD pct=54 pm=540 win_cyc=48000024 busy_cyc=25914140 windows=38
+on
+40766 LOG on=1
+40769 EVT t_us=40767260 name=cmd_rx
+40771 EVT t_us=40769941 name=cmd_reply
+# ! 30 посилок: кожні 3 с gate 10 лк ~1 с -> 500 лк, class по колу 500 / 100 / 10 лк. Скрипт питатиме приблизно після кожних 5 і слатиме status. Enter - старт
+# ! Ще 5 посилок (по одній кожні 3 с), потім Enter
+41197 LOAD pct=54 pm=538 win_cyc=47999976 busy_cyc=25813821 windows=39
+42197 LOAD pct=52 pm=520 win_cyc=48000000 busy_cyc=24951940 windows=40
+43197 LOAD pct=52 pm=519 win_cyc=48000000 busy_cyc=24923502 windows=41
+44197 LOAD pct=52 pm=520 win_cyc=48000000 busy_cyc=24943470 windows=42
+44499 PARCEL_IN gate=3413
+44500 SORT n=1 class=A raw=999 impact=0 route=A angle=0 lat_ms=2
+44501 EVT t_us=44499680 name=parcel_in
+44502 EVT t_us=44500904 name=servo_set
+44884 PARCEL_OUT gate=999 state=READY
+45197 LOAD pct=55 pm=552 win_cyc=48000000 busy_cyc=26495821 windows=43
+46197 LOAD pct=52 pm=518 win_cyc=48000000 busy_cyc=24842063 windows=44
+47197 LOAD pct=52 pm=517 win_cyc=48000000 busy_cyc=24800165 windows=45
+47763 PARCEL_IN gate=3413
+47764 SORT n=2 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=1
+47766 EVT t_us=47764582 name=parcel_in
+47767 EVT t_us=47765804 name=servo_set
+48149 PARCEL_OUT gate=999 state=READY
+48201 LOAD pct=55 pm=549 win_cyc=48184752 busy_cyc=26460887 windows=46
+50197 LOAD pct=48 pm=483 win_cyc=95815513 busy_cyc=46258613 windows=47
+51023 PARCEL_IN gate=3413
+51024 SORT n=3 class=B raw=3413 impact=0 route=B angle=90 lat_ms=1
+51026 EVT t_us=51024603 name=parcel_in
+51027 EVT t_us=51025840 name=servo_set
+51197 LOAD pct=54 pm=543 win_cyc=48000353 busy_cyc=26066892 windows=48
+51404 PARCEL_OUT gate=999 state=READY
+52197 LOAD pct=52 pm=523 win_cyc=48000004 busy_cyc=25100917 windows=49
+53197 LOAD pct=52 pm=516 win_cyc=47999991 busy_cyc=24744618 windows=50
+54197 LOAD pct=51 pm=513 win_cyc=48000005 busy_cyc=24600914 windows=51
+54283 PARCEL_IN gate=3413
+54284 SORT n=4 class=A raw=999 impact=0 route=A angle=0 lat_ms=1
+54286 EVT t_us=54284596 name=parcel_in
+54287 EVT t_us=54285805 name=servo_set
+54309 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54329 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54349 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54369 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54389 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54409 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54429 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54449 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54469 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54489 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54509 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54529 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54549 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54569 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54589 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54609 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54629 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54649 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54664 PARCEL_OUT gate=999 state=READY
+54669 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54689 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54789 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54809 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54829 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54849 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54869 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54889 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54909 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+54949 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+55075 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+55197 LOAD pct=92 pm=918 win_cyc=48000088 busy_cyc=44085179 windows=52
+55729 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+# > status
+st56197 LOAD pct=52 pm=524 win_cyc=47999907 busy_cyc=25152740 windows=53
+atus
+57112 STATUS state=READY a=2 b=1 reject=1 total=4 impact=0 log=1 fault=NONE
+57105 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+57126 EVT t_us=57113271 name=cmd_rx
+57132 EVT t_us=57127226 name=cmd_reply
+# ! Ще 5 посилок (по одній кожні 3 с), потім Enter
+57201 LOAD pct=55 pm=550 win_cyc=48185733 busy_cyc=26516868 windows=54
+57539 PARCEL_IN gate=3413
+57540 SORT n=5 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=1
+57542 EVT t_us=57540596 name=parcel_in
+57543 EVT t_us=57541822 name=servo_set
+57915 PARCEL_OUT gate=999 state=READY
+59197 LOAD pct=52 pm=524 win_cyc=95814267 busy_cyc=50247007 windows=55
+60197 LOAD pct=52 pm=520 win_cyc=48000077 busy_cyc=24942107 windows=56
+60824 PARCEL_IN gate=3413
+60825 SORT n=6 class=B raw=3413 impact=0 route=B angle=90 lat_ms=1
+60827 EVT t_us=60825596 name=parcel_in
+60828 EVT t_us=60826815 name=servo_set
+61180 PARCEL_OUT gate=999 state=READY
+61197 LOAD pct=54 pm=543 win_cyc=47999932 busy_cyc=26044301 windows=57
+62197 LOAD pct=52 pm=521 win_cyc=48000063 busy_cyc=24985855 windows=58
+63197 LOAD pct=51 pm=509 win_cyc=47999933 busy_cyc=24409214 windows=59
+64064 PARCEL_IN gate=3413
+64065 SORT n=7 class=A raw=999 impact=0 route=A angle=0 lat_ms=1
+64067 EVT t_us=64065726 name=parcel_in
+64068 EVT t_us=64066947 name=servo_set
+64197 LOAD pct=53 pm=531 win_cyc=48000004 busy_cyc=25488926 windows=60
+64445 PARCEL_OUT gate=999 state=READY
+65197 LOAD pct=52 pm=525 win_cyc=47999991 busy_cyc=25196731 windows=61
+66197 LOAD pct=52 pm=518 win_cyc=48000077 busy_cyc=24882975 windows=62
+67197 LOAD pct=52 pm=517 win_cyc=47999656 busy_cyc=24838149 windows=63
+67324 PARCEL_IN gate=3413
+67325 SORT n=8 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=1
+67327 EVT t_us=67325595 name=parcel_in
+67328 EVT t_us=67326816 name=servo_set
+67709 PARCEL_OUT gate=999 state=READY
+68197 LOAD pct=55 pm=550 win_cyc=48000291 busy_cyc=26410137 windows=64
+69197 LOAD pct=52 pm=518 win_cyc=48000005 busy_cyc=24843948 windows=65
+70197 LOAD pct=52 pm=517 win_cyc=47999704 busy_cyc=24833269 windows=66
+70594 PARCEL_IN gate=3413
+70595 SORT n=9 class=B raw=3413 impact=0 route=B angle=90 lat_ms=1
+70597 EVT t_us=70595587 name=parcel_in
+70598 EVT t_us=70596814 name=servo_set
+70974 PARCEL_OUT gate=999 state=READY
+71197 LOAD pct=55 pm=550 win_cyc=47999654 busy_cyc=26406401 windows=67
+# > status
+72197 LOAD pct=52 pm=517 win_cyc=48000072 busy_cyc=24833191 windows=68
+status73197 LOAD pct=52 pm=522 win_cyc=47999928 busy_cyc=25051466 windows=69
+
+73243 STATUS state=READY a=3 b=3 reject=3 total=9 impact=0 log=1 fault=NONE
+73257 EVT t_us=73244621 name=cmd_rx
+73259 EVT t_us=73258401 name=cmd_reply
+# ! Ще 5 посилок (по одній кожні 3 с), потім Enter
+73859 PARCEL_IN gate=3413
+73860 SORT n=10 class=A raw=999 impact=0 route=A angle=0 lat_ms=1
+73862 EVT t_us=73860693 name=parcel_in
+73863 EVT t_us=73861912 name=servo_set
+74197 LOAD pct=56 pm=562 win_cyc=48000000 busy_cyc=26972203 windows=70
+74234 PARCEL_OUT gate=999 state=READY
+75197 LOAD pct=52 pm=522 win_cyc=48000000 busy_cyc=25077136 windows=71
+76197 LOAD pct=52 pm=517 win_cyc=48000000 busy_cyc=24828922 windows=72
+77119 PARCEL_IN gate=3413
+77120 SORT n=11 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=1
+77122 EVT t_us=77120588 name=parcel_in
+77123 EVT t_us=77121816 name=servo_set
+77197 LOAD pct=55 pm=547 win_cyc=48000072 busy_cyc=26237935 windows=73
+77489 PARCEL_OUT gate=999 state=READY
+78197 LOAD pct=52 pm=524 win_cyc=47999928 busy_cyc=25142132 windows=74
+79197 LOAD pct=52 pm=518 win_cyc=48000072 busy_cyc=24848614 windows=75
+80196 LOAD pct=52 pm=518 win_cyc=48000000 busy_cyc=24861687 windows=76
+80359 PARCEL_IN gate=3413
+80360 SORT n=12 class=B raw=3413 impact=0 route=B angle=90 lat_ms=1
+80361 EVT t_us=80360708 name=parcel_in
+80363 EVT t_us=80361947 name=servo_set
+80754 PARCEL_OUT gate=999 state=READY
+81196 LOAD pct=55 pm=552 win_cyc=48000492 busy_cyc=26512987 windows=77
+82196 LOAD pct=52 pm=517 win_cyc=47999436 busy_cyc=24811838 windows=78
+83196 LOAD pct=52 pm=518 win_cyc=48000000 busy_cyc=24870623 windows=79
+83614 PARCEL_IN gate=3413
+83615 SORT n=13 class=A raw=999 impact=0 route=A angle=0 lat_ms=2
+83616 EVT t_us=83615582 name=parcel_in
+83618 EVT t_us=83616796 name=servo_set
+83999 PARCEL_OUT gate=999 state=READY
+84196 LOAD pct=55 pm=551 win_cyc=48000000 busy_cyc=26440367 windows=80
+85196 LOAD pct=52 pm=518 win_cyc=48000072 busy_cyc=24846108 windows=81
+86196 LOAD pct=52 pm=517 win_cyc=48000000 busy_cyc=24830837 windows=82
+86864 PARCEL_IN gate=3413
+86865 SORT n=14 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=2
+86866 EVT t_us=86865598 name=parcel_in
+86868 EVT t_us=86866837 name=servo_set
+87196 LOAD pct=55 pm=547 win_cyc=47999952 busy_cyc=26253433 windows=83
+87239 PARCEL_OUT gate=999 state=READY
+# > status
+88196 LOAD pct=52 pm=516 win_cyc=47999976 busy_cyc=24754218 windows=84
+stat89196 LOAD pct=52 pm=521 win_cyc=48000000 busy_cyc=24997901 windows=85
+us
+89610 STATUS state=READY a=5 b=4 reject=5 total=14 impact=0 log=1 fault=NONE
+89625 EVT t_us=89612484 name=cmd_rx
+89630 EVT t_us=89626406 name=cmd_reply
+# ! Ще 5 посилок (по одній кожні 3 с), потім Enter
+90123 PARCEL_IN gate=3413
+90125 SORT n=15 class=B raw=3413 impact=0 route=B angle=90 lat_ms=1
+90126 EVT t_us=90125583 name=parcel_in
+90127 EVT t_us=90126800 name=servo_set
+90196 LOAD pct=57 pm=569 win_cyc=48000000 busy_cyc=27304009 windows=86
+90504 PARCEL_OUT gate=999 state=READY
+91196 LOAD pct=52 pm=522 win_cyc=48000024 busy_cyc=25060213 windows=87
+92196 LOAD pct=52 pm=516 win_cyc=48000000 busy_cyc=24790924 windows=88
+93196 LOAD pct=50 pm=501 win_cyc=48000048 busy_cyc=24063257 windows=89
+93388 PARCEL_IN gate=3413
+93389 SORT n=16 class=A raw=999 impact=0 route=A angle=0 lat_ms=1
+93391 EVT t_us=93390583 name=parcel_in
+93392 EVT t_us=93391784 name=servo_set
+93774 PARCEL_OUT gate=999 state=READY
+94196 LOAD pct=54 pm=541 win_cyc=47999928 busy_cyc=25985493 windows=90
+95196 LOAD pct=43 pm=434 win_cyc=48000000 busy_cyc=20827300 windows=91
+96199 LOAD pct=47 pm=468 win_cyc=48134976 busy_cyc=22537968 windows=92
+96653 PARCEL_IN gate=3413
+96655 SORT n=17 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=1
+96656 EVT t_us=96655668 name=parcel_in
+96657 EVT t_us=96656884 name=servo_set
+97039 PARCEL_OUT gate=999 state=READY
+98196 LOAD pct=53 pm=525 win_cyc=95865289 busy_cyc=50338742 windows=93
+99196 LOAD pct=46 pm=455 win_cyc=48000352 busy_cyc=21846519 windows=94
+99918 PARCEL_IN gate=3413
+99919 SORT n=18 class=B raw=3413 impact=0 route=B angle=90 lat_ms=1
+99921 EVT t_us=99920596 name=parcel_in
+99922 EVT t_us=99921823 name=servo_set
+100199 LOAD pct=51 pm=508 win_cyc=48134983 busy_cyc=24471359 windows=95
+100294 PARCEL_OUT gate=999 state=READY
+102196 LOAD pct=50 pm=504 win_cyc=95865017 busy_cyc=48283558 windows=96
+103178 PARCEL_IN gate=3413
+103179 SORT n=19 class=A raw=999 impact=0 route=A angle=0 lat_ms=1
+103181 EVT t_us=103180681 name=parcel_in
+103182 EVT t_us=103181878 name=servo_set
+103226 LOAD pct=53 pm=525 win_cyc=49444057 busy_cyc=25978552 windows=97
+103554 PARCEL_OUT gate=999 state=READY
+103729 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+# > status
+st105196 LOAD pct=52 pm=520 win_cyc=94556759 busy_cyc=49141365 windows=98
+atus
+106022 STATUS state=READY a=7 b=6 reject=6 total=19 impact=0 log=1 fault=NONE
+106037 EVT t_us=106024418 name=cmd_rx
+106042 EVT t_us=106038402 name=cmd_reply
+# ! Ще 5 посилок (по одній кожні 3 с), потім Enter
+106196 LOAD pct=53 pm=533 win_cyc=47999177 busy_cyc=25594624 windows=99
+106443 PARCEL_IN gate=3413
+106444 SORT n=20 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=1
+106446 EVT t_us=106445596 name=parcel_in
+106447 EVT t_us=106446817 name=servo_set
+106824 PARCEL_OUT gate=999 state=READY
+107196 LOAD pct=55 pm=551 win_cyc=48000003 busy_cyc=26451182 windows=100
+108196 LOAD pct=52 pm=520 win_cyc=47999992 busy_cyc=24952957 windows=101
+109196 LOAD pct=52 pm=522 win_cyc=48000005 busy_cyc=25043404 windows=102
+109708 PARCEL_IN gate=3413
+109709 SORT n=21 class=B raw=3413 impact=0 route=B angle=90 lat_ms=1
+109711 EVT t_us=109710580 name=parcel_in
+109712 EVT t_us=109711779 name=servo_set
+110094 PARCEL_OUT gate=999 state=READY
+110196 LOAD pct=55 pm=553 win_cyc=48000003 busy_cyc=26524730 windows=103
+111196 LOAD pct=52 pm=521 win_cyc=47999992 busy_cyc=24987286 windows=104
+112196 LOAD pct=52 pm=521 win_cyc=48000005 busy_cyc=24995065 windows=105
+112973 PARCEL_IN gate=3413
+112974 SORT n=22 class=A raw=999 impact=0 route=A angle=0 lat_ms=1
+112976 EVT t_us=112975606 name=parcel_in
+112977 EVT t_us=112976805 name=servo_set
+113196 LOAD pct=55 pm=548 win_cyc=48000003 busy_cyc=26285000 windows=106
+113349 PARCEL_OUT gate=999 state=READY
+114196 LOAD pct=53 pm=527 win_cyc=47999992 busy_cyc=25274301 windows=107
+115196 LOAD pct=52 pm=519 win_cyc=47999657 busy_cyc=24892856 windows=108
+116196 LOAD pct=52 pm=521 win_cyc=48000351 busy_cyc=24995618 windows=109
+116223 PARCEL_IN gate=3413
+116224 SORT n=23 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=1
+116226 EVT t_us=116225802 name=parcel_in
+116227 EVT t_us=116227108 name=servo_set
+116614 PARCEL_OUT gate=999 state=READY
+117196 LOAD pct=54 pm=538 win_cyc=48000016 busy_cyc=25826568 windows=110
+118196 LOAD pct=52 pm=517 win_cyc=47999657 busy_cyc=24837289 windows=111
+119196 LOAD pct=52 pm=519 win_cyc=47999714 busy_cyc=24888349 windows=112
+119498 PARCEL_IN gate=3413
+119499 SORT n=24 class=B raw=3413 impact=0 route=B angle=90 lat_ms=1
+119501 EVT t_us=119500588 name=parcel_in
+119502 EVT t_us=119501805 name=servo_set
+119873 PARCEL_OUT gate=999 state=READY
+120196 LOAD pct=55 pm=552 win_cyc=47999992 busy_cyc=26515476 windows=113
+# > status
+121196 LOAD pct=52 pm=520 win_cyc=48000004 busy_cyc=24956003 windows=114
+status122196 LOAD pct=52 pm=521 win_cyc=48000004 busy_cyc=25000467 windows=115
+
+122246 STATUS state=READY a=8 b=8 reject=8 total=24 impact=0 log=1 fault=NONE
+122261 EVT t_us=122248830 name=cmd_rx
+122262 EVT t_us=122262758 name=cmd_reply
+# ! Ще 5 посилок (по одній кожні 3 с), потім Enter
+122738 PARCEL_IN gate=3413
+122739 SORT n=25 class=A raw=999 impact=0 route=A angle=0 lat_ms=1
+122740 EVT t_us=122740615 name=parcel_in
+122742 EVT t_us=122741804 name=servo_set
+123128 PARCEL_OUT gate=999 state=READY
+123196 LOAD pct=56 pm=565 win_cyc=48039588 busy_cyc=27133957 windows=116
+124196 LOAD pct=50 pm=502 win_cyc=47960408 busy_cyc=24062158 windows=117
+125196 LOAD pct=52 pm=518 win_cyc=48000004 busy_cyc=24876103 windows=118
+126013 PARCEL_IN gate=3413
+126014 SORT n=26 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=1
+126015 EVT t_us=126015583 name=parcel_in
+126017 EVT t_us=126016807 name=servo_set
+126196 LOAD pct=55 pm=548 win_cyc=47999992 busy_cyc=26313665 windows=119
+126393 PARCEL_OUT gate=999 state=READY
+127196 LOAD pct=53 pm=527 win_cyc=48000008 busy_cyc=25283422 windows=120
+128195 LOAD pct=52 pm=520 win_cyc=48000000 busy_cyc=24949336 windows=121
+129195 LOAD pct=52 pm=520 win_cyc=48000000 busy_cyc=24977578 windows=122
+129278 PARCEL_IN gate=3413
+129279 SORT n=27 class=B raw=3413 impact=0 route=B angle=90 lat_ms=1
+129281 EVT t_us=129280741 name=parcel_in
+129282 EVT t_us=129281978 name=servo_set
+129663 PARCEL_OUT gate=999 state=READY
+130195 LOAD pct=55 pm=555 win_cyc=48000000 busy_cyc=26637788 windows=123
+131195 LOAD pct=52 pm=521 win_cyc=48000000 busy_cyc=25002401 windows=124
+132195 LOAD pct=52 pm=521 win_cyc=48000000 busy_cyc=24993610 windows=125
+132543 PARCEL_IN gate=3413
+132544 SORT n=28 class=A raw=999 impact=0 route=A angle=0 lat_ms=2
+132545 EVT t_us=132545583 name=parcel_in
+132547 EVT t_us=132546790 name=servo_set
+132918 PARCEL_OUT gate=999 state=READY
+133195 LOAD pct=55 pm=553 win_cyc=48000000 busy_cyc=26537212 windows=126
+134195 LOAD pct=52 pm=519 win_cyc=48000000 busy_cyc=24924271 windows=127
+135195 LOAD pct=52 pm=521 win_cyc=48000000 busy_cyc=25006751 windows=128
+135803 PARCEL_IN gate=3413
+135804 SORT n=29 class=UNKNOWN raw=2045 impact=0 route=REJECT angle=180 lat_ms=2
+135805 EVT t_us=135805583 name=parcel_in
+135807 EVT t_us=135806814 name=servo_set
+136183 PARCEL_OUT gate=999 state=READY
+136195 LOAD pct=56 pm=557 win_cyc=48000024 busy_cyc=26729966 windows=129
+137195 LOAD pct=52 pm=521 win_cyc=47999976 busy_cyc=25006027 windows=130
+# > status
+statu138195 LOAD pct=52 pm=522 win_cyc=48000000 busy_cyc=25044689 windows=131
+s
+138441 STATUS state=READY a=10 b=9 reject=10 total=29 impact=0 log=1 fault=NONE
+138460 EVT t_us=138444160 name=cmd_rx
+138461 EVT t_us=138462313 name=cmd_reply
+139067 PARCEL_IN gate=3413
+139069 SORT n=30 class=B raw=3413 impact=0 route=B angle=90 lat_ms=1
+139070 EVT t_us=139070583 name=parcel_in
+139071 EVT t_us=139071800 name=servo_set
+139199 LOAD pct=57 pm=568 win_cyc=48186048 busy_cyc=27368249 windows=132
+139453 PARCEL_OUT gate=999 state=READY
+141195 LOAD pct=51 pm=509 win_cyc=95813976 busy_cyc=48808705 windows=133
+142195 LOAD pct=44 pm=437 win_cyc=47999976 busy_cyc=20961915 windows=134
+# > stats
+stats143195 LOAD pct=52 pm=519 win_cyc=48000000 busy_cyc=24893070 windows=135
+
+143245 PERF git=89185df5 now_cyc=517 pair_cyc=1315 cyc_per_us=48 arch=qpc lto=1 tick_hz=1000
+143261 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+143271 STARTUP boot_us=12146 gate_us=133937 class_us=138639 imu_us=211544 lcd_us=764285 os_api_us=195660 os_start_us=198779
+143299 STAT name=uart_rx n=55 min_us=66 avg_us=2643 max_us=20924 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+143319 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+143340 STAT name=gate n=20796 min_us=127 avg_us=131 max_us=740 period_us=5000 jit_min_us=-4503 jit_max_us=5337 miss=1
+143366 STAT name=sort n=30 min_us=4543 avg_us=4667 max_us=4811 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+143389 STAT name=imu n=9455 min_us=2174 avg_us=2842 max_us=14059 period_us=10000 jit_min_us=-5617 jit_max_us=28383 miss=415
+143416 STAT name=lcd n=207 min_us=49106 avg_us=67315 max_us=250528 period_us=500000 jit_min_us=-75140 jit_max_us=75128 miss=0
+143440 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+143461 STAT name=logger n=198 min_us=3798 avg_us=11048 max_us=29770 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+143486 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+143506 STAT name=i2c_xfer n=47154 min_us=84 avg_us=481 max_us=11468 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+143529 STAT name=uart_line n=317 min_us=2194 avg_us=12381 max_us=29740 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+143551 STAT name=lcd_update n=207 min_us=48793 avg_us=66052 max_us=115643 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+143578 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+143599 STAT name=parcel_latency n=30 min_us=1189 avg_us=1222 max_us=1306 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+143621 STAT name=bus_wait n=9478 min_us=295 avg_us=303 max_us=1386 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+143646 UART rx=55 ore=0
+143658 TASK name=estop prio=7 cpu_pm=0 stack_free=380 state=blocked run_ms=0
+143677 TASK name=gate prio=6 cpu_pm=126 stack_free=140 state=blocked run_ms=13235
+143698 TASK name=sort prio=5 cpu_pm=1 stack_free=112 state=blocked run_ms=156
+143717 TASK name=bus prio=4 cpu_pm=278 stack_free=124 state=blocked run_ms=29078
+143736 TASK name=imu prio=3 cpu_pm=95 stack_free=84 state=blocked run_ms=10000
+143756 TASK name=console prio=2 cpu_pm=24 stack_free=76 state=run run_ms=2534
+143776 TASK name=lcd prio=1 cpu_pm=4 stack_free=172 state=ready run_ms=442
+143791 TASK name=IDLE prio=0 cpu_pm=470 stack_free=108 state=ready run_ms=49087
+143809 BUSQ skip=416 parcel_drop=0 post_fail=0
+143819 LOGQ len=16 max_used=7 lines=198 drop=0 trunc=0 rx_drop=0
+143831 SIMCRIT win_ms=104288 task_n=612706 isr_n=682142 deferred_tick=25298 deferred_pendsv=17200 deferred_irq=26793
+143858 EVT t_us=143248746 name=cmd_rx
+143859 EVT t_us=143859920 name=cmd_reply
+# > load
+l144195 LOAD pct=83 pm=834 win_cyc=48000000 busy_cyc=40032849 windows=136
+oad
+144898 LOAD pct=83 pm=834 win_cyc=48000000 busy_cyc=40032849 windows=136
+144916 EVT t_us=144901656 name=cmd_rx
+144918 EVT t_us=144918402 name=cmd_reply
+# > stack
+s145195 LOAD pct=49 pm=490 win_cyc=48000000 busy_cyc=23532849 windows=137
+t145299 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ack
+146094 STACK used=584 reserved=1024 free=440 overflow=0
+146106 STACK name=estop used=132 reserved=512 free=380
+146117 STACK name=gate used=372 reserved=512 free=140
+146132 STACK name=sort used=528 reserved=640 free=112
+146144 STACK name=bus used=580 reserved=704 free=124
+146155 STACK name=imu used=364 reserved=448 free=84
+146166 STACK name=console used=692 reserved=768 free=76
+146177 STACK name=lcd used=340 reserved=512 free=172
+146192 STACK name=IDLE used=84 reserved=192 free=108
+146206 LOAD pct=59 pm=588 win_cyc=48539304 busy_cyc=28560800 windows=138
+146204 EVT t_us=146097431 name=cmd_rx
+146205 EVT t_us=146206926 name=cmd_reply
+# > heap
+heap
+147260 HEAP arena=0 used=0 free=0
+147265 POOL n=1 min_free=5
+147272 POOL n=2 min_free=1
+147281 EVT t_us=147263508 name=cmd_rx
+147282 EVT t_us=147279684 name=cmd_reply
+# > hist gate
+hist148195 LOAD pct=53 pm=525 win_cyc=95461318 busy_cyc=50143125 windows=139
+ gate149195 LOAD pct=50 pm=495 win_cyc=47999991 busy_cyc=23779228 windows=140
+
+149246 HIST name=gate period_us=5000 n=21976 step_us=100
+149257 HIST name=gate lo_us=-inf hi_us=-1000 n=2
+149268 HIST name=gate lo_us=-900 hi_us=-800 n=8
+149279 HIST name=gate lo_us=-800 hi_us=-700 n=5
+149289 HIST name=gate lo_us=-700 hi_us=-600 n=3
+149300 HIST name=gate lo_us=-600 hi_us=-500 n=11
+149311 HIST name=gate lo_us=-500 hi_us=-400 n=6
+149321 HIST name=gate lo_us=-400 hi_us=-300 n=30
+149336 HIST name=gate lo_us=-300 hi_us=-200 n=173
+149346 HIST name=gate lo_us=-200 hi_us=-100 n=2370
+149357 HIST name=gate lo_us=-100 hi_us=0 n=5445
+149369 HIST name=gate lo_us=0 hi_us=100 n=11444
+149379 HIST name=gate lo_us=100 hi_us=200 n=2293
+149390 HIST name=gate lo_us=200 hi_us=300 n=139
+149400 HIST name=gate lo_us=300 hi_us=400 n=37
+149410 HIST name=gate lo_us=400 hi_us=500 n=12
+149421 HIST name=gate lo_us=500 hi_us=600 n=4
+149431 HIST name=gate lo_us=600 hi_us=700 n=1
+149441 HIST name=gate lo_us=700 hi_us=800 n=8
+149456 HIST name=gate lo_us=800 hi_us=900 n=6
+149466 HIST name=gate lo_us=2000 hi_us=inf n=2
+149477 EVT t_us=149248927 name=cmd_rx
+149479 EVT t_us=149479956 name=cmd_reply
+# > hist imu
+his150195 LOAD pct=65 pm=655 win_cyc=48000004 busy_cyc=31424942 windows=141
+t im150942 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+u151195 LOAD pct=53 pm=534 win_cyc=48001157 busy_cyc=25637292 windows=142
+151282 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+
+151319 HIST name=imu period_us=10000 n=10173 step_us=100
+151330 HIST name=imu lo_us=-inf hi_us=-1000 n=14
+151345 HIST name=imu lo_us=-1000 hi_us=-900 n=2
+151355 HIST name=imu lo_us=-700 hi_us=-600 n=1
+151366 HIST name=imu lo_us=-200 hi_us=-100 n=10
+151376 HIST name=imu lo_us=-100 hi_us=0 n=2106
+151387 HIST name=imu lo_us=0 hi_us=100 n=7323
+151397 HIST name=imu lo_us=100 hi_us=200 n=34
+151407 HIST name=imu lo_us=200 hi_us=300 n=24
+151417 HIST name=imu lo_us=300 hi_us=400 n=3
+151429 HIST name=imu lo_us=400 hi_us=500 n=45
+151439 HIST name=imu lo_us=500 hi_us=600 n=40
+151449 HIST name=imu lo_us=600 hi_us=700 n=14
+151459 HIST name=imu lo_us=700 hi_us=800 n=5
+151470 HIST name=imu lo_us=800 hi_us=900 n=8
+151480 HIST name=imu lo_us=900 hi_us=1000 n=17
+151490 HIST name=imu lo_us=1000 hi_us=1100 n=21
+151500 HIST name=imu lo_us=1100 hi_us=1200 n=16
+151515 HIST name=imu lo_us=1200 hi_us=1300 n=10
+151525 HIST name=imu lo_us=1300 hi_us=1400 n=1
+151535 HIST name=imu lo_us=1400 hi_us=1500 n=3
+151545 HIST name=imu lo_us=1500 hi_us=1600 n=3
+151555 HIST name=imu lo_us=1600 hi_us=1700 n=8
+151565 HIST name=imu lo_us=1700 hi_us=1800 n=4
+151576 HIST name=imu lo_us=1800 hi_us=1900 n=2
+151586 HIST name=imu lo_us=1900 hi_us=2000 n=4
+151596 HIST name=imu lo_us=2000 hi_us=inf n=462
+151607 EVT t_us=151322448 name=cmd_rx
+151609 EVT t_us=151609404 name=cmd_reply
+# > hist lcd
+hi152195 LOAD pct=71 pm=706 win_cyc=47998839 busy_cyc=33882739 windows=143
+st lc153195 LOAD pct=52 pm=520 win_cyc=48000028 busy_cyc=24978430 windows=144
+d
+153424 HIST name=lcd period_us=500000 n=226 step_us=100
+153439 HIST name=lcd lo_us=-inf hi_us=-1000 n=111
+153449 HIST name=lcd lo_us=-600 hi_us=-500 n=7
+153459 HIST name=lcd lo_us=-400 hi_us=-300 n=1
+153469 HIST name=lcd lo_us=2000 hi_us=inf n=107
+153480 EVT t_us=153427466 name=cmd_rx
+153481 EVT t_us=153482967 name=cmd_reply
+154195 LOAD pct=56 pm=562 win_cyc=47999981 busy_cyc=26979166 windows=145

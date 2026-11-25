@@ -92,4 +92,13 @@ Wokwi для VS Code, `tools/run_scenario.py` по RFC2217 (`rfc2217://localhost
 | `S3_2026-11-25_1028.log` | `ea882c67`, продукт, мишею під потоком `stats` | `post_fail=51`, `LOGQ drop=321` - проблема 90 |
 | `S3_2026-11-25_1033.log` | `6cfb950a`, `rx_posted` | `post_fail=58` - перша гіпотеза проблеми 90 не підтвердилась |
 | `S3_2026-11-25_1039.log` | `6cfb950a-dirty` = код `cabee1b` до коміту | `post_fail=0`, `LOGQ drop=0`; NACK на 54,0-54,2 і 102,0-102,1 с |
+| `S1_2026-11-25_1043.log`, `S2_2026-11-25_1044.log`, `S3_2026-11-25_1047.log` | `89185df5` (код `cabee1b`), `ARCH=qpc` | S1-S3 продукту для порівняльної таблиці (`results.md`), `post_fail=0` |
+| `S1_2026-11-25_1049.log`, `S2_2026-11-25_1051.log`, `S3_2026-11-25_1054.log` | `89185df5`, `ARCH=rtos` | те саме для FreeRTOS, той самий день |
+| `S1_2026-11-25_1056.log`, `S2_2026-11-25_1058.log`, `S3_2026-11-25_1101.log` | `89185df5`, `ARCH=superloop` | те саме для super loop |
+| `S3_2026-11-25_1104.log` | `310070da`, стеки AO за виміром | перевірка стеків: gate - 92 B вільно, звідси 504 B (`81fdcba`) |
+| `Q93_estop_81fdcbac.txt`, `Q93_estopx_81fdcbac.txt` | `81fdcbac`, `TEST_QPCHECK=1 PERF=0 TEST_Q93=estop/estopx`, E-STOP мишею | 9.3 п. 4: `FATAL qp qf_port 630` / `drop=391` без `FATAL` |
+| `Q93_pool_81fdcbac.txt`, `Q93_poolx_81fdcbac.txt` | `81fdcbac`, `TEST_Q93=pool/poolx`, пріоритети продукту | 9.3 п. 5: пул з 1 блоку не вичерпується |
+| `Q93_pool_25bc3429.txt`, `Q93_poolx_25bc3429.txt` | `25bc3429`, Bus 1, Lcd 4 | `FATAL qp qf_dyn 630` / ~14 відмов за секунду без `FATAL` |
+
+Порівняльна таблиця трьох прошивок - `results.md`.
 
