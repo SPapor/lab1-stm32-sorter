@@ -282,7 +282,9 @@ static volatile uint32_t estop_edge_ms;     /* час першого фронт�
 #if !defined(TEST_KSTRESS) && !defined(TEST_CRITCOST) && !defined(TEST_QSTRESS)
 static tasks_ops_t task_ops;
 #endif
+#if !ARCH_QPC
 static i2c_bus_t i2c1_inner;     /* шина під м'ютексом: i2c1_bus бере його на кожну транзакцію */
+#endif
 #endif
 
 static volatile uint8_t estop_pending;      /* був фронт PC13, EXTI вимкнено до кінця брязкоту */
@@ -363,8 +365,14 @@ static void log_line(uint32_t ms, const char *event, const char *fmt, const fmt_
                      unsigned n);
 static void rtos_second(void);
 static void ev_i2c(const char *event, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+#if ARCH_QPC
+#if SIM_CRIT
+static void i2c_try_hold(uint8_t on);
+#endif
+#else
 static bus_status_t locked_write(void *ctx, uint8_t addr7, const uint8_t *data, size_t len);
 static bus_status_t locked_read(void *ctx, uint8_t addr7, uint8_t *data, size_t len);
+#endif
 #if PERF
 static void ev_now(const char *event, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 #endif
@@ -556,10 +564,16 @@ int main(void)
 #if ARCH_RTOS
   /* Шина спільна для imu і lcd: кожна транзакція - під м'ютексом (до старту
    * ядра - без нього). I2C_RECOVER - через чергу журналу */
+#if ARCH_QPC
+#if SIM_CRIT
+  i2c1_ctx.hold = i2c_try_hold;
+#endif
+#else
   i2c1_inner = i2c1_bus;
   i2c1_bus.write = locked_write;
   i2c1_bus.read = locked_read;
   i2c1_bus.ctx = &i2c1_inner;
+#endif
   i2c_hal_set_log(&i2c1_ctx, ev_i2c);
 #endif
   i2c_hal_set_tries(&i2c1_ctx, 1);
@@ -1499,6 +1513,17 @@ static void cli_work(int ch)
   TASK_RUN(PT_UART, uart_rx_run(ch));
 }
 
+#if ARCH_QPC
+#if SIM_CRIT
+static void i2c_try_hold(uint8_t on)
+{
+  if (on)
+    LOCK(I2C);
+  else
+    UNLOCK(I2C);
+}
+#endif
+#else
 /* Шина I2C під м'ютексом: транзакція (з повторами FR-09) - одне взяття */
 static bus_status_t locked_write(void *ctx, uint8_t addr7, const uint8_t *data, size_t len)
 {
@@ -1521,6 +1546,7 @@ static bus_status_t locked_read(void *ctx, uint8_t addr7, uint8_t *data, size_t 
   UNLOCK(I2C);
   return st;
 }
+#endif
 
 /* Задача logger раз на секунду. LOAD = 100 % - частка idle (run-time stats ядра
  * в тактах perf_now) у тому самому вікні perf_load, що й у super loop. Вікно -
