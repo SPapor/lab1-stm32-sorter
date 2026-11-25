@@ -10,7 +10,7 @@
 
 Репозиторій: https://github.com/SPapor/lab1-stm32-sorter
 
-PR-и ЛР5: [#26](https://github.com/SPapor/lab1-stm32-sorter/pull/26), [#27](https://github.com/SPapor/lab1-stm32-sorter/pull/27), [#28](https://github.com/SPapor/lab1-stm32-sorter/pull/28), [#29](https://github.com/SPapor/lab1-stm32-sorter/pull/29), [#30](https://github.com/SPapor/lab1-stm32-sorter/pull/30), [#31](https://github.com/SPapor/lab1-stm32-sorter/pull/31), гілка `lab5/finish`
+PR-и ЛР5: [#26](https://github.com/SPapor/lab1-stm32-sorter/pull/26), [#27](https://github.com/SPapor/lab1-stm32-sorter/pull/27), [#28](https://github.com/SPapor/lab1-stm32-sorter/pull/28), [#29](https://github.com/SPapor/lab1-stm32-sorter/pull/29), [#30](https://github.com/SPapor/lab1-stm32-sorter/pull/30), [#31](https://github.com/SPapor/lab1-stm32-sorter/pull/31), [#32](https://github.com/SPapor/lab1-stm32-sorter/pull/32)
 
 ## 2. Завдання
 
@@ -45,7 +45,7 @@ PR-и ЛР5: [#26](https://github.com/SPapor/lab1-stm32-sorter/pull/26), [#27](h
 | 24.11 | Ядро QP/C 8.1.6 (сабмодуль, порт FreeRTOS, `qp_config.h`, BSP, `Q_onError`), ворота `TEST_QSTRESS` | #29 |
 | 25.11 | Крок 3: AO по одному - Bus, Estop, Gate, Sorter (ієрархічний), Console; після кожного - збірка і рядок бюджету; розміри черг за виміром `QMAX` | #30 |
 | 25.11 | Крок 4: лічильник `post_fail`, S1-S3 трьох прошивок, стеки за S3, 9.3 п. 4-5 | #31 |
-| 25.11 | Доробка кроку 4: Lcd шматками, E-STOP у S1-S3 на трьох прошивках, удар, 6.2.x на QP/C, проблема 93 | `lab5/finish` |
+| 25.11 | Доробка кроку 4: Lcd шматками, E-STOP у S1-S3 на трьох прошивках, удар, 6.2.x на QP/C, проблема 93 | #32 |
 
 ### 4.2. Схема AO
 
