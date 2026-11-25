@@ -1,0 +1,301 @@
+# git=9390efdd (з build/git.cfg) scenario=S1 build="ARCH=qpc LTO=1 TICK_HZ=1000 SIM_CRIT=1 ASSERT=0 LAB2_CAP=0 TEST_I2C_FAULT=0 TEST_I2C_DIAG=0 TEST_PRIMASK=0 TEST_BOOTMARK=0 TEST_APIPROBE=0 TEST_KSTRESS=0 TEST_QSTRESS=0 TEST_QPCHECK=1 TEST_CRITCOST=0 OSMETRICS=0 TEST_INVERSION=0 TEST_OS=0 PERF=0 GCC=10.3.1 NEWLIB=3.3.0" perf=? arch=? lto=? tick_hz=? port=rfc2217://localhost:4000 host_start=2026-11-25T02:07:46
+# сценарій S1: Простій: лише періодичні задачі
+# > stats
+stats
+10331 CLI st=BAD
+# "stats": CLI st=BAD, спроба 1 з 4
+# > stats (повтор: CR + команда)
+
+stats
+11737 CLI st=BAD
+# "stats": немає відповіді, спроба 2 з 4
+# > stats (повтор: CR + команда)
+
+stats
+16136 CLI st=BAD
+# "stats": немає відповіді, спроба 3 з 4
+# > stats (повтор: CR + команда)
+
+stats
+20538 CLI st=BAD
+# "stats": немає відповіді, спроба 4 з 4
+# "stats" так і не виконалась
+# > set log 2
+set log 2
+25656 CLI st=BAD
+25650 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+# "set log 2": CLI st=BAD, спроба 1 з 4
+# > set log 2 (повтор: CR + команда)
+
+s25949 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+e26160 QMAX estop=1 gate=1 sort=0 bus=1 imu=2 console=2 lcd=1
+t log 2
+27847 CLI st=BAD
+# "set log 2": немає відповіді, спроба 2 з 4
+# > set log 2 (повтор: CR + команда)
+
+set31549 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ log 2
+33052 CLI st=BAD
+# "set log 2": немає відповіді, спроба 3 з 4
+# > set log 2 (повтор: CR + команда)
+
+set log 2
+38256 CLI st=BAD
+# "set log 2": немає відповіді, спроба 4 з 4
+# "set log 2" так і не виконалась
+# > set lcd_ms 500
+set lcd_ms 500
+44260 CLI st=BAD
+# "set lcd_ms 500": CLI st=BAD, спроба 1 з 4
+# > set lcd_ms 500 (повтор: CR + команда)
+
+set lc45570 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+d_ms 546772 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+00
+47469 CLI st=BAD
+# "set lcd_ms 500": немає відповіді, спроба 2 з 4
+# > set lcd_ms 500 (повтор: CR + команда)
+
+set lcd_ms 500
+53683 CLI st=BAD
+# "set lcd_ms 500": немає відповіді, спроба 3 з 4
+# > set lcd_ms 500 (повтор: CR + команда)
+
+set lcd_ms 500
+59878 CLI st=BAD
+# "set lcd_ms 500": немає відповіді, спроба 4 з 4
+# "set lcd_ms 500" так і не виконалась
+# > set lcd_chars 0
+set lcd_ch64789 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ars 0
+66085 CLI st=BAD
+# "set lcd_chars 0": CLI st=BAD, спроба 1 з 4
+# > set lcd_chars 0 (повтор: CR + команда)
+
+66206 I2C_RECOVER try=1/3 where=wr addr=0x27 err=0x24 isr=0x00000001
+set lcd_c67998 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+hars 0
+69487 CLI st=BAD
+# "set lcd_chars 0": немає відповіді, спроба 2 з 4
+# > set lcd_chars 0 (повтор: CR + команда)
+
+set lcd_chars 0
+75894 CLI st=BAD
+# "set lcd_chars 0": немає відповіді, спроба 3 з 4
+# > set lcd_chars 0 (повтор: CR + команда)
+
+set lcd_chars 81797 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+0
+82294 CLI st=BAD
+# "set lcd_chars 0": немає відповіді, спроба 4 з 4
+# "set lcd_chars 0" так і не виконалась
+# > set imu_ms 10
+set imu_ms 10
+88104 CLI st=BAD
+# "set imu_ms 10": CLI st=BAD, спроба 1 з 4
+# > set imu_ms 10 (повтор: CR + команда)
+
+set imu89607 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+_ms 10
+91105 CLI st=BAD
+# "set imu_ms 10": немає відповіді, спроба 2 з 4
+# > set imu_ms 10 (повтор: CR + команда)
+
+set imu_ms 10
+97105 CLI st=BAD
+# "set imu_ms 10": немає відповіді, спроба 3 з 4
+# > set imu_ms 10 (повтор: CR + команда)
+
+set 101011 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+imu_ms 10
+103108 CLI st=BAD
+# "set imu_ms 10": немає відповіді, спроба 4 з 4
+# "set imu_ms 10" так і не виконалась
+# > stats reset
+stats reset
+108417 CLI st=BAD
+# "stats reset": CLI st=BAD, спроба 1 з 4
+# > stats reset (повтор: CR + команда)
+
+stats reset
+111015 CLI st=BAD
+# "stats reset": немає відповіді, спроба 2 з 4
+# > stats reset (повтор: CR + команда)
+
+stats reset
+116623 CLI st=BAD
+# "stats reset": немає відповіді, спроба 3 з 4
+# > stats reset (повтор: CR + команда)
+
+stats reset
+122223 CLI st=BAD
+# "stats reset": немає відповіді, спроба 4 з 4
+# "stats reset" так і не виконалась
+# > log on
+log on
+126628 LOG on=1
+# "log on": немає відповіді, спроба 1 з 4
+# > log on (повтор: CR + команда)
+
+log on
+131233 LOG on=1
+# "log on": немає відповіді, спроба 2 з 4
+# > log on (повтор: CR + команда)
+
+log on
+135833 LOG on=1
+# "log on": немає відповіді, спроба 3 з 4
+# > log on (повтор: CR + команда)
+
+log on
+140443 LOG on=1
+# "log on": немає відповіді, спроба 4 з 4
+# "log on" так і не виконалась
+# нічого не чіпаю 60 с часу МК (Wokwi може йти повільніше за реальний час)
+294679 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+# > stats
+stats
+295761 CLI st=BAD
+# "stats": CLI st=BAD, спроба 1 з 4
+# > stats (повтор: CR + команда)
+
+stats
+297180 CLI st=BAD
+# "stats": немає відповіді, спроба 2 з 4
+# > stats (повтор: CR + команда)
+
+stats
+301771 CLI st=BAD
+# "stats": немає відповіді, спроба 3 з 4
+# > stats (повтор: CR + команда)
+
+stats
+306181 CLI st=BAD
+# "stats": немає відповіді, спроба 4 з 4
+# "stats" так і не виконалась
+# > load
+load309982 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+310182 CLI st=BAD
+# "load": CLI st=BAD, спроба 1 з 4
+# > load (повтор: CR + команда)
+
+load
+311381 CLI st=BAD
+# "load": немає відповіді, спроба 2 з 4
+# > load (повтор: CR + команда)
+
+load
+315584 CLI st=BAD
+# "load": немає відповіді, спроба 3 з 4
+# > load (повтор: CR + команда)
+
+load
+319795 CLI st=BAD
+# "load": немає відповіді, спроба 4 з 4
+# "load" так і не виконалась
+# > stack
+stack323802 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+323999 CLI st=BAD
+# "stack": CLI st=BAD, спроба 1 з 4
+# > stack (повтор: CR + команда)
+
+stack
+325395 CLI st=BAD
+# "stack": немає відповіді, спроба 2 з 4
+# > stack (повтор: CR + команда)
+
+stack
+329800 CLI st=BAD
+# "stack": немає відповіді, спроба 3 з 4
+# > stack (повтор: CR + команда)
+
+stack
+334208 CLI st=BAD
+# "stack": немає відповіді, спроба 4 з 4
+# "stack" так і не виконалась
+# > heap
+heap
+338208 CLI st=BAD
+# "heap": CLI st=BAD, спроба 1 з 4
+# > heap (повтор: CR + команда)
+
+heap
+339403 CLI st=BAD
+# "heap": немає відповіді, спроба 2 з 4
+# > heap (повтор: CR + команда)
+
+heap
+343613 CLI st=BAD
+# "heap": немає відповіді, спроба 3 з 4
+# > heap (повтор: CR + команда)
+
+heap
+347809 CLI st=BAD
+# "heap": немає відповіді, спроба 4 з 4
+# "heap" так і не виконалась
+# > hist gate
+hist gate
+352811 CLI st=BAD
+# "hist gate": CLI st=BAD, спроба 1 з 4
+# > hist gate (повтор: CR + команда)
+
+hist gate
+355013 CLI st=BAD
+# "hist gate": немає відповіді, спроба 2 з 4
+# > hist gate (повтор: CR + команда)
+
+hist gate
+360228 CLI st=BAD
+# "hist gate": немає відповіді, спроба 3 з 4
+# > hist gate (повтор: CR + команда)
+
+hist gate
+365428 CLI st=BAD
+# "hist gate": немає відповіді, спроба 4 з 4
+# "hist gate" так і не виконалась
+# > hist imu
+h368651 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+ist imu
+370223 CLI st=BAD
+# "hist imu": CLI st=BAD, спроба 1 з 4
+# > hist imu (повтор: CR + команда)
+
+his371041 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+t imu
+372231 CLI st=BAD
+# "hist imu": немає відповіді, спроба 2 з 4
+# > hist imu (повтор: CR + команда)
+
+hist i376641 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+mu
+377240 CLI st=BAD
+# "hist imu": немає відповіді, спроба 3 з 4
+# > hist imu (повтор: CR + команда)
+
+hist imu
+382243 CLI st=BAD
+# "hist imu": немає відповіді, спроба 4 з 4
+# "hist imu" так і не виконалась
+# > hist lcd
+hist lcd
+387046 CLI st=BAD
+# "hist lcd": CLI st=BAD, спроба 1 з 4
+# > hist lcd (повтор: CR + команда)
+
+hist lcd
+389047 CLI st=BAD
+# "hist lcd": немає відповіді, спроба 2 з 4
+# > hist lcd (повтор: CR + команда)
+
+hist lcd
+394057 CLI st=BAD
+# "hist lcd": немає відповіді, спроба 3 з 4
+# > hist lcd (повтор: CR + команда)
+
+hist lcd
+399057 CLI st=BAD
+# "hist lcd": немає відповіді, спроба 4 з 4
+# "hist lcd" так і не виконалась

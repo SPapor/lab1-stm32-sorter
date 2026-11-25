@@ -71,6 +71,12 @@ void kstress_switched_in(void *tcb);
 #define traceTASK_SWITCHED_IN()             kstress_switched_in((void *)pxCurrentTCB)
 #endif
 
+#if defined(TEST_QPCHECK) && !defined(TEST_QSTRESS)
+void qmax_note(const void *queue, uint32_t waiting);
+#define traceQUEUE_SEND(q)                  qmax_note((q), (q)->uxMessagesWaiting + 1u)
+#define traceQUEUE_SEND_FROM_ISR(q)         qmax_note((q), (q)->uxMessagesWaiting + 1u)
+#endif
+
 #define configENABLE_MPU                    0
 
 #define INCLUDE_xTaskDelayUntil             0

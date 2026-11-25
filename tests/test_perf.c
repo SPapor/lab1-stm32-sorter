@@ -260,6 +260,29 @@ static void test_hist_bins(void)
     TEST_ASSERT_EQUAL_INT32(2000, perf_hist_lo_us(31));
 }
 
+static unsigned hist_bin_signed(int32_t jitter_us)
+{
+    if (jitter_us < PERF_HIST_LO_US)
+        return 0;
+    if (jitter_us >= PERF_HIST_LO_US + (int32_t)(PERF_HIST_BINS - 2u) * PERF_HIST_STEP_US)
+        return PERF_HIST_BINS - 1u;
+    return (unsigned)((jitter_us - PERF_HIST_LO_US) / PERF_HIST_STEP_US) + 1u;
+}
+
+/* Беззнакове ділення в perf_hist_bin дає той самий кошик, що знакове */
+static void test_hist_bin_unsigned_div_same(void)
+{
+    static const int32_t edge[] = {
+        INT32_MIN, INT32_MIN + 1, -2000000000, -1001, -1000, -999, -901, -900, -101, -100,
+        -99, -1, 0, 1, 99, 100, 1899, 1900, 1999, 2000, 2001, 1000000, INT32_MAX - 1, INT32_MAX,
+    };
+
+    for (unsigned i = 0; i < sizeof edge / sizeof edge[0]; i++)
+        TEST_ASSERT_EQUAL_UINT(hist_bin_signed(edge[i]), perf_hist_bin(edge[i]));
+    for (int32_t j = -3000; j <= 5000; j++)
+        TEST_ASSERT_EQUAL_UINT(hist_bin_signed(j), perf_hist_bin(j));
+}
+
 /* Інтервал між стартами через переповнення 32 біт */
 static void test_period_across_32bit_wrap(void)
 {
@@ -366,6 +389,7 @@ int main(void)
     RUN_TEST(test_period_positive_only);
     RUN_TEST(test_period_missed);
     RUN_TEST(test_hist_bins);
+    RUN_TEST(test_hist_bin_unsigned_div_same);
     RUN_TEST(test_period_across_32bit_wrap);
     RUN_TEST(test_period_reset);
     RUN_TEST(test_load_window);

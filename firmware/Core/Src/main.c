@@ -216,6 +216,9 @@ static perf_stat_t st_loop;          /* loop: повний прохід цикл
 static perf_stat_t st_i2c;           /* i2c_xfer: виклик шини, з повторами FR-09 */
 static perf_stat_t st_uart_line;     /* uart_line: один рядок журналу в UART */
 static perf_stat_t st_lcd_update;    /* lcd_update: обидва рядки LCD */
+#if ARCH_QPC
+static perf_stat_t st_bus_wait;
+#endif
 
 /* Затримки реакції (методичка 5.1, приклад 2) */
 static perf_stat_t st_estop_lat;     /* estop_latency: фронт PC13 → реакція */
@@ -288,22 +291,22 @@ static volatile uint8_t estop_pending;      /* був фронт PC13, EXTI ви
 static uint8_t stream_on = 1;   /* періодичний рядок accel (команда stream) */
 #endif
 
-/* Текст команди help: лише синтаксис, без описів (бюджет flash ЛР4,
- * docs/rtos-design.md, розділ 4); синтаксис розбирає App/cli.c */
-static const char *const help_lines[] = {
-  "help | status | reset | log on|off",
+/* Текст команди help: імена команд одним рядком (бюджет flash, docs/qp-design.md,
+ * крок 3); синтаксис розбирає App/cli.c */
+static const char help_line[] = "help status reset log"
 #if PERF
+  " stats load stack heap"
 #if ARCH_RTOS
-  "stats [reset] | load | stack | heap | tasks",
-#else
-  "stats [reset] | load | stack | heap",
+  " tasks"
 #endif
 #if HIST_CMD
-  "hist gate|imu|lcd",
+  " hist"
 #endif
-  "set lcd_ms|lcd_chars|imu_ms|log <n>",
+  " set"
 #endif
+  ;
 #ifdef LAB2_CAP
+static const char *const help_lines[] = {
   "stream on|off       periodic 'accel' line (default on)",
   "cap whoami          MPU-6050: write 0x75, read 1 byte",
   "cap accel           MPU-6050: write 0x3B, read 6 bytes",
@@ -313,8 +316,8 @@ static const char *const help_lines[] = {
   "cap servo <0..180>  set servo angle",
   "cap adc             one gate + one class conversion",
   "cap uart            send 0x55 and 'UART-TEST'",
-#endif
 };
+#endif
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -329,8 +332,29 @@ static void sort_task(void);
 static void imu_task(void);
 static void lcd_task(void);
 #else
+#if ARCH_QPC
+static uint8_t estop_work(void);
+#else
 static void estop_work(void);
+#endif
+#if ARCH_QPC
+static void qpc_estop_apply(void);
+static void qpc_parcel_out(uint16_t raw);
+static void qpc_impact(int16_t x, int16_t y, int16_t z);
+static uint8_t qpc_sorter_state(void);
+static void qpc_imu_begin(void);
+static uint8_t qpc_bus_imu_read(uint8_t raw[6]);
+static void qpc_imu_end(uint8_t st, const uint8_t raw[6]);
+static void qpc_lcd_begin(char rows[2][TASKS_LCD_ROW]);
+static uint8_t qpc_bus_lcd_row(uint8_t row, const char *text);
+static void qpc_lcd_end(uint8_t st);
+static void qpc_bus_wait(uint32_t cyc);
+#endif
+#if ARCH_QPC
+static uint8_t gate_work(void);
+#else
 static void gate_work(void);
+#endif
 static void sort_work(uint32_t in_ms, uint32_t in_cyc);
 static void imu_work(void);
 static void lcd_work(void);
@@ -370,8 +394,10 @@ static void console_echo(char ch);
 static void cmd_run(const cli_cmd_t *cmd);
 static void con_write(const char *s, int n);
 static void uart_rx_run(int ch);
+#if !ARCH_QPC
 static void estop_run(void);
-static void gate_run(void);
+#endif
+static gate_event_t gate_run(void);
 static void sort_run(uint32_t in_ms, uint32_t in_cyc);
 static void imu_run(void);
 static void lcd_run(uint8_t due);
@@ -581,6 +607,19 @@ int main(void)
   (void)cli_work;
   (void)log_line;
   (void)rtos_second;
+#if ARCH_QPC
+  (void)qpc_imu_begin;
+  (void)qpc_bus_imu_read;
+  (void)qpc_imu_end;
+  (void)qpc_lcd_begin;
+  (void)qpc_bus_lcd_row;
+  (void)qpc_lcd_end;
+  (void)qpc_bus_wait;
+  (void)qpc_estop_apply;
+  (void)qpc_parcel_out;
+  (void)qpc_impact;
+  (void)qpc_sorter_state;
+#endif
   tasks_start(NULL);
 #else
   task_ops.estop = estop_work;
@@ -595,6 +634,19 @@ int main(void)
   task_ops.gate_ms = GATE_PERIOD_MS;
   task_ops.imu_ms = &imu_period_ms;
   task_ops.lcd_ms = &lcd_period_ms;
+#if ARCH_QPC
+  task_ops.imu_begin = qpc_imu_begin;
+  task_ops.bus_imu_read = qpc_bus_imu_read;
+  task_ops.imu_end = qpc_imu_end;
+  task_ops.lcd_begin = qpc_lcd_begin;
+  task_ops.bus_lcd_row = qpc_bus_lcd_row;
+  task_ops.lcd_end = qpc_lcd_end;
+  task_ops.bus_wait = qpc_bus_wait;
+  task_ops.estop_apply = qpc_estop_apply;
+  task_ops.parcel_out = qpc_parcel_out;
+  task_ops.impact = qpc_impact;
+  task_ops.sorter_state = qpc_sorter_state;
+#endif
   tasks_start(&task_ops);
 #endif
 #endif
@@ -913,6 +965,7 @@ static void estop_task(void)
 }
 #endif
 
+#if !ARCH_QPC
 static void estop_run(void)
 {
   static uint16_t presses;
@@ -944,6 +997,73 @@ static void estop_run(void)
 #endif
   }
 }
+#else
+#if PERF
+static uint32_t qpc_estop_t_irq;
+#endif
+
+static uint8_t qpc_estop_check(void)
+{
+  estop_pending = 0;
+#if PERF
+  qpc_estop_t_irq = estop_irq_cyc;
+#endif
+  uint8_t pressed = (HAL_GPIO_ReadPin(BOARD_ESTOP_PORT, BOARD_ESTOP_PIN) == GPIO_PIN_RESET);
+  __HAL_GPIO_EXTI_CLEAR_FALLING_IT(BOARD_ESTOP_PIN);
+  HAL_NVIC_ClearPendingIRQ(BOARD_ESTOP_IRQ);
+  HAL_NVIC_EnableIRQ(BOARD_ESTOP_IRQ);
+  return pressed;
+}
+
+static void qpc_estop_apply(void)
+{
+  static uint16_t presses;
+#if PERF
+  uint32_t t_react = perf_now();
+  uint64_t us_react = perf_now_us64();
+#endif
+
+  LOCK(SORTER);
+  sorter_state_t st = sorter_estop_toggle(&sorter);
+  UNLOCK(SORTER);
+  presses++;
+  ev_log("ESTOP", "n=%u state=%s", (unsigned)presses, sorter_state_name(st));
+#if PERF
+  uint32_t lat = t_react - qpc_estop_t_irq;
+  perf_add(&st_estop_lat, lat);
+  evt("estop_irq", us_react - perf_cyc_to_us(lat, cyc_per_us));
+  evt("estop_react", us_react);
+#endif
+}
+
+static void qpc_parcel_out(uint16_t raw)
+{
+  LOCK(SORTER);
+  sorter_parcel_out(&sorter);
+  sorter_state_t st = sorter.state;
+  UNLOCK(SORTER);
+  ev_log("PARCEL_OUT", "gate=%u state=%s", (unsigned)raw, sorter_state_name(st));
+}
+
+static void qpc_impact(int16_t x, int16_t y, int16_t z)
+{
+  LOCK(SORTER);
+  int first = sorter_impact(&sorter);
+  UNLOCK(SORTER);
+  if (first)
+    ev_log("IMPACT", "amag_mg=%lu x_mg=%ld y_mg=%ld z_mg=%ld",
+           (unsigned long)impact_isqrt(impact_mag2(x, y, z)), (long)x, (long)y, (long)z);
+}
+
+static uint8_t qpc_sorter_state(void)
+{
+  return (uint8_t)sorter.state;
+}
+
+_Static_assert(SORTER_READY == TASKS_ST_READY && SORTER_SORTING == TASKS_ST_SORTING &&
+               SORTER_ESTOP == TASKS_ST_ESTOP && SORTER_FAULT == TASKS_ST_FAULT,
+               "стани sorter у sorter_tasks.h");
+#endif
 
 /* Кожні GATE_PERIOD_MS: відлік АЦП gate → поріг з гістерезисом (FR-01).
  * PARCEL_IN — подія для sort_task; PARCEL_OUT — посилка пройшла, SORTING → READY. */
@@ -967,11 +1087,13 @@ static uint16_t adc_read(uint32_t channel)
   return raw;
 }
 
-static void gate_run(void)
+static gate_event_t gate_run(void)
 {
   uint16_t raw = adc_read(BOARD_ADC_CH_GATE);
   READY_IF(health_ldr(raw, ADC_HAL_MAX_RAW) == HEALTH_OK, RDY_GATE);
-  switch (gate_update(&gate, raw)) {
+  gate_event_t ev = gate_update(&gate, raw);
+
+  switch (ev) {
   case GATE_EV_IN: {
     uint32_t cyc = 0;
 #if PERF
@@ -989,16 +1111,21 @@ static void gate_run(void)
     break;
   }
   case GATE_EV_OUT: {
+#if ARCH_QPC
+    tasks_parcel_out(raw);
+#else
     LOCK(SORTER);
     sorter_parcel_out(&sorter);
     sorter_state_t st = sorter.state;
     UNLOCK(SORTER);
     ev_log("PARCEL_OUT", "gate=%u state=%s", (unsigned)raw, sorter_state_name(st));
+#endif
     break;
   }
   default:
     break;
   }
+  return ev;
 }
 
 /* Подія PARCEL_IN: клас (FR-02), прапорець удару (FR-04), лоток (FR-05),
@@ -1066,34 +1193,47 @@ static void imu_task(void)
 }
 #endif
 
-static void imu_run(void)
+static void imu_process(mpu6050_status_t st, const mpu6050_accel_raw_t *a)
 {
-  mpu6050_accel_raw_t a;
-
-#ifdef TEST_I2C_FAULT
-  i2c_fault_probe();
-#endif
-
-  mpu6050_status_t st = mpu6050_read_accel_raw(&imu, &a);
   if (st != MPU6050_OK) {
     ev_log("IMU_ERR", "st=%s", mpu_err_name(st));
     return;
   }
 
-  int32_t x = mpu6050_raw_to_mg(a.x);
-  int32_t y = mpu6050_raw_to_mg(a.y);
-  int32_t z = mpu6050_raw_to_mg(a.z);
+  int32_t x = mpu6050_raw_to_mg(a->x);
+  int32_t y = mpu6050_raw_to_mg(a->y);
+  int32_t z = mpu6050_raw_to_mg(a->z);
   uint32_t m2 = impact_mag2(x, y, z);
   READY_IF(m2 >= (uint32_t)IMU_READY_MG * IMU_READY_MG, RDY_IMU);
   int first = 0;
   if (impact_over(m2)) {
+#if ARCH_QPC
+    tasks_impact((int16_t)x, (int16_t)y, (int16_t)z);
+#else
     LOCK(SORTER);
     first = sorter_impact(&sorter);
     UNLOCK(SORTER);
+#endif
   }
   if (first)
     ev_log("IMPACT", "amag_mg=%lu x_mg=%ld y_mg=%ld z_mg=%ld",
            (unsigned long)impact_isqrt(m2), (long)x, (long)y, (long)z);
+}
+
+static mpu6050_status_t imu_read(mpu6050_accel_raw_t *a)
+{
+#ifdef TEST_I2C_FAULT
+  i2c_fault_probe();
+#endif
+  return mpu6050_read_accel_raw(&imu, a);
+}
+
+static void imu_run(void)
+{
+  mpu6050_accel_raw_t a;
+  mpu6050_status_t st = imu_read(&a);
+
+  imu_process(st, &a);
 }
 
 /* Кожні LCD_PERIOD_MS: стан і лічильники A/B/REJECT (FR-06) або причина FAULT
@@ -1125,14 +1265,12 @@ static void lcd_task(void)
 /* due = 1 — настав період: новий текст рядків. lcd_chars = 0 — обидва рядки
  * повністю (34 записи HD44780, ~31,5 мс); N > 0 — лише символи, що змінилися,
  * не більше N за прохід, решта — на наступних проходах циклу (STAT lcd_part) */
-static void lcd_run(uint8_t due)
+static void lcd_format(void)
 {
   char *row0 = lcd_want[0];
   char *row1 = lcd_want[1];
   const size_t cap = sizeof lcd_want[0];
-  lcd_status_t st;
 
-  if (due) {
   /* Той самий текст, що давали "%-16s", "%-8s n=%-5lu" і "A%-4lu B%-4lu R%-3lu" */
   LOCK(SORTER);
   if (sorter.state == SORTER_FAULT) {
@@ -1150,33 +1288,49 @@ static void lcd_run(uint8_t due)
     lcdfmt_u32(row1, n, cap, sorter.count[BIN_REJECT], 3);
   }
   UNLOCK(SORTER);
-  }
+}
 
-#if PERF
-  uint32_t t0 = perf_now();
-#endif
-  /* У rtos - завжди повна перемальовка: порції lcd_chars - обхід обмеження 1 super
-   * loop, а задачу lcd і так витісняють (docs/rtos-design.md, розділ 6) */
-  if (lcd_chars == 0u || ARCH_RTOS) {
-    st = lcd1602_set_cursor(&lcd, 0, 0);
-    if (st == LCD_OK)
-      st = lcd1602_print(&lcd, row0);
-    if (st == LCD_OK)
-      st = lcd1602_set_cursor(&lcd, 0, 1);
-    if (st == LCD_OK)
-      st = lcd1602_print(&lcd, row1);
-  } else {
-    st = lcd_write_changed();
-  }
-#if PERF
-  perf_add(&st_lcd_update, perf_now() - t0);
-#endif
+static lcd_status_t lcd_write_row(uint8_t row, const char *text)
+{
+  lcd_status_t st = lcd1602_set_cursor(&lcd, 0, row);
+
+  if (st == LCD_OK)
+    st = lcd1602_print(&lcd, text);
+  return st;
+}
+
+static void lcd_finish(lcd_status_t st)
+{
   READY_IF(st == LCD_OK, RDY_LCD);
   if (st != LCD_OK) {
     memset(lcd_shown, 0, sizeof lcd_shown);   /* що на екрані — невідомо: наступний період перепише все */
     lcd_pending = 0;
     ev_log("LCD_ERR", "isr=0x%08lX", (unsigned long)i2c1_ctx.last_isr);
   }
+}
+
+static void lcd_run(uint8_t due)
+{
+  lcd_status_t st;
+
+  if (due)
+    lcd_format();
+#if PERF
+  uint32_t t0 = perf_now();
+#endif
+  /* У rtos - завжди повна перемальовка: порції lcd_chars - обхід обмеження 1 super
+   * loop, а задачу lcd і так витісняють (docs/rtos-design.md, розділ 6) */
+  if (lcd_chars == 0u || ARCH_RTOS) {
+    st = lcd_write_row(0, lcd_want[0]);
+    if (st == LCD_OK)
+      st = lcd_write_row(1, lcd_want[1]);
+  } else {
+    st = lcd_write_changed();
+  }
+#if PERF
+  perf_add(&st_lcd_update, perf_now() - t0);
+#endif
+  lcd_finish(st);
 }
 
 /* lcd_chars > 0: не більше lcd_chars символів, що відрізняються від показаних.
@@ -1218,16 +1372,112 @@ static lcd_status_t lcd_write_changed(void)
  * Робота задач rtos (Tasks/sorter_tasks.c): ті самі *_run, що в super loop; час і
  * чекання задає задача, тож тут лише облік TASK_RUN
  * ------------------------------------------------------------------------- */
+#if ARCH_QPC
+#if PERF
+static uint32_t t0_imu, t0_lcd, t0_lcd_update;
+#endif
+
+static void qpc_imu_begin(void)
+{
+#if PERF
+  t0_imu = perf_begin(PT_IMU);
+#endif
+}
+
+static uint8_t qpc_bus_imu_read(uint8_t raw[6])
+{
+  mpu6050_accel_raw_t a;
+  mpu6050_status_t st = imu_read(&a);
+
+  memcpy(raw, &a, sizeof a);
+  return (uint8_t)st;
+}
+
+static void qpc_imu_end(uint8_t st, const uint8_t raw[6])
+{
+  mpu6050_accel_raw_t a;
+
+  memcpy(&a, raw, sizeof a);
+  imu_process((mpu6050_status_t)st, &a);
+#if PERF
+  perf_end(PT_IMU, t0_imu);
+#endif
+}
+
+static void qpc_lcd_begin(char rows[2][TASKS_LCD_ROW])
+{
+#if PERF
+  t0_lcd = perf_begin(PT_LCD);
+#endif
+  lcd_format();
+  memcpy(rows, lcd_want, sizeof lcd_want);
+#if PERF
+  t0_lcd_update = perf_now();
+#endif
+}
+
+static uint8_t qpc_bus_lcd_row(uint8_t row, const char *text)
+{
+  return (uint8_t)lcd_write_row(row, text);
+}
+
+static void qpc_lcd_end(uint8_t st)
+{
+#if PERF
+  perf_add(&st_lcd_update, perf_now() - t0_lcd_update);
+#endif
+  lcd_finish((lcd_status_t)st);
+#if PERF
+  perf_end(PT_LCD, t0_lcd);
+#endif
+}
+
+static void qpc_bus_wait(uint32_t cyc)
+{
+#if PERF
+  perf_add(&st_bus_wait, cyc);
+#else
+  (void)cyc;
+#endif
+}
+
+_Static_assert(sizeof(mpu6050_accel_raw_t) == 6u, "BusDoneEvt.data - 6 байтів MPU");
+_Static_assert(sizeof lcd_want == 2u * TASKS_LCD_ROW, "рядки LCD у BusReqEvt");
+#endif
+
+#if ARCH_QPC
+static uint8_t estop_work(void)
+{
+  uint8_t pressed = 0;
+
+  if (estop_pending)
+    TASK_RUN(PT_ESTOP, pressed = qpc_estop_check());
+  return pressed;
+}
+#else
 static void estop_work(void)
 {
   if (estop_pending)
     TASK_RUN(PT_ESTOP, estop_run());
 }
+#endif
 
+#if ARCH_QPC
+_Static_assert(GATE_EV_IN == TASKS_GATE_IN && GATE_EV_OUT == TASKS_GATE_OUT, "події gate у sorter_tasks.h");
+
+static uint8_t gate_work(void)
+{
+  gate_event_t ev;
+
+  TASK_RUN(PT_GATE, ev = gate_run());
+  return (uint8_t)ev;
+}
+#else
 static void gate_work(void)
 {
   TASK_RUN(PT_GATE, gate_run());
 }
+#endif
 
 static void sort_work(uint32_t in_ms, uint32_t in_cyc)
 {
@@ -1341,6 +1591,9 @@ static void perf_setup(void)
   st_i2c.name = "i2c_xfer";
   st_uart_line.name = "uart_line";
   st_lcd_update.name = "lcd_update";
+#if ARCH_QPC
+  st_bus_wait.name = "bus_wait";
+#endif
   st_estop_lat.name = "estop_latency";
   st_parcel_lat.name = "parcel_latency";
   cyc_per_us = perf_hal_cpu_hz() / 1000000u;
@@ -1503,6 +1756,9 @@ static void stats_report(void)
 {
   static const perf_stat_t *const other[] = {
     &st_loop, &st_i2c, &st_uart_line, &st_lcd_update, &st_estop_lat, &st_parcel_lat,
+#if ARCH_QPC
+    &st_bus_wait,
+#endif
   };
   uint32_t rx, ore;
 
@@ -1560,6 +1816,9 @@ static void stats_reset(void)
 {
   static perf_stat_t *const other[] = {
     &st_loop, &st_i2c, &st_uart_line, &st_lcd_update, &st_estop_lat, &st_parcel_lat,
+#if ARCH_QPC
+    &st_bus_wait,
+#endif
   };
 
   for (unsigned i = 0; i < PT_COUNT; i++) {
@@ -1871,8 +2130,11 @@ static void cmd_run(const cli_cmd_t *cmd)
 {
   switch (cmd->id) {
   case CLI_HELP:
+    uart_hal_printf("%s", help_line);
+#ifdef LAB2_CAP
     for (size_t i = 0; i < sizeof help_lines / sizeof help_lines[0]; i++)
       uart_hal_printf("%s", help_lines[i]);
+#endif
     break;
   case CLI_STATUS: {
     sorter_t s;

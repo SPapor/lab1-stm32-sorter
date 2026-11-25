@@ -89,7 +89,7 @@ unsigned perf_hist_bin(int32_t jitter_us)
         return 0;
     if (jitter_us >= PERF_HIST_HI_US)
         return PERF_HIST_BINS - 1u;
-    return (unsigned)((jitter_us - PERF_HIST_LO_US) / PERF_HIST_STEP_US) + 1u;
+    return (uint32_t)(jitter_us - PERF_HIST_LO_US) / (uint32_t)PERF_HIST_STEP_US + 1u;
 }
 
 int32_t perf_hist_lo_us(unsigned bin)

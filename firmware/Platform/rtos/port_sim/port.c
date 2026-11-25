@@ -815,6 +815,7 @@ portDONT_DISCARD volatile uint32_t ulPortSimBlock = 0;          /* тік і Pen
 portDONT_DISCARD volatile uint32_t ulPortSimPendSVPending = 0;  /* пише PendSV_Handler */
 static volatile uint32_t ulSimBlockIrq = 0;                     /* переривання NVIC */
 static volatile uint32_t ulSimTaskDepth = 0;                    /* вкладеність секцій задачі */
+static volatile uint32_t ulSimTaskSaved = 0;
 static volatile uint32_t ulSimTicksPending = 0;
 static volatile uint32_t ulSimIrqPending = 0;                   /* лінії NVIC, біт на лінію */
 static volatile port_sim_counters_t xSimCounters;
@@ -851,6 +852,17 @@ static void prvSimExit( uint32_t ulPrev )
     {
         ulSimBlockIrq = ulPrev >> 1;
         ulPortSimBlock = ulPrev & 1UL;
+
+        if( ( ulSimBlockIrq == 0UL ) && ( ulSimIrqPending != 0UL ) )
+        {
+            uint32_t ulLines = ulSimIrqPending;
+
+            ulSimIrqPending = 0;
+            xSimCounters.deferred_irq++;
+            portNVIC_ISPR0_REG = ulLines;
+            portNVIC_ISER0_REG = ulLines;
+        }
+
         return;
     }
 
@@ -925,6 +937,35 @@ uint32_t port_sim_defer_irq( uint32_t ulIrqn )
     return 1;
 }
 
+uint32_t port_sim_tick_hold( void )
+{
+    uint32_t ulPrimask;
+    uint32_t ulPrev;
+
+    __asm volatile ( "mrs %0, PRIMASK" : "=r" ( ulPrimask ) );
+    portDISABLE_INTERRUPTS();
+    ulPrev = ( ulSimBlockIrq << 1 ) | ulPortSimBlock;
+    ulPortSimBlock = 1UL;
+    __asm volatile ( "msr PRIMASK, %0" ::"r" ( ulPrimask ) : "memory" );
+    return ulPrev;
+}
+
+void port_sim_tick_release( uint32_t ulPrev )
+{
+    uint32_t ulPrimask;
+
+    __asm volatile ( "mrs %0, PRIMASK" : "=r" ( ulPrimask ) );
+    portDISABLE_INTERRUPTS();
+
+    if( ulPrev == 0UL )
+    {
+        ulSimBlockIrq = 1UL;
+    }
+
+    prvSimExit( ulPrev );
+    __asm volatile ( "msr PRIMASK, %0" ::"r" ( ulPrimask ) : "memory" );
+}
+
 uint32_t port_sim_blocked( void )
 {
     return ulPortSimBlock;
@@ -976,8 +1017,14 @@ void vClearInterruptMask( uint32_t ulMask ) /* PRIVILEGED_FUNCTION */
 void vPortEnterCritical( void ) /* PRIVILEGED_FUNCTION */
 {
     portDISABLE_INTERRUPTS();
-    ( void ) prvSimEnter(); /* SIM_CRIT: спершу стан, потім глибина - див. prvSimEnter */
-    ulSimTaskDepth++;       /* SIM_CRIT */
+    {
+        uint32_t ulPrev = prvSimEnter(); /* SIM_CRIT: спершу стан, потім глибина - див. prvSimEnter */
+
+        if( ulSimTaskDepth++ == 0UL ) /* SIM_CRIT */
+        {
+            ulSimTaskSaved = ulPrev;
+        }
+    }
 
     if( prvSimStarted() ) /* SIM_CRIT */
     {
@@ -999,11 +1046,11 @@ void vPortExitCritical( void ) /* PRIVILEGED_FUNCTION */
     configASSERT( ulCriticalNesting );
     ulCriticalNesting--;
 
-    /* SIM_CRIT: найзовнішня секція задачі починалася зі стану 0 (перемкнути
-     * задачу під час секції нема чим, а секції ISR свій стан відновлюють) */
+    /* SIM_CRIT: найзовнішня секція задачі відновлює стан, з якого почалась:
+     * 0 або port_sim_tick_hold (секції ISR свій стан відновлюють самі) */
     if( --ulSimTaskDepth == 0UL )
     {
-        prvSimExit( 0UL );
+        prvSimExit( ulSimTaskSaved );
     }
 
     if( ulCriticalNesting == 0 )

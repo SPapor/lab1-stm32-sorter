@@ -1,0 +1,72 @@
+2 BOOT fw=lab5-qpc git=77dcb86f-dirty perf=1 arch=qpc lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=0      
+12 EVT t_us=12177 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=525 pair_cyc=1299
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+42 EVT t_us=41576 name=i2c_fail
+46 EVT t_us=45483 name=i2c_ok
+49 SELFTEST dev=mpu6050 status=OK who=0x68 tries=1
+124 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+129 SELFTEST dev=ldr_gate status=OK raw=1001
+134 SELFTEST dev=ldr_class status=OK raw=1001
+138 SELFTEST dev=servo status=OK pulse_us=1500
+143 SELFTEST_END ok=5 warn=0 fail=0
+184 STATE state=READY
+186 STACK used=656 reserved=1024 free=368 overflow=0
+191 HEAP arena=0 used=0 free=0
+198 QSTRESS_START run_s=120 isr_hz=2000
+2 BOOT fw=lab5-qpc git=77dcb86f-dirty perf=1 arch=qpc lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=0      
+12 EVT t_us=12177 name=boot
+15 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+21 PERF cpu_hz=48000000 now_cyc=525 pair_cyc=1299
+33 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+42 EVT t_us=41576 name=i2c_fail
+46 EVT t_us=45483 name=i2c_ok
+49 SELFTEST dev=mpu6050 status=OK who=0x68 tries=1
+124 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+129 SELFTEST dev=ldr_gate status=OK raw=1001
+134 SELFTEST dev=ldr_class status=OK raw=1001
+138 SELFTEST dev=servo status=OK pulse_us=1500
+143 SELFTEST_END ok=5 warn=0 fail=0
+184 STATE state=READY
+186 STACK used=656 reserved=1024 free=368 overflow=0
+191 HEAP arena=0 used=0 free=0
+198 QSTRESS_START run_s=120 isr_hz=2000
+10215 QSTRESS t_s=10 ping=1001/1001/1001 pub=500 sub=500/500 isr_pub=99 isr=19980/999 sent=999 rx=999 nopool=0 qfull=0
+10251 QSTRESS_ERR t_s=10 sum_err=0 seq_err=0 crit=0 nvic_off_free=0 pool_min=17 pool_use=0 stack_min=88
+10288 QSTRESS_TICK t_s=10 ktick=9998 ptick=9998 hook=9998 t10=999 t15=667 t23=435 one17=584 crit_task_n=92541 crit_isr_n=98238
+20210 QSTRESS t_s=20 ping=2000/2000/2000 pub=1000 sub=1000/1000 isr_pub=199 isr=39934/1997 sent=1997 rx=1997 nopool=0 qfull=0
+20250 QSTRESS_ERR t_s=20 sum_err=0 seq_err=0 crit=0 nvic_off_free=0 pool_min=17 pool_use=0 stack_min=88
+20280 QSTRESS_TICK t_s=20 ktick=19996 ptick=19996 hook=19996 t10=1999 t15=1333 t23=869 one17=1167 crit_task_n=185424 crit_isr_n=196380
+30209 QSTRESS t_s=30 ping=3000/3000/3000 pub=1500 sub=1500/1500 isr_pub=299 isr=59831/2992 sent=2992 rx=2992 nopool=0 qfull=0
+30254 QSTRESS_ERR t_s=30 sum_err=0 seq_err=0 crit=0 nvic_off_free=0 pool_min=17 pool_use=0 stack_min=88
+30280 QSTRESS_TICK t_s=30 ktick=29996 ptick=29996 hook=29996 t10=2999 t15=2000 t23=1304 one17=1750 crit_task_n=277839 crit_isr_n=294530
+40210 QSTRESS t_s=40 ping=4000/4000/4000 pub=2000 sub=2000/2000 isr_pub=399 isr=79833/3992 sent=3992 rx=3992 nopool=0 qfull=0
+40250 QSTRESS_ERR t_s=40 sum_err=0 seq_err=0 crit=0 nvic_off_free=0 pool_min=17 pool_use=0 stack_min=88
+40280 QSTRESS_TICK t_s=40 ktick=39998 ptick=39998 hook=39998 t10=3999 t15=2667 t23=1739 one17=2334 crit_task_n=370768 crit_isr_n=392724
+50209 QSTRESS t_s=50 ping=5000/5000/5000 pub=2500 sub=2500/2500 isr_pub=498 isr=99716/4986 sent=4986 rx=4986 nopool=0 qfull=0
+50255 QSTRESS_ERR t_s=50 sum_err=0 seq_err=0 crit=0 nvic_off_free=0 pool_min=17 pool_use=0 stack_min=88
+50289 QSTRESS_TICK t_s=50 ktick=49997 ptick=49997 hook=49997 t10=4999 t15=3333 t23=2174 one17=2917 crit_task_n=463348 crit_isr_n=490850
+60210 QSTRESS t_s=60 ping=6000/6000/6000 pub=3000 sub=3000/3000 isr_pub=598 isr=119704/5986 sent=5986 rx=5986 nopool=0 qfull=0
+60254 QSTRESS_ERR t_s=60 sum_err=0 seq_err=0 crit=0 nvic_off_free=0 pool_min=17 pool_use=0 stack_min=88
+60287 QSTRESS_TICK t_s=60 ktick=59995 ptick=59996 hook=59995 t10=5999 t15=4000 t23=2608 one17=3500 crit_task_n=556182 crit_isr_n=589001
+70210 QSTRESS t_s=70 ping=7000/7000/7000 pub=3500 sub=3500/3500 isr_pub=698 isr=139625/6982 sent=6982 rx=6982 nopool=0 qfull=0
+70250 QSTRESS_ERR t_s=70 sum_err=0 seq_err=0 crit=0 nvic_off_free=0 pool_min=17 pool_use=0 stack_min=88
+70280 QSTRESS_TICK t_s=70 ktick=69997 ptick=69997 hook=69997 t10=6999 t15=4667 t23=3043 one17=4084 crit_task_n=648983 crit_isr_n=687175
+80208 QSTRESS t_s=80 ping=8000/8000/8000 pub=4000 sub=4000/4000 isr_pub=797 isr=159554/7978 sent=7978 rx=7978 nopool=0 qfull=0
+80249 QSTRESS_ERR t_s=80 sum_err=0 seq_err=0 crit=0 nvic_off_free=0 pool_min=17 pool_use=0 stack_min=88
+80279 QSTRESS_TICK t_s=80 ktick=79996 ptick=79996 hook=79996 t10=7999 t15=5333 t23=3478 one17=4667 crit_task_n=741617 crit_isr_n=785316
+90208 QSTRESS t_s=90 ping=9000/9000/9000 pub=4500 sub=4500/4500 isr_pub=897 isr=179553/8978 sent=8978 rx=8978 nopool=0 qfull=0
+90249 QSTRESS_ERR t_s=90 sum_err=0 seq_err=0 crit=0 nvic_off_free=0 pool_min=17 pool_use=0 stack_min=84
+90276 QSTRESS_TICK t_s=90 ktick=89996 ptick=89996 hook=89996 t10=8999 t15=6000 t23=3913 one17=5250 crit_task_n=832547 crit_isr_n=883491
+100213 QSTRESS t_s=100 ping=10001/10001/10001 pub=5000 sub=5000/5000 isr_pub=997 isr=199437/9972 sent=9972 rx=9972 nopool=0 qfull=0
+100253 QSTRESS_ERR t_s=100 sum_err=0 seq_err=0 crit=0 nvic_off_free=0 pool_min=17 pool_use=0 stack_min=84
+100287 QSTRESS_TICK t_s=100 ktick=99998 ptick=99998 hook=99998 t10=9999 t15=6667 t23=4348 one17=5834 crit_task_n=924577 crit_isr_n=981655
+110208 QSTRESS t_s=110 ping=11000/11000/11000 pub=5500 sub=5500/5500 isr_pub=1097 isr=219425/10972 sent=10972 rx=10972 nopool=0 qfull=0
+110253 QSTRESS_ERR t_s=110 sum_err=0 seq_err=0 crit=0 nvic_off_free=0 pool_min=17 pool_use=0 stack_min=84
+110287 QSTRESS_TICK t_s=110 ktick=109995 ptick=109995 hook=109995 t10=10999 t15=7333 t23=4782 one17=6417 crit_task_n=1017492 crit_isr_n=1079794
+120207 QSTRESS t_s=120 ping=12000/12000/12000 pub=6000 sub=6000/6000 isr_pub=1196 isr=239316/11966 sent=11966 rx=11966 nopool=0 qfull=0
+120255 QSTRESS_ERR t_s=120 sum_err=0 seq_err=0 crit=0 nvic_off_free=0 pool_min=17 pool_use=0 stack_min=84
+120287 QSTRESS_TICK t_s=120 ktick=119995 ptick=119995 hook=119995 t10=11999 t15=8000 t23=5217 one17=7000 crit_task_n=1110191 crit_isr_n=1177937
+120335 QSTRESS_STACK t_s=120 report=84/704 sub2=152/416 pub=144/512 ping=96/448 sub1=152/416 pong=88/448 timer=136/416
+120369 QSTRESS_END t_s=120 result=PASS fail=0

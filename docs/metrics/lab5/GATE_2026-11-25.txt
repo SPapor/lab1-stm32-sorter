@@ -1,0 +1,4 @@
+# git=8a9f6fa0 build="ARCH=qpc LTO=1" - Wokwi для VS Code, ldr_gate мишею: 500 -> 10 -> 500 лк; уривок UART з S1_2026-11-25_0117 (той самий запуск)
+137941 PARCEL_IN gate=3413
+137942 SORT n=1 class=A raw=1001 impact=0 route=A angle=0 lat_ms=2
+143512 PARCEL_OUT gate=999 state=READY
