@@ -50,6 +50,8 @@ Wokwi для VS Code, `tools/run_scenario.py` по RFC2217 (`rfc2217://localhost
 | `QPCHECK_S1idle_2026-11-25.txt` | `ed392c78`, `TEST_QPCHECK=1 PERF=0`, без сценарію | без `FATAL` (до фіксу - `FATAL qp qf_port 630` на 1,7-8,2 с), проблема 86 |
 | `S1_2026-11-25_0117.log` | `8a9f6fa0`, AO Gate | 4 `I2C_RECOVER`, gate - 7 пропусків |
 | `GATE_2026-11-25.txt` | `8a9f6fa0`, той самий запуск, `ldr_gate` мишею | `PARCEL_IN` -> `SORT` -> `PARCEL_OUT` через стани Gate |
+| `S1_2026-11-25_0132.log` | `a2b2372c`, AO Sorter | 5 `I2C_RECOVER`, `FATAL` немає |
+| `SORTER_QPCHECK_2026-11-25.txt` | `a2b2372c`, `TEST_QPCHECK=1 PERF=0`, мишею | усі переходи Sorter, твердження «стан QP == `sorter.state`» не спрацювали |
 | `QSTRESS_2026-11-25.txt` | `TEST_QSTRESS=1` з виправленим `port_sim` (до коміту `e2bf64f`, той самий код) | ворота знову PASS, найменший запас стека 84 B |
 
 Бюджет пам'яті - `budget/` (свій README).
