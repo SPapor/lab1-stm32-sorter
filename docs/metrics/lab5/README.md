@@ -147,4 +147,4 @@ Wokwi для VS Code, `tools/run_scenario.py` по RFC2217 (`rfc2217://localhost
 | `d3159783` | `S1_2026-11-25_1545.log` | `0cc5a5b` |
 | `6.2.4_2026-11-25_1550.log` | `397b7739`, `TEST_I2C_FAULT=1`, `sda_gnd` мишею | gate 5,45 мс / 1 пропуск - проблема 93 виправлена |
 | `S1_2026-11-25_1552.log` | `397b7739`, продукт | перевірка: 5 `I2C_RECOVER`, imu 0 пропусків |
-
+| `6.2.7-fault_2026-11-25_qpc.log` | `397b7739`, qpc, `diagram.json` без MPU (тимчасово) | `FAULT reason=MPU_NOT_FOUND` на 208 мс, консоль жива |
