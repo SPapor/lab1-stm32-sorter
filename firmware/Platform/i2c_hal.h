@@ -35,9 +35,8 @@ typedef struct {
     uint8_t log_pending;      /* є відкладений рядок I2C_RECOVER */
     i2c_hal_log_fn log;       /* NULL - рядок одразу в UART (uart_hal) */
 #if ARCH_QPC && SIM_CRIT
-    uint8_t (*hold)(uint8_t on);
-    uint8_t stuck;
-    uint8_t bad_addr[2];
+    void (*hold)(uint8_t on);
+    uint8_t bad_addr[4];
 #endif
 } i2c_hal_ctx_t;
 

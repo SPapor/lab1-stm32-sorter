@@ -69,10 +69,23 @@ typedef HAL_StatusTypeDef (*xfer_fn_t)(I2C_HandleTypeDef *h, uint16_t addr8, uin
 /* Одна транзакція з повторами (FR-09). Статус беремо до recover: HAL_I2C_DeInit
  * скидає ErrorCode. Повтор запису PCF8574 чи регістра MPU-6050 безпечний: той самий
  * байт у той самий регістр / порт. */
+#if ARCH_QPC && SIM_CRIT
+static uint8_t *bad_slot(i2c_hal_ctx_t *c, uint8_t addr7)
+{
+    for (unsigned i = 0; i < sizeof c->bad_addr; i++)
+        if (c->bad_addr[i] == addr7)
+            return &c->bad_addr[i];
+    return NULL;
+}
+#endif
+
 static bus_status_t xfer(i2c_hal_ctx_t *c, xfer_fn_t fn, const char *where,
                          uint8_t addr7, uint8_t *data, size_t len)
 {
     bus_status_t st = BUS_ERR_OTHER;
+#if ARCH_QPC && SIM_CRIT
+    uint8_t skip = bad_slot(c, addr7) != NULL;
+#endif
 
     if (len > UINT16_MAX)
         return BUS_ERR_OTHER;
@@ -82,8 +95,10 @@ static bus_status_t xfer(i2c_hal_ctx_t *c, xfer_fn_t fn, const char *where,
         c->diag_tick_cyc = perf_now();
 #endif
 #if ARCH_QPC && SIM_CRIT
-        uint8_t held = c->hold != NULL && !c->stuck && addr7 != c->bad_addr[0] && addr7 != c->bad_addr[1]
-                       && c->hold(1u);
+        uint8_t held = c->hold != NULL && !skip;
+
+        if (held)
+            c->hold(1u);
 #endif
         HAL_StatusTypeDef s = fn(c->h, (uint16_t)(addr7 << 1), data, (uint16_t)len,
                                  I2C_HAL_TIMEOUT_MS);
@@ -93,19 +108,24 @@ static bus_status_t xfer(i2c_hal_ctx_t *c, xfer_fn_t fn, const char *where,
 #if ARCH_QPC && SIM_CRIT
         if (held)
             c->hold(0u);
-        c->stuck = st != BUS_OK && (c->last_isr & I2C_ISR_BUSY) != 0u;
+        if (st != BUS_OK && !skip && (c->last_err & HAL_I2C_ERROR_TIMEOUT) != 0u
+            && ((c->last_err & HAL_I2C_ERROR_AF) != 0u || (c->last_isr & I2C_ISR_BUSY) != 0u)) {
+            uint8_t *slot = bad_slot(c, 0u);
+
+            skip = 1u;
+            if (slot != NULL)
+                *slot = addr7;
+        }
 #endif
         if (st == BUS_OK)
             break;
     }
 #if ARCH_QPC && SIM_CRIT
-    if (st != BUS_OK && addr7 != c->bad_addr[0]) {
-        c->bad_addr[1] = c->bad_addr[0];
-        c->bad_addr[0] = addr7;
-    } else if (st == BUS_OK) {
-        for (unsigned i = 0; i < 2u; i++)
-            if (c->bad_addr[i] == addr7)
-                c->bad_addr[i] = 0;
+    if (st == BUS_OK && skip) {
+        uint8_t *slot = bad_slot(c, addr7);
+
+        if (slot != NULL)
+            *slot = 0u;
     }
 #endif
     return st;
@@ -137,9 +157,8 @@ void i2c_hal_bus_init(i2c_bus_t *bus, i2c_hal_ctx_t *ctx, I2C_HandleTypeDef *h, 
     ctx->log = NULL;
 #if ARCH_QPC && SIM_CRIT
     ctx->hold = NULL;
-    ctx->stuck = 0;
-    ctx->bad_addr[0] = 0;
-    ctx->bad_addr[1] = 0;
+    for (unsigned i = 0; i < sizeof ctx->bad_addr; i++)
+        ctx->bad_addr[i] = 0;
 #endif
 
     bus->write = hal_write;
@@ -150,6 +169,10 @@ void i2c_hal_bus_init(i2c_bus_t *bus, i2c_hal_ctx_t *ctx, I2C_HandleTypeDef *h, 
 void i2c_hal_set_tries(i2c_hal_ctx_t *ctx, uint8_t tries)
 {
     ctx->max_tries = tries ? tries : 1u;
+#if ARCH_QPC && SIM_CRIT
+    for (unsigned i = 0; i < sizeof ctx->bad_addr; i++)
+        ctx->bad_addr[i] = 0;
+#endif
 }
 
 void i2c_hal_set_log(i2c_hal_ctx_t *ctx, i2c_hal_log_fn log)
