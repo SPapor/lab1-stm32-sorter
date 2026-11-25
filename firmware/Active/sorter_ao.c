@@ -754,7 +754,7 @@ void tasks_report(tasks_out_fn out)
     tasks_list(out);
     out("BUSQ", "skip=%lu parcel_drop=%lu", (unsigned long)bus_skip, (unsigned long)parcel_drop);
     out("LOGQ", "len=%u max_used=%lu lines=%lu drop=%lu trunc=%lu rx_drop=%lu",
-        (unsigned)QLOG_LEN, (unsigned long)(QLOG_LEN + 2u - QF_getPoolMin(2U)), (unsigned long)log_lines,
+        (unsigned)QLOG_LEN, (unsigned long)(QLOG_LEN + 2u - QF_getPoolMin(3U)), (unsigned long)log_lines,
         (unsigned long)log_drop, (unsigned long)log_trunc, (unsigned long)rx_drop);
 #if SIM_CRIT
     {
