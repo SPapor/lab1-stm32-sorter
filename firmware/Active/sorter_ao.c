@@ -97,7 +97,11 @@ static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bu
 static QEvtPtr q_estop[2], q_gate[2], q_sort[3], q_bus[2], q_imu[3], q_console[QLOG_LEN + 3u], q_lcd[2];
 static QEvtPtr *const qsto[T_COUNT] = { q_estop, q_gate, q_sort, q_bus, q_imu, q_console, q_lcd };
 static QF_MPOOL_EL(ParcelEvt) pool_small[8];
+#if defined(TEST_Q93) && TEST_Q93 >= 3
+static QF_MPOOL_EL(BusReqEvt) pool_mid[1];
+#else
 static QF_MPOOL_EL(BusReqEvt) pool_mid[3];
+#endif
 static QTimeEvt logger_second;
 static char lcd_rows[2][TASKS_LCD_ROW];
 static QF_MPOOL_EL(LogEvt) pool_log[QLOG_LEN + 2u];
@@ -115,6 +119,7 @@ static uint32_t bus_skip;
 #ifdef TEST_QPCHECK
 static uint8_t qmax[T_COUNT];
 static volatile uint8_t qmax_new;
+static volatile uint32_t q93_drop;
 
 void qmax_note(const void *queue, uint32_t waiting)
 {
@@ -134,6 +139,22 @@ static void qmax_print(void)
     static const char *const key[T_COUNT] = { " estop=", " gate=", " sort=", " bus=", " imu=",
                                               " console=", " lcd=" };
 
+    static uint16_t pool_seen[3] = { 0xFFFFu, 0xFFFFu, 0xFFFFu };
+    static uint32_t drop_seen;
+    uint16_t pool[3];
+    uint32_t drop = q93_drop;
+
+    for (unsigned i = 0; i < 3u; i++) {
+        pool[i] = (uint16_t)QF_getPoolMin((uint_fast8_t)(i + 1u));
+        if (pool[i] != pool_seen[i]) {
+            pool_seen[i] = pool[i];
+            qmax_new = 1u;
+        }
+    }
+    if (drop != drop_seen) {
+        drop_seen = drop;
+        qmax_new = 1u;
+    }
     if (!qmax_new)
         return;
     qmax_new = 0u;
@@ -143,6 +164,13 @@ static void qmax_print(void)
         rtos_hal_raw_puts(key[i]);
         rtos_hal_raw_putu(qmax[i], 10u);
     }
+    rtos_hal_raw_puts(" pool_min=");
+    for (unsigned i = 0; i < 3u; i++) {
+        rtos_hal_raw_putu(pool[i], 10u);
+        rtos_hal_raw_puts(i < 2u ? "/" : "");
+    }
+    rtos_hal_raw_puts(" drop=");
+    rtos_hal_raw_putu(drop, 10u);
     rtos_hal_raw_puts("\r\n");
 }
 #endif
@@ -280,7 +308,12 @@ void tasks_estop_from_isr(void)
 
     if (!running)
         return;
+#if defined(TEST_Q93) && TEST_Q93 == 2
+    if (!QACTIVE_POST_X_FROM_ISR(&ao[T_ESTOP].super, &estop_evt, 1U, &woken, NULL))
+        q93_drop++;
+#else
     QACTIVE_POST_FROM_ISR(&ao[T_ESTOP].super, &estop_evt, &woken, NULL);
+#endif
     portYIELD_FROM_ISR(woken);
 }
 
@@ -516,7 +549,21 @@ static uint32_t now_cyc(void)
 
 static void bus_request(Ao *me, uint8_t op, uint8_t row)
 {
+#if defined(TEST_Q93) && TEST_Q93 == 4
+    BusReqEvt *r = Q_NEW_X(BusReqEvt, 0U, BUS_REQ_SIG);
+
+    if (r == NULL) {
+        BusDoneEvt *d = Q_NEW(BusDoneEvt, BUS_DONE_SIG);
+
+        q93_drop++;
+        d->op = op;
+        d->st = 3u;
+        QACTIVE_POST(&me->super, &d->super, &me->super);
+        return;
+    }
+#else
     BusReqEvt *r = Q_NEW(BusReqEvt, BUS_REQ_SIG);
+#endif
 
     r->reply_to = &me->super;
     r->op = op;

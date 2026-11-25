@@ -955,7 +955,9 @@ void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin != BOARD_ESTOP_PIN)
     return;
+#if !defined(TEST_Q93) || TEST_Q93 > 2
   HAL_NVIC_DisableIRQ(BOARD_ESTOP_IRQ);
+#endif
 #if PERF
   estop_irq_cyc = perf_now();
 #endif
