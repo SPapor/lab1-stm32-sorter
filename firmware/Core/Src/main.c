@@ -216,6 +216,9 @@ static perf_stat_t st_loop;          /* loop: повний прохід цикл
 static perf_stat_t st_i2c;           /* i2c_xfer: виклик шини, з повторами FR-09 */
 static perf_stat_t st_uart_line;     /* uart_line: один рядок журналу в UART */
 static perf_stat_t st_lcd_update;    /* lcd_update: обидва рядки LCD */
+#if ARCH_QPC
+static perf_stat_t st_bus_wait;
+#endif
 
 /* Затримки реакції (методичка 5.1, приклад 2) */
 static perf_stat_t st_estop_lat;     /* estop_latency: фронт PC13 → реакція */
@@ -330,6 +333,15 @@ static void imu_task(void);
 static void lcd_task(void);
 #else
 static void estop_work(void);
+#if ARCH_QPC
+static void qpc_imu_begin(void);
+static uint8_t qpc_bus_imu_read(uint8_t raw[6]);
+static void qpc_imu_end(uint8_t st, const uint8_t raw[6]);
+static void qpc_lcd_begin(char rows[2][TASKS_LCD_ROW]);
+static uint8_t qpc_bus_lcd_row(uint8_t row, const char *text);
+static void qpc_lcd_end(uint8_t st);
+static void qpc_bus_wait(uint32_t cyc);
+#endif
 static void gate_work(void);
 static void sort_work(uint32_t in_ms, uint32_t in_cyc);
 static void imu_work(void);
@@ -581,6 +593,15 @@ int main(void)
   (void)cli_work;
   (void)log_line;
   (void)rtos_second;
+#if ARCH_QPC
+  (void)qpc_imu_begin;
+  (void)qpc_bus_imu_read;
+  (void)qpc_imu_end;
+  (void)qpc_lcd_begin;
+  (void)qpc_bus_lcd_row;
+  (void)qpc_lcd_end;
+  (void)qpc_bus_wait;
+#endif
   tasks_start(NULL);
 #else
   task_ops.estop = estop_work;
@@ -595,6 +616,15 @@ int main(void)
   task_ops.gate_ms = GATE_PERIOD_MS;
   task_ops.imu_ms = &imu_period_ms;
   task_ops.lcd_ms = &lcd_period_ms;
+#if ARCH_QPC
+  task_ops.imu_begin = qpc_imu_begin;
+  task_ops.bus_imu_read = qpc_bus_imu_read;
+  task_ops.imu_end = qpc_imu_end;
+  task_ops.lcd_begin = qpc_lcd_begin;
+  task_ops.bus_lcd_row = qpc_bus_lcd_row;
+  task_ops.lcd_end = qpc_lcd_end;
+  task_ops.bus_wait = qpc_bus_wait;
+#endif
   tasks_start(&task_ops);
 #endif
 #endif
@@ -1241,6 +1271,79 @@ static lcd_status_t lcd_write_changed(void)
  * Робота задач rtos (Tasks/sorter_tasks.c): ті самі *_run, що в super loop; час і
  * чекання задає задача, тож тут лише облік TASK_RUN
  * ------------------------------------------------------------------------- */
+#if ARCH_QPC
+#if PERF
+static uint32_t t0_imu, t0_lcd, t0_lcd_update;
+#endif
+
+static void qpc_imu_begin(void)
+{
+#if PERF
+  t0_imu = perf_begin(PT_IMU);
+#endif
+}
+
+static uint8_t qpc_bus_imu_read(uint8_t raw[6])
+{
+  mpu6050_accel_raw_t a;
+  mpu6050_status_t st = imu_read(&a);
+
+  memcpy(raw, &a, sizeof a);
+  return (uint8_t)st;
+}
+
+static void qpc_imu_end(uint8_t st, const uint8_t raw[6])
+{
+  mpu6050_accel_raw_t a;
+
+  memcpy(&a, raw, sizeof a);
+  imu_process((mpu6050_status_t)st, &a);
+#if PERF
+  perf_end(PT_IMU, t0_imu);
+#endif
+}
+
+static void qpc_lcd_begin(char rows[2][TASKS_LCD_ROW])
+{
+#if PERF
+  t0_lcd = perf_begin(PT_LCD);
+#endif
+  lcd_format();
+  memcpy(rows, lcd_want, sizeof lcd_want);
+#if PERF
+  t0_lcd_update = perf_now();
+#endif
+}
+
+static uint8_t qpc_bus_lcd_row(uint8_t row, const char *text)
+{
+  return (uint8_t)lcd_write_row(row, text);
+}
+
+static void qpc_lcd_end(uint8_t st)
+{
+#if PERF
+  perf_add(&st_lcd_update, perf_now() - t0_lcd_update);
+#endif
+  lcd_finish((lcd_status_t)st);
+#if PERF
+  perf_end(PT_LCD, t0_lcd);
+#endif
+}
+
+static void qpc_bus_wait(uint32_t cyc)
+{
+#if PERF
+  perf_add(&st_bus_wait, cyc);
+#else
+  (void)cyc;
+#endif
+}
+
+_Static_assert(sizeof(mpu6050_accel_raw_t) == 6u, "BusDoneEvt.data - 6 байтів MPU");
+_Static_assert(sizeof lcd_want == 2u * TASKS_LCD_ROW, "рядки LCD у BusReqEvt");
+#endif
+
 static void estop_work(void)
 {
   if (estop_pending)
@@ -1364,6 +1467,9 @@ static void perf_setup(void)
   st_i2c.name = "i2c_xfer";
   st_uart_line.name = "uart_line";
   st_lcd_update.name = "lcd_update";
+#if ARCH_QPC
+  st_bus_wait.name = "bus_wait";
+#endif
   st_estop_lat.name = "estop_latency";
   st_parcel_lat.name = "parcel_latency";
   cyc_per_us = perf_hal_cpu_hz() / 1000000u;
@@ -1526,6 +1632,9 @@ static void stats_report(void)
 {
   static const perf_stat_t *const other[] = {
     &st_loop, &st_i2c, &st_uart_line, &st_lcd_update, &st_estop_lat, &st_parcel_lat,
+#if ARCH_QPC
+    &st_bus_wait,
+#endif
   };
   uint32_t rx, ore;
 
@@ -1583,6 +1692,9 @@ static void stats_reset(void)
 {
   static perf_stat_t *const other[] = {
     &st_loop, &st_i2c, &st_uart_line, &st_lcd_update, &st_estop_lat, &st_parcel_lat,
+#if ARCH_QPC
+    &st_bus_wait,
+#endif
   };
 
   for (unsigned i = 0; i < PT_COUNT; i++) {

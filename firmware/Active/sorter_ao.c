@@ -16,13 +16,15 @@
 #endif
 
 
-enum { T_ESTOP = 0, T_GATE, T_SORT, T_IMU, T_CLI, T_LOGGER, T_LCD, T_COUNT };
-enum { LOG_SIG = Q_USER_SIG, TICK_SIG, PARCEL_SIG, ESTOP_SIG, RX_SIG, SECOND_SIG };
+enum { T_ESTOP = 0, T_GATE, T_SORT, T_BUS, T_IMU, T_CLI, T_LOGGER, T_LCD, T_COUNT };
+enum { LOG_SIG = Q_USER_SIG, TICK_SIG, PARCEL_SIG, ESTOP_SIG, RX_SIG, SECOND_SIG, BUS_REQ_SIG, BUS_DONE_SIG };
+enum { BUS_MPU_READ = 0, BUS_LCD_ROW };
 
 #define QLOG_LEN        16u
 #define SB_RX_BYTES     64u
 #define USART2_IRQ_PRIO 3u
 #define SECOND_MS       1000u
+#define BUS_WAIT_TICKS  3u
 
 typedef struct {
     QEvt super;
@@ -40,10 +42,27 @@ typedef struct {
 } ParcelEvt;
 
 typedef struct {
+    QEvt super;
+    QActive *reply_to;
+    uint32_t t_post;
+    uint8_t op;
+    uint8_t row;
+    char text[TASKS_LCD_ROW];
+} BusReqEvt;
+
+typedef struct {
+    QEvt super;
+    uint8_t st;
+    uint8_t op;
+    uint8_t data[6];
+} BusDoneEvt;
+
+typedef struct {
     QActive super;
     QTimeEvt te;
-    QTimeEvt te2;
     uint16_t period;
+    uint8_t step;
+    uint8_t wait;
 } Ao;
 
 static const struct {
@@ -52,23 +71,28 @@ static const struct {
     uint8_t prio;
     uint8_t qlen;
 } task_def[T_COUNT] = {
-    [T_ESTOP]  = { "estop",  128u, 7u, 2u },
-    [T_GATE]   = { "gate",   128u, 6u, 2u },
-    [T_SORT]   = { "sort",   160u, 5u, 3u },
-    [T_IMU]    = { "imu",    192u, 4u, 2u },
+    [T_ESTOP]  = { "estop",  128u, 8u, 2u },
+    [T_GATE]   = { "gate",   128u, 7u, 2u },
+    [T_SORT]   = { "sort",   160u, 6u, 3u },
+    [T_BUS]    = { "bus",    176u, 5u, 3u },
+    [T_IMU]    = { "imu",    96u, 4u, 4u },
     [T_CLI]    = { "cli",    192u, 3u, 2u },
     [T_LOGGER] = { "logger", 160u, 2u, QLOG_LEN },
-    [T_LCD]    = { "lcd",    160u, 1u, 2u },
+    [T_LCD]    = { "lcd",    128u, 1u, 4u },
 };
 
 static const tasks_ops_t *ops;
 static Ao ao[T_COUNT];
-static StackType_t stk_estop[128], stk_gate[128], stk_sort[160], stk_imu[192], stk_cli[192],
-    stk_logger[160], stk_lcd[160];
-static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_imu, stk_cli, stk_logger, stk_lcd };
-static QEvtPtr q_estop[2], q_gate[2], q_sort[3], q_imu[2], q_cli[2], q_logger[QLOG_LEN], q_lcd[2];
-static QEvtPtr *const qsto[T_COUNT] = { q_estop, q_gate, q_sort, q_imu, q_cli, q_logger, q_lcd };
-static QF_MPOOL_EL(ParcelEvt) pool_small[4];
+static StackType_t stk_estop[128], stk_gate[128], stk_sort[160], stk_bus[176], stk_imu[96],
+    stk_cli[192], stk_logger[160], stk_lcd[128];
+static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_cli,
+                                           stk_logger, stk_lcd };
+static QEvtPtr q_estop[2], q_gate[2], q_sort[3], q_bus[3], q_imu[4], q_cli[2], q_logger[QLOG_LEN], q_lcd[4];
+static QEvtPtr *const qsto[T_COUNT] = { q_estop, q_gate, q_sort, q_bus, q_imu, q_cli, q_logger, q_lcd };
+static QF_MPOOL_EL(ParcelEvt) pool_small[8];
+static QF_MPOOL_EL(BusReqEvt) pool_mid[3];
+static QTimeEvt logger_second;
+static char lcd_rows[2][TASKS_LCD_ROW];
 static QF_MPOOL_EL(LogEvt) pool_log[QLOG_LEN + 2u];
 static volatile uint8_t running;
 static uint8_t rx_buf[SB_RX_BYTES];
@@ -78,6 +102,7 @@ static const QEvt estop_evt = QEVT_INITIALIZER(ESTOP_SIG);
 static const QEvt rx_evt = QEVT_INITIALIZER(RX_SIG);
 
 static uint32_t parcel_drop;
+static uint32_t bus_lost;
 static uint32_t log_drop;
 static uint32_t log_trunc;
 static uint32_t log_lines;
@@ -282,13 +307,88 @@ static QState sort_run(Ao *me, QEvt const *e)
     }
 }
 
-static QState imu_run(Ao *me, QEvt const *e)
+static uint32_t now_cyc(void)
+{
+#if PERF
+    return perf_now();
+#else
+    return 0u;
+#endif
+}
+
+static void bus_request(Ao *me, uint8_t op, uint8_t row)
+{
+    BusReqEvt *r = Q_NEW(BusReqEvt, BUS_REQ_SIG);
+
+    r->reply_to = &me->super;
+    r->op = op;
+    r->row = row;
+    if (op == BUS_LCD_ROW)
+        for (unsigned i = 0; i < TASKS_LCD_ROW; i++)
+            r->text[i] = lcd_rows[row][i];
+    r->t_post = now_cyc();
+    QACTIVE_POST(&ao[T_BUS].super, &r->super, &me->super);
+}
+
+static QState bus_serving(Ao *me, QEvt const *e)
+{
+    switch (e->sig) {
+    case BUS_REQ_SIG: {
+        BusReqEvt const *r = Q_EVT_CAST(BusReqEvt);
+        BusDoneEvt *d = Q_NEW(BusDoneEvt, BUS_DONE_SIG);
+
+        d->op = r->op;
+        if (r->op == BUS_MPU_READ) {
+#if SIM_CRIT
+            uint32_t hold;
+#endif
+            ops->bus_wait(now_cyc() - r->t_post);
+#if SIM_CRIT
+            hold = port_sim_tick_hold();
+#endif
+            d->st = ops->bus_imu_read(d->data);
+#if SIM_CRIT
+            port_sim_tick_release(hold);
+#endif
+        } else {
+            d->st = ops->bus_lcd_row(r->row, r->text);
+        }
+        QACTIVE_POST(r->reply_to, &d->super, &me->super);
+        return Q_HANDLED();
+    }
+    default:
+        return Q_SUPER(&QHsm_top);
+    }
+}
+
+static QState imu_reading(Ao *me, QEvt const *e);
+
+static QState imu_idle(Ao *me, QEvt const *e)
 {
     switch (e->sig) {
     case TICK_SIG:
         follow_knob(me, ops->imu_ms);
-        ops->imu();
-        return Q_HANDLED();
+        ops->imu_begin();
+        me->wait = 0u;
+        bus_request(me, BUS_MPU_READ, 0u);
+        return Q_TRAN(&imu_reading);
+    default:
+        return Q_SUPER(&QHsm_top);
+    }
+}
+
+static QState imu_reading(Ao *me, QEvt const *e)
+{
+    switch (e->sig) {
+    case BUS_DONE_SIG:
+        ops->imu_end(Q_EVT_CAST(BusDoneEvt)->st, Q_EVT_CAST(BusDoneEvt)->data);
+        return Q_TRAN(&imu_idle);
+    case TICK_SIG:
+        follow_knob(me, ops->imu_ms);
+        if (++me->wait < BUS_WAIT_TICKS)
+            return Q_HANDLED();
+        count(&bus_lost);
+        return Q_TRAN(&imu_idle);
     default:
         return Q_SUPER(&QHsm_top);
     }
@@ -328,13 +428,43 @@ static QState logger_run(Ao *me, QEvt const *e)
     }
 }
 
-static QState lcd_run(Ao *me, QEvt const *e)
+static QState lcd_drawing(Ao *me, QEvt const *e);
+
+static QState lcd_idle(Ao *me, QEvt const *e)
 {
     switch (e->sig) {
     case TICK_SIG:
         follow_knob(me, ops->lcd_ms);
-        ops->lcd();
+        ops->lcd_begin(lcd_rows);
+        me->step = 0u;
+        me->wait = 0u;
+        bus_request(me, BUS_LCD_ROW, 0u);
+        return Q_TRAN(&lcd_drawing);
+    default:
+        return Q_SUPER(&QHsm_top);
+    }
+}
+
+static QState lcd_drawing(Ao *me, QEvt const *e)
+{
+    switch (e->sig) {
+    case BUS_DONE_SIG: {
+        uint8_t st = Q_EVT_CAST(BusDoneEvt)->st;
+
+        if (st != 0u || me->step != 0u) {
+            ops->lcd_end(st);
+            return Q_TRAN(&lcd_idle);
+        }
+        me->step = 1u;
+        bus_request(me, BUS_LCD_ROW, 1u);
         return Q_HANDLED();
+    }
+    case TICK_SIG:
+        follow_knob(me, ops->lcd_ms);
+        if (++me->wait < BUS_WAIT_TICKS)
+            return Q_HANDLED();
+        count(&bus_lost);
+        return Q_TRAN(&lcd_idle);
     default:
         return Q_SUPER(&QHsm_top);
     }
@@ -352,19 +482,21 @@ static QState ao_initial(Ao *me, void const *par)
         return Q_TRAN(&gate_run);
     case T_SORT:
         return Q_TRAN(&sort_run);
+    case T_BUS:
+        return Q_TRAN(&bus_serving);
     case T_IMU:
         if (ops->imu != NULL)
             arm_period(me, *ops->imu_ms);
-        return Q_TRAN(&imu_run);
+        return Q_TRAN(&imu_idle);
     case T_CLI:
         return Q_TRAN(&cli_run);
     case T_LOGGER:
-        QTimeEvt_armX(&me->te2, ms_ticks(SECOND_MS), ms_ticks(SECOND_MS));
+        QTimeEvt_armX(&logger_second, ms_ticks(SECOND_MS), ms_ticks(SECOND_MS));
         return Q_TRAN(&logger_run);
     default:
         if (ops->lcd != NULL)
             arm_period(me, *ops->lcd_ms);
-        return Q_TRAN(&lcd_run);
+        return Q_TRAN(&lcd_idle);
     }
 }
 
@@ -390,6 +522,7 @@ void tasks_start(const tasks_ops_t *o)
     (void)uart_unlock;
     (void)pool_log;
     (void)pool_small;
+    (void)pool_mid;
     (void)qsto;
     (void)stk;
     qstress_start();
@@ -397,11 +530,12 @@ void tasks_start(const tasks_ops_t *o)
     ops = o;
     QF_init();
     QF_poolInit(pool_small, sizeof pool_small, sizeof pool_small[0]);
+    QF_poolInit(pool_mid, sizeof pool_mid, sizeof pool_mid[0]);
     QF_poolInit(pool_log, sizeof pool_log, sizeof pool_log[0]);
+    QTimeEvt_ctorX(&logger_second, &ao[T_LOGGER].super, SECOND_SIG, 0U);
     for (unsigned i = 0; i < T_COUNT; i++) {
         QActive_ctor(&ao[i].super, Q_STATE_CAST(&ao_initial));
         QTimeEvt_ctorX(&ao[i].te, &ao[i].super, TICK_SIG, 0U);
-        QTimeEvt_ctorX(&ao[i].te2, &ao[i].super, SECOND_SIG, 0U);
         QActive_setAttr(&ao[i].super, TASK_NAME_ATTR, task_def[i].name);
         QActive_start(&ao[i].super, task_def[i].prio, qsto[i], task_def[i].qlen, stk[i],
                       task_def[i].words * sizeof(StackType_t), NULL);
@@ -445,7 +579,7 @@ void tasks_list(tasks_out_fn out)
         vTaskGetInfo(th(i), &s, pdTRUE, eInvalid);
         rt = s.ulRunTimeCounter - rt_base[i];
         out("TASK", "name=%s prio=%lu cpu_pm=%lu stack_free=%u state=%s run_ms=%lu",
-            s.pcTaskName, (unsigned long)s.uxBasePriority,
+            s.pcTaskName, (unsigned long)s.uxCurrentPriority,
             (unsigned long)per_mille(rt, total),
             (unsigned)(s.usStackHighWaterMark * sizeof(StackType_t)),
             (s.eCurrentState <= eDeleted) ? state_name[s.eCurrentState] : "?",
@@ -460,6 +594,7 @@ void tasks_report(tasks_out_fn out)
 #endif
 
     tasks_list(out);
+    out("BUSQ", "lost=%lu parcel_drop=%lu", (unsigned long)bus_lost, (unsigned long)parcel_drop);
     out("LOGQ", "len=%u max_used=%lu lines=%lu drop=%lu trunc=%lu rx_drop=%lu",
         (unsigned)QLOG_LEN, (unsigned long)(QLOG_LEN + 2u - QF_getPoolMin(2U)), (unsigned long)log_lines,
         (unsigned long)log_drop, (unsigned long)log_trunc, (unsigned long)rx_drop);
@@ -492,6 +627,8 @@ void tasks_stats_reset(void)
 #if SIM_CRIT
     port_sim_counters(&sim_base);
 #endif
+    bus_lost = 0;
+    parcel_drop = 0;
     log_drop = 0;
     log_trunc = 0;
     log_lines = 0;

@@ -13,6 +13,7 @@
 
 /* Скільки аргументів формату несе запис черги журналу (найбільше - рядок SORT) */
 #define TASKS_LOG_ARGS 7u
+#define TASKS_LCD_ROW 17u
 
 typedef void (*tasks_out_fn)(const char *event, const char *fmt, ...)
     __attribute__((format(printf, 2, 3)));
@@ -31,6 +32,15 @@ typedef struct {
     uint16_t gate_ms;
     const volatile uint16_t *imu_ms;         /* ручки set imu_ms і set lcd_ms */
     const volatile uint16_t *lcd_ms;
+#if ARCH_QPC
+    void (*imu_begin)(void);
+    uint8_t (*bus_imu_read)(uint8_t raw[6]);
+    void (*imu_end)(uint8_t st, const uint8_t raw[6]);
+    void (*lcd_begin)(char rows[2][TASKS_LCD_ROW]);
+    uint8_t (*bus_lcd_row)(uint8_t row, const char *text);
+    void (*lcd_end)(uint8_t st);
+    void (*bus_wait)(uint32_t cyc);
+#endif
 } tasks_ops_t;
 
 typedef enum {
