@@ -132,16 +132,32 @@ int tasks_running(void)
     return running;
 }
 
+#if SIM_CRIT
+static uint32_t i2c_hold;
+#endif
+
 void tasks_lock(tasks_lock_t l)
 {
-    if (running && l != TASKS_LOCK_I2C)
+    if (!running)
+        return;
+    if (l != TASKS_LOCK_I2C)
         vTaskSuspendAll();
+#if SIM_CRIT
+    else
+        i2c_hold = port_sim_tick_hold();
+#endif
 }
 
 void tasks_unlock(tasks_lock_t l)
 {
-    if (running && l != TASKS_LOCK_I2C)
+    if (!running)
+        return;
+    if (l != TASKS_LOCK_I2C)
         (void)xTaskResumeAll();
+#if SIM_CRIT
+    else
+        port_sim_tick_release(i2c_hold);
+#endif
 }
 
 static void uart_lock(void)
@@ -248,13 +264,6 @@ void USART2_IRQHandler(void)
     portYIELD_FROM_ISR(woken);
 }
 
-static void arm_period(Ao *me, uint16_t ms)
-{
-    uint32_t t = ms_ticks(ms);
-
-    QTimeEvt_armX(&me->te, t, t);
-}
-
 static void arm_next(Ao *me, const volatile uint16_t *knob)
 {
     uint16_t now = (uint16_t)xTaskGetTickCount();
@@ -303,9 +312,9 @@ static QState estop_debouncing(Ao *me, QEvt const *e)
 
 static QState gate_run(Ao *me, QEvt const *e)
 {
-    (void)me;
     switch (e->sig) {
     case TICK_SIG:
+        arm_next(me, &ops->gate_ms);
         ops->gate();
         return Q_HANDLED();
     default:
@@ -357,17 +366,8 @@ static QState bus_serving(Ao *me, QEvt const *e)
 
         d->op = r->op;
         if (r->op == BUS_MPU_READ) {
-#if SIM_CRIT
-            uint32_t hold;
-#endif
             ops->bus_wait(now_cyc() - r->t_post);
-#if SIM_CRIT
-            hold = port_sim_tick_hold();
-#endif
             d->st = ops->bus_imu_read(d->data);
-#if SIM_CRIT
-            port_sim_tick_release(hold);
-#endif
         } else {
             d->st = ops->bus_lcd_row(r->row, r->text);
         }
@@ -490,7 +490,7 @@ static QState ao_initial(Ao *me, void const *par)
         ops->estop();
         return Q_TRAN(&estop_armed);
     case T_GATE:
-        arm_period(me, ops->gate_ms);
+        arm_next(me, &ops->gate_ms);
         return Q_TRAN(&gate_run);
     case T_SORT:
         return Q_TRAN(&sort_run);
