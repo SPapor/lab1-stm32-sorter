@@ -79,19 +79,19 @@ static const struct {
     uint8_t prio;
     uint8_t qlen;
 } task_def[T_COUNT] = {
-    [T_ESTOP]   = { "estop",   128u, 7u, 2u },
-    [T_GATE]    = { "gate",    128u, 6u, 2u },
-    [T_SORT]    = { "sort",    160u, 5u, 3u },
-    [T_BUS]     = { "bus",     176u, 4u, 2u },
-    [T_IMU]     = { "imu",     112u, 3u, 3u },
-    [T_CONSOLE] = { "console", 192u, 2u, QLOG_LEN + 3u },
-    [T_LCD]     = { "lcd",     128u, 1u, 2u },
+    [T_ESTOP]   = { "estop",   102u, 7u, 2u },
+    [T_GATE]    = { "gate",    124u, 6u, 2u },
+    [T_SORT]    = { "sort",    158u, 5u, 3u },
+    [T_BUS]     = { "bus",     178u, 4u, 2u },
+    [T_IMU]     = { "imu",     116u, 3u, 3u },
+    [T_CONSOLE] = { "console", 208u, 2u, QLOG_LEN + 3u },
+    [T_LCD]     = { "lcd",     116u, 1u, 2u },
 };
 
 static const tasks_ops_t *ops;
 static Ao ao[T_COUNT];
-static StackType_t stk_estop[128], stk_gate[128], stk_sort[160], stk_bus[176], stk_imu[112],
-    stk_console[192], stk_lcd[128];
+static StackType_t stk_estop[102], stk_gate[124], stk_sort[158], stk_bus[178], stk_imu[116],
+    stk_console[208], stk_lcd[116];
 static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_console,
                                            stk_lcd };
 static QEvtPtr q_estop[2], q_gate[2], q_sort[3], q_bus[2], q_imu[3], q_console[QLOG_LEN + 3u], q_lcd[2];
