@@ -47,6 +47,14 @@ endif
 ifeq ($(TEST_CRITCOST)$(ARCH_ON),1superloop)
 $(error TEST_CRITCOST=1 лише для ARCH=rtos)
 endif
+L5_NAMES := mutex logblock busblock late sensor stack starve
+L5_ON := $(strip $(foreach i,1 2 3 4 5 6 7,$(if $(filter $(TEST_L5),$(word $(i),$(L5_NAMES))),$(i))))
+L5_ON := $(if $(L5_ON),$(L5_ON),0)
+ifneq ($(L5_ON),0)
+ifneq ($(ARCH_ON),qpc)
+$(error TEST_L5 лише для ARCH=qpc)
+endif
+endif
 Q93_ON := $(if $(filter estop,$(TEST_Q93)),1,$(if $(filter estopx,$(TEST_Q93)),2,$(if $(filter pool,$(TEST_Q93)),3,$(if $(filter poolx,$(TEST_Q93)),4,0))))
 ifneq ($(Q93_ON),0)
 ifneq ($(ARCH_ON),qpc)
@@ -225,6 +233,7 @@ BUILD_OPTS := LAB2_CAP TEST_I2C_FAULT TEST_I2C_DIAG TEST_PRIMASK TEST_BOOTMARK T
 C_DEFS += $(foreach o,$(BUILD_OPTS),$(if $(filter 1,$($(o))),-D$(o)))
 C_DEFS += $(if $(filter-out 0,$(INV_ON)),-DTEST_INVERSION=$(INV_ON))
 C_DEFS += $(if $(filter-out 0,$(Q93_ON)),-DTEST_Q93=$(Q93_ON))
+C_DEFS += $(if $(filter-out 0,$(L5_ON)),-DTEST_L5=$(L5_ON))
 C_DEFS += $(TEST_OS_DEFS)
 
 # PERF завжди визначений (#if PERF): 0 лише явно, порожнє значення = 1.
@@ -259,7 +268,7 @@ endif
 BUILD_CFG  = $(BUILD_DIR)/build.cfg
 BUILD_LINE = ARCH=$(ARCH_ON) LTO=$(LTO_ON) TICK_HZ=$(TICK_HZ_ON) SIM_CRIT=$(SIM_CRIT_ON) ASSERT=$(ASSERT_ON) \
              $(foreach o,$(BUILD_OPTS),$(o)=$(if $(filter 1,$($(o))),1,0)) \
-             TEST_INVERSION=$(if $(INV_NAME),$(INV_NAME),0) TEST_Q93=$(if $(filter-out 0,$(Q93_ON)),$(TEST_Q93),0) TEST_OS=$(TEST_OS_ON) PERF=$(PERF_ON) \
+             TEST_INVERSION=$(if $(INV_NAME),$(INV_NAME),0) TEST_Q93=$(if $(filter-out 0,$(Q93_ON)),$(TEST_Q93),0) TEST_L5=$(if $(filter-out 0,$(L5_ON)),$(TEST_L5),0) TEST_OS=$(TEST_OS_ON) PERF=$(PERF_ON) \
              GCC=$(shell $(CC) -dumpfullversion) \
              NEWLIB=$(shell printf '\043include <newlib.h>\n' | $(CC) -dM -E -x c - | sed -n 's/.*_NEWLIB_VERSION "\(.*\)"/\1/p')
 
