@@ -96,6 +96,9 @@ endif
 ifeq ($(TEST_QSTRESS)$(TEST_QPCHECK),11)
 $(error TEST_QSTRESS і TEST_QPCHECK - окремі збірки)
 endif
+ifeq ($(LAB2_CAP),1)
+$(error LAB2_CAP не для ARCH=qpc: cap lcd пише в LCD повз Bus)
+endif
 ifneq ($(Q93_ON),0)
 ifneq ($(TEST_QPCHECK),1)
 $(error TEST_Q93 - лише разом з TEST_QPCHECK=1)
