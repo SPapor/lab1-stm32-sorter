@@ -82,7 +82,7 @@ static bus_status_t xfer(i2c_hal_ctx_t *c, xfer_fn_t fn, const char *where,
         c->diag_tick_cyc = perf_now();
 #endif
 #if ARCH_QPC && SIM_CRIT
-        uint8_t held = c->hold != NULL && c->hold(1u);
+        uint8_t held = c->hold != NULL && !c->stuck && addr7 != c->bad_addr && c->hold(1u);
 #endif
         HAL_StatusTypeDef s = fn(c->h, (uint16_t)(addr7 << 1), data, (uint16_t)len,
                                  I2C_HAL_TIMEOUT_MS);
@@ -92,10 +92,17 @@ static bus_status_t xfer(i2c_hal_ctx_t *c, xfer_fn_t fn, const char *where,
 #if ARCH_QPC && SIM_CRIT
         if (held)
             c->hold(0u);
+        c->stuck = st != BUS_OK && (c->last_isr & I2C_ISR_BUSY) != 0u;
 #endif
         if (st == BUS_OK)
             break;
     }
+#if ARCH_QPC && SIM_CRIT
+    if (st != BUS_OK)
+        c->bad_addr = addr7;
+    else if (addr7 == c->bad_addr)
+        c->bad_addr = 0;
+#endif
     return st;
 }
 
@@ -125,6 +132,8 @@ void i2c_hal_bus_init(i2c_bus_t *bus, i2c_hal_ctx_t *ctx, I2C_HandleTypeDef *h, 
     ctx->log = NULL;
 #if ARCH_QPC && SIM_CRIT
     ctx->hold = NULL;
+    ctx->stuck = 0;
+    ctx->bad_addr = 0;
 #endif
 
     bus->write = hal_write;

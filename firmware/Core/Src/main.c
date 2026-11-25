@@ -1537,8 +1537,6 @@ static uint8_t i2c_try_hold(uint8_t on)
     UNLOCK(I2C);
     return 0u;
   }
-  if (HAL_GPIO_ReadPin(BOARD_I2C_PORT, BOARD_I2C_SDA_PIN) == GPIO_PIN_RESET)
-    return 0u;
   LOCK(I2C);
   return 1u;
 }

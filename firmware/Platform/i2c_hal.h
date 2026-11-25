@@ -36,6 +36,8 @@ typedef struct {
     i2c_hal_log_fn log;       /* NULL - рядок одразу в UART (uart_hal) */
 #if ARCH_QPC && SIM_CRIT
     uint8_t (*hold)(uint8_t on);
+    uint8_t stuck;
+    uint8_t bad_addr;
 #endif
 } i2c_hal_ctx_t;
 
