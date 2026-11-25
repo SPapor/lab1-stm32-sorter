@@ -578,7 +578,7 @@ A + B разом - -540 B, прогноз тоді ~32 260-32 360, вільно 
 
 ### AO Bus
 
-Bus (пріоритет 5 - вище клієнтів Imu 4 і Lcd 1, нижче Gate і Sorter) - єдиний, хто ходить у I²C: `BUS_REQ` з операцією `BUS_MPU_READ` або `BUS_LCD_ROW` (рядок LCD цілком, варіант D), відповідь `BUS_DONE` з 6 байтами MPU або статусом. Imu - стани `idle`/`reading`, Lcd - `idle`/`drawing` (рядок 0, потім рядок 1). Якщо `BUS_DONE` не прийшов за 3 тіки (`BUS_WAIT_TICKS`), клієнт повертається в `idle` і рахує втрату (`BUSQ lost=`). Код - проміжний шар `Active/sorter_ao.c` (Bus, Imu, Lcd) і операції в `main.c` (`qpc_*`): читання MPU, запис рядка, облік `STAT imu`, `lcd`, `lcd_update`, `bus_wait`.
+Bus (пріоритет 5 - вище клієнтів Imu 4 і Lcd 1, нижче Gate і Sorter) - єдиний, хто ходить у I²C: `BUS_REQ` з операцією `BUS_MPU_READ` або `BUS_LCD_ROW` (рядок LCD цілком, варіант D), відповідь `BUS_DONE` з 6 байтами MPU або статусом. Imu - стани `idle`/`reading`, Lcd - `idle`/`drawing` (рядок 0, потім рядок 1). (Так до `2e12fef`; тепер `BUS_LCD_ROW` - шматок рядка з 4 символів, 8 запитів на перемальовку, курсор - лише на початку рядка: «Крок 4, доробка».) Якщо `BUS_DONE` не прийшов за 3 тіки (`BUS_WAIT_TICKS`), клієнт повертається в `idle` і рахує втрату (`BUSQ lost=`). Код - проміжний шар `Active/sorter_ao.c` (Bus, Imu, Lcd) і операції в `main.c` (`qpc_*`): читання MPU, запис рядка, облік `STAT imu`, `lcd`, `lcd_update`, `bus_wait`.
 
 Читання MPU Bus робить під `port_sim_tick_hold` (лише `SIM_CRIT=1`): тік ядра з хуком QP чекає до кінця читання, переривання - ні. Це обхід проблеми 81: без нього у Wokwi губиться байт читання (809 `I2C_RECOVER` за S1), з ним - 3 (`S1_2026-11-25_0041.log`).
 
