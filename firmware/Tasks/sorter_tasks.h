@@ -14,13 +14,19 @@
 /* Скільки аргументів формату несе запис черги журналу (найбільше - рядок SORT) */
 #define TASKS_LOG_ARGS 7u
 #define TASKS_LCD_ROW 17u
+#define TASKS_GATE_IN 1u
+#define TASKS_GATE_OUT 2u
 
 typedef void (*tasks_out_fn)(const char *event, const char *fmt, ...)
     __attribute__((format(printf, 2, 3)));
 
 typedef struct {
     void (*estop)(void);                     /* після антибрязкоту; сама перевіряє, чи був фронт */
+#if ARCH_QPC
+    uint8_t (*gate)(void);
+#else
     void (*gate)(void);                      /* кожні gate_ms */
+#endif
     void (*sort)(uint32_t in_ms, uint32_t in_cyc);   /* PARCEL_IN з черги */
     void (*imu)(void);                       /* кожні *imu_ms; NULL - MPU немає, задача спить */
     void (*lcd)(void);                       /* кожні *lcd_ms; NULL - LCD немає, задача спить */

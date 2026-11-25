@@ -342,7 +342,11 @@ static uint8_t qpc_bus_lcd_row(uint8_t row, const char *text);
 static void qpc_lcd_end(uint8_t st);
 static void qpc_bus_wait(uint32_t cyc);
 #endif
+#if ARCH_QPC
+static uint8_t gate_work(void);
+#else
 static void gate_work(void);
+#endif
 static void sort_work(uint32_t in_ms, uint32_t in_cyc);
 static void imu_work(void);
 static void lcd_work(void);
@@ -383,7 +387,7 @@ static void cmd_run(const cli_cmd_t *cmd);
 static void con_write(const char *s, int n);
 static void uart_rx_run(int ch);
 static void estop_run(void);
-static void gate_run(void);
+static gate_event_t gate_run(void);
 static void sort_run(uint32_t in_ms, uint32_t in_cyc);
 static void imu_run(void);
 static void lcd_run(uint8_t due);
@@ -997,11 +1001,13 @@ static uint16_t adc_read(uint32_t channel)
   return raw;
 }
 
-static void gate_run(void)
+static gate_event_t gate_run(void)
 {
   uint16_t raw = adc_read(BOARD_ADC_CH_GATE);
   READY_IF(health_ldr(raw, ADC_HAL_MAX_RAW) == HEALTH_OK, RDY_GATE);
-  switch (gate_update(&gate, raw)) {
+  gate_event_t ev = gate_update(&gate, raw);
+
+  switch (ev) {
   case GATE_EV_IN: {
     uint32_t cyc = 0;
 #if PERF
@@ -1029,6 +1035,7 @@ static void gate_run(void)
   default:
     break;
   }
+  return ev;
 }
 
 /* Подія PARCEL_IN: клас (FR-02), прапорець удару (FR-04), лоток (FR-05),
@@ -1350,10 +1357,22 @@ static void estop_work(void)
     TASK_RUN(PT_ESTOP, estop_run());
 }
 
+#if ARCH_QPC
+_Static_assert(GATE_EV_IN == TASKS_GATE_IN && GATE_EV_OUT == TASKS_GATE_OUT, "події gate у sorter_tasks.h");
+
+static uint8_t gate_work(void)
+{
+  gate_event_t ev;
+
+  TASK_RUN(PT_GATE, ev = gate_run());
+  return (uint8_t)ev;
+}
+#else
 static void gate_work(void)
 {
   TASK_RUN(PT_GATE, gate_run());
 }
+#endif
 
 static void sort_work(uint32_t in_ms, uint32_t in_cyc)
 {

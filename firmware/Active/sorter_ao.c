@@ -310,12 +310,28 @@ static QState estop_debouncing(Ao *me, QEvt const *e)
     }
 }
 
-static QState gate_run(Ao *me, QEvt const *e)
+static QState gate_occupied(Ao *me, QEvt const *e);
+
+static QState gate_clear(Ao *me, QEvt const *e)
 {
     switch (e->sig) {
     case TICK_SIG:
         arm_next(me, &ops->gate_ms);
-        ops->gate();
+        if (ops->gate() == TASKS_GATE_IN)
+            return Q_TRAN(&gate_occupied);
+        return Q_HANDLED();
+    default:
+        return Q_SUPER(&QHsm_top);
+    }
+}
+
+static QState gate_occupied(Ao *me, QEvt const *e)
+{
+    switch (e->sig) {
+    case TICK_SIG:
+        arm_next(me, &ops->gate_ms);
+        if (ops->gate() == TASKS_GATE_OUT)
+            return Q_TRAN(&gate_clear);
         return Q_HANDLED();
     default:
         return Q_SUPER(&QHsm_top);
@@ -491,7 +507,7 @@ static QState ao_initial(Ao *me, void const *par)
         return Q_TRAN(&estop_armed);
     case T_GATE:
         arm_next(me, &ops->gate_ms);
-        return Q_TRAN(&gate_run);
+        return Q_TRAN(&gate_clear);
     case T_SORT:
         return Q_TRAN(&sort_run);
     case T_BUS:
