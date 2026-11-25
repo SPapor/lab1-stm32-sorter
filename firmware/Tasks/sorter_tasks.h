@@ -16,12 +16,20 @@
 #define TASKS_LCD_ROW 17u
 #define TASKS_GATE_IN 1u
 #define TASKS_GATE_OUT 2u
+#define TASKS_ST_READY 0u
+#define TASKS_ST_SORTING 1u
+#define TASKS_ST_ESTOP 2u
+#define TASKS_ST_FAULT 3u
 
 typedef void (*tasks_out_fn)(const char *event, const char *fmt, ...)
     __attribute__((format(printf, 2, 3)));
 
 typedef struct {
+#if ARCH_QPC
+    uint8_t (*estop)(void);
+#else
     void (*estop)(void);                     /* після антибрязкоту; сама перевіряє, чи був фронт */
+#endif
 #if ARCH_QPC
     uint8_t (*gate)(void);
 #else
@@ -46,6 +54,10 @@ typedef struct {
     uint8_t (*bus_lcd_row)(uint8_t row, const char *text);
     void (*lcd_end)(uint8_t st);
     void (*bus_wait)(uint32_t cyc);
+    void (*estop_apply)(void);
+    void (*parcel_out)(uint16_t raw);
+    void (*impact)(int16_t x, int16_t y, int16_t z);
+    uint8_t (*sorter_state)(void);
 #endif
 } tasks_ops_t;
 
@@ -74,6 +86,10 @@ void tasks_log(const char *event, const char *fmt, va_list ap)
 
 /* PARCEL_IN від gate для sort (черга qParcel): мс і такти perf_now моменту виявлення */
 void tasks_parcel(uint32_t in_ms, uint32_t in_cyc);
+#if ARCH_QPC
+void tasks_parcel_out(uint16_t raw);
+void tasks_impact(int16_t x, int16_t y, int16_t z);
+#endif
 
 /* З колбека EXTI E-STOP: будить задачу estop */
 void tasks_estop_from_isr(void);

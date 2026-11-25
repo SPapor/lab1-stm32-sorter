@@ -16,8 +16,11 @@
 #endif
 
 
+Q_DEFINE_THIS_MODULE("sorter_ao")
+
 enum { T_ESTOP = 0, T_GATE, T_SORT, T_BUS, T_IMU, T_CLI, T_LOGGER, T_LCD, T_COUNT };
-enum { LOG_SIG = Q_USER_SIG, TICK_SIG, PARCEL_SIG, ESTOP_SIG, RX_SIG, SECOND_SIG, BUS_REQ_SIG, BUS_DONE_SIG };
+enum { LOG_SIG = Q_USER_SIG, TICK_SIG, PARCEL_SIG, ESTOP_SIG, RX_SIG, SECOND_SIG, BUS_REQ_SIG, BUS_DONE_SIG,
+       ESTOP_PRESS_SIG, PARCEL_OUT_SIG, IMPACT_SIG };
 enum { BUS_MPU_READ = 0, BUS_LCD_ROW };
 
 #define QLOG_LEN        16u
@@ -39,6 +42,13 @@ typedef struct {
     uint32_t ms;
     uint32_t cyc;
 } ParcelEvt;
+
+typedef struct {
+    QEvt super;
+    int16_t x;
+    int16_t y;
+    int16_t z;
+} ImpactEvt;
 
 typedef struct {
     QEvt super;
@@ -71,7 +81,7 @@ static const struct {
 } task_def[T_COUNT] = {
     [T_ESTOP]  = { "estop",  128u, 8u, 2u },
     [T_GATE]   = { "gate",   128u, 7u, 2u },
-    [T_SORT]   = { "sort",   160u, 6u, 3u },
+    [T_SORT]   = { "sort",   160u, 6u, 4u },
     [T_BUS]    = { "bus",    176u, 5u, 3u },
     [T_IMU]    = { "imu",    112u, 4u, 4u },
     [T_CLI]    = { "cli",    192u, 3u, 2u },
@@ -85,7 +95,7 @@ static StackType_t stk_estop[128], stk_gate[128], stk_sort[160], stk_bus[176], s
     stk_cli[192], stk_logger[160], stk_lcd[128];
 static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_cli,
                                            stk_logger, stk_lcd };
-static QEvtPtr q_estop[2], q_gate[2], q_sort[3], q_bus[3], q_imu[4], q_cli[2], q_logger[QLOG_LEN], q_lcd[4];
+static QEvtPtr q_estop[2], q_gate[2], q_sort[4], q_bus[3], q_imu[4], q_cli[2], q_logger[QLOG_LEN], q_lcd[4];
 static QEvtPtr *const qsto[T_COUNT] = { q_estop, q_gate, q_sort, q_bus, q_imu, q_cli, q_logger, q_lcd };
 static QF_MPOOL_EL(ParcelEvt) pool_small[8];
 static QF_MPOOL_EL(BusReqEvt) pool_mid[3];
@@ -97,6 +107,7 @@ static uint8_t rx_buf[SB_RX_BYTES];
 static volatile uint8_t rx_head, rx_tail;
 
 static const QEvt estop_evt = QEVT_INITIALIZER(ESTOP_SIG);
+static const QEvt estop_press_evt = QEVT_INITIALIZER(ESTOP_PRESS_SIG);
 static const QEvt rx_evt = QEVT_INITIALIZER(RX_SIG);
 
 static uint32_t parcel_drop;
@@ -203,9 +214,9 @@ void tasks_log(const char *event, const char *fmt, va_list ap)
         count(&log_drop);
 }
 
-void tasks_parcel(uint32_t in_ms, uint32_t in_cyc)
+static void parcel_post(enum_t sig, uint32_t in_ms, uint32_t in_cyc)
 {
-    ParcelEvt *p = Q_NEW_X(ParcelEvt, 1U, PARCEL_SIG);
+    ParcelEvt *p = Q_NEW_X(ParcelEvt, 1U, sig);
 
     if (p == NULL) {
         count(&parcel_drop);
@@ -215,6 +226,26 @@ void tasks_parcel(uint32_t in_ms, uint32_t in_cyc)
     p->cyc = in_cyc;
     if (!QACTIVE_POST_X(&ao[T_SORT].super, &p->super, 1U, NULL))
         count(&parcel_drop);
+}
+
+void tasks_parcel(uint32_t in_ms, uint32_t in_cyc)
+{
+    parcel_post(PARCEL_SIG, in_ms, in_cyc);
+}
+
+void tasks_parcel_out(uint16_t raw)
+{
+    parcel_post(PARCEL_OUT_SIG, raw, 0u);
+}
+
+void tasks_impact(int16_t x, int16_t y, int16_t z)
+{
+    ImpactEvt *m = Q_NEW(ImpactEvt, IMPACT_SIG);
+
+    m->x = x;
+    m->y = y;
+    m->z = z;
+    QACTIVE_POST(&ao[T_SORT].super, &m->super, NULL);
 }
 
 void tasks_estop_from_isr(void)
@@ -301,7 +332,8 @@ static QState estop_debouncing(Ao *me, QEvt const *e)
         (void)QTimeEvt_disarm(&me->te);
         return Q_HANDLED();
     case TICK_SIG:
-        ops->estop();
+        if (ops->estop())
+            QACTIVE_POST(&ao[T_SORT].super, &estop_press_evt, &me->super);
         return Q_TRAN(&estop_armed);
     case ESTOP_SIG:
         return Q_HANDLED();
@@ -338,15 +370,112 @@ static QState gate_occupied(Ao *me, QEvt const *e)
     }
 }
 
-static QState sort_run(Ao *me, QEvt const *e)
+#ifdef Q_UNSAFE
+#define SORTER_IS(st)
+#else
+#define SORTER_IS(st)                                              \
+    case Q_ENTRY_SIG:                                              \
+        Q_ASSERT_ID(900U + (st), ops->sorter_state() == (st));     \
+        return Q_HANDLED();
+#endif
+
+static QState sorter_operational(Ao *me, QEvt const *e);
+static QState sorter_ready(Ao *me, QEvt const *e);
+static QState sorter_sorting(Ao *me, QEvt const *e);
+static QState sorter_estop(Ao *me, QEvt const *e);
+static QState sorter_fault(Ao *me, QEvt const *e);
+
+static void sort_parcel(QEvt const *e)
+{
+    ops->sort(Q_EVT_CAST(ParcelEvt)->ms, Q_EVT_CAST(ParcelEvt)->cyc);
+}
+
+static void sort_out(QEvt const *e)
+{
+    ops->parcel_out((uint16_t)Q_EVT_CAST(ParcelEvt)->ms);
+}
+
+static QState sorter_top(Ao *me, QEvt const *e)
 {
     (void)me;
     switch (e->sig) {
     case PARCEL_SIG:
-        ops->sort(Q_EVT_CAST(ParcelEvt)->ms, Q_EVT_CAST(ParcelEvt)->cyc);
+        sort_parcel(e);
+        return Q_HANDLED();
+    case PARCEL_OUT_SIG:
+        sort_out(e);
+        return Q_HANDLED();
+    case ESTOP_PRESS_SIG:
+        ops->estop_apply();
+        return Q_HANDLED();
+    case IMPACT_SIG:
         return Q_HANDLED();
     default:
         return Q_SUPER(&QHsm_top);
+    }
+}
+
+static QState sorter_operational(Ao *me, QEvt const *e)
+{
+    (void)me;
+    switch (e->sig) {
+    case ESTOP_PRESS_SIG:
+        ops->estop_apply();
+        return Q_TRAN(&sorter_estop);
+    case IMPACT_SIG:
+        ops->impact(Q_EVT_CAST(ImpactEvt)->x, Q_EVT_CAST(ImpactEvt)->y, Q_EVT_CAST(ImpactEvt)->z);
+        return Q_HANDLED();
+    default:
+        return Q_SUPER(&sorter_top);
+    }
+}
+
+static QState sorter_ready(Ao *me, QEvt const *e)
+{
+    (void)me;
+    switch (e->sig) {
+    SORTER_IS(TASKS_ST_READY)
+    case PARCEL_SIG:
+        sort_parcel(e);
+        return Q_TRAN(&sorter_sorting);
+    default:
+        return Q_SUPER(&sorter_operational);
+    }
+}
+
+static QState sorter_sorting(Ao *me, QEvt const *e)
+{
+    (void)me;
+    switch (e->sig) {
+    SORTER_IS(TASKS_ST_SORTING)
+    case PARCEL_OUT_SIG:
+        sort_out(e);
+        return Q_TRAN(&sorter_ready);
+    default:
+        return Q_SUPER(&sorter_operational);
+    }
+}
+
+static QState sorter_estop(Ao *me, QEvt const *e)
+{
+    (void)me;
+    switch (e->sig) {
+    SORTER_IS(TASKS_ST_ESTOP)
+    case ESTOP_PRESS_SIG:
+        ops->estop_apply();
+        return Q_TRAN(&sorter_ready);
+    default:
+        return Q_SUPER(&sorter_top);
+    }
+}
+
+static QState sorter_fault(Ao *me, QEvt const *e)
+{
+    (void)me;
+    switch (e->sig) {
+    SORTER_IS(TASKS_ST_FAULT)
+    default:
+        return Q_SUPER(&sorter_top);
     }
 }
 
@@ -503,13 +632,14 @@ static QState ao_initial(Ao *me, void const *par)
     (void)par;
     switch (me - ao) {
     case T_ESTOP:
-        ops->estop();
-        return Q_TRAN(&estop_armed);
+        return Q_TRAN(&estop_debouncing);
     case T_GATE:
         arm_next(me, &ops->gate_ms);
         return Q_TRAN(&gate_clear);
     case T_SORT:
-        return Q_TRAN(&sort_run);
+        if (ops->sorter_state() == TASKS_ST_FAULT)
+            return Q_TRAN(&sorter_fault);
+        return Q_TRAN(&sorter_ready);
     case T_BUS:
         return Q_TRAN(&bus_serving);
     case T_IMU:

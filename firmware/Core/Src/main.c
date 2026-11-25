@@ -332,8 +332,16 @@ static void sort_task(void);
 static void imu_task(void);
 static void lcd_task(void);
 #else
-static void estop_work(void);
 #if ARCH_QPC
+static uint8_t estop_work(void);
+#else
+static void estop_work(void);
+#endif
+#if ARCH_QPC
+static void qpc_estop_apply(void);
+static void qpc_parcel_out(uint16_t raw);
+static void qpc_impact(int16_t x, int16_t y, int16_t z);
+static uint8_t qpc_sorter_state(void);
 static void qpc_imu_begin(void);
 static uint8_t qpc_bus_imu_read(uint8_t raw[6]);
 static void qpc_imu_end(uint8_t st, const uint8_t raw[6]);
@@ -386,7 +394,9 @@ static void console_echo(char ch);
 static void cmd_run(const cli_cmd_t *cmd);
 static void con_write(const char *s, int n);
 static void uart_rx_run(int ch);
+#if !ARCH_QPC
 static void estop_run(void);
+#endif
 static gate_event_t gate_run(void);
 static void sort_run(uint32_t in_ms, uint32_t in_cyc);
 static void imu_run(void);
@@ -605,6 +615,10 @@ int main(void)
   (void)qpc_bus_lcd_row;
   (void)qpc_lcd_end;
   (void)qpc_bus_wait;
+  (void)qpc_estop_apply;
+  (void)qpc_parcel_out;
+  (void)qpc_impact;
+  (void)qpc_sorter_state;
 #endif
   tasks_start(NULL);
 #else
@@ -628,6 +642,10 @@ int main(void)
   task_ops.bus_lcd_row = qpc_bus_lcd_row;
   task_ops.lcd_end = qpc_lcd_end;
   task_ops.bus_wait = qpc_bus_wait;
+  task_ops.estop_apply = qpc_estop_apply;
+  task_ops.parcel_out = qpc_parcel_out;
+  task_ops.impact = qpc_impact;
+  task_ops.sorter_state = qpc_sorter_state;
 #endif
   tasks_start(&task_ops);
 #endif
@@ -947,6 +965,7 @@ static void estop_task(void)
 }
 #endif
 
+#if !ARCH_QPC
 static void estop_run(void)
 {
   static uint16_t presses;
@@ -978,6 +997,73 @@ static void estop_run(void)
 #endif
   }
 }
+#else
+#if PERF
+static uint32_t qpc_estop_t_irq;
+#endif
+
+static uint8_t qpc_estop_check(void)
+{
+  estop_pending = 0;
+#if PERF
+  qpc_estop_t_irq = estop_irq_cyc;
+#endif
+  uint8_t pressed = (HAL_GPIO_ReadPin(BOARD_ESTOP_PORT, BOARD_ESTOP_PIN) == GPIO_PIN_RESET);
+  __HAL_GPIO_EXTI_CLEAR_FALLING_IT(BOARD_ESTOP_PIN);
+  HAL_NVIC_ClearPendingIRQ(BOARD_ESTOP_IRQ);
+  HAL_NVIC_EnableIRQ(BOARD_ESTOP_IRQ);
+  return pressed;
+}
+
+static void qpc_estop_apply(void)
+{
+  static uint16_t presses;
+#if PERF
+  uint32_t t_react = perf_now();
+  uint64_t us_react = perf_now_us64();
+#endif
+
+  LOCK(SORTER);
+  sorter_state_t st = sorter_estop_toggle(&sorter);
+  UNLOCK(SORTER);
+  presses++;
+  ev_log("ESTOP", "n=%u state=%s", (unsigned)presses, sorter_state_name(st));
+#if PERF
+  uint32_t lat = t_react - qpc_estop_t_irq;
+  perf_add(&st_estop_lat, lat);
+  evt("estop_irq", us_react - perf_cyc_to_us(lat, cyc_per_us));
+  evt("estop_react", us_react);
+#endif
+}
+
+static void qpc_parcel_out(uint16_t raw)
+{
+  LOCK(SORTER);
+  sorter_parcel_out(&sorter);
+  sorter_state_t st = sorter.state;
+  UNLOCK(SORTER);
+  ev_log("PARCEL_OUT", "gate=%u state=%s", (unsigned)raw, sorter_state_name(st));
+}
+
+static void qpc_impact(int16_t x, int16_t y, int16_t z)
+{
+  LOCK(SORTER);
+  int first = sorter_impact(&sorter);
+  UNLOCK(SORTER);
+  if (first)
+    ev_log("IMPACT", "amag_mg=%lu x_mg=%ld y_mg=%ld z_mg=%ld",
+           (unsigned long)impact_isqrt(impact_mag2(x, y, z)), (long)x, (long)y, (long)z);
+}
+
+static uint8_t qpc_sorter_state(void)
+{
+  return (uint8_t)sorter.state;
+}
+
+_Static_assert(SORTER_READY == TASKS_ST_READY && SORTER_SORTING == TASKS_ST_SORTING &&
+               SORTER_ESTOP == TASKS_ST_ESTOP && SORTER_FAULT == TASKS_ST_FAULT,
+               "стани sorter у sorter_tasks.h");
+#endif
 
 /* Кожні GATE_PERIOD_MS: відлік АЦП gate → поріг з гістерезисом (FR-01).
  * PARCEL_IN — подія для sort_task; PARCEL_OUT — посилка пройшла, SORTING → READY. */
@@ -1025,11 +1111,15 @@ static gate_event_t gate_run(void)
     break;
   }
   case GATE_EV_OUT: {
+#if ARCH_QPC
+    tasks_parcel_out(raw);
+#else
     LOCK(SORTER);
     sorter_parcel_out(&sorter);
     sorter_state_t st = sorter.state;
     UNLOCK(SORTER);
     ev_log("PARCEL_OUT", "gate=%u state=%s", (unsigned)raw, sorter_state_name(st));
+#endif
     break;
   }
   default:
@@ -1117,9 +1207,13 @@ static void imu_process(mpu6050_status_t st, const mpu6050_accel_raw_t *a)
   READY_IF(m2 >= (uint32_t)IMU_READY_MG * IMU_READY_MG, RDY_IMU);
   int first = 0;
   if (impact_over(m2)) {
+#if ARCH_QPC
+    tasks_impact((int16_t)x, (int16_t)y, (int16_t)z);
+#else
     LOCK(SORTER);
     first = sorter_impact(&sorter);
     UNLOCK(SORTER);
+#endif
   }
   if (first)
     ev_log("IMPACT", "amag_mg=%lu x_mg=%ld y_mg=%ld z_mg=%ld",
@@ -1351,11 +1445,22 @@ _Static_assert(sizeof(mpu6050_accel_raw_t) == 6u, "BusDoneEvt.data - 6 байт�
 _Static_assert(sizeof lcd_want == 2u * TASKS_LCD_ROW, "рядки LCD у BusReqEvt");
 #endif
 
+#if ARCH_QPC
+static uint8_t estop_work(void)
+{
+  uint8_t pressed = 0;
+
+  if (estop_pending)
+    TASK_RUN(PT_ESTOP, pressed = qpc_estop_check());
+  return pressed;
+}
+#else
 static void estop_work(void)
 {
   if (estop_pending)
     TASK_RUN(PT_ESTOP, estop_run());
 }
+#endif
 
 #if ARCH_QPC
 _Static_assert(GATE_EV_IN == TASKS_GATE_IN && GATE_EV_OUT == TASKS_GATE_OUT, "події gate у sorter_tasks.h");
