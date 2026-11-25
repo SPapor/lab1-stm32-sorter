@@ -1,0 +1,20 @@
+# git=ed59bbf2 build="ARCH=qpc LTO=1 TEST_QPCHECK=1 PERF=0 TEST_Q93=pool" clicks=0
+1 BOOT fw=lab5-qpc git=ed59bbf2 perf=0 arch=qpc lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=0            
+18 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+26 SELFTEST dev=mpu6050 status=OK who=0x68 tries=1
+100 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+106 SELFTEST dev=ldr_gate status=OK raw=999
+110 SELFTEST dev=ldr_class status=OK raw=999
+115 SELFTEST dev=servo status=OK pulse_us=1500
+119 SELFTEST_END ok=5 warn=0 fail=0
+156 STATE state=READY
+1 BOOT fw=lab5-qpc git=ed59bbf2 perf=0 arch=qpc lto=1 tick_hz=1000 kernel=V11.3.3 os_heap=0            
+18 I2C_RECOVER try=1/1 where=wr addr=0x68 err=0x20 isr=0x00008003
+26 SELFTEST dev=mpu6050 status=OK who=0x68 tries=1
+100 SELFTEST dev=lcd1602 status=OK addr=0x27 rb=0x08
+106 SELFTEST dev=ldr_gate status=OK raw=999
+110 SELFTEST dev=ldr_class status=OK raw=999
+115 SELFTEST dev=servo status=OK pulse_us=1500
+119 SELFTEST_END ok=5 warn=0 fail=0
+156 STATE state=READY
+663 FATAL qp qf_dyn 630

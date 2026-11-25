@@ -348,7 +348,7 @@ static void qpc_imu_begin(void);
 static uint8_t qpc_bus_imu_read(uint8_t raw[6]);
 static void qpc_imu_end(uint8_t st, const uint8_t raw[6]);
 static void qpc_lcd_begin(char rows[2][TASKS_LCD_ROW]);
-static uint8_t qpc_bus_lcd_row(uint8_t row, const char *text);
+static uint8_t qpc_bus_lcd_row(uint8_t part, const char *text);
 static void qpc_lcd_end(uint8_t st);
 static void qpc_bus_wait(uint32_t cyc);
 #endif
@@ -1435,9 +1435,19 @@ static void qpc_lcd_begin(char rows[2][TASKS_LCD_ROW])
 #endif
 }
 
-static uint8_t qpc_bus_lcd_row(uint8_t row, const char *text)
+static uint8_t qpc_bus_lcd_row(uint8_t part, const char *text)
 {
-  return (uint8_t)lcd_write_row(row, text);
+  char buf[TASKS_LCD_PART + 1u];
+  uint8_t col = (uint8_t)((part % TASKS_LCD_PARTS) * TASKS_LCD_PART);
+  lcd_status_t st = LCD_OK;
+
+  memcpy(buf, text, TASKS_LCD_PART);
+  buf[TASKS_LCD_PART] = '\0';
+  if (col == 0u)
+    st = lcd1602_set_cursor(&lcd, 0, (uint8_t)(part / TASKS_LCD_PARTS));
+  if (st == LCD_OK)
+    st = lcd1602_print(&lcd, buf);
+  return (uint8_t)st;
 }
 
 static void qpc_lcd_end(uint8_t st)
@@ -1462,6 +1472,7 @@ static void qpc_bus_wait(uint32_t cyc)
 
 _Static_assert(sizeof(mpu6050_accel_raw_t) == 6u, "BusDoneEvt.data - 6 байтів MPU");
 _Static_assert(sizeof lcd_want == 2u * TASKS_LCD_ROW, "рядки LCD у BusReqEvt");
+_Static_assert(TASKS_LCD_PART * TASKS_LCD_PARTS == LCD1602_COLS, "рядок LCD - ціле число шматків");
 #endif
 
 #if ARCH_QPC
