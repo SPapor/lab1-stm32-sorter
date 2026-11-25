@@ -52,6 +52,9 @@ Wokwi для VS Code, `tools/run_scenario.py` по RFC2217 (`rfc2217://localhost
 | `GATE_2026-11-25.txt` | `8a9f6fa0`, той самий запуск, `ldr_gate` мишею | `PARCEL_IN` -> `SORT` -> `PARCEL_OUT` через стани Gate |
 | `S1_2026-11-25_0132.log` | `a2b2372c`, AO Sorter | 5 `I2C_RECOVER`, `FATAL` немає |
 | `SORTER_QPCHECK_2026-11-25.txt` | `a2b2372c`, `TEST_QPCHECK=1 PERF=0`, мишею | усі переходи Sorter, твердження «стан QP == `sorter.state`» не спрацювали |
+| `S1_2026-11-25_0138.log` | `23a889a4`, AO Console | gate - 1 пропуск, джитер 8,5 мс = найдовша транзакція I²C; 7 `I2C_RECOVER` |
 | `QSTRESS_2026-11-25.txt` | `TEST_QSTRESS=1` з виправленим `port_sim` (до коміту `e2bf64f`, той самий код) | ворота знову PASS, найменший запас стека 84 B |
 
 Бюджет пам'яті - `budget/` (свій README).
+
+`LOGQ max_used` у логах кроку 3 до `8fab6f2` (`S1_2026-11-25_0029` ... `S1_2026-11-25_0132`) неправильне: рахувався мінімум пулу `pool_mid`, а не пулу `LOG`.
