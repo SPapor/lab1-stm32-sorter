@@ -80,7 +80,7 @@ static const struct {
     uint8_t qlen;
 } task_def[T_COUNT] = {
     [T_ESTOP]   = { "estop",   102u, 7u, 2u },
-    [T_GATE]    = { "gate",    124u, 6u, 2u },
+    [T_GATE]    = { "gate",    126u, 6u, 2u },
     [T_SORT]    = { "sort",    158u, 5u, 3u },
     [T_BUS]     = { "bus",     178u, 4u, 2u },
     [T_IMU]     = { "imu",     116u, 3u, 3u },
@@ -90,7 +90,7 @@ static const struct {
 
 static const tasks_ops_t *ops;
 static Ao ao[T_COUNT];
-static StackType_t stk_estop[102], stk_gate[124], stk_sort[158], stk_bus[178], stk_imu[116],
+static StackType_t stk_estop[102], stk_gate[126], stk_sort[158], stk_bus[178], stk_imu[116],
     stk_console[208], stk_lcd[116];
 static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_console,
                                            stk_lcd };
