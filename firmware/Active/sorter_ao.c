@@ -69,7 +69,7 @@ typedef struct {
 typedef struct {
     QActive super;
     QTimeEvt te;
-    uint16_t due;
+    uint32_t due;
     uint8_t step;
 } Ao;
 
@@ -84,7 +84,7 @@ static const struct {
     [T_SORT]    = { "sort",    160u, 5u, 4u },
     [T_BUS]     = { "bus",     176u, 4u, 3u },
     [T_IMU]     = { "imu",     112u, 3u, 4u },
-    [T_CONSOLE] = { "console", 192u, 2u, QLOG_LEN + 2u },
+    [T_CONSOLE] = { "console", 192u, 2u, QLOG_LEN + 3u },
     [T_LCD]     = { "lcd",     128u, 1u, 4u },
 };
 
@@ -94,7 +94,7 @@ static StackType_t stk_estop[128], stk_gate[128], stk_sort[160], stk_bus[176], s
     stk_console[192], stk_lcd[128];
 static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_console,
                                            stk_lcd };
-static QEvtPtr q_estop[2], q_gate[2], q_sort[4], q_bus[3], q_imu[4], q_console[QLOG_LEN + 2u], q_lcd[4];
+static QEvtPtr q_estop[2], q_gate[2], q_sort[4], q_bus[3], q_imu[4], q_console[QLOG_LEN + 3u], q_lcd[4];
 static QEvtPtr *const qsto[T_COUNT] = { q_estop, q_gate, q_sort, q_bus, q_imu, q_console, q_lcd };
 static QF_MPOOL_EL(ParcelEvt) pool_small[8];
 static QF_MPOOL_EL(BusReqEvt) pool_mid[3];
@@ -199,13 +199,13 @@ void tasks_log(const char *event, const char *fmt, va_list ap)
         n = TASKS_LOG_ARGS;
     }
     e->n = (uint8_t)n;
-    if (!QACTIVE_POST_X(&ao[T_CONSOLE].super, &e->super, 1U, NULL))
+    if (!QACTIVE_POST_X(&ao[T_CONSOLE].super, &e->super, 3U, NULL))
         count(&log_drop);
 }
 
-static void parcel_post(enum_t sig, uint32_t in_ms, uint32_t in_cyc)
+static void parcel_post(enum_t sig, uint16_t margin, uint32_t in_ms, uint32_t in_cyc)
 {
-    ParcelEvt *p = Q_NEW_X(ParcelEvt, 1U, sig);
+    ParcelEvt *p = Q_NEW_X(ParcelEvt, margin, sig);
 
     if (p == NULL) {
         count(&parcel_drop);
@@ -213,28 +213,30 @@ static void parcel_post(enum_t sig, uint32_t in_ms, uint32_t in_cyc)
     }
     p->ms = in_ms;
     p->cyc = in_cyc;
-    if (!QACTIVE_POST_X(&ao[T_SORT].super, &p->super, 1U, NULL))
+    if (!QACTIVE_POST_X(&ao[T_SORT].super, &p->super, margin, NULL))
         count(&parcel_drop);
 }
 
 void tasks_parcel(uint32_t in_ms, uint32_t in_cyc)
 {
-    parcel_post(PARCEL_SIG, in_ms, in_cyc);
+    parcel_post(PARCEL_SIG, 1U, in_ms, in_cyc);
 }
 
 void tasks_parcel_out(uint16_t raw)
 {
-    parcel_post(PARCEL_OUT_SIG, raw, 0u);
+    parcel_post(PARCEL_OUT_SIG, 0U, raw, 0u);
 }
 
 void tasks_impact(int16_t x, int16_t y, int16_t z)
 {
-    ImpactEvt *m = Q_NEW(ImpactEvt, IMPACT_SIG);
+    ImpactEvt *m = Q_NEW_X(ImpactEvt, 1U, IMPACT_SIG);
 
+    if (m == NULL)
+        return;
     m->x = x;
     m->y = y;
     m->z = z;
-    QACTIVE_POST(&ao[T_SORT].super, &m->super, NULL);
+    (void)QACTIVE_POST_X(&ao[T_SORT].super, &m->super, 1U, NULL);
 }
 
 void tasks_estop_from_isr(void)
@@ -280,19 +282,19 @@ void USART2_IRQHandler(void)
         rx_head = next;
     }
     if (was_empty && rx_head != rx_tail)
-        (void)QACTIVE_POST_X_FROM_ISR(&ao[T_CONSOLE].super, &rx_evt, 1U, &woken, NULL);
+        (void)QACTIVE_POST_X_FROM_ISR(&ao[T_CONSOLE].super, &rx_evt, 0U, &woken, NULL);
     portYIELD_FROM_ISR(woken);
 }
 
 static void arm_next(Ao *me, const volatile uint16_t *knob)
 {
-    uint16_t now = (uint16_t)xTaskGetTickCount();
-    int16_t left;
+    uint32_t now = xTaskGetTickCount();
+    int32_t left;
 
-    me->due = (uint16_t)(me->due + ms_ticks(*knob));
-    left = (int16_t)(me->due - now);
+    me->due += ms_ticks(*knob);
+    left = (int32_t)(me->due - now);
     if (left <= 0) {
-        me->due = (uint16_t)(now + 1u);
+        me->due = now + 1u;
         left = 1;
     }
     QTimeEvt_armX(&me->te, (uint32_t)left, 0U);
