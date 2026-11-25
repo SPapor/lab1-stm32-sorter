@@ -18,7 +18,7 @@
 
 Q_DEFINE_THIS_MODULE("sorter_ao")
 
-enum { T_ESTOP = 0, T_GATE, T_SORT, T_BUS, T_IMU, T_CLI, T_LOGGER, T_LCD, T_COUNT };
+enum { T_ESTOP = 0, T_GATE, T_SORT, T_BUS, T_IMU, T_CONSOLE, T_LCD, T_COUNT };
 enum { LOG_SIG = Q_USER_SIG, TICK_SIG, PARCEL_SIG, ESTOP_SIG, RX_SIG, SECOND_SIG, BUS_REQ_SIG, BUS_DONE_SIG,
        ESTOP_PRESS_SIG, PARCEL_OUT_SIG, IMPACT_SIG };
 enum { BUS_MPU_READ = 0, BUS_LCD_ROW };
@@ -79,24 +79,23 @@ static const struct {
     uint8_t prio;
     uint8_t qlen;
 } task_def[T_COUNT] = {
-    [T_ESTOP]  = { "estop",  128u, 8u, 2u },
-    [T_GATE]   = { "gate",   128u, 7u, 2u },
-    [T_SORT]   = { "sort",   160u, 6u, 4u },
-    [T_BUS]    = { "bus",    176u, 5u, 3u },
-    [T_IMU]    = { "imu",    112u, 4u, 4u },
-    [T_CLI]    = { "cli",    192u, 3u, 2u },
-    [T_LOGGER] = { "logger", 160u, 2u, QLOG_LEN },
-    [T_LCD]    = { "lcd",    128u, 1u, 4u },
+    [T_ESTOP]   = { "estop",   128u, 7u, 2u },
+    [T_GATE]    = { "gate",    128u, 6u, 2u },
+    [T_SORT]    = { "sort",    160u, 5u, 4u },
+    [T_BUS]     = { "bus",     176u, 4u, 3u },
+    [T_IMU]     = { "imu",     112u, 3u, 4u },
+    [T_CONSOLE] = { "console", 192u, 2u, QLOG_LEN + 2u },
+    [T_LCD]     = { "lcd",     128u, 1u, 4u },
 };
 
 static const tasks_ops_t *ops;
 static Ao ao[T_COUNT];
 static StackType_t stk_estop[128], stk_gate[128], stk_sort[160], stk_bus[176], stk_imu[112],
-    stk_cli[192], stk_logger[160], stk_lcd[128];
-static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_cli,
-                                           stk_logger, stk_lcd };
-static QEvtPtr q_estop[2], q_gate[2], q_sort[4], q_bus[3], q_imu[4], q_cli[2], q_logger[QLOG_LEN], q_lcd[4];
-static QEvtPtr *const qsto[T_COUNT] = { q_estop, q_gate, q_sort, q_bus, q_imu, q_cli, q_logger, q_lcd };
+    stk_console[192], stk_lcd[128];
+static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_console,
+                                           stk_lcd };
+static QEvtPtr q_estop[2], q_gate[2], q_sort[4], q_bus[3], q_imu[4], q_console[QLOG_LEN + 2u], q_lcd[4];
+static QEvtPtr *const qsto[T_COUNT] = { q_estop, q_gate, q_sort, q_bus, q_imu, q_console, q_lcd };
 static QF_MPOOL_EL(ParcelEvt) pool_small[8];
 static QF_MPOOL_EL(BusReqEvt) pool_mid[3];
 static QTimeEvt logger_second;
@@ -171,16 +170,6 @@ void tasks_unlock(tasks_lock_t l)
 #endif
 }
 
-static void uart_lock(void)
-{
-    tasks_lock(TASKS_LOCK_UART);
-}
-
-static void uart_unlock(void)
-{
-    tasks_unlock(TASKS_LOCK_UART);
-}
-
 void tasks_snapshot(void *dst, const void *src, size_t n)
 {
     uint8_t *d = dst;
@@ -210,7 +199,7 @@ void tasks_log(const char *event, const char *fmt, va_list ap)
         n = TASKS_LOG_ARGS;
     }
     e->n = (uint8_t)n;
-    if (!QACTIVE_POST_X(&ao[T_LOGGER].super, &e->super, 1U, NULL))
+    if (!QACTIVE_POST_X(&ao[T_CONSOLE].super, &e->super, 1U, NULL))
         count(&log_drop);
 }
 
@@ -291,7 +280,7 @@ void USART2_IRQHandler(void)
         rx_head = next;
     }
     if (was_empty && rx_head != rx_tail)
-        (void)QACTIVE_POST_X_FROM_ISR(&ao[T_CLI].super, &rx_evt, 1U, &woken, NULL);
+        (void)QACTIVE_POST_X_FROM_ISR(&ao[T_CONSOLE].super, &rx_evt, 1U, &woken, NULL);
     portYIELD_FROM_ISR(woken);
 }
 
@@ -554,7 +543,7 @@ static QState imu_reading(Ao *me, QEvt const *e)
     }
 }
 
-static QState cli_run(Ao *me, QEvt const *e)
+static QState console_run(Ao *me, QEvt const *e)
 {
     int ch;
 
@@ -564,15 +553,6 @@ static QState cli_run(Ao *me, QEvt const *e)
         if ((ch = tasks_rx_getc()) >= 0)
             ops->cli(ch);
         return Q_HANDLED();
-    default:
-        return Q_SUPER(&QHsm_top);
-    }
-}
-
-static QState logger_run(Ao *me, QEvt const *e)
-{
-    (void)me;
-    switch (e->sig) {
     case LOG_SIG: {
         LogEvt const *l = Q_EVT_CAST(LogEvt);
 
@@ -646,11 +626,9 @@ static QState ao_initial(Ao *me, void const *par)
         if (ops->imu != NULL)
             arm_next(me, ops->imu_ms);
         return Q_TRAN(&imu_idle);
-    case T_CLI:
-        return Q_TRAN(&cli_run);
-    case T_LOGGER:
+    case T_CONSOLE:
         QTimeEvt_armX(&logger_second, ms_ticks(SECOND_MS), ms_ticks(SECOND_MS));
-        return Q_TRAN(&logger_run);
+        return Q_TRAN(&console_run);
     default:
         if (ops->lcd != NULL)
             arm_next(me, ops->lcd_ms);
@@ -676,8 +654,6 @@ void tasks_start(const tasks_ops_t *o)
 #ifdef TEST_QSTRESS
     (void)o;
     (void)ao_initial;
-    (void)uart_lock;
-    (void)uart_unlock;
     (void)pool_log;
     (void)pool_small;
     (void)pool_mid;
@@ -690,7 +666,7 @@ void tasks_start(const tasks_ops_t *o)
     QF_poolInit(pool_small, sizeof pool_small, sizeof pool_small[0]);
     QF_poolInit(pool_mid, sizeof pool_mid, sizeof pool_mid[0]);
     QF_poolInit(pool_log, sizeof pool_log, sizeof pool_log[0]);
-    QTimeEvt_ctorX(&logger_second, &ao[T_LOGGER].super, SECOND_SIG, 0U);
+    QTimeEvt_ctorX(&logger_second, &ao[T_CONSOLE].super, SECOND_SIG, 0U);
     for (unsigned i = 0; i < T_COUNT; i++) {
         QActive_ctor(&ao[i].super, Q_STATE_CAST(&ao_initial));
         QTimeEvt_ctorX(&ao[i].te, &ao[i].super, TICK_SIG, 0U);
@@ -701,7 +677,6 @@ void tasks_start(const tasks_ops_t *o)
 #if PERF
     rtos_hal_trace_task(0u, ao[T_LCD].super.thread, BOARD_PROBE_LCD_PIN);
 #endif
-    uart_hal_set_lock(uart_lock, uart_unlock);
     running = 1;
     (void)QF_run();
     for (;;) {
