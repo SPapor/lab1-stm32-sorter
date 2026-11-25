@@ -562,6 +562,7 @@ A + B разом - -540 B, прогноз тоді ~32 260-32 360, вільно 
 | + AO Bus, Imu і Lcd як клієнти Bus (8 AO), стек Imu 448 B | 32 288 | 12 200 | 480 (RAM - 88) | `d04f17f`, `7c5ac65` |
 | + AO Estop (`armed`/`debouncing`) | 32 352 | 12 200 | 416 | `719ee3f` |
 | + проблема 86: I²C під `port_sim_tick_hold`, тіки Gate/Imu/Lcd одноразові | 32 380 | 12 200 | 388 (RAM - 88) | `62b09bf`, `ed392c7` |
+| + AO Gate (`clear`/`occupied`) | 32 476 | 12 200 | 292 (RAM - 88) | `8a9f6fa` |
 
 ### AO Bus
 
@@ -606,3 +607,9 @@ Bus (пріоритет 5 - вище клієнтів Imu 4 і Lcd 1, нижче
 Пропуски imu (254 за 60 с, по два на кожну перемальовку LCD) - ціна варіанта D: поки Bus пише рядок (~32 мс), Imu (пріоритет 4, нижче Bus) чекає, а `bus_wait` міряє лише час у черзі Bus після того, як Imu свій запит надіслала. Джитер gate 12,3 мс лишився від проміжного шару (друк під `vTaskSuspendAll`) - до AO Console.
 
 `TEST_QPCHECK=1 PERF=0` на `ed392c78` (без `Q_UNSAFE`) - без `FATAL` до кінця прогону (останній рядок на 105 с часу МК, `QPCHECK_S1idle_2026-11-25.txt`); до фіксу падав на 1,7-8,2 с (проблема 86).
+
+### AO Gate
+
+Два стани за розділом 2: `clear` --тік [`gate_run` повернула `GATE_EV_IN`]--> `occupied` --тік [`GATE_EV_OUT`]--> `clear`. Пороги з гістерезисом - як і були, `App/gate.c`; `gate_run` у `main.c` тепер повертає подію порога (в усіх трьох прошивках: rtos +4 B, super loop без змін). `PARCEL_IN` і `PARCEL_OUT` для Sorter поки йдуть через проміжний шар (`tasks_parcel`, `sorter_parcel_out` під `LOCK(SORTER)`) - перейдуть у події разом з AO Sorter. Flash +96 B.
+
+Перевірка (`GATE_2026-11-25.txt`, `8a9f6fa0`): `ldr_gate` мишею 500 -> 10 -> 500 лк - `PARCEL_IN gate=3413`, `SORT n=1 ... lat_ms=2`, `PARCEL_OUT gate=999 state=READY`. S1 на тому ж хеші (`S1_2026-11-25_0117.log`): 4 `I2C_RECOVER`, gate - 7 пропусків, `FATAL` немає.

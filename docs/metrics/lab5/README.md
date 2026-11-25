@@ -48,6 +48,8 @@ Wokwi для VS Code, `tools/run_scenario.py` по RFC2217 (`rfc2217://localhost
 | `S1_2026-11-25_0102.log` | `62b09bff`, I²C без жодного захисту | 37 `I2C_RECOVER` (32 - запис LCD), проміжна точка проблеми 86 |
 | `S1_2026-11-25_0109.log` | `ed392c78`, AO Estop, тіки одноразові, I²C під `port_sim_tick_hold` | 1 `I2C_RECOVER`, пропусків gate 6 (було 68) |
 | `QPCHECK_S1idle_2026-11-25.txt` | `ed392c78`, `TEST_QPCHECK=1 PERF=0`, без сценарію | без `FATAL` (до фіксу - `FATAL qp qf_port 630` на 1,7-8,2 с), проблема 86 |
+| `S1_2026-11-25_0117.log` | `8a9f6fa0`, AO Gate | 4 `I2C_RECOVER`, gate - 7 пропусків |
+| `GATE_2026-11-25.txt` | `8a9f6fa0`, той самий запуск, `ldr_gate` мишею | `PARCEL_IN` -> `SORT` -> `PARCEL_OUT` через стани Gate |
 | `QSTRESS_2026-11-25.txt` | `TEST_QSTRESS=1` з виправленим `port_sim` (до коміту `e2bf64f`, той самий код) | ворота знову PASS, найменший запас стека 84 B |
 
 Бюджет пам'яті - `budget/` (свій README).
