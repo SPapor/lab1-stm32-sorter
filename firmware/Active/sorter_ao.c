@@ -631,12 +631,13 @@ static QState console_run(Ao *me, QEvt const *e)
 {
     int ch;
 
-    (void)me;
     switch (e->sig) {
     case RX_SIG:
         rx_posted = 0u;
         if ((ch = tasks_rx_getc()) >= 0)
             ops->cli(ch);
+        if (rx_head != rx_tail && !rx_posted && QACTIVE_POST_X(&me->super, &rx_evt, 0U, &me->super))
+            rx_posted = 1u;
         return Q_HANDLED();
     case LOG_SIG: {
         LogEvt const *l = Q_EVT_CAST(LogEvt);

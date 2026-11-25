@@ -944,6 +944,9 @@ static void uart_rx_run(int ch)
       evt("cmd_rx", us_rx);
       evt("cmd_reply", us_reply);
 #endif
+#if ARCH_QPC
+      return;
+#endif
     }
   } while ((ch = con_getc()) >= 0);
 }
