@@ -75,7 +75,7 @@ static const struct {
     [T_GATE]   = { "gate",   128u, 7u, 2u },
     [T_SORT]   = { "sort",   160u, 6u, 3u },
     [T_BUS]    = { "bus",    176u, 5u, 3u },
-    [T_IMU]    = { "imu",    96u, 4u, 4u },
+    [T_IMU]    = { "imu",    112u, 4u, 4u },
     [T_CLI]    = { "cli",    192u, 3u, 2u },
     [T_LOGGER] = { "logger", 160u, 2u, QLOG_LEN },
     [T_LCD]    = { "lcd",    128u, 1u, 4u },
@@ -83,7 +83,7 @@ static const struct {
 
 static const tasks_ops_t *ops;
 static Ao ao[T_COUNT];
-static StackType_t stk_estop[128], stk_gate[128], stk_sort[160], stk_bus[176], stk_imu[96],
+static StackType_t stk_estop[128], stk_gate[128], stk_sort[160], stk_bus[176], stk_imu[112],
     stk_cli[192], stk_logger[160], stk_lcd[128];
 static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_cli,
                                            stk_logger, stk_lcd };
