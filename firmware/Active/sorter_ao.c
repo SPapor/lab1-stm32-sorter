@@ -110,6 +110,7 @@ static const QEvt estop_press_evt = QEVT_INITIALIZER(ESTOP_PRESS_SIG);
 static const QEvt rx_evt = QEVT_INITIALIZER(RX_SIG);
 
 static uint32_t parcel_drop;
+volatile uint32_t qp_post_fail;
 static uint32_t bus_skip;
 #ifdef TEST_QPCHECK
 static uint8_t qmax[T_COUNT];
@@ -766,7 +767,8 @@ void tasks_report(tasks_out_fn out)
 #endif
 
     tasks_list(out);
-    out("BUSQ", "skip=%lu parcel_drop=%lu", (unsigned long)bus_skip, (unsigned long)parcel_drop);
+    out("BUSQ", "skip=%lu parcel_drop=%lu post_fail=%lu", (unsigned long)bus_skip, (unsigned long)parcel_drop,
+        (unsigned long)qp_post_fail);
     out("LOGQ", "len=%u max_used=%lu lines=%lu drop=%lu trunc=%lu rx_drop=%lu",
         (unsigned)QLOG_LEN, (unsigned long)(QLOG_LEN + 2u - QF_getPoolMin(3U)), (unsigned long)log_lines,
         (unsigned long)log_drop, (unsigned long)log_trunc, (unsigned long)rx_drop);
