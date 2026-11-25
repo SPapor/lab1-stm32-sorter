@@ -4760,3 +4760,1086 @@ k
 3208135 LOAD pct=56 pm=560 win_cyc=48000096 busy_cyc=26873606 windows=3196
 3209135 LOAD pct=56 pm=557 win_cyc=48000672 busy_cyc=26740618 windows=3197
 3210135 LOAD pct=56 pm=558 win_cyc=47999280 busy_cyc=26802397 windows=3198
+3211135 LOAD pct=56 pm=559 win_cyc=47999616 busy_cyc=26828651 windows=3199
+3212135 LOAD pct=56 pm=559 win_cyc=48001104 busy_cyc=26825006 windows=3200
+3213135 LOAD pct=56 pm=558 win_cyc=48000216 busy_cyc=26781682 windows=3201
+3214135 LOAD pct=55 pm=549 win_cyc=47999028 busy_cyc=26372258 windows=3202
+3215135 LOAD pct=56 pm=555 win_cyc=48000756 busy_cyc=26660207 windows=3203
+3216135 LOAD pct=56 pm=555 win_cyc=48000216 busy_cyc=26650127 windows=3204
+3217135 LOAD pct=55 pm=555 win_cyc=47999964 busy_cyc=26635427 windows=3205
+3218135 LOAD pct=55 pm=555 win_cyc=47999398 busy_cyc=26616198 windows=3206
+3219135 LOAD pct=56 pm=555 win_cyc=48001252 busy_cyc=26646705 windows=3207
+3220135 LOAD pct=55 pm=551 win_cyc=47999752 busy_cyc=26447433 windows=3208
+3221135 LOAD pct=55 pm=550 win_cyc=48000040 busy_cyc=26390346 windows=3209
+3222135 LOAD pct=55 pm=555 win_cyc=47999632 busy_cyc=26616500 windows=3210
+3222862 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3222882 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3222912 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3223135 LOAD pct=59 pm=594 win_cyc=47999596 busy_cyc=28488802 windows=3211
+3224135 LOAD pct=56 pm=558 win_cyc=48001036 busy_cyc=26764845 windows=3212
+3225135 LOAD pct=55 pm=552 win_cyc=47999584 busy_cyc=26478606 windows=3213
+3226135 LOAD pct=56 pm=558 win_cyc=48000160 busy_cyc=26800066 windows=3214
+3227135 LOAD pct=56 pm=556 win_cyc=47999968 busy_cyc=26708205 windows=3215
+3228135 LOAD pct=56 pm=559 win_cyc=48000220 busy_cyc=26819143 windows=3216
+3229135 LOAD pct=56 pm=561 win_cyc=47999440 busy_cyc=26907471 windows=3217
+3230135 LOAD pct=56 pm=560 win_cyc=48000352 busy_cyc=26899114 windows=3218
+3231135 LOAD pct=56 pm=559 win_cyc=47999992 busy_cyc=26845402 windows=3219
+3232135 LOAD pct=56 pm=560 win_cyc=47999896 busy_cyc=26879519 windows=3220
+3233135 LOAD pct=56 pm=559 win_cyc=47999730 busy_cyc=26852519 windows=3221
+3234135 LOAD pct=56 pm=556 win_cyc=47999976 busy_cyc=26704788 windows=3222
+3235135 LOAD pct=55 pm=555 win_cyc=47999760 busy_cyc=26630314 windows=3223
+3236135 LOAD pct=56 pm=560 win_cyc=47999328 busy_cyc=26885987 windows=3224
+3237135 LOAD pct=56 pm=558 win_cyc=48000924 busy_cyc=26768153 windows=3225
+3238135 LOAD pct=56 pm=558 win_cyc=47999964 busy_cyc=26766602 windows=3226
+3239135 LOAD pct=56 pm=555 win_cyc=47999160 busy_cyc=26640600 windows=3227
+3240135 LOAD pct=56 pm=557 win_cyc=48000876 busy_cyc=26741513 windows=3228
+3241134 LOAD pct=56 pm=556 win_cyc=47999028 busy_cyc=26686909 windows=3229
+3242134 LOAD pct=56 pm=557 win_cyc=48000048 busy_cyc=26744746 windows=3230
+3243134 LOAD pct=56 pm=558 win_cyc=47999988 busy_cyc=26776247 windows=3231
+3244134 LOAD pct=56 pm=559 win_cyc=47999964 busy_cyc=26808768 windows=3232
+3245134 LOAD pct=56 pm=560 win_cyc=48000060 busy_cyc=26894663 windows=3233
+3246134 LOAD pct=56 pm=559 win_cyc=47999628 busy_cyc=26845084 windows=3234
+3247134 LOAD pct=56 pm=560 win_cyc=47999952 busy_cyc=26866477 windows=3235
+3248134 LOAD pct=56 pm=556 win_cyc=48000348 busy_cyc=26697168 windows=3236
+3249134 LOAD pct=56 pm=557 win_cyc=48000000 busy_cyc=26721754 windows=3237
+3250134 LOAD pct=56 pm=560 win_cyc=48001008 busy_cyc=26871837 windows=3238
+3251134 LOAD pct=56 pm=560 win_cyc=47998692 busy_cyc=26880736 windows=3239
+3252134 LOAD pct=56 pm=560 win_cyc=48001272 busy_cyc=26880655 windows=3240
+3253134 LOAD pct=56 pm=559 win_cyc=48000036 busy_cyc=26830365 windows=3241
+3254134 LOAD pct=56 pm=558 win_cyc=47999976 busy_cyc=26781719 windows=3242
+3255134 LOAD pct=56 pm=559 win_cyc=47999016 busy_cyc=26842554 windows=3243
+3256134 LOAD pct=56 pm=560 win_cyc=48001008 busy_cyc=26875359 windows=3244
+3257134 LOAD pct=56 pm=560 win_cyc=47999976 busy_cyc=26889496 windows=3245
+3258134 LOAD pct=56 pm=558 win_cyc=47999088 busy_cyc=26778725 windows=3246
+3259134 LOAD pct=56 pm=558 win_cyc=48000960 busy_cyc=26794785 windows=3247
+3260134 LOAD pct=56 pm=558 win_cyc=47999712 busy_cyc=26798910 windows=3248
+3261134 LOAD pct=56 pm=558 win_cyc=48000228 busy_cyc=26783323 windows=3249
+3262134 LOAD pct=55 pm=554 win_cyc=47999100 busy_cyc=26612955 windows=3250
+3263134 LOAD pct=56 pm=555 win_cyc=48000912 busy_cyc=26660855 windows=3251
+3264134 LOAD pct=56 pm=555 win_cyc=47999988 busy_cyc=26646143 windows=3252
+3265134 LOAD pct=56 pm=555 win_cyc=48000036 busy_cyc=26642879 windows=3253
+3266134 LOAD pct=55 pm=554 win_cyc=47999315 busy_cyc=26614075 windows=3254
+3267134 LOAD pct=55 pm=551 win_cyc=48001263 busy_cyc=26439504 windows=3255
+# > heap
+heap3268134 LOAD pct=56 pm=557 win_cyc=47999800 busy_cyc=26753236 windows=3256
+
+3268161 HEAP arena=0 used=0 free=0
+3268167 POOL n=1 min_free=5
+3268175 POOL n=2 min_free=1
+3268184 EVT t_us=3268229916 name=cmd_rx
+3268185 EVT t_us=3268247683 name=cmd_reply
+# > stack
+sta3268767 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+c3269134 LOAD pct=60 pm=596 win_cyc=47999189 busy_cyc=28631090 windows=3257
+k
+3269367 STACK used=584 reserved=1024 free=440 overflow=0
+3269379 STACK name=estop used=132 reserved=408 free=276
+3269395 STACK name=gate used=372 reserved=504 free=132
+3269407 STACK name=sort used=528 reserved=632 free=104
+3269419 STACK name=bus used=588 reserved=712 free=124
+3269434 STACK name=imu used=364 reserved=464 free=100
+3269445 STACK name=console used=696 reserved=832 free=136
+3269458 STACK name=lcd used=356 reserved=464 free=108
+3269469 STACK name=IDLE used=84 reserved=192 free=108
+3269485 EVT t_us=3269435448 name=cmd_rx
+3269487 EVT t_us=3269552873 name=cmd_reply
+3270134 LOAD pct=63 pm=635 win_cyc=47999583 busy_cyc=30467846 windows=3258
+3270892 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3270932 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3271134 LOAD pct=59 pm=586 win_cyc=48000232 busy_cyc=28125641 windows=3259
+3272134 LOAD pct=56 pm=558 win_cyc=47999621 busy_cyc=26767985 windows=3260
+3273134 LOAD pct=56 pm=556 win_cyc=48000555 busy_cyc=26685935 windows=3261
+3274138 LOAD pct=56 pm=559 win_cyc=48210597 busy_cyc=26959157 windows=3262
+3274132 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3276134 LOAD pct=56 pm=559 win_cyc=95789271 busy_cyc=53584321 windows=3263
+3277134 LOAD pct=56 pm=560 win_cyc=48000088 busy_cyc=26861814 windows=3264
+3278134 LOAD pct=56 pm=561 win_cyc=47999981 busy_cyc=26916115 windows=3265
+3279134 LOAD pct=56 pm=560 win_cyc=47998693 busy_cyc=26876859 windows=3266
+3280134 LOAD pct=56 pm=560 win_cyc=48000780 busy_cyc=26870477 windows=3267
+3281134 LOAD pct=56 pm=560 win_cyc=47999976 busy_cyc=26856089 windows=3268
+3282134 LOAD pct=56 pm=560 win_cyc=47999832 busy_cyc=26902074 windows=3269
+3283134 LOAD pct=56 pm=559 win_cyc=48000096 busy_cyc=26841832 windows=3270
+3284134 LOAD pct=56 pm=558 win_cyc=48000132 busy_cyc=26802756 windows=3271
+3285134 LOAD pct=56 pm=559 win_cyc=47999964 busy_cyc=26852624 windows=3272
+3286134 LOAD pct=56 pm=558 win_cyc=48000000 busy_cyc=26805592 windows=3273
+3287134 LOAD pct=56 pm=559 win_cyc=47999232 busy_cyc=26811229 windows=3274
+3288133 LOAD pct=56 pm=558 win_cyc=48000528 busy_cyc=26784727 windows=3275
+3289133 LOAD pct=56 pm=559 win_cyc=48000000 busy_cyc=26808414 windows=3276
+3290133 LOAD pct=56 pm=558 win_cyc=48000084 busy_cyc=26798934 windows=3277
+3291133 LOAD pct=56 pm=559 win_cyc=48000000 busy_cyc=26813847 windows=3278
+3292133 LOAD pct=56 pm=559 win_cyc=47999964 busy_cyc=26829884 windows=3279
+3293133 LOAD pct=56 pm=560 win_cyc=48000036 busy_cyc=26898967 windows=3280
+3294133 LOAD pct=56 pm=559 win_cyc=48000168 busy_cyc=26833798 windows=3281
+3295133 LOAD pct=56 pm=559 win_cyc=47999244 busy_cyc=26824868 windows=3282
+3296133 LOAD pct=56 pm=559 win_cyc=47999988 busy_cyc=26826244 windows=3283
+3297133 LOAD pct=56 pm=559 win_cyc=48000552 busy_cyc=26834734 windows=3284
+3298133 LOAD pct=56 pm=559 win_cyc=48000024 busy_cyc=26822896 windows=3285
+3299133 LOAD pct=56 pm=559 win_cyc=48000216 busy_cyc=26842468 windows=3286
+3300133 LOAD pct=56 pm=559 win_cyc=47999976 busy_cyc=26845342 windows=3287
+3301133 LOAD pct=56 pm=559 win_cyc=48000048 busy_cyc=26829892 windows=3288
+3302133 LOAD pct=56 pm=559 win_cyc=47999976 busy_cyc=26823892 windows=3289
+3303133 LOAD pct=56 pm=559 win_cyc=48000024 busy_cyc=26846830 windows=3290
+3304133 LOAD pct=56 pm=559 win_cyc=47999916 busy_cyc=26837014 windows=3291
+3305133 LOAD pct=56 pm=560 win_cyc=47999940 busy_cyc=26898692 windows=3292
+3306133 LOAD pct=56 pm=558 win_cyc=48000072 busy_cyc=26798641 windows=3293
+3307133 LOAD pct=56 pm=558 win_cyc=47999808 busy_cyc=26773551 windows=3294
+3308133 LOAD pct=56 pm=559 win_cyc=48000024 busy_cyc=26831960 windows=3295
+3309133 LOAD pct=56 pm=558 win_cyc=48000036 busy_cyc=26774352 windows=3296
+3310133 LOAD pct=56 pm=555 win_cyc=47999952 busy_cyc=26656678 windows=3297
+3311133 LOAD pct=56 pm=556 win_cyc=48000252 busy_cyc=26693551 windows=3298
+3312133 LOAD pct=55 pm=549 win_cyc=47999748 busy_cyc=26362250 windows=3299
+3313133 LOAD pct=56 pm=556 win_cyc=47998800 busy_cyc=26679805 windows=3300
+3314133 LOAD pct=56 pm=558 win_cyc=48000671 busy_cyc=26761300 windows=3301
+3315133 LOAD pct=56 pm=557 win_cyc=48001323 busy_cyc=26716415 windows=3302
+3316133 LOAD pct=56 pm=557 win_cyc=48000017 busy_cyc=26714544 windows=3303
+3317133 LOAD pct=56 pm=557 win_cyc=47999956 busy_cyc=26756233 windows=3304
+3318133 LOAD pct=56 pm=557 win_cyc=47999619 busy_cyc=26758775 windows=3305
+3318871 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3318891 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3319133 LOAD pct=58 pm=585 win_cyc=48000245 busy_cyc=28068740 windows=3306
+3320133 LOAD pct=56 pm=557 win_cyc=47999632 busy_cyc=26726522 windows=3307
+3321133 LOAD pct=56 pm=558 win_cyc=48000471 busy_cyc=26799597 windows=3308
+3322137 LOAD pct=55 pm=551 win_cyc=48210658 busy_cyc=26563885 windows=3309
+3322131 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3324133 LOAD pct=56 pm=562 win_cyc=95789318 busy_cyc=53822186 windows=3310
+3325133 LOAD pct=56 pm=560 win_cyc=47999933 busy_cyc=26894766 windows=3311
+3326133 LOAD pct=56 pm=560 win_cyc=48000076 busy_cyc=26857023 windows=3312
+3327133 LOAD pct=56 pm=560 win_cyc=47998717 busy_cyc=26871982 windows=3313
+3328133 LOAD pct=56 pm=559 win_cyc=48000000 busy_cyc=26825388 windows=3314
+3329133 LOAD pct=56 pm=559 win_cyc=48000756 busy_cyc=26851774 windows=3315
+3330133 LOAD pct=56 pm=560 win_cyc=47999772 busy_cyc=26857100 windows=3316
+# > heap
+heap3331133 LOAD pct=56 pm=562 win_cyc=48005443 busy_cyc=26989650 windows=3317
+
+3331147 HEAP arena=0 used=0 free=0
+3331156 POOL n=1 min_free=5
+3331163 POOL n=2 min_free=1
+3331167 EVT t_us=3331216710 name=cmd_rx
+3331172 EVT t_us=3331236298 name=cmd_reply
+# > stack
+stac3332133 LOAD pct=59 pm=590 win_cyc=47994821 busy_cyc=28316578 windows=3318
+k
+3332416 STACK used=584 reserved=1024 free=440 overflow=0
+3332427 STACK name=estop used=132 reserved=408 free=276
+3332443 STACK name=gate used=372 reserved=504 free=132
+3332454 STACK name=sort used=528 reserved=632 free=104
+3332466 STACK name=bus used=588 reserved=712 free=124
+3332477 STACK name=imu used=364 reserved=464 free=100
+3332488 STACK name=console used=696 reserved=832 free=136
+3332503 STACK name=lcd used=356 reserved=464 free=108
+3332515 STACK name=IDLE used=84 reserved=192 free=108
+3332527 EVT t_us=3332485339 name=cmd_rx
+3332528 EVT t_us=3332595762 name=cmd_reply
+3333133 LOAD pct=64 pm=638 win_cyc=47999964 busy_cyc=30609911 windows=3319
+3334133 LOAD pct=56 pm=558 win_cyc=48000000 busy_cyc=26803849 windows=3320
+3335133 LOAD pct=56 pm=558 win_cyc=47999256 busy_cyc=26800273 windows=3321
+3336132 LOAD pct=56 pm=558 win_cyc=48000528 busy_cyc=26783324 windows=3322
+3337132 LOAD pct=56 pm=559 win_cyc=47999976 busy_cyc=26814577 windows=3323
+3338132 LOAD pct=56 pm=558 win_cyc=48000084 busy_cyc=26791477 windows=3324
+3339132 LOAD pct=56 pm=559 win_cyc=48000000 busy_cyc=26812905 windows=3325
+3340132 LOAD pct=56 pm=559 win_cyc=47999964 busy_cyc=26837776 windows=3326
+3341132 LOAD pct=56 pm=560 win_cyc=48000036 busy_cyc=26895686 windows=3327
+3342132 LOAD pct=56 pm=559 win_cyc=48000168 busy_cyc=26824438 windows=3328
+3343132 LOAD pct=56 pm=559 win_cyc=47999244 busy_cyc=26833216 windows=3329
+3344132 LOAD pct=56 pm=559 win_cyc=47999976 busy_cyc=26824859 windows=3330
+3345132 LOAD pct=56 pm=559 win_cyc=48000540 busy_cyc=26835994 windows=3331
+3346132 LOAD pct=56 pm=559 win_cyc=48000048 busy_cyc=26824008 windows=3332
+3347132 LOAD pct=56 pm=559 win_cyc=48000216 busy_cyc=26842043 windows=3333
+3348132 LOAD pct=56 pm=559 win_cyc=47999976 busy_cyc=26845138 windows=3334
+3349132 LOAD pct=56 pm=559 win_cyc=48000048 busy_cyc=26828628 windows=3335
+3350132 LOAD pct=56 pm=559 win_cyc=47999976 busy_cyc=26821467 windows=3336
+3351132 LOAD pct=56 pm=559 win_cyc=48000024 busy_cyc=26843206 windows=3337
+3352132 LOAD pct=56 pm=559 win_cyc=47999916 busy_cyc=26847642 windows=3338
+3353132 LOAD pct=56 pm=560 win_cyc=47999940 busy_cyc=26874074 windows=3339
+3354132 LOAD pct=56 pm=558 win_cyc=48000096 busy_cyc=26798482 windows=3340
+3355132 LOAD pct=56 pm=558 win_cyc=47999808 busy_cyc=26774274 windows=3341
+3356132 LOAD pct=56 pm=556 win_cyc=47999940 busy_cyc=26707913 windows=3342
+3357132 LOAD pct=56 pm=557 win_cyc=48000120 busy_cyc=26738411 windows=3343
+3358132 LOAD pct=56 pm=555 win_cyc=47999964 busy_cyc=26662056 windows=3344
+3359132 LOAD pct=56 pm=556 win_cyc=48000156 busy_cyc=26693986 windows=3345
+3360132 LOAD pct=56 pm=556 win_cyc=47999832 busy_cyc=26703899 windows=3346
+3361132 LOAD pct=56 pm=556 win_cyc=48000012 busy_cyc=26683331 windows=3347
+3362132 LOAD pct=55 pm=555 win_cyc=47999399 busy_cyc=26628077 windows=3348
+3363132 LOAD pct=55 pm=554 win_cyc=48001361 busy_cyc=26599178 windows=3349
+3364132 LOAD pct=56 pm=557 win_cyc=47999967 busy_cyc=26757004 windows=3350
+3365132 LOAD pct=56 pm=558 win_cyc=47999956 busy_cyc=26764782 windows=3351
+3366132 LOAD pct=56 pm=558 win_cyc=47999717 busy_cyc=26764877 windows=3352
+3366850 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3367132 LOAD pct=57 pm=572 win_cyc=48000159 busy_cyc=27433740 windows=3353
+3368132 LOAD pct=56 pm=558 win_cyc=47999620 busy_cyc=26768814 windows=3354
+3369132 LOAD pct=56 pm=558 win_cyc=48000569 busy_cyc=26799723 windows=3355
+3370136 LOAD pct=56 pm=559 win_cyc=48210571 busy_cyc=26957408 windows=3356
+3370130 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3372132 LOAD pct=56 pm=558 win_cyc=95789321 busy_cyc=53440704 windows=3357
+3373132 LOAD pct=56 pm=559 win_cyc=48000027 busy_cyc=26850927 windows=3358
+3374132 LOAD pct=56 pm=560 win_cyc=47999980 busy_cyc=26888013 windows=3359
+3375132 LOAD pct=56 pm=560 win_cyc=47999597 busy_cyc=26876207 windows=3360
+3376132 LOAD pct=56 pm=559 win_cyc=47999900 busy_cyc=26838015 windows=3361
+3377132 LOAD pct=56 pm=559 win_cyc=47999976 busy_cyc=26851297 windows=3362
+3378132 LOAD pct=56 pm=559 win_cyc=47999832 busy_cyc=26852961 windows=3363
+3379132 LOAD pct=56 pm=559 win_cyc=48000096 busy_cyc=26844123 windows=3364
+3380132 LOAD pct=56 pm=558 win_cyc=48000132 busy_cyc=26802621 windows=3365
+3381132 LOAD pct=56 pm=559 win_cyc=47999964 busy_cyc=26848850 windows=3366
+3382132 LOAD pct=56 pm=559 win_cyc=48000012 busy_cyc=26847129 windows=3367
+3383132 LOAD pct=56 pm=558 win_cyc=47999220 busy_cyc=26799670 windows=3368
+3384131 LOAD pct=56 pm=558 win_cyc=48000528 busy_cyc=26782283 windows=3369
+3385131 LOAD pct=56 pm=559 win_cyc=48000012 busy_cyc=26815114 windows=3370
+3386131 LOAD pct=56 pm=558 win_cyc=48000072 busy_cyc=26799646 windows=3371
+3387131 LOAD pct=56 pm=559 win_cyc=47999916 busy_cyc=26814356 windows=3372
+3388131 LOAD pct=56 pm=559 win_cyc=48000288 busy_cyc=26837602 windows=3373
+3389131 LOAD pct=56 pm=560 win_cyc=47999796 busy_cyc=26880098 windows=3374
+3390131 LOAD pct=56 pm=559 win_cyc=48000228 busy_cyc=26820588 windows=3375
+3391131 LOAD pct=56 pm=559 win_cyc=47999208 busy_cyc=26841994 windows=3376
+3392131 LOAD pct=56 pm=559 win_cyc=47999952 busy_cyc=26824486 windows=3377
+3393131 LOAD pct=56 pm=559 win_cyc=48000540 busy_cyc=26835828 windows=3378
+# > heap
+hea3394131 LOAD pct=56 pm=561 win_cyc=48004656 busy_cyc=26930941 windows=3379
+p
+3394342 HEAP arena=0 used=0 free=0
+3394347 POOL n=1 min_free=5
+3394355 POOL n=2 min_free=1
+3394335 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+3394363 EVT t_us=3394413197 name=cmd_rx
+3394365 EVT t_us=3394433135 name=cmd_reply
+# > stack
+sta3395131 LOAD pct=60 pm=603 win_cyc=47995392 busy_cyc=28926114 windows=3380
+ck
+3395525 STACK used=584 reserved=1024 free=440 overflow=0
+3395541 STACK name=estop used=132 reserved=408 free=276
+3395552 STACK name=gate used=372 reserved=504 free=132
+3395563 STACK name=sort used=528 reserved=632 free=104
+3395575 STACK name=bus used=588 reserved=712 free=124
+3395586 STACK name=imu used=364 reserved=464 free=100
+3395601 STACK name=console used=696 reserved=832 free=136
+3395612 STACK name=lcd used=356 reserved=464 free=108
+3395623 STACK name=IDLE used=84 reserved=192 free=108
+3395635 EVT t_us=3395596429 name=cmd_rx
+3395637 EVT t_us=3395705927 name=cmd_reply
+3396131 LOAD pct=64 pm=636 win_cyc=48005124 busy_cyc=30544884 windows=3381
+3397131 LOAD pct=56 pm=559 win_cyc=47996052 busy_cyc=26838390 windows=3382
+3398131 LOAD pct=56 pm=558 win_cyc=48000024 busy_cyc=26776773 windows=3383
+3399131 LOAD pct=56 pm=560 win_cyc=47999064 busy_cyc=26862799 windows=3384
+3400131 LOAD pct=56 pm=559 win_cyc=48000912 busy_cyc=26850443 windows=3385
+3401131 LOAD pct=56 pm=560 win_cyc=48000024 busy_cyc=26891542 windows=3386
+3402131 LOAD pct=56 pm=559 win_cyc=47999064 busy_cyc=26810351 windows=3387
+3403131 LOAD pct=56 pm=558 win_cyc=47999592 busy_cyc=26798189 windows=3388
+3404131 LOAD pct=56 pm=558 win_cyc=48001104 busy_cyc=26803202 windows=3389
+3405131 LOAD pct=56 pm=559 win_cyc=48000240 busy_cyc=26827918 windows=3390
+3406131 LOAD pct=55 pm=552 win_cyc=47999004 busy_cyc=26471976 windows=3391
+3407131 LOAD pct=55 pm=549 win_cyc=48001008 busy_cyc=26333056 windows=3392
+3408131 LOAD pct=56 pm=555 win_cyc=47999988 busy_cyc=26650235 windows=3393
+3409131 LOAD pct=56 pm=555 win_cyc=47999940 busy_cyc=26645627 windows=3394
+3410131 LOAD pct=55 pm=554 win_cyc=47999448 busy_cyc=26612527 windows=3395
+3411131 LOAD pct=56 pm=555 win_cyc=48001228 busy_cyc=26652765 windows=3396
+3412131 LOAD pct=55 pm=551 win_cyc=47999787 busy_cyc=26448409 windows=3397
+3413131 LOAD pct=56 pm=556 win_cyc=48000005 busy_cyc=26675578 windows=3398
+3414131 LOAD pct=55 pm=555 win_cyc=47999608 busy_cyc=26629772 windows=3399
+3414248 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414268 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414288 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414308 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414328 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414348 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414368 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414388 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414408 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414428 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414448 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414468 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414488 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414508 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414528 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414548 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414568 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414588 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414768 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414788 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414808 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414828 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414848 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3414908 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3415131 LOAD pct=86 pm=859 win_cyc=47999607 busy_cyc=41211927 windows=3400
+3416131 LOAD pct=56 pm=558 win_cyc=48001013 busy_cyc=26762841 windows=3401
+3417131 LOAD pct=54 pm=542 win_cyc=47999620 busy_cyc=26035609 windows=3402
+3418131 LOAD pct=56 pm=558 win_cyc=48000111 busy_cyc=26801488 windows=3403
+3419131 LOAD pct=56 pm=558 win_cyc=48000017 busy_cyc=26767797 windows=3404
+3420131 LOAD pct=56 pm=559 win_cyc=48000220 busy_cyc=26818518 windows=3405
+3421131 LOAD pct=56 pm=561 win_cyc=47999643 busy_cyc=26905969 windows=3406
+3422131 LOAD pct=56 pm=561 win_cyc=48000137 busy_cyc=26905739 windows=3407
+3423131 LOAD pct=56 pm=559 win_cyc=47999992 busy_cyc=26845175 windows=3408
+3424131 LOAD pct=56 pm=560 win_cyc=47999835 busy_cyc=26873780 windows=3409
+3425131 LOAD pct=56 pm=560 win_cyc=47999789 busy_cyc=26855752 windows=3410
+3426131 LOAD pct=56 pm=559 win_cyc=48000024 busy_cyc=26852854 windows=3411
+3427131 LOAD pct=55 pm=555 win_cyc=47999700 busy_cyc=26634490 windows=3412
+3428131 LOAD pct=56 pm=560 win_cyc=47999364 busy_cyc=26880695 windows=3413
+3429131 LOAD pct=56 pm=558 win_cyc=48000876 busy_cyc=26764117 windows=3414
+3430131 LOAD pct=56 pm=555 win_cyc=47999976 busy_cyc=26644165 windows=3415
+3431131 LOAD pct=56 pm=555 win_cyc=47999160 busy_cyc=26640881 windows=3416
+3432131 LOAD pct=56 pm=558 win_cyc=48000876 busy_cyc=26764459 windows=3417
+3433130 LOAD pct=56 pm=558 win_cyc=47999064 busy_cyc=26802623 windows=3418
+3434130 LOAD pct=56 pm=557 win_cyc=48000012 busy_cyc=26749448 windows=3419
+3435130 LOAD pct=56 pm=558 win_cyc=48000912 busy_cyc=26771577 windows=3420
+3436130 LOAD pct=56 pm=559 win_cyc=47999100 busy_cyc=26832713 windows=3421
+3437130 LOAD pct=56 pm=561 win_cyc=47999988 busy_cyc=26905243 windows=3422
+3438130 LOAD pct=56 pm=556 win_cyc=47999652 busy_cyc=26710339 windows=3423
+3439130 LOAD pct=56 pm=557 win_cyc=48000000 busy_cyc=26714085 windows=3424
+3440130 LOAD pct=56 pm=559 win_cyc=48000300 busy_cyc=26832919 windows=3425
+3441130 LOAD pct=56 pm=556 win_cyc=48000936 busy_cyc=26710554 windows=3426
+3442130 LOAD pct=56 pm=560 win_cyc=48000072 busy_cyc=26881414 windows=3427
+3443130 LOAD pct=56 pm=560 win_cyc=47998680 busy_cyc=26885027 windows=3428
+3444130 LOAD pct=56 pm=560 win_cyc=48001284 busy_cyc=26888702 windows=3429
+3445130 LOAD pct=56 pm=556 win_cyc=48000036 busy_cyc=26688621 windows=3430
+3446130 LOAD pct=56 pm=558 win_cyc=48000024 busy_cyc=26775058 windows=3431
+3447130 LOAD pct=56 pm=560 win_cyc=47999016 busy_cyc=26870049 windows=3432
+3448130 LOAD pct=56 pm=559 win_cyc=48000924 busy_cyc=26851397 windows=3433
+3449130 LOAD pct=56 pm=560 win_cyc=48000036 busy_cyc=26878403 windows=3434
+3450130 LOAD pct=56 pm=558 win_cyc=47999040 busy_cyc=26800849 windows=3435
+3451130 LOAD pct=56 pm=559 win_cyc=47999604 busy_cyc=26843006 windows=3436
+3452130 LOAD pct=56 pm=559 win_cyc=48001116 busy_cyc=26832751 windows=3437
+3453130 LOAD pct=56 pm=559 win_cyc=48000216 busy_cyc=26815406 windows=3438
+3454130 LOAD pct=55 pm=548 win_cyc=47999016 busy_cyc=26326493 windows=3439
+3455130 LOAD pct=55 pm=550 win_cyc=48001008 busy_cyc=26378356 windows=3440
+3456130 LOAD pct=56 pm=555 win_cyc=47999976 busy_cyc=26646731 windows=3441
+# > heap
+heap
+3457100 HEAP arena=0 used=0 free=0
+3457105 POOL n=1 min_free=5
+3457112 POOL n=2 min_free=1
+3457120 EVT t_us=3457172485 name=cmd_rx
+3457122 EVT t_us=3457192137 name=cmd_reply
+# > stack
+3457142 LOAD pct=57 pm=568 win_cyc=48582391 busy_cyc=27612008 windows=3442
+stack
+3458181 STACK used=584 reserved=1024 free=440 overflow=0
+3458194 STACK name=estop used=132 reserved=408 free=276
+3458210 STACK name=gate used=372 reserved=504 free=132
+3458221 STACK name=sort used=528 reserved=632 free=104
+3458232 STACK name=bus used=588 reserved=712 free=124
+3458244 STACK name=imu used=364 reserved=464 free=100
+3458260 STACK name=console used=696 reserved=832 free=136
+3458271 STACK name=lcd used=356 reserved=464 free=108
+3458282 STACK name=IDLE used=84 reserved=192 free=108
+3458295 EVT t_us=3458253601 name=cmd_rx
+3458300 EVT t_us=3458366767 name=cmd_reply
+3459130 LOAD pct=60 pm=597 win_cyc=95418249 busy_cyc=56940474 windows=3443
+3460130 LOAD pct=55 pm=550 win_cyc=47999740 busy_cyc=26390017 windows=3444
+3461130 LOAD pct=54 pm=544 win_cyc=48000004 busy_cyc=26118204 windows=3445
+3462130 LOAD pct=55 pm=555 win_cyc=47999668 busy_cyc=26630870 windows=3446
+3462247 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462267 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462287 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462307 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462327 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462347 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462367 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462387 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462407 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462427 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462447 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462467 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462487 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462507 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462527 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462547 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462567 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462587 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462607 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462787 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462807 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462827 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462847 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3462877 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3463130 LOAD pct=86 pm=860 win_cyc=47999668 busy_cyc=41267442 windows=3447
+3464130 LOAD pct=55 pm=553 win_cyc=48000952 busy_cyc=26526638 windows=3448
+3465130 LOAD pct=55 pm=546 win_cyc=47999632 busy_cyc=26221691 windows=3449
+3466130 LOAD pct=56 pm=557 win_cyc=48000076 busy_cyc=26756692 windows=3450
+3466169 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3466627 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3467130 LOAD pct=58 pm=582 win_cyc=48000004 busy_cyc=27923679 windows=3451
+3468130 LOAD pct=56 pm=558 win_cyc=48000028 busy_cyc=26792657 windows=3452
+3469130 LOAD pct=56 pm=559 win_cyc=47999620 busy_cyc=26809125 windows=3453
+3470130 LOAD pct=56 pm=560 win_cyc=48000340 busy_cyc=26902576 windows=3454
+3471130 LOAD pct=56 pm=556 win_cyc=48000004 busy_cyc=26678884 windows=3455
+3472130 LOAD pct=56 pm=560 win_cyc=47999920 busy_cyc=26876881 windows=3456
+3473130 LOAD pct=56 pm=559 win_cyc=47999716 busy_cyc=26855080 windows=3457
+3474130 LOAD pct=56 pm=557 win_cyc=48000024 busy_cyc=26717050 windows=3458
+3475130 LOAD pct=55 pm=555 win_cyc=47999724 busy_cyc=26633128 windows=3459
+3476130 LOAD pct=56 pm=560 win_cyc=47999328 busy_cyc=26889978 windows=3460
+3477130 LOAD pct=56 pm=558 win_cyc=48000912 busy_cyc=26764967 windows=3461
+3478130 LOAD pct=56 pm=558 win_cyc=47999964 busy_cyc=26763861 windows=3462
+3479130 LOAD pct=56 pm=555 win_cyc=47999100 busy_cyc=26643247 windows=3463
+3480130 LOAD pct=56 pm=558 win_cyc=48000936 busy_cyc=26760549 windows=3464
+3481129 LOAD pct=56 pm=558 win_cyc=47999076 busy_cyc=26805105 windows=3465
+3482129 LOAD pct=56 pm=557 win_cyc=47999988 busy_cyc=26748821 windows=3466
+3483129 LOAD pct=56 pm=558 win_cyc=47999976 busy_cyc=26775663 windows=3467
+3484129 LOAD pct=56 pm=559 win_cyc=48000048 busy_cyc=26837685 windows=3468
+3485129 LOAD pct=56 pm=561 win_cyc=47999976 busy_cyc=26905455 windows=3469
+3486129 LOAD pct=56 pm=559 win_cyc=47999604 busy_cyc=26847668 windows=3470
+3487129 LOAD pct=56 pm=560 win_cyc=48000084 busy_cyc=26870227 windows=3471
+3488129 LOAD pct=56 pm=556 win_cyc=48000336 busy_cyc=26698482 windows=3472
+3489129 LOAD pct=56 pm=559 win_cyc=47999988 busy_cyc=26825531 windows=3473
+3490129 LOAD pct=56 pm=560 win_cyc=48000912 busy_cyc=26883019 windows=3474
+3491129 LOAD pct=56 pm=560 win_cyc=47998752 busy_cyc=26890407 windows=3475
+3492129 LOAD pct=56 pm=560 win_cyc=48001260 busy_cyc=26888040 windows=3476
+3493129 LOAD pct=56 pm=556 win_cyc=48000000 busy_cyc=26684969 windows=3477
+3494129 LOAD pct=56 pm=558 win_cyc=47999988 busy_cyc=26781314 windows=3478
+3495129 LOAD pct=56 pm=559 win_cyc=47999100 busy_cyc=26848775 windows=3479
+3496129 LOAD pct=56 pm=559 win_cyc=48000912 busy_cyc=26847865 windows=3480
+3497129 LOAD pct=56 pm=560 win_cyc=47999988 busy_cyc=26877353 windows=3481
+3498129 LOAD pct=56 pm=558 win_cyc=47999100 busy_cyc=26806883 windows=3482
+3499129 LOAD pct=56 pm=559 win_cyc=48000924 busy_cyc=26826449 windows=3483
+3500129 LOAD pct=56 pm=559 win_cyc=47999760 busy_cyc=26849253 windows=3484
+3501129 LOAD pct=56 pm=558 win_cyc=48000252 busy_cyc=26765442 windows=3485
+3502129 LOAD pct=56 pm=555 win_cyc=47999040 busy_cyc=26656007 windows=3486
+3503129 LOAD pct=56 pm=556 win_cyc=48000924 busy_cyc=26667887 windows=3487
+3504129 LOAD pct=56 pm=555 win_cyc=48000036 busy_cyc=26644091 windows=3488
+3505129 LOAD pct=54 pm=544 win_cyc=47999976 busy_cyc=26089437 windows=3489
+3506129 LOAD pct=54 pm=543 win_cyc=47999292 busy_cyc=26062940 windows=3490
+3507129 LOAD pct=55 pm=553 win_cyc=48001348 busy_cyc=26543835 windows=3491
+3508129 LOAD pct=56 pm=556 win_cyc=47999728 busy_cyc=26669214 windows=3492
+3509129 LOAD pct=55 pm=551 win_cyc=48000016 busy_cyc=26447632 windows=3493
+3510129 LOAD pct=56 pm=556 win_cyc=47999657 busy_cyc=26669261 windows=3494
+3510296 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3510396 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3510596 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3510886 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3510926 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3511129 LOAD pct=62 pm=619 win_cyc=47999631 busy_cyc=29728860 windows=3495
+3512129 LOAD pct=55 pm=553 win_cyc=48000952 busy_cyc=26544493 windows=3496
+3513129 LOAD pct=56 pm=558 win_cyc=47999705 busy_cyc=26786465 windows=3497
+3514129 LOAD pct=55 pm=548 win_cyc=48000075 busy_cyc=26307301 windows=3498
+3515129 LOAD pct=56 pm=560 win_cyc=48000004 busy_cyc=26880002 windows=3499
+3516129 LOAD pct=56 pm=559 win_cyc=47999993 busy_cyc=26818625 windows=3500
+3517129 LOAD pct=56 pm=561 win_cyc=47999967 busy_cyc=26911110 windows=3501
+3518129 LOAD pct=56 pm=561 win_cyc=48000040 busy_cyc=26909588 windows=3502
+3519129 LOAD pct=56 pm=559 win_cyc=48000005 busy_cyc=26825384 windows=3503
+# > heap
+heap
+3520111 HEAP arena=0 used=0 free=0
+3520120 POOL n=1 min_free=5
+3520124 POOL n=2 min_free=1
+3520139 LOAD pct=58 pm=576 win_cyc=48499957 busy_cyc=27927678 windows=3504
+3520133 EVT t_us=3520184651 name=cmd_rx
+3520134 EVT t_us=3520205903 name=cmd_reply
+# > stack
+stack
+3521442 STACK used=584 reserved=1024 free=440 overflow=0
+3521454 STACK name=estop used=132 reserved=408 free=276
+3521469 STACK name=gate used=372 reserved=504 free=132
+3521480 STACK name=sort used=528 reserved=632 free=104
+3521491 STACK name=bus used=588 reserved=712 free=124
+3521503 STACK name=imu used=364 reserved=464 free=100
+3521514 STACK name=console used=696 reserved=832 free=136
+3521529 STACK name=lcd used=356 reserved=464 free=108
+3521540 STACK name=IDLE used=84 reserved=192 free=108
+3521553 EVT t_us=3521514780 name=cmd_rx
+3521554 EVT t_us=3521624846 name=cmd_reply
+3522129 LOAD pct=60 pm=602 win_cyc=95499642 busy_cyc=57444182 windows=3505
+3523129 LOAD pct=55 pm=555 win_cyc=47999760 busy_cyc=26636721 windows=3506
+3524129 LOAD pct=56 pm=560 win_cyc=47999328 busy_cyc=26883912 windows=3507
+3525129 LOAD pct=56 pm=558 win_cyc=48000876 busy_cyc=26766608 windows=3508
+3526129 LOAD pct=56 pm=558 win_cyc=48000000 busy_cyc=26766519 windows=3509
+3527129 LOAD pct=56 pm=555 win_cyc=47999088 busy_cyc=26642751 windows=3510
+3528129 LOAD pct=56 pm=557 win_cyc=48000924 busy_cyc=26742740 windows=3511
+3529128 LOAD pct=56 pm=558 win_cyc=47999004 busy_cyc=26805471 windows=3512
+3530128 LOAD pct=56 pm=558 win_cyc=48000048 busy_cyc=26794475 windows=3513
+3531128 LOAD pct=56 pm=556 win_cyc=48000012 busy_cyc=26665203 windows=3514
+3532128 LOAD pct=56 pm=559 win_cyc=48000024 busy_cyc=26810910 windows=3515
+3533128 LOAD pct=56 pm=560 win_cyc=47999988 busy_cyc=26896023 windows=3516
+3534128 LOAD pct=56 pm=559 win_cyc=47999604 busy_cyc=26847380 windows=3517
+3535128 LOAD pct=56 pm=560 win_cyc=48000060 busy_cyc=26872252 windows=3518
+3536128 LOAD pct=56 pm=559 win_cyc=48000360 busy_cyc=26840516 windows=3519
+3537128 LOAD pct=56 pm=557 win_cyc=48000012 busy_cyc=26713234 windows=3520
+3538128 LOAD pct=56 pm=560 win_cyc=48000876 busy_cyc=26867793 windows=3521
+3539128 LOAD pct=56 pm=560 win_cyc=47998776 busy_cyc=26886226 windows=3522
+3540128 LOAD pct=56 pm=560 win_cyc=48001260 busy_cyc=26883388 windows=3523
+3541128 LOAD pct=56 pm=559 win_cyc=47999964 busy_cyc=26841683 windows=3524
+3542128 LOAD pct=56 pm=558 win_cyc=48000060 busy_cyc=26777290 windows=3525
+3543128 LOAD pct=56 pm=559 win_cyc=47999040 busy_cyc=26843127 windows=3526
+3544128 LOAD pct=56 pm=560 win_cyc=48000900 busy_cyc=26870925 windows=3527
+3545128 LOAD pct=56 pm=560 win_cyc=48000060 busy_cyc=26872150 windows=3528
+3546128 LOAD pct=56 pm=557 win_cyc=47999040 busy_cyc=26748983 windows=3529
+3547128 LOAD pct=56 pm=558 win_cyc=47999580 busy_cyc=26795151 windows=3530
+3548128 LOAD pct=56 pm=558 win_cyc=48001140 busy_cyc=26803319 windows=3531
+3549128 LOAD pct=56 pm=559 win_cyc=48000216 busy_cyc=26810120 windows=3532
+3550128 LOAD pct=55 pm=554 win_cyc=47998992 busy_cyc=26611067 windows=3533
+3551128 LOAD pct=56 pm=556 win_cyc=48000792 busy_cyc=26670785 windows=3534
+3552128 LOAD pct=56 pm=555 win_cyc=48000216 busy_cyc=26642706 windows=3535
+3553128 LOAD pct=56 pm=555 win_cyc=47999928 busy_cyc=26643191 windows=3536
+3554128 LOAD pct=55 pm=554 win_cyc=47999436 busy_cyc=26614725 windows=3537
+3555128 LOAD pct=56 pm=555 win_cyc=48001277 busy_cyc=26652751 windows=3538
+3556128 LOAD pct=55 pm=551 win_cyc=47999739 busy_cyc=26455094 windows=3539
+3557128 LOAD pct=56 pm=556 win_cyc=48000016 busy_cyc=26674711 windows=3540
+3558128 LOAD pct=55 pm=555 win_cyc=47999609 busy_cyc=26631642 windows=3541
+3558865 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3558885 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3559128 LOAD pct=59 pm=587 win_cyc=47999679 busy_cyc=28153955 windows=3542
+3559668 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3559728 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3560128 LOAD pct=58 pm=578 win_cyc=48001024 busy_cyc=27742871 windows=3543
+3561128 LOAD pct=55 pm=551 win_cyc=47999561 busy_cyc=26429801 windows=3544
+3561668 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00008005
+3562128 LOAD pct=57 pm=566 win_cyc=48000087 busy_cyc=27162236 windows=3545
+3563128 LOAD pct=56 pm=555 win_cyc=48000005 busy_cyc=26645979 windows=3546
+3564128 LOAD pct=56 pm=558 win_cyc=48000040 busy_cyc=26799273 windows=3547
+3565128 LOAD pct=56 pm=561 win_cyc=47999955 busy_cyc=26915830 windows=3548
+3566128 LOAD pct=56 pm=561 win_cyc=48000005 busy_cyc=26907686 windows=3549
+3567128 LOAD pct=56 pm=560 win_cyc=48000016 busy_cyc=26859731 windows=3550
+3568128 LOAD pct=56 pm=560 win_cyc=47999871 busy_cyc=26881282 windows=3551
+3569128 LOAD pct=56 pm=560 win_cyc=47999775 busy_cyc=26863801 windows=3552
+3570128 LOAD pct=56 pm=556 win_cyc=48000003 busy_cyc=26709525 windows=3553
+3571128 LOAD pct=55 pm=555 win_cyc=47999734 busy_cyc=26636112 windows=3554
+3572128 LOAD pct=56 pm=560 win_cyc=47999352 busy_cyc=26890806 windows=3555
+3573128 LOAD pct=56 pm=558 win_cyc=48000852 busy_cyc=26761092 windows=3556
+3574128 LOAD pct=56 pm=557 win_cyc=48000012 busy_cyc=26753287 windows=3557
+3575128 LOAD pct=56 pm=555 win_cyc=47999088 busy_cyc=26644077 windows=3558
+3576128 LOAD pct=56 pm=558 win_cyc=48000912 busy_cyc=26765005 windows=3559
+3577127 LOAD pct=56 pm=558 win_cyc=47999004 busy_cyc=26759562 windows=3560
+3578127 LOAD pct=56 pm=558 win_cyc=48000060 busy_cyc=26780959 windows=3561
+3579127 LOAD pct=56 pm=558 win_cyc=48000024 busy_cyc=26778348 windows=3562
+3580127 LOAD pct=56 pm=559 win_cyc=47999988 busy_cyc=26811586 windows=3563
+3581127 LOAD pct=56 pm=560 win_cyc=47999964 busy_cyc=26894109 windows=3564
+3582127 LOAD pct=56 pm=559 win_cyc=47999712 busy_cyc=26849592 windows=3565
+# > heap
+heap3583127 LOAD pct=56 pm=562 win_cyc=47999976 busy_cyc=26984531 windows=3566
+
+3583186 HEAP arena=0 used=0 free=0
+3583191 POOL n=1 min_free=5
+3583198 POOL n=2 min_free=1
+3583207 EVT t_us=3583261433 name=cmd_rx
+3583209 EVT t_us=3583277581 name=cmd_reply
+# > stack
+stac3584127 LOAD pct=59 pm=585 win_cyc=48000360 busy_cyc=28090388 windows=3567
+k
+3584388 STACK used=584 reserved=1024 free=440 overflow=0
+3584400 STACK name=estop used=132 reserved=408 free=276
+3584412 STACK name=gate used=372 reserved=504 free=132
+3584427 STACK name=sort used=528 reserved=632 free=104
+3584438 STACK name=bus used=588 reserved=712 free=124
+3584449 STACK name=imu used=364 reserved=464 free=100
+3584461 STACK name=console used=696 reserved=832 free=136
+3584473 STACK name=lcd used=356 reserved=464 free=108
+3584488 STACK name=IDLE used=84 reserved=192 free=108
+3584499 EVT t_us=3584463135 name=cmd_rx
+3584501 EVT t_us=3584573493 name=cmd_reply
+3585127 LOAD pct=64 pm=637 win_cyc=48000876 busy_cyc=30582549 windows=3568
+3586127 LOAD pct=56 pm=560 win_cyc=48000072 busy_cyc=26862233 windows=3569
+3587127 LOAD pct=56 pm=560 win_cyc=47998704 busy_cyc=26883855 windows=3570
+3588127 LOAD pct=56 pm=560 win_cyc=48001272 busy_cyc=26885923 windows=3571
+3589127 LOAD pct=56 pm=559 win_cyc=48000024 busy_cyc=26839570 windows=3572
+3590127 LOAD pct=56 pm=558 win_cyc=47999988 busy_cyc=26781576 windows=3573
+3591127 LOAD pct=56 pm=559 win_cyc=47999016 busy_cyc=26844162 windows=3574
+3592127 LOAD pct=56 pm=559 win_cyc=48000096 busy_cyc=26852350 windows=3575
+3593127 LOAD pct=56 pm=560 win_cyc=48000912 busy_cyc=26873114 windows=3576
+3594127 LOAD pct=56 pm=558 win_cyc=47999028 busy_cyc=26804371 windows=3577
+3595127 LOAD pct=56 pm=558 win_cyc=48000960 busy_cyc=26795529 windows=3578
+3596127 LOAD pct=56 pm=558 win_cyc=47999748 busy_cyc=26803273 windows=3579
+3597127 LOAD pct=56 pm=559 win_cyc=48000228 busy_cyc=26823117 windows=3580
+3598127 LOAD pct=55 pm=554 win_cyc=47999088 busy_cyc=26609388 windows=3581
+3599127 LOAD pct=56 pm=556 win_cyc=48000924 busy_cyc=26670450 windows=3582
+3600127 LOAD pct=56 pm=555 win_cyc=47999988 busy_cyc=26645166 windows=3583
+3601127 LOAD pct=56 pm=555 win_cyc=48000024 busy_cyc=26642411 windows=3584
+3602127 LOAD pct=55 pm=554 win_cyc=47999329 busy_cyc=26613862 windows=3585
+3603127 LOAD pct=56 pm=558 win_cyc=48001288 busy_cyc=26762115 windows=3586
+3604127 LOAD pct=55 pm=551 win_cyc=47999751 busy_cyc=26449742 windows=3587
+3605127 LOAD pct=55 pm=547 win_cyc=47999993 busy_cyc=26268015 windows=3588
+3606127 LOAD pct=55 pm=555 win_cyc=47999656 busy_cyc=26632516 windows=3589
+3606904 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3607127 LOAD pct=57 pm=569 win_cyc=47999595 busy_cyc=27299786 windows=3590
+3608127 LOAD pct=56 pm=558 win_cyc=48001049 busy_cyc=26767076 windows=3591
+3608667 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3608727 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3609127 LOAD pct=57 pm=575 win_cyc=47999668 busy_cyc=27583074 windows=3592
+3610127 LOAD pct=56 pm=558 win_cyc=48000051 busy_cyc=26796065 windows=3593
+3611127 LOAD pct=56 pm=558 win_cyc=47999993 busy_cyc=26766512 windows=3594
+3612127 LOAD pct=56 pm=558 win_cyc=48000208 busy_cyc=26794098 windows=3595
+3613127 LOAD pct=56 pm=561 win_cyc=47999453 busy_cyc=26924549 windows=3596
+3614127 LOAD pct=56 pm=561 win_cyc=48000339 busy_cyc=26908538 windows=3597
+3615127 LOAD pct=56 pm=559 win_cyc=47999992 busy_cyc=26829274 windows=3598
+3616127 LOAD pct=56 pm=560 win_cyc=47999909 busy_cyc=26876141 windows=3599
+3617127 LOAD pct=56 pm=559 win_cyc=47999725 busy_cyc=26851945 windows=3600
+3618127 LOAD pct=56 pm=557 win_cyc=47999979 busy_cyc=26718784 windows=3601
+3619127 LOAD pct=55 pm=555 win_cyc=47999770 busy_cyc=26630454 windows=3602
+3620127 LOAD pct=56 pm=561 win_cyc=48000276 busy_cyc=26905822 windows=3603
+3621127 LOAD pct=56 pm=558 win_cyc=47999952 busy_cyc=26769736 windows=3604
+3622127 LOAD pct=56 pm=558 win_cyc=47999988 busy_cyc=26767741 windows=3605
+3623127 LOAD pct=56 pm=558 win_cyc=47999100 busy_cyc=26794234 windows=3606
+3624127 LOAD pct=56 pm=557 win_cyc=48000924 busy_cyc=26743600 windows=3607
+3625126 LOAD pct=56 pm=558 win_cyc=47998992 busy_cyc=26805805 windows=3608
+3626126 LOAD pct=56 pm=557 win_cyc=48000060 busy_cyc=26752821 windows=3609
+3627126 LOAD pct=56 pm=558 win_cyc=48000060 busy_cyc=26779395 windows=3610
+3628126 LOAD pct=56 pm=558 win_cyc=47999976 busy_cyc=26806168 windows=3611
+3629126 LOAD pct=56 pm=560 win_cyc=47999940 busy_cyc=26897869 windows=3612
+3630126 LOAD pct=56 pm=559 win_cyc=47999724 busy_cyc=26827016 windows=3613
+3631126 LOAD pct=56 pm=560 win_cyc=47999964 busy_cyc=26871234 windows=3614
+3632126 LOAD pct=56 pm=556 win_cyc=48000360 busy_cyc=26701228 windows=3615
+3633126 LOAD pct=56 pm=559 win_cyc=47999952 busy_cyc=26829728 windows=3616
+3634126 LOAD pct=56 pm=560 win_cyc=48000996 busy_cyc=26885454 windows=3617
+3635126 LOAD pct=56 pm=560 win_cyc=47998704 busy_cyc=26888653 windows=3618
+3636126 LOAD pct=56 pm=560 win_cyc=48001272 busy_cyc=26885157 windows=3619
+3637126 LOAD pct=56 pm=556 win_cyc=47999988 busy_cyc=26686396 windows=3620
+3638126 LOAD pct=56 pm=558 win_cyc=48000048 busy_cyc=26777837 windows=3621
+3639126 LOAD pct=56 pm=560 win_cyc=47999052 busy_cyc=26873479 windows=3622
+3640126 LOAD pct=56 pm=559 win_cyc=48000900 busy_cyc=26845646 windows=3623
+3641126 LOAD pct=56 pm=560 win_cyc=47999808 busy_cyc=26869841 windows=3624
+3642126 LOAD pct=56 pm=558 win_cyc=47999292 busy_cyc=26804328 windows=3625
+3643126 LOAD pct=56 pm=558 win_cyc=47999580 busy_cyc=26800382 windows=3626
+3644126 LOAD pct=56 pm=558 win_cyc=48001128 busy_cyc=26798006 windows=3627
+3645126 LOAD pct=56 pm=560 win_cyc=48000204 busy_cyc=26887914 windows=3628
+# > heap
+heap3646126 LOAD pct=56 pm=557 win_cyc=47999088 busy_cyc=26746415 windows=3629
+
+3646140 HEAP arena=0 used=0 free=0
+3646148 POOL n=1 min_free=5
+3646156 POOL n=2 min_free=1
+3646160 EVT t_us=3646216619 name=cmd_rx
+3646166 EVT t_us=3646236101 name=cmd_reply
+# > stack
+stac3647126 LOAD pct=59 pm=587 win_cyc=48000912 busy_cyc=28158188 windows=3630
+k
+3647340 STACK used=584 reserved=1024 free=440 overflow=0
+3647351 STACK name=estop used=132 reserved=408 free=276
+3647366 STACK name=gate used=372 reserved=504 free=132
+3647377 STACK name=sort used=528 reserved=632 free=104
+3647388 STACK name=bus used=588 reserved=712 free=124
+3647400 STACK name=imu used=364 reserved=464 free=100
+3647411 STACK name=console used=696 reserved=832 free=136
+3647426 STACK name=lcd used=356 reserved=464 free=108
+3647437 STACK name=IDLE used=84 reserved=192 free=108
+3647448 EVT t_us=3647416382 name=cmd_rx
+3647450 EVT t_us=3647523579 name=cmd_reply
+3648126 LOAD pct=63 pm=631 win_cyc=48000048 busy_cyc=30298945 windows=3631
+3649126 LOAD pct=56 pm=555 win_cyc=47999952 busy_cyc=26642629 windows=3632
+3650126 LOAD pct=55 pm=555 win_cyc=47999377 busy_cyc=26618312 windows=3633
+3651126 LOAD pct=56 pm=555 win_cyc=48001288 busy_cyc=26657303 windows=3634
+3652126 LOAD pct=55 pm=551 win_cyc=47999717 busy_cyc=26449152 windows=3635
+3653126 LOAD pct=55 pm=547 win_cyc=47999991 busy_cyc=26268021 windows=3636
+3654126 LOAD pct=55 pm=555 win_cyc=47999680 busy_cyc=26632938 windows=3637
+3654843 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3654883 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3654923 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3655126 LOAD pct=59 pm=591 win_cyc=47999633 busy_cyc=28384067 windows=3638
+3656126 LOAD pct=55 pm=553 win_cyc=48000939 busy_cyc=26542742 windows=3639
+3657126 LOAD pct=56 pm=558 win_cyc=47999668 busy_cyc=26788135 windows=3640
+3658126 LOAD pct=55 pm=554 win_cyc=48000089 busy_cyc=26590978 windows=3641
+3659126 LOAD pct=56 pm=557 win_cyc=47999991 busy_cyc=26756272 windows=3642
+3660126 LOAD pct=56 pm=559 win_cyc=48000028 busy_cyc=26829941 windows=3643
+3661126 LOAD pct=56 pm=560 win_cyc=47999633 busy_cyc=26882193 windows=3644
+3662126 LOAD pct=56 pm=561 win_cyc=48000339 busy_cyc=26907428 windows=3645
+3663126 LOAD pct=56 pm=559 win_cyc=48000029 busy_cyc=26828887 windows=3646
+3664126 LOAD pct=56 pm=560 win_cyc=47999872 busy_cyc=26858853 windows=3647
+3665126 LOAD pct=56 pm=559 win_cyc=47999726 busy_cyc=26854748 windows=3648
+3666126 LOAD pct=56 pm=556 win_cyc=48000024 busy_cyc=26706656 windows=3649
+3667126 LOAD pct=55 pm=555 win_cyc=47999772 busy_cyc=26630929 windows=3650
+3668126 LOAD pct=56 pm=560 win_cyc=47999304 busy_cyc=26895736 windows=3651
+3669126 LOAD pct=56 pm=558 win_cyc=48000864 busy_cyc=26767273 windows=3652
+3670126 LOAD pct=56 pm=558 win_cyc=48000024 busy_cyc=26790477 windows=3653
+3671126 LOAD pct=56 pm=555 win_cyc=47999076 busy_cyc=26648036 windows=3654
+3672126 LOAD pct=56 pm=557 win_cyc=48000936 busy_cyc=26740021 windows=3655
+3673125 LOAD pct=56 pm=558 win_cyc=47998992 busy_cyc=26801851 windows=3656
+3674125 LOAD pct=56 pm=557 win_cyc=48000060 busy_cyc=26754182 windows=3657
+3675125 LOAD pct=56 pm=558 win_cyc=48000036 busy_cyc=26779177 windows=3658
+3676125 LOAD pct=56 pm=559 win_cyc=47999976 busy_cyc=26811320 windows=3659
+3677125 LOAD pct=56 pm=560 win_cyc=47999964 busy_cyc=26895125 windows=3660
+3678125 LOAD pct=56 pm=559 win_cyc=47999724 busy_cyc=26825942 windows=3661
+3679125 LOAD pct=56 pm=560 win_cyc=47999964 busy_cyc=26869486 windows=3662
+3680125 LOAD pct=56 pm=556 win_cyc=48000360 busy_cyc=26699817 windows=3663
+3681125 LOAD pct=56 pm=557 win_cyc=48000000 busy_cyc=26715044 windows=3664
+3682125 LOAD pct=56 pm=560 win_cyc=48000912 busy_cyc=26874404 windows=3665
+3683125 LOAD pct=56 pm=560 win_cyc=47998764 busy_cyc=26891045 windows=3666
+3684125 LOAD pct=56 pm=560 win_cyc=48001272 busy_cyc=26883577 windows=3667
+3685125 LOAD pct=56 pm=559 win_cyc=48000000 busy_cyc=26840156 windows=3668
+3686125 LOAD pct=56 pm=558 win_cyc=48000036 busy_cyc=26778401 windows=3669
+3687125 LOAD pct=56 pm=559 win_cyc=47999028 busy_cyc=26843736 windows=3670
+3688125 LOAD pct=56 pm=559 win_cyc=48000900 busy_cyc=26855070 windows=3671
+3689125 LOAD pct=56 pm=560 win_cyc=48000036 busy_cyc=26887535 windows=3672
+3690125 LOAD pct=56 pm=558 win_cyc=47999064 busy_cyc=26797847 windows=3673
+3691125 LOAD pct=56 pm=558 win_cyc=47999580 busy_cyc=26799893 windows=3674
+3692125 LOAD pct=56 pm=558 win_cyc=48001116 busy_cyc=26806445 windows=3675
+3693125 LOAD pct=56 pm=556 win_cyc=48000264 busy_cyc=26671059 windows=3676
+3694125 LOAD pct=56 pm=555 win_cyc=47999016 busy_cyc=26659513 windows=3677
+3695125 LOAD pct=56 pm=556 win_cyc=48000924 busy_cyc=26667251 windows=3678
+3696125 LOAD pct=55 pm=552 win_cyc=48000060 busy_cyc=26476943 windows=3679
+3697125 LOAD pct=55 pm=555 win_cyc=47999952 busy_cyc=26631455 windows=3680
+3698125 LOAD pct=55 pm=554 win_cyc=47999281 busy_cyc=26615036 windows=3681
+3699125 LOAD pct=56 pm=555 win_cyc=48001361 busy_cyc=26657624 windows=3682
+3700125 LOAD pct=54 pm=543 win_cyc=47999740 busy_cyc=26079697 windows=3683
+3701125 LOAD pct=55 pm=549 win_cyc=47999979 busy_cyc=26361648 windows=3684
+3702125 LOAD pct=55 pm=555 win_cyc=47999693 busy_cyc=26632639 windows=3685
+3702842 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3702852 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3702922 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3703125 LOAD pct=59 pm=591 win_cyc=47999632 busy_cyc=28368336 windows=3686
+3704125 LOAD pct=55 pm=553 win_cyc=48000927 busy_cyc=26543186 windows=3687
+3705125 LOAD pct=56 pm=558 win_cyc=47999657 busy_cyc=26766543 windows=3688
+3705227 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3706125 LOAD pct=56 pm=560 win_cyc=48000112 busy_cyc=26883523 windows=3689
+3707125 LOAD pct=56 pm=557 win_cyc=47999979 busy_cyc=26727136 windows=3690
+3708125 LOAD pct=56 pm=557 win_cyc=48000041 busy_cyc=26733359 windows=3691
+# > heap
+heap
+3709098 HEAP arena=0 used=0 free=0
+3709106 POOL n=1 min_free=5
+3709114 POOL n=2 min_free=1
+3709119 EVT t_us=3709175953 name=cmd_rx
+3709135 LOAD pct=58 pm=582 win_cyc=48498856 busy_cyc=28225353 windows=3692
+3709125 EVT t_us=3709196228 name=cmd_reply
+# > stack
+stack
+3710369 STACK used=584 reserved=1024 free=440 overflow=0
+3710385 STACK name=estop used=132 reserved=408 free=276
+3710396 STACK name=gate used=372 reserved=504 free=132
+3710408 STACK name=sort used=528 reserved=632 free=104
+3710419 STACK name=bus used=588 reserved=712 free=124
+3710434 STACK name=imu used=364 reserved=464 free=100
+3710445 STACK name=console used=696 reserved=832 free=136
+3710457 STACK name=lcd used=356 reserved=464 free=108
+3710469 STACK name=IDLE used=84 reserved=192 free=108
+3710480 EVT t_us=3710446770 name=cmd_rx
+3710486 EVT t_us=3710557227 name=cmd_reply
+3711125 LOAD pct=60 pm=601 win_cyc=95501120 busy_cyc=57374627 windows=3693
+3712125 LOAD pct=56 pm=559 win_cyc=47999848 busy_cyc=26830727 windows=3694
+3713125 LOAD pct=56 pm=559 win_cyc=47999798 busy_cyc=26854225 windows=3695
+3714125 LOAD pct=56 pm=559 win_cyc=47999976 busy_cyc=26849632 windows=3696
+3715125 LOAD pct=55 pm=555 win_cyc=47999760 busy_cyc=26630142 windows=3697
+3716125 LOAD pct=56 pm=560 win_cyc=47999316 busy_cyc=26891506 windows=3698
+3717125 LOAD pct=56 pm=558 win_cyc=48000912 busy_cyc=26787222 windows=3699
+3718125 LOAD pct=56 pm=558 win_cyc=47999988 busy_cyc=26769335 windows=3700
+3719125 LOAD pct=56 pm=558 win_cyc=47999076 busy_cyc=26794270 windows=3701
+3720125 LOAD pct=56 pm=557 win_cyc=48000948 busy_cyc=26739533 windows=3702
+3721124 LOAD pct=56 pm=558 win_cyc=47998992 busy_cyc=26806427 windows=3703
+3722124 LOAD pct=56 pm=558 win_cyc=48000048 busy_cyc=26781106 windows=3704
+3723124 LOAD pct=56 pm=556 win_cyc=48000048 busy_cyc=26671025 windows=3705
+3724124 LOAD pct=56 pm=558 win_cyc=48000012 busy_cyc=26805648 windows=3706
+3725124 LOAD pct=56 pm=559 win_cyc=47999964 busy_cyc=26850466 windows=3707
+3726124 LOAD pct=56 pm=559 win_cyc=47999616 busy_cyc=26846497 windows=3708
+3727124 LOAD pct=56 pm=560 win_cyc=48000060 busy_cyc=26869610 windows=3709
+3728124 LOAD pct=56 pm=556 win_cyc=48000348 busy_cyc=26690259 windows=3710
+3729124 LOAD pct=56 pm=557 win_cyc=48000012 busy_cyc=26715866 windows=3711
+3730124 LOAD pct=56 pm=560 win_cyc=48000900 busy_cyc=26872363 windows=3712
+3731124 LOAD pct=56 pm=560 win_cyc=47998668 busy_cyc=26890931 windows=3713
+3732124 LOAD pct=56 pm=560 win_cyc=48001380 busy_cyc=26879249 windows=3714
+3733124 LOAD pct=56 pm=559 win_cyc=47999952 busy_cyc=26832751 windows=3715
+3734124 LOAD pct=56 pm=558 win_cyc=47999988 busy_cyc=26777435 windows=3716
+3735124 LOAD pct=56 pm=559 win_cyc=47999124 busy_cyc=26839276 windows=3717
+3736124 LOAD pct=56 pm=559 win_cyc=48000888 busy_cyc=26846729 windows=3718
+3737124 LOAD pct=56 pm=560 win_cyc=47999052 busy_cyc=26887522 windows=3719
+3738124 LOAD pct=56 pm=558 win_cyc=48000060 busy_cyc=26782439 windows=3720
+3739124 LOAD pct=56 pm=558 win_cyc=48000888 busy_cyc=26796969 windows=3721
+3740124 LOAD pct=56 pm=559 win_cyc=47999748 busy_cyc=26850724 windows=3722
+3741124 LOAD pct=56 pm=558 win_cyc=48000276 busy_cyc=26785076 windows=3723
+3742124 LOAD pct=55 pm=554 win_cyc=47999052 busy_cyc=26610275 windows=3724
+3743124 LOAD pct=56 pm=556 win_cyc=48000936 busy_cyc=26664803 windows=3725
+3744124 LOAD pct=56 pm=555 win_cyc=48000012 busy_cyc=26643539 windows=3726
+3745124 LOAD pct=55 pm=555 win_cyc=47999976 busy_cyc=26635727 windows=3727
+3746124 LOAD pct=55 pm=555 win_cyc=47999282 busy_cyc=26616717 windows=3728
+3747124 LOAD pct=56 pm=555 win_cyc=48001360 busy_cyc=26649990 windows=3729
+3748124 LOAD pct=54 pm=543 win_cyc=47999740 busy_cyc=26077825 windows=3730
+3749124 LOAD pct=55 pm=550 win_cyc=47999980 busy_cyc=26397664 windows=3731
+3750124 LOAD pct=55 pm=555 win_cyc=47999692 busy_cyc=26632744 windows=3732
+3750841 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3750851 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3750921 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3751124 LOAD pct=59 pm=594 win_cyc=47999632 busy_cyc=28488518 windows=3733
+3752124 LOAD pct=55 pm=552 win_cyc=48000928 busy_cyc=26489896 windows=3734
+3753124 LOAD pct=56 pm=559 win_cyc=47999656 busy_cyc=26811439 windows=3735
+3753721 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3754124 LOAD pct=56 pm=563 win_cyc=48000100 busy_cyc=27011575 windows=3736
+3755124 LOAD pct=56 pm=556 win_cyc=48000028 busy_cyc=26703545 windows=3737
+3756124 LOAD pct=56 pm=559 win_cyc=48000208 busy_cyc=26823655 windows=3738
+3757124 LOAD pct=56 pm=561 win_cyc=47999452 busy_cyc=26922208 windows=3739
+3758124 LOAD pct=56 pm=561 win_cyc=48000364 busy_cyc=26923995 windows=3740
+3759124 LOAD pct=56 pm=559 win_cyc=47999944 busy_cyc=26817178 windows=3741
+3760124 LOAD pct=56 pm=560 win_cyc=47999860 busy_cyc=26876768 windows=3742
+3761124 LOAD pct=56 pm=559 win_cyc=47999798 busy_cyc=26854352 windows=3743
+3762124 LOAD pct=56 pm=555 win_cyc=47999988 busy_cyc=26654576 windows=3744
+3763124 LOAD pct=56 pm=557 win_cyc=47999748 busy_cyc=26743178 windows=3745
+3764124 LOAD pct=56 pm=560 win_cyc=47999316 busy_cyc=26898328 windows=3746
+3765124 LOAD pct=56 pm=558 win_cyc=48000912 busy_cyc=26768759 windows=3747
+3766124 LOAD pct=56 pm=558 win_cyc=47999988 busy_cyc=26764148 windows=3748
+3767124 LOAD pct=56 pm=558 win_cyc=47999076 busy_cyc=26794696 windows=3749
+3768124 LOAD pct=56 pm=558 win_cyc=48000924 busy_cyc=26763438 windows=3750
+3769123 LOAD pct=56 pm=558 win_cyc=47999016 busy_cyc=26805776 windows=3751
+3770123 LOAD pct=55 pm=555 win_cyc=48000072 busy_cyc=26636300 windows=3752
+3771123 LOAD pct=56 pm=558 win_cyc=48000900 busy_cyc=26779955 windows=3753
+# > heap
+heap3771756 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x20 isr=0x00000023
+
+3771954 HEAP arena=0 used=0 free=0
+3771958 POOL n=1 min_free=5
+3771967 POOL n=2 min_free=1
+3771975 EVT t_us=3772032547 name=cmd_rx
+3771977 EVT t_us=3772052773 name=cmd_reply
+# > stack
+3772123 LOAD pct=60 pm=601 win_cyc=47998812 busy_cyc=28844945 windows=3754
+stack3773123 LOAD pct=56 pm=563 win_cyc=48000084 busy_cyc=27021436 windows=3755
+
+3773152 STACK used=584 reserved=1024 free=440 overflow=0
+3773164 STACK name=estop used=132 reserved=408 free=276
+3773175 STACK name=gate used=372 reserved=504 free=132
+3773187 STACK name=sort used=528 reserved=632 free=104
+3773198 STACK name=bus used=588 reserved=712 free=124
+3773209 STACK name=imu used=364 reserved=464 free=100
+3773224 STACK name=console used=696 reserved=832 free=136
+3773236 STACK name=lcd used=356 reserved=464 free=108
+3773247 STACK name=IDLE used=84 reserved=192 free=108
+3773259 EVT t_us=3773230836 name=cmd_rx
+3773264 EVT t_us=3773336936 name=cmd_reply
+3774123 LOAD pct=64 pm=636 win_cyc=48000168 busy_cyc=30545660 windows=3756
+3775123 LOAD pct=56 pm=559 win_cyc=48000012 busy_cyc=26823256 windows=3757
+3776123 LOAD pct=56 pm=559 win_cyc=47999208 busy_cyc=26821967 windows=3758
+3777123 LOAD pct=56 pm=559 win_cyc=48000540 busy_cyc=26835296 windows=3759
+3778123 LOAD pct=56 pm=559 win_cyc=47999964 busy_cyc=26827372 windows=3760
+3779123 LOAD pct=56 pm=559 win_cyc=48000132 busy_cyc=26840075 windows=3761
+3780123 LOAD pct=56 pm=559 win_cyc=48000168 busy_cyc=26844548 windows=3762
+3781123 LOAD pct=56 pm=559 win_cyc=47999940 busy_cyc=26830060 windows=3763
+3782123 LOAD pct=56 pm=558 win_cyc=48000060 busy_cyc=26780219 windows=3764
+3783123 LOAD pct=56 pm=559 win_cyc=47999976 busy_cyc=26846536 windows=3765
+3784123 LOAD pct=56 pm=559 win_cyc=47999880 busy_cyc=26852757 windows=3766
+3785123 LOAD pct=56 pm=559 win_cyc=48000060 busy_cyc=26848500 windows=3767
+3786123 LOAD pct=56 pm=559 win_cyc=47999976 busy_cyc=26838581 windows=3768
+3787123 LOAD pct=56 pm=558 win_cyc=47999808 busy_cyc=26780995 windows=3769
+3788123 LOAD pct=56 pm=558 win_cyc=48000060 busy_cyc=26792664 windows=3770
+3789123 LOAD pct=56 pm=558 win_cyc=48000216 busy_cyc=26775793 windows=3771
+3790123 LOAD pct=56 pm=555 win_cyc=47999772 busy_cyc=26658798 windows=3772
+3791123 LOAD pct=55 pm=555 win_cyc=48000072 busy_cyc=26624396 windows=3773
+3792123 LOAD pct=56 pm=556 win_cyc=47999916 busy_cyc=26698329 windows=3774
+3793123 LOAD pct=56 pm=556 win_cyc=47998812 busy_cyc=26683151 windows=3775
+3794123 LOAD pct=55 pm=555 win_cyc=48000698 busy_cyc=26628910 windows=3776
+3795123 LOAD pct=56 pm=557 win_cyc=48001264 busy_cyc=26712885 windows=3777
+3796123 LOAD pct=56 pm=558 win_cyc=47999969 busy_cyc=26760118 windows=3778
+3797123 LOAD pct=56 pm=557 win_cyc=48000063 busy_cyc=26748426 windows=3779
+3798123 LOAD pct=56 pm=557 win_cyc=47999632 busy_cyc=26733451 windows=3780
+3798661 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3798671 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3798841 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3798881 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3798921 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3799123 LOAD pct=62 pm=622 win_cyc=48000185 busy_cyc=29861181 windows=3781
+3800123 LOAD pct=56 pm=558 win_cyc=47999619 busy_cyc=26766354 windows=3782
+3801123 LOAD pct=56 pm=557 win_cyc=48000556 busy_cyc=26753409 windows=3783
+3802127 LOAD pct=56 pm=559 win_cyc=48210584 busy_cyc=26958349 windows=3784
+3802121 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3804123 LOAD pct=56 pm=562 win_cyc=95789272 busy_cyc=53812544 windows=3785
+3805123 LOAD pct=56 pm=559 win_cyc=48000077 busy_cyc=26850077 windows=3786
+3806123 LOAD pct=56 pm=560 win_cyc=47999991 busy_cyc=26887726 windows=3787
+3807123 LOAD pct=56 pm=560 win_cyc=47999572 busy_cyc=26879504 windows=3788
+3808123 LOAD pct=56 pm=559 win_cyc=47999910 busy_cyc=26835630 windows=3789
+3809123 LOAD pct=56 pm=559 win_cyc=48000000 busy_cyc=26851597 windows=3790
+3810123 LOAD pct=56 pm=559 win_cyc=47999796 busy_cyc=26853476 windows=3791
+3811123 LOAD pct=56 pm=559 win_cyc=48000120 busy_cyc=26844695 windows=3792
+3812123 LOAD pct=56 pm=559 win_cyc=47999964 busy_cyc=26841955 windows=3793
+3813123 LOAD pct=56 pm=559 win_cyc=48000108 busy_cyc=26811260 windows=3794
+3814123 LOAD pct=56 pm=559 win_cyc=48000012 busy_cyc=26837909 windows=3795
+3815123 LOAD pct=56 pm=558 win_cyc=47999244 busy_cyc=26803260 windows=3796
+3816122 LOAD pct=56 pm=558 win_cyc=48000504 busy_cyc=26785208 windows=3797
+3817122 LOAD pct=56 pm=559 win_cyc=48000012 busy_cyc=26811902 windows=3798
+3818122 LOAD pct=56 pm=558 win_cyc=48000096 busy_cyc=26771486 windows=3799
+3819122 LOAD pct=56 pm=559 win_cyc=47999892 busy_cyc=26810587 windows=3800
+3820122 LOAD pct=56 pm=559 win_cyc=48000060 busy_cyc=26832356 windows=3801
+3821122 LOAD pct=56 pm=559 win_cyc=48000048 busy_cyc=26849920 windows=3802
+3822122 LOAD pct=56 pm=559 win_cyc=48000144 busy_cyc=26828437 windows=3803
+3823122 LOAD pct=56 pm=559 win_cyc=47999256 busy_cyc=26823896 windows=3804
+3824122 LOAD pct=56 pm=559 win_cyc=47999988 busy_cyc=26825344 windows=3805
+3825122 LOAD pct=56 pm=559 win_cyc=48000516 busy_cyc=26842069 windows=3806
+3826122 LOAD pct=56 pm=560 win_cyc=48000060 busy_cyc=26876603 windows=3807
+3827122 LOAD pct=56 pm=559 win_cyc=48000036 busy_cyc=26839084 windows=3808
+3828122 LOAD pct=56 pm=560 win_cyc=48000144 busy_cyc=26892048 windows=3809
+3829122 LOAD pct=56 pm=559 win_cyc=48000060 busy_cyc=26813617 windows=3810
+3830122 LOAD pct=56 pm=558 win_cyc=47999808 busy_cyc=26777391 windows=3811
+3831122 LOAD pct=56 pm=559 win_cyc=48000204 busy_cyc=26837763 windows=3812
+3832122 LOAD pct=56 pm=559 win_cyc=47999904 busy_cyc=26853481 windows=3813
+3833122 LOAD pct=56 pm=560 win_cyc=47999952 busy_cyc=26896273 windows=3814
+3834122 LOAD pct=56 pm=558 win_cyc=48000048 busy_cyc=26791845 windows=3815
+# > heap
+heap
+3835047 HEAP arena=0 used=0 free=0
+3835056 POOL n=1 min_free=5
+3835063 POOL n=2 min_free=1
+3835068 EVT t_us=3835126995 name=cmd_rx
+3835073 EVT t_us=3835147225 name=cmd_reply
+# > stack
+3835122 LOAD pct=59 pm=587 win_cyc=47999892 busy_cyc=28188263 windows=3816
+stack3836122 LOAD pct=56 pm=562 win_cyc=47999904 busy_cyc=26971455 windows=3817
+
+3836162 STACK used=584 reserved=1024 free=440 overflow=0
+3836174 STACK name=estop used=132 reserved=408 free=276
+3836186 STACK name=gate used=372 reserved=504 free=132
+3836197 STACK name=sort used=528 reserved=632 free=104
+3836212 STACK name=bus used=588 reserved=712 free=124
+3836223 STACK name=imu used=364 reserved=464 free=100
+3836235 STACK name=console used=696 reserved=832 free=136
+3836246 STACK name=lcd used=356 reserved=464 free=108
+3836257 STACK name=IDLE used=84 reserved=192 free=108
+3836273 EVT t_us=3836242128 name=cmd_rx
+3836275 EVT t_us=3836352402 name=cmd_reply
+# ! Ще 3-5 посилок наприкінці, потім Enter
+3837122 LOAD pct=64 pm=635 win_cyc=48000288 busy_cyc=30487966 windows=3818
+3838122 LOAD pct=56 pm=555 win_cyc=47999784 busy_cyc=26653817 windows=3819
+3839122 LOAD pct=55 pm=555 win_cyc=48000168 busy_cyc=26627762 windows=3820
+3840122 LOAD pct=56 pm=556 win_cyc=47999808 busy_cyc=26698139 windows=3821
+3841122 LOAD pct=55 pm=555 win_cyc=48000024 busy_cyc=26617079 windows=3822
+3842122 LOAD pct=55 pm=555 win_cyc=47999390 busy_cyc=26625597 windows=3823
+3843122 LOAD pct=56 pm=556 win_cyc=48001361 busy_cyc=26668940 windows=3824
+3844122 LOAD pct=56 pm=557 win_cyc=47999980 busy_cyc=26748500 windows=3825
+3845122 LOAD pct=55 pm=549 win_cyc=47999967 busy_cyc=26357031 windows=3826
+3846122 LOAD pct=56 pm=559 win_cyc=47999705 busy_cyc=26812135 windows=3827
+3846880 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3847122 LOAD pct=56 pm=560 win_cyc=48000172 busy_cyc=26892934 windows=3828
+3848122 LOAD pct=56 pm=558 win_cyc=47999619 busy_cyc=26760007 windows=3829
+3849122 LOAD pct=56 pm=558 win_cyc=48000557 busy_cyc=26785567 windows=3830
+3850126 LOAD pct=56 pm=559 win_cyc=48210583 busy_cyc=26945927 windows=3831
+3850120 I2C_RECOVER try=1/3 where=rd addr=0x68 err=0x04 isr=0x00000005
+3852122 LOAD pct=56 pm=562 win_cyc=95789297 busy_cyc=53810428 windows=3832
+3853122 LOAD pct=56 pm=559 win_cyc=48000052 busy_cyc=26849643 windows=3833
+3854122 LOAD pct=56 pm=561 win_cyc=47999991 busy_cyc=26913204 windows=3834
+# > stats
+stats3855122 LOAD pct=56 pm=563 win_cyc=47999561 busy_cyc=27026924 windows=3835
+
+3855312 PERF git=64653fd6 now_cyc=517 pair_cyc=1315 cyc_per_us=48 arch=qpc lto=1 tick_hz=1000
+3855331 KNOBS lcd_ms=500 lcd_chars=0 imu_ms=10 log=2
+3855342 STARTUP boot_us=12146 gate_us=133938 class_us=138519 imu_us=211544 lcd_us=802316 os_api_us=195532 os_start_us=198643
+3855367 STAT name=uart_rx n=673 min_us=66 avg_us=12616 max_us=125169 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3855394 STAT name=estop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3855416 STAT name=gate n=763220 min_us=127 avg_us=130 max_us=728 period_us=5000 jit_min_us=-4658 jit_max_us=8488 miss=10
+3855443 STAT name=sort n=4 min_us=4555 avg_us=4590 max_us=4618 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3855466 STAT name=imu n=378532 min_us=2078 avg_us=3089 max_us=14238 period_us=10000 jit_min_us=-7507 jit_max_us=10809 miss=6
+3855496 STAT name=lcd n=7632 min_us=75352 avg_us=99431 max_us=250092 period_us=500000 jit_min_us=-60355 jit_max_us=60365 miss=0
+3855525 STAT name=lcd_part n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3855546 STAT name=logger n=847 min_us=4988 avg_us=16043 max_us=38571 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3855572 STAT name=loop n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3855593 STAT name=i2c_xfer n=1795042 min_us=84 avg_us=540 max_us=11712 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3855617 STAT name=uart_line n=5379 min_us=2960 avg_us=13657 max_us=38541 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3855645 STAT name=lcd_update n=7632 min_us=74928 avg_us=99077 max_us=249676 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3855667 STAT name=estop_latency n=0 min_us=0 avg_us=0 max_us=0 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3855693 STAT name=parcel_latency n=4 min_us=1199 avg_us=1204 max_us=1209 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3855716 STAT name=bus_wait n=378557 min_us=292 avg_us=319 max_us=1451 period_us=0 jit_min_us=0 jit_max_us=0 miss=0
+3855741 UART rx=673 ore=0
+3855752 TASK name=estop prio=7 cpu_pm=0 stack_free=276 state=blocked run_ms=0
+3855771 TASK name=gate prio=6 cpu_pm=126 stack_free=132 state=blocked run_ms=483035
+3855792 TASK name=sort prio=5 cpu_pm=0 stack_free=104 state=blocked run_ms=20
+3855812 TASK name=bus prio=4 cpu_pm=312 stack_free=124 state=blocked run_ms=1192384
+3855832 TASK name=imu prio=3 cpu_pm=101 stack_free=100 state=blocked run_ms=386189
+3855853 TASK name=console prio=2 cpu_pm=12 stack_free=136 state=run run_ms=47950
+3855873 TASK name=lcd prio=1 cpu_pm=9 stack_free=108 state=ready run_ms=37537
+3855893 TASK name=IDLE prio=0 cpu_pm=438 stack_free=108 state=ready run_ms=1673955
+3855912 BUSQ skip=3086 parcel_drop=0 post_fail=0
+3855922 LOGQ len=16 max_used=5 lines=847 drop=0 trunc=0 rx_drop=0
+3855935 SIMCRIT win_ms=3816462 task_n=24424763 isr_n=25044038 deferred_tick=978324 deferred_pendsv=754735 deferred_irq=1088432
+3855963 EVT t_us=3855392315 name=cmd_rx
+3855965 EVT t_us=3856042830 name=cmd_reply
+# > load
+3856122 LOAD pct=94 pm=939 win_cyc=47999921 busy_cyc=45093117 windows=3836
+load
+3856952 LOAD pct=94 pm=939 win_cyc=47999921 busy_cyc=45093117 windows=3836
+3856967 EVT t_us=3857032510 name=cmd_rx
+3856972 EVT t_us=3857046759 name=cmd_reply
+# > stack
+3857122 LOAD pct=59 pm=587 win_cyc=48000000 busy_cyc=28168534 windows=3837
+stack3858122 LOAD pct=56 pm=564 win_cyc=47999784 busy_cyc=27072547 windows=3838
+
+3858150 STACK used=584 reserved=1024 free=440 overflow=0
+3858158 STACK name=estop used=132 reserved=408 free=276
+3858173 STACK name=gate used=372 reserved=504 free=132
+3858185 STACK name=sort used=528 reserved=632 free=104
+3858196 STACK name=bus used=588 reserved=712 free=124
+3858207 STACK name=imu used=364 reserved=464 free=100
+3858222 STACK name=console used=720 reserved=832 free=112
+3858234 STACK name=lcd used=356 reserved=464 free=108
+3858245 STACK name=IDLE used=84 reserved=192 free=108
+3858257 EVT t_us=3858230856 name=cmd_rx
+3858262 EVT t_us=3858336937 name=cmd_reply
+# > heap
+heap3859122 LOAD pct=64 pm=640 win_cyc=48000108 busy_cyc=30716346 windows=3839
+
+3859283 HEAP arena=0 used=0 free=0
+3859292 POOL n=1 min_free=5
+3859296 POOL n=2 min_free=1
+3859305 EVT t_us=3859363761 name=cmd_rx
+3859306 EVT t_us=3859384945 name=cmd_reply
+# > hist gate
+hist3860122 LOAD pct=59 pm=588 win_cyc=48000000 busy_cyc=28201219 windows=3840
+ gate3861122 LOAD pct=56 pm=563 win_cyc=48000168 busy_cyc=27041435 windows=3841
+
+3861285 HIST name=gate period_us=5000 n=764393 step_us=100
+3861296 HIST name=gate lo_us=-inf hi_us=-1000 n=391
+3861307 HIST name=gate lo_us=-1000 hi_us=-900 n=123
+3861321 HIST name=gate lo_us=-900 hi_us=-800 n=267
+3861332 HIST name=gate lo_us=-800 hi_us=-700 n=974
+3861342 HIST name=gate lo_us=-700 hi_us=-600 n=934
+3861353 HIST name=gate lo_us=-600 hi_us=-500 n=3113
+3861363 HIST name=gate lo_us=-500 hi_us=-400 n=318
+3861374 HIST name=gate lo_us=-400 hi_us=-300 n=2715
+3861385 HIST name=gate lo_us=-300 hi_us=-200 n=6246
+3861396 HIST name=gate lo_us=-200 hi_us=-100 n=114812
+3861406 HIST name=gate lo_us=-100 hi_us=0 n=165928
+3861417 HIST name=gate lo_us=0 hi_us=100 n=334226
+3861427 HIST name=gate lo_us=100 hi_us=200 n=119464
+3861442 HIST name=gate lo_us=200 hi_us=300 n=6367
+3861452 HIST name=gate lo_us=300 hi_us=400 n=4461
+3861462 HIST name=gate lo_us=400 hi_us=500 n=582
+3861473 HIST name=gate lo_us=500 hi_us=600 n=497
+3861483 HIST name=gate lo_us=600 hi_us=700 n=1308
+3861494 HIST name=gate lo_us=700 hi_us=800 n=1203
+3861504 HIST name=gate lo_us=800 hi_us=900 n=265
+3861515 HIST name=gate lo_us=900 hi_us=1000 n=1
+3861525 HIST name=gate lo_us=1000 hi_us=1100 n=1
+3861535 HIST name=gate lo_us=1100 hi_us=1200 n=2
+3861545 HIST name=gate lo_us=1300 hi_us=1400 n=3
+3861556 HIST name=gate lo_us=1600 hi_us=1700 n=2
+3861566 HIST name=gate lo_us=1700 hi_us=1800 n=3
+3861577 HIST name=gate lo_us=2000 hi_us=inf n=212
+3861592 EVT t_us=3861365609 name=cmd_rx
+3861594 EVT t_us=3861667934 name=cmd_reply
+# > hist imu
+hi3862122 LOAD pct=75 pm=747 win_cyc=47999940 busy_cyc=35839080 windows=3842
+st im3863122 LOAD pct=56 pm=562 win_cyc=47999244 busy_cyc=26958668 windows=3843
+u
+3863432 HIST name=imu period_us=10000 n=379320 step_us=100
+3863443 HIST name=imu lo_us=-inf hi_us=-1000 n=21608
+3863454 HIST name=imu lo_us=-1000 hi_us=-900 n=190
+3863465 HIST name=imu lo_us=-900 hi_us=-800 n=131
+3863475 HIST name=imu lo_us=-800 hi_us=-700 n=110
+3863486 HIST name=imu lo_us=-700 hi_us=-600 n=50
+3863496 HIST name=imu lo_us=-600 hi_us=-500 n=92
+3863507 HIST name=imu lo_us=-500 hi_us=-400 n=74
+3863517 HIST name=imu lo_us=-400 hi_us=-300 n=129
+3863531 HIST name=imu lo_us=-300 hi_us=-200 n=285
+3863542 HIST name=imu lo_us=-200 hi_us=-100 n=3970
+3863552 HIST name=imu lo_us=-100 hi_us=0 n=30461
+3863562 HIST name=imu lo_us=0 hi_us=100 n=260742
+3863572 HIST name=imu lo_us=100 hi_us=200 n=3908
+3863583 HIST name=imu lo_us=200 hi_us=300 n=40
+3863593 HIST name=imu lo_us=300 hi_us=400 n=20
+3863603 HIST name=imu lo_us=400 hi_us=500 n=127
+3863614 HIST name=imu lo_us=500 hi_us=600 n=9
+3863624 HIST name=imu lo_us=600 hi_us=700 n=28
+3863634 HIST name=imu lo_us=700 hi_us=800 n=195
+3863644 HIST name=imu lo_us=800 hi_us=900 n=780
+3863654 HIST name=imu lo_us=900 hi_us=1000 n=3068
+3863664 HIST name=imu lo_us=1000 hi_us=1100 n=15415
+3863675 HIST name=imu lo_us=1100 hi_us=1200 n=3296
+3863685 HIST name=imu lo_us=1200 hi_us=1300 n=133
+3863695 HIST name=imu lo_us=1300 hi_us=1400 n=13
+3863705 HIST name=imu lo_us=1400 hi_us=1500 n=26
+3863716 HIST name=imu lo_us=1500 hi_us=1600 n=106
+3863726 HIST name=imu lo_us=1600 hi_us=1700 n=73
+3863736 HIST name=imu lo_us=1700 hi_us=1800 n=1781
+3863746 HIST name=imu lo_us=1800 hi_us=1900 n=2733
+3863757 HIST name=imu lo_us=1900 hi_us=2000 n=8846
+3863771 HIST name=imu lo_us=2000 hi_us=inf n=20894
+3863782 EVT t_us=3863512525 name=cmd_rx
+3863784 EVT t_us=3863862298 name=cmd_reply
+# > hist lcd
+h3864121 LOAD pct=77 pm=771 win_cyc=48000504 busy_cyc=37014607 windows=3844
+ist l3865121 LOAD pct=56 pm=563 win_cyc=48000012 busy_cyc=27006281 windows=3845
+cd
+3865585 HIST name=lcd period_us=500000 n=7651 step_us=100
+3865597 HIST name=lcd lo_us=-inf hi_us=-1000 n=3809
+3865611 HIST name=lcd lo_us=-600 hi_us=-500 n=18
+3865621 HIST name=lcd lo_us=500 hi_us=600 n=17
+3865631 HIST name=lcd lo_us=1300 hi_us=1400 n=1
+3865641 HIST name=lcd lo_us=2000 hi_us=inf n=3806
+3865652 EVT t_us=3865666177 name=cmd_rx
+3865655 EVT t_us=3865732566 name=cmd_reply
+3866121 LOAD pct=61 pm=610 win_cyc=48000096 busy_cyc=29299377 windows=3846
