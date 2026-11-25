@@ -82,10 +82,18 @@ static const struct {
     [T_ESTOP]   = { "estop",   102u, 7u, 2u },
     [T_GATE]    = { "gate",    126u, 6u, 2u },
     [T_SORT]    = { "sort",    158u, 5u, 3u },
+#if defined(TEST_Q93) && TEST_Q93 >= 3
+    [T_BUS]     = { "bus",     178u, 1u, 2u },
+#else
     [T_BUS]     = { "bus",     178u, 4u, 2u },
+#endif
     [T_IMU]     = { "imu",     116u, 3u, 3u },
     [T_CONSOLE] = { "console", 208u, 2u, QLOG_LEN + 3u },
+#if defined(TEST_Q93) && TEST_Q93 >= 3
+    [T_LCD]     = { "lcd",     116u, 4u, 2u },
+#else
     [T_LCD]     = { "lcd",     116u, 1u, 2u },
+#endif
 };
 
 static const tasks_ops_t *ops;
