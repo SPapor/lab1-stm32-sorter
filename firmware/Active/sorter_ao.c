@@ -24,7 +24,6 @@ enum { BUS_MPU_READ = 0, BUS_LCD_ROW };
 #define SB_RX_BYTES     64u
 #define USART2_IRQ_PRIO 3u
 #define SECOND_MS       1000u
-#define BUS_WAIT_TICKS  3u
 
 typedef struct {
     QEvt super;
@@ -60,9 +59,8 @@ typedef struct {
 typedef struct {
     QActive super;
     QTimeEvt te;
-    uint16_t period;
+    uint16_t due;
     uint8_t step;
-    uint8_t wait;
 } Ao;
 
 static const struct {
@@ -102,7 +100,7 @@ static const QEvt estop_evt = QEVT_INITIALIZER(ESTOP_SIG);
 static const QEvt rx_evt = QEVT_INITIALIZER(RX_SIG);
 
 static uint32_t parcel_drop;
-static uint32_t bus_lost;
+static uint32_t bus_skip;
 static uint32_t log_drop;
 static uint32_t log_trunc;
 static uint32_t log_lines;
@@ -136,15 +134,13 @@ int tasks_running(void)
 
 void tasks_lock(tasks_lock_t l)
 {
-    (void)l;
-    if (running)
+    if (running && l != TASKS_LOCK_I2C)
         vTaskSuspendAll();
 }
 
 void tasks_unlock(tasks_lock_t l)
 {
-    (void)l;
-    if (running)
+    if (running && l != TASKS_LOCK_I2C)
         (void)xTaskResumeAll();
 }
 
@@ -256,16 +252,21 @@ static void arm_period(Ao *me, uint16_t ms)
 {
     uint32_t t = ms_ticks(ms);
 
-    me->period = ms;
     QTimeEvt_armX(&me->te, t, t);
 }
 
-static void follow_knob(Ao *me, const volatile uint16_t *knob)
+static void arm_next(Ao *me, const volatile uint16_t *knob)
 {
-    if (*knob != me->period) {
-        (void)QTimeEvt_disarm(&me->te);
-        arm_period(me, *knob);
+    uint16_t now = (uint16_t)xTaskGetTickCount();
+    int16_t left;
+
+    me->due = (uint16_t)(me->due + ms_ticks(*knob));
+    left = (int16_t)(me->due - now);
+    if (left <= 0) {
+        me->due = (uint16_t)(now + 1u);
+        left = 1;
     }
+    QTimeEvt_armX(&me->te, (uint32_t)left, 0U);
 }
 
 static QState estop_debouncing(Ao *me, QEvt const *e);
@@ -384,9 +385,8 @@ static QState imu_idle(Ao *me, QEvt const *e)
 {
     switch (e->sig) {
     case TICK_SIG:
-        follow_knob(me, ops->imu_ms);
+        arm_next(me, ops->imu_ms);
         ops->imu_begin();
-        me->wait = 0u;
         bus_request(me, BUS_MPU_READ, 0u);
         return Q_TRAN(&imu_reading);
     default:
@@ -401,11 +401,9 @@ static QState imu_reading(Ao *me, QEvt const *e)
         ops->imu_end(Q_EVT_CAST(BusDoneEvt)->st, Q_EVT_CAST(BusDoneEvt)->data);
         return Q_TRAN(&imu_idle);
     case TICK_SIG:
-        follow_knob(me, ops->imu_ms);
-        if (++me->wait < BUS_WAIT_TICKS)
-            return Q_HANDLED();
-        count(&bus_lost);
-        return Q_TRAN(&imu_idle);
+        arm_next(me, ops->imu_ms);
+        count(&bus_skip);
+        return Q_HANDLED();
     default:
         return Q_SUPER(&QHsm_top);
     }
@@ -451,10 +449,9 @@ static QState lcd_idle(Ao *me, QEvt const *e)
 {
     switch (e->sig) {
     case TICK_SIG:
-        follow_knob(me, ops->lcd_ms);
+        arm_next(me, ops->lcd_ms);
         ops->lcd_begin(lcd_rows);
         me->step = 0u;
-        me->wait = 0u;
         bus_request(me, BUS_LCD_ROW, 0u);
         return Q_TRAN(&lcd_drawing);
     default:
@@ -477,11 +474,9 @@ static QState lcd_drawing(Ao *me, QEvt const *e)
         return Q_HANDLED();
     }
     case TICK_SIG:
-        follow_knob(me, ops->lcd_ms);
-        if (++me->wait < BUS_WAIT_TICKS)
-            return Q_HANDLED();
-        count(&bus_lost);
-        return Q_TRAN(&lcd_idle);
+        arm_next(me, ops->lcd_ms);
+        count(&bus_skip);
+        return Q_HANDLED();
     default:
         return Q_SUPER(&QHsm_top);
     }
@@ -503,7 +498,7 @@ static QState ao_initial(Ao *me, void const *par)
         return Q_TRAN(&bus_serving);
     case T_IMU:
         if (ops->imu != NULL)
-            arm_period(me, *ops->imu_ms);
+            arm_next(me, ops->imu_ms);
         return Q_TRAN(&imu_idle);
     case T_CLI:
         return Q_TRAN(&cli_run);
@@ -512,7 +507,7 @@ static QState ao_initial(Ao *me, void const *par)
         return Q_TRAN(&logger_run);
     default:
         if (ops->lcd != NULL)
-            arm_period(me, *ops->lcd_ms);
+            arm_next(me, ops->lcd_ms);
         return Q_TRAN(&lcd_idle);
     }
 }
@@ -611,7 +606,7 @@ void tasks_report(tasks_out_fn out)
 #endif
 
     tasks_list(out);
-    out("BUSQ", "lost=%lu parcel_drop=%lu", (unsigned long)bus_lost, (unsigned long)parcel_drop);
+    out("BUSQ", "skip=%lu parcel_drop=%lu", (unsigned long)bus_skip, (unsigned long)parcel_drop);
     out("LOGQ", "len=%u max_used=%lu lines=%lu drop=%lu trunc=%lu rx_drop=%lu",
         (unsigned)QLOG_LEN, (unsigned long)(QLOG_LEN + 2u - QF_getPoolMin(2U)), (unsigned long)log_lines,
         (unsigned long)log_drop, (unsigned long)log_trunc, (unsigned long)rx_drop);
@@ -644,7 +639,7 @@ void tasks_stats_reset(void)
 #if SIM_CRIT
     port_sim_counters(&sim_base);
 #endif
-    bus_lost = 0;
+    bus_skip = 0;
     parcel_drop = 0;
     log_drop = 0;
     log_trunc = 0;
