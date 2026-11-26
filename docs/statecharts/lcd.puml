@@ -1,0 +1,11 @@
+@startuml lcd
+!include style.iuml
+title AO Lcd (пріоритет 1) - клієнт Bus
+[*] --> idle : init / arm_next(lcd_ms)
+state idle
+state drawing : step 0..7 (2 рядки x 4 шматки по 4 символи)
+idle --> drawing : TICK / arm_next; lcd_begin() (текст рядків);\nstep = 0; post BUS_REQ(LCD_ROW, 0) -> Bus
+drawing --> drawing : BUS_DONE [st == OK && step < 7] /\nstep++; post BUS_REQ(LCD_ROW, step) -> Bus
+drawing --> idle : BUS_DONE [st != OK || step == 7] / lcd_end(st)
+drawing --> drawing : TICK / arm_next; BUSQ skip++
+@enduml

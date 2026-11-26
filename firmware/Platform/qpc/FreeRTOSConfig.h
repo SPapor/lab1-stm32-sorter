@@ -25,7 +25,11 @@ extern uint32_t SystemCoreClock;
 #define configTOTAL_HEAP_SIZE               ((size_t)0)
 #define configUSE_NEWLIB_REENTRANT          0
 
+#if defined(TEST_L5) && TEST_L5 == 1
+#define configUSE_MUTEXES                   1
+#else
 #define configUSE_MUTEXES                   0
+#endif
 #define configUSE_RECURSIVE_MUTEXES         0
 #define configUSE_COUNTING_SEMAPHORES       0
 #define configUSE_TASK_NOTIFICATIONS        0
@@ -92,8 +96,16 @@ extern volatile uint32_t qp_post_fail;
 #define INCLUDE_vTaskPrioritySet            0
 #define INCLUDE_uxTaskPriorityGet           0
 #define INCLUDE_vTaskDelete                 0
+#if defined(TEST_L5) && TEST_L5 == 1
+#define INCLUDE_vTaskSuspend                1
+#else
 #define INCLUDE_vTaskSuspend                0
+#endif
+#if defined(TEST_L5) && (TEST_L5 == 2 || TEST_L5 == 3)
+#define INCLUDE_vTaskDelay                  1
+#else
 #define INCLUDE_vTaskDelay                  0
+#endif
 #define INCLUDE_xTaskGetSchedulerState      0
 #define INCLUDE_eTaskGetState               0
 #define INCLUDE_xTaskAbortDelay             0

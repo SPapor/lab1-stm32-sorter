@@ -96,6 +96,14 @@ jobs:
           make build ARCH=qpc LTO=1 TEST_QPCHECK=1 PERF=0 TEST_Q93=estopx
           make build ARCH=qpc LTO=1 TEST_QPCHECK=1 PERF=0 TEST_Q93=pool
           make build ARCH=qpc LTO=1 TEST_QPCHECK=1 PERF=0 TEST_Q93=poolx
+          make build ARCH=qpc LTO=1 TEST_L5=mutex
+          make build ARCH=qpc LTO=1 TEST_L5=logblock
+          make build ARCH=qpc LTO=1 TEST_L5=busblock
+          make build ARCH=qpc LTO=1 TEST_L5=late
+          make build ARCH=qpc LTO=1 TEST_L5=sensor
+          make build ARCH=qpc LTO=1 TEST_L5=stack
+          make build ARCH=qpc LTO=1 TEST_L5=starve
+          make build ARCH=qpc LTO=1 TICK_HZ=200
           make build ARCH=qpc LTO=1
 
       - name: gcc 14 for comparison (docker/Dockerfile) - product builds only

@@ -18,6 +18,23 @@
 
 Q_DEFINE_THIS_MODULE("sorter_ao")
 
+#if defined(TEST_L5) && (TEST_L5 == 1 || TEST_L5 == 5)
+#define IMU_STACK_WORDS 178
+#else
+#define IMU_STACK_WORDS 116
+#endif
+#if defined(TEST_L5) && TEST_L5 == 1
+#define LCD_STACK_WORDS 178
+#else
+#define LCD_STACK_WORDS 116
+#endif
+
+#if defined(TEST_L5) && TEST_L5 == 1
+#define L5_UNUSED __attribute__((unused))
+#else
+#define L5_UNUSED
+#endif
+
 enum { T_ESTOP = 0, T_GATE, T_SORT, T_BUS, T_IMU, T_CONSOLE, T_LCD, T_COUNT };
 enum { LOG_SIG = Q_USER_SIG, TICK_SIG, PARCEL_SIG, ESTOP_SIG, RX_SIG, SECOND_SIG, BUS_REQ_SIG, BUS_DONE_SIG,
        ESTOP_PRESS_SIG, PARCEL_OUT_SIG, IMPACT_SIG };
@@ -80,26 +97,30 @@ static const struct {
     uint8_t qlen;
 } task_def[T_COUNT] = {
     [T_ESTOP]   = { "estop",   102u, 7u, 2u },
+#if defined(TEST_L5) && TEST_L5 == 6
+    [T_GATE]    = { "gate",    70u, 6u, 2u },
+#else
     [T_GATE]    = { "gate",    126u, 6u, 2u },
+#endif
     [T_SORT]    = { "sort",    158u, 5u, 3u },
 #if defined(TEST_Q93) && TEST_Q93 >= 3
     [T_BUS]     = { "bus",     178u, 1u, 2u },
 #else
     [T_BUS]     = { "bus",     178u, 4u, 2u },
 #endif
-    [T_IMU]     = { "imu",     116u, 3u, 3u },
+    [T_IMU]     = { "imu",     IMU_STACK_WORDS, 3u, 3u },
     [T_CONSOLE] = { "console", 208u, 2u, QLOG_LEN + 3u },
 #if defined(TEST_Q93) && TEST_Q93 >= 3
-    [T_LCD]     = { "lcd",     116u, 4u, 2u },
+    [T_LCD]     = { "lcd",     LCD_STACK_WORDS, 4u, 2u },
 #else
-    [T_LCD]     = { "lcd",     116u, 1u, 2u },
+    [T_LCD]     = { "lcd",     LCD_STACK_WORDS, 1u, 2u },
 #endif
 };
 
 static const tasks_ops_t *ops;
 static Ao ao[T_COUNT];
-static StackType_t stk_estop[102], stk_gate[126], stk_sort[158], stk_bus[178], stk_imu[116],
-    stk_console[208], stk_lcd[116];
+static StackType_t stk_estop[102], stk_gate[126], stk_sort[158], stk_bus[178], stk_imu[IMU_STACK_WORDS],
+    stk_console[208], stk_lcd[LCD_STACK_WORDS];
 static StackType_t *const stk[T_COUNT] = { stk_estop, stk_gate, stk_sort, stk_bus, stk_imu, stk_console,
                                            stk_lcd };
 static QEvtPtr q_estop[2], q_gate[2], q_sort[3], q_bus[2], q_imu[3], q_console[QLOG_LEN + 3u], q_lcd[2];
@@ -252,6 +273,24 @@ void tasks_snapshot(void *dst, const void *src, size_t n)
         *d++ = *s++;
     taskEXIT_CRITICAL();
 }
+
+#if defined(TEST_L5) && TEST_L5 == 5
+static void l5_log(const char *event, const char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    tasks_log(event, fmt, ap);
+    va_end(ap);
+}
+#endif
+
+#if defined(TEST_L5) && TEST_L5 == 1
+#include "semphr.h"
+
+static StaticSemaphore_t bus_mtx_mem;
+static SemaphoreHandle_t bus_mtx;
+#endif
 
 void tasks_log(const char *event, const char *fmt, va_list ap)
 {
@@ -411,10 +450,31 @@ static QState estop_debouncing(Ao *me, QEvt const *e)
 
 static QState gate_occupied(Ao *me, QEvt const *e);
 
+#if defined(TEST_L5) && TEST_L5 == 7
+static const QEvt starve_evt = QEVT_INITIALIZER(TICK_SIG);
+
+static int starve_step(Ao *me, QEvt const *e)
+{
+    uint32_t now = HAL_GetTick();
+
+    if (now >= 30000u && now < 35000u) {
+        QACTIVE_POST(&me->super, &starve_evt, &me->super);
+        return 1;
+    }
+    if (e == &starve_evt)
+        me->due = xTaskGetTickCount();
+    return 0;
+}
+#endif
+
 static QState gate_clear(Ao *me, QEvt const *e)
 {
     switch (e->sig) {
     case TICK_SIG:
+#if defined(TEST_L5) && TEST_L5 == 7
+        if (starve_step(me, e))
+            return Q_HANDLED();
+#endif
         arm_next(me, &ops->gate_ms);
         if (ops->gate() == TASKS_GATE_IN)
             return Q_TRAN(&gate_occupied);
@@ -428,6 +488,10 @@ static QState gate_occupied(Ao *me, QEvt const *e)
 {
     switch (e->sig) {
     case TICK_SIG:
+#if defined(TEST_L5) && TEST_L5 == 7
+        if (starve_step(me, e))
+            return Q_HANDLED();
+#endif
         arm_next(me, &ops->gate_ms);
         if (ops->gate() == TASKS_GATE_OUT)
             return Q_TRAN(&gate_clear);
@@ -591,12 +655,34 @@ static QState bus_serving(Ao *me, QEvt const *e)
         BusDoneEvt *d = Q_NEW(BusDoneEvt, BUS_DONE_SIG);
 
         d->op = r->op;
+#if defined(TEST_L5) && TEST_L5 == 3
+        vTaskDelay(ms_ticks(5u));
+#endif
         if (r->op == BUS_MPU_READ) {
             ops->bus_wait(now_cyc() - r->t_post);
+#if defined(TEST_L5) && TEST_L5 == 5
+            if (HAL_GetTick() >= 30000u && HAL_GetTick() < 32000u) {
+                d->st = 1u;
+                for (unsigned i = 0; i < sizeof d->data; i++)
+                    d->data[i] = 0u;
+            } else
+#endif
             d->st = ops->bus_imu_read(d->data);
         } else {
             d->st = ops->bus_lcd_row(r->row, r->text);
         }
+#if defined(TEST_L5) && TEST_L5 == 4
+        if (r->op == BUS_MPU_READ) {
+            BusDoneEvt *late = Q_NEW(BusDoneEvt, BUS_DONE_SIG);
+
+            late->op = d->op;
+            late->st = d->st;
+            for (unsigned i = 0; i < sizeof late->data; i++)
+                late->data[i] = d->data[i];
+            QACTIVE_POST(r->reply_to, &d->super, &me->super);
+            QACTIVE_POST(r->reply_to, &late->super, &me->super);
+        } else
+#endif
         QACTIVE_POST(r->reply_to, &d->super, &me->super);
         return Q_HANDLED();
     }
@@ -605,7 +691,7 @@ static QState bus_serving(Ao *me, QEvt const *e)
     }
 }
 
-static QState imu_reading(Ao *me, QEvt const *e);
+static QState imu_reading(Ao *me, QEvt const *e) L5_UNUSED;
 
 static QState imu_idle(Ao *me, QEvt const *e)
 {
@@ -613,8 +699,23 @@ static QState imu_idle(Ao *me, QEvt const *e)
     case TICK_SIG:
         arm_next(me, ops->imu_ms);
         ops->imu_begin();
+#if defined(TEST_L5) && TEST_L5 == 1
+        {
+            uint8_t data[6];
+            uint32_t t0 = now_cyc();
+            uint8_t st;
+
+            (void)xSemaphoreTake(bus_mtx, portMAX_DELAY);
+            ops->bus_wait(now_cyc() - t0);
+            st = ops->bus_imu_read(data);
+            (void)xSemaphoreGive(bus_mtx);
+            ops->imu_end(st, data);
+        }
+        return Q_HANDLED();
+#else
         bus_request(me, BUS_MPU_READ, 0u);
         return Q_TRAN(&imu_reading);
+#endif
     default:
         return Q_SUPER(&QHsm_top);
     }
@@ -624,6 +725,18 @@ static QState imu_reading(Ao *me, QEvt const *e)
 {
     switch (e->sig) {
     case BUS_DONE_SIG:
+#if defined(TEST_L5) && TEST_L5 == 5
+        {
+            static uint16_t fails;
+
+            if (Q_EVT_CAST(BusDoneEvt)->st == 0u && fails != 0u) {
+                l5_log("L5_SENSOR", "ok after=%u", (unsigned)fails);
+                fails = 0u;
+            } else if (Q_EVT_CAST(BusDoneEvt)->st != 0u && fails < UINT16_MAX) {
+                fails++;
+            }
+        }
+#endif
         ops->imu_end(Q_EVT_CAST(BusDoneEvt)->st, Q_EVT_CAST(BusDoneEvt)->data);
         return Q_TRAN(&imu_idle);
     case TICK_SIG:
@@ -650,6 +763,9 @@ static QState console_run(Ao *me, QEvt const *e)
     case LOG_SIG: {
         LogEvt const *l = Q_EVT_CAST(LogEvt);
 
+#if defined(TEST_L5) && TEST_L5 == 2
+        vTaskDelay(ms_ticks(1u));
+#endif
         ops->log_line(l->ms, l->event, l->fmt, l->arg, l->n);
         log_lines++;
         return Q_HANDLED();
@@ -665,7 +781,7 @@ static QState console_run(Ao *me, QEvt const *e)
     }
 }
 
-static QState lcd_drawing(Ao *me, QEvt const *e);
+static QState lcd_drawing(Ao *me, QEvt const *e) L5_UNUSED;
 
 static QState lcd_idle(Ao *me, QEvt const *e)
 {
@@ -673,9 +789,26 @@ static QState lcd_idle(Ao *me, QEvt const *e)
     case TICK_SIG:
         arm_next(me, ops->lcd_ms);
         ops->lcd_begin(lcd_rows);
+#if defined(TEST_L5) && TEST_L5 == 1
+        {
+            uint8_t st = 0u;
+            char part[TASKS_LCD_PART];
+
+            (void)xSemaphoreTake(bus_mtx, portMAX_DELAY);
+            for (unsigned p = 0; p < 2u * TASKS_LCD_PARTS && st == 0u; p++) {
+                for (unsigned i = 0; i < TASKS_LCD_PART; i++)
+                    part[i] = lcd_rows[p / TASKS_LCD_PARTS][(p % TASKS_LCD_PARTS) * TASKS_LCD_PART + i];
+                st = ops->bus_lcd_row((uint8_t)p, part);
+            }
+            (void)xSemaphoreGive(bus_mtx);
+            ops->lcd_end(st);
+        }
+        return Q_HANDLED();
+#else
         me->step = 0u;
         bus_request(me, BUS_LCD_ROW, 0u);
         return Q_TRAN(&lcd_drawing);
+#endif
     default:
         return Q_SUPER(&QHsm_top);
     }
@@ -764,6 +897,9 @@ void tasks_start(const tasks_ops_t *o)
     QF_poolInit(pool_mid, sizeof pool_mid, sizeof pool_mid[0]);
     QF_poolInit(pool_log, sizeof pool_log, sizeof pool_log[0]);
     QTimeEvt_ctorX(&logger_second, &ao[T_CONSOLE].super, SECOND_SIG, 0U);
+#if defined(TEST_L5) && TEST_L5 == 1
+    bus_mtx = xSemaphoreCreateMutexStatic(&bus_mtx_mem);
+#endif
     for (unsigned i = 0; i < T_COUNT; i++) {
         QActive_ctor(&ao[i].super, Q_STATE_CAST(&ao_initial));
         QTimeEvt_ctorX(&ao[i].te, &ao[i].super, TICK_SIG, 0U);
@@ -819,17 +955,19 @@ void tasks_list(tasks_out_fn out)
 
 void tasks_report(tasks_out_fn out)
 {
-#if SIM_CRIT
+#if SIM_CRIT && (!defined(TEST_L5) || TEST_L5 != 1)
     uint64_t total = rtos_hal_runtime_now() - rt_total_base;
 #endif
 
+#if !defined(TEST_L5) || TEST_L5 != 1
     tasks_list(out);
+#endif
     out("BUSQ", "skip=%lu parcel_drop=%lu post_fail=%lu", (unsigned long)bus_skip, (unsigned long)parcel_drop,
         (unsigned long)qp_post_fail);
     out("LOGQ", "len=%u max_used=%lu lines=%lu drop=%lu trunc=%lu rx_drop=%lu",
         (unsigned)QLOG_LEN, (unsigned long)(QLOG_LEN + 2u - QF_getPoolMin(3U)), (unsigned long)log_lines,
         (unsigned long)log_drop, (unsigned long)log_trunc, (unsigned long)rx_drop);
-#if SIM_CRIT
+#if SIM_CRIT && (!defined(TEST_L5) || TEST_L5 != 1)
     {
         port_sim_counters_t c;
 

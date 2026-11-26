@@ -1,0 +1,52 @@
+@startuml s3_sequence
+!include style.iuml
+skinparam sequence {
+  LifeLineBorderColor #4A6A8A
+  ParticipantBackgroundColor #F7F9FC
+}
+title S3: посилка під потоком stats - витіснення за пріоритетами
+participant "SysTick +\nхук QP" as tick
+participant "Gate (6)" as gate
+participant "Sorter (5)" as sorter
+participant "Bus (4)" as bus
+participant "Imu (3)" as imu
+participant "Console (2)" as console
+participant "Lcd (1)" as lcd
+
+activate console
+note over console : друкує відповідь stats\n(одна команда за подію RX)
+tick -> gate : TICK (5 мс)
+deactivate console
+activate gate
+gate -> gate : gate(): АЦП, поріг -> PARCEL_IN
+gate ->> sorter : PARCEL_IN(ms, cyc)
+gate ->> console : LOG PARCEL_IN
+deactivate gate
+activate sorter
+sorter -> sorter : sort(): АЦП class, клас,\nлоток, ШІМ CCR (FR-03)
+sorter ->> console : LOG SORT
+deactivate sorter
+tick -> imu : TICK (10 мс)
+activate imu
+imu ->> bus : BUS_REQ(MPU_READ)
+deactivate imu
+activate bus
+note right of bus : Bus вища за Imu:\nFreeRTOS перемикається одразу
+bus -> bus : читання 6 B MPU\n(тік відкладено на спробу)
+bus ->> imu : BUS_DONE(st, data)
+deactivate bus
+activate imu
+imu -> imu : imu_end(): |a| > 2 g?
+deactivate imu
+activate console
+note over console : продовжує stats,\nдалі - LOG PARCEL_IN, LOG SORT
+console ->> console : RX (наступна команда)
+deactivate console
+activate lcd
+note over lcd : отримує процесор лише,\nколи всі вище чекають
+lcd ->> bus : BUS_REQ(LCD_ROW, part)
+deactivate lcd
+activate bus
+bus ->> lcd : BUS_DONE
+deactivate bus
+@enduml

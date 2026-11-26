@@ -1,0 +1,27 @@
+@startuml sorter
+!include style.iuml
+title AO Sorter (пріоритет 5) - ієрархічна машина
+state top {
+  state operational {
+    state ready
+    state sorting
+    ready --> sorting : PARCEL_IN / sort(): клас, лоток,\nсерво, лічильники, рядок SORT
+    sorting --> ready : PARCEL_OUT / sort_out()
+  }
+  state estop
+  state fault
+  operational --> estop : ESTOP_PRESS / estop_apply()
+  estop --> ready : ESTOP_PRESS / estop_apply()
+}
+[*] --> ready : init [sorter.state != FAULT]
+[*] --> fault : init [самоперевірка FAIL]
+top : PARCEL_IN / sort() (SORT_SKIP: стан не приймає)
+top : PARCEL_OUT / sort_out()
+top : ESTOP_PRESS / estop_apply() (у fault лишається fault)
+top : IMPACT / (ігнорується: estop, fault)
+operational : IMPACT / impact(x, y, z)
+ready : entry [TEST_QPCHECK] / Q_ASSERT(sorter.state == READY)
+sorting : entry [TEST_QPCHECK] / Q_ASSERT(sorter.state == SORTING)
+estop : entry [TEST_QPCHECK] / Q_ASSERT(sorter.state == ESTOP)
+fault : entry [TEST_QPCHECK] / Q_ASSERT(sorter.state == FAULT)
+@enduml

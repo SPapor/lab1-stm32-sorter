@@ -1,0 +1,10 @@
+@startuml imu
+!include style.iuml
+title AO Imu (пріоритет 3) - клієнт Bus
+[*] --> idle : init / arm_next(imu_ms)
+state idle
+state reading
+idle --> reading : TICK / arm_next; imu_begin();\npost BUS_REQ(MPU_READ) -> Bus
+reading --> idle : BUS_DONE / imu_end(st, data):\nудар -> post IMPACT -> Sorter;\nпомилка -> рядок IMU_ERR
+reading --> reading : TICK / arm_next; BUSQ skip++
+@enduml

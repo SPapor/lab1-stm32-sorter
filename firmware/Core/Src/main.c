@@ -107,7 +107,7 @@ enum {
 #ifdef OSMETRICS
 #define OSBENCH_N           1000u
 #endif
-#if defined(OSMETRICS) || defined(TEST_APIPROBE) || RTOS_ASSERT
+#if defined(OSMETRICS) || defined(TEST_APIPROBE) || RTOS_ASSERT || defined(TEST_L5)
 #define HIST_CMD            0
 #else
 #define HIST_CMD            1

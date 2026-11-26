@@ -1,0 +1,13 @@
+@startuml bus
+!include style.iuml
+title AO Bus (пріоритет 4) - власник шини I2C1
+[*] --> serving
+state serving : BUS_REQ(MPU_READ) / bus_wait(t_post); read 6 B MPU;\n    post BUS_DONE(st, data) -> reply_to
+state serving : BUS_REQ(LCD_ROW, part) / 4 символи HD44780\n    (курсор - лише на початку рядка);\n    post BUS_DONE(st) -> reply_to
+note right of serving
+  Транзакція з повторами FR-09 (до 3 спроб) - i2c_hal.
+  Тік на час однієї спроби відкладено (лише Wokwi, SIM_CRIT).
+  Стану fault немає: при відмові клієнт одразу
+  отримує BUS_DONE з помилкою (6.2.4).
+end note
+@enduml
