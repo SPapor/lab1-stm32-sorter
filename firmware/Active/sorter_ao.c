@@ -108,14 +108,10 @@ static const struct {
 #else
     [T_BUS]     = { "bus",     178u, 4u, 2u },
 #endif
-#if defined(TEST_L5) && (TEST_L5 == 1 || TEST_L5 == 5)
-    [T_IMU]     = { "imu",     178u, 3u, 3u },
-#else
-    [T_IMU]     = { "imu",     116u, 3u, 3u },
-#endif
+    [T_IMU]     = { "imu",     IMU_STACK_WORDS, 3u, 3u },
     [T_CONSOLE] = { "console", 208u, 2u, QLOG_LEN + 3u },
 #if defined(TEST_Q93) && TEST_Q93 >= 3
-    [T_LCD]     = { "lcd",     116u, 4u, 2u },
+    [T_LCD]     = { "lcd",     LCD_STACK_WORDS, 4u, 2u },
 #else
     [T_LCD]     = { "lcd",     LCD_STACK_WORDS, 1u, 2u },
 #endif
@@ -456,6 +452,19 @@ static QState gate_occupied(Ao *me, QEvt const *e);
 
 #if defined(TEST_L5) && TEST_L5 == 7
 static const QEvt starve_evt = QEVT_INITIALIZER(TICK_SIG);
+
+static int starve_step(Ao *me, QEvt const *e)
+{
+    uint32_t now = HAL_GetTick();
+
+    if (now >= 30000u && now < 35000u) {
+        QACTIVE_POST(&me->super, &starve_evt, &me->super);
+        return 1;
+    }
+    if (e == &starve_evt)
+        me->due = xTaskGetTickCount();
+    return 0;
+}
 #endif
 
 static QState gate_clear(Ao *me, QEvt const *e)
@@ -463,12 +472,8 @@ static QState gate_clear(Ao *me, QEvt const *e)
     switch (e->sig) {
     case TICK_SIG:
 #if defined(TEST_L5) && TEST_L5 == 7
-        if (HAL_GetTick() >= 30000u && HAL_GetTick() < 35000u) {
-            QACTIVE_POST(&me->super, &starve_evt, &me->super);
+        if (starve_step(me, e))
             return Q_HANDLED();
-        }
-        if (e == &starve_evt)
-            me->due = xTaskGetTickCount();
 #endif
         arm_next(me, &ops->gate_ms);
         if (ops->gate() == TASKS_GATE_IN)
@@ -483,6 +488,10 @@ static QState gate_occupied(Ao *me, QEvt const *e)
 {
     switch (e->sig) {
     case TICK_SIG:
+#if defined(TEST_L5) && TEST_L5 == 7
+        if (starve_step(me, e))
+            return Q_HANDLED();
+#endif
         arm_next(me, &ops->gate_ms);
         if (ops->gate() == TASKS_GATE_OUT)
             return Q_TRAN(&gate_clear);
@@ -652,9 +661,11 @@ static QState bus_serving(Ao *me, QEvt const *e)
         if (r->op == BUS_MPU_READ) {
             ops->bus_wait(now_cyc() - r->t_post);
 #if defined(TEST_L5) && TEST_L5 == 5
-            if (HAL_GetTick() >= 30000u && HAL_GetTick() < 32000u)
-                d->st = 3u;
-            else
+            if (HAL_GetTick() >= 30000u && HAL_GetTick() < 32000u) {
+                d->st = 1u;
+                for (unsigned i = 0; i < sizeof d->data; i++)
+                    d->data[i] = 0u;
+            } else
 #endif
             d->st = ops->bus_imu_read(d->data);
         } else {
@@ -715,11 +726,15 @@ static QState imu_reading(Ao *me, QEvt const *e)
     switch (e->sig) {
     case BUS_DONE_SIG:
 #if defined(TEST_L5) && TEST_L5 == 5
-        if (Q_EVT_CAST(BusDoneEvt)->st == 0u && me->step != 0u) {
-            l5_log("L5_SENSOR", "ok after=%u", (unsigned)me->step);
-            me->step = 0u;
-        } else if (Q_EVT_CAST(BusDoneEvt)->st != 0u && me->step < 255u) {
-            me->step++;
+        {
+            static uint16_t fails;
+
+            if (Q_EVT_CAST(BusDoneEvt)->st == 0u && fails != 0u) {
+                l5_log("L5_SENSOR", "ok after=%u", (unsigned)fails);
+                fails = 0u;
+            } else if (Q_EVT_CAST(BusDoneEvt)->st != 0u && fails < UINT16_MAX) {
+                fails++;
+            }
         }
 #endif
         ops->imu_end(Q_EVT_CAST(BusDoneEvt)->st, Q_EVT_CAST(BusDoneEvt)->data);

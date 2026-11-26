@@ -15,7 +15,7 @@ LDFLAGS += -Wl,--print-memory-usage
 #   ARCH=superloop — super loop ЛР3 (за замовчуванням)
 #   ARCH=rtos      — FreeRTOS: ядро з Middlewares/FreeRTOS, задачі з Tasks/
 #   LTO=1          — -flto для всього образу (обидві ARCH однаково)
-#   TICK_HZ=<Гц>   — частота тіку FreeRTOS, лише для ARCH=rtos (методичка 7.2, п. 6)
+#   TICK_HZ=<Гц>   — частота тіку FreeRTOS, для ARCH=rtos і qpc (методичка 7.2, п. 6; ЛР5 9.2)
 #   SIM_CRIT=1|0   — лише rtos: 1 (за замовчуванням) - порт з обходом для Wokwi
 #                    (Platform/rtos/port_sim), 0 - порт із сабмодуля без змін
 #   ASSERT=1       — лише rtos: configASSERT і перевірка обробників SVC/PendSV
@@ -50,12 +50,25 @@ endif
 L5_NAMES := mutex logblock busblock late sensor stack starve
 L5_ON := $(strip $(foreach i,1 2 3 4 5 6 7,$(if $(filter $(TEST_L5),$(word $(i),$(L5_NAMES))),$(i))))
 L5_ON := $(if $(L5_ON),$(L5_ON),0)
+ifneq ($(strip $(TEST_L5)),)
+ifneq ($(words $(TEST_L5) $(L5_ON)),2)
+$(error TEST_L5=$(TEST_L5): одне з $(L5_NAMES))
+endif
+ifeq ($(L5_ON),0)
+$(error TEST_L5=$(TEST_L5): одне з $(L5_NAMES))
+endif
+endif
 ifneq ($(L5_ON),0)
 ifneq ($(ARCH_ON),qpc)
 $(error TEST_L5 лише для ARCH=qpc)
 endif
 endif
 Q93_ON := $(if $(filter estop,$(TEST_Q93)),1,$(if $(filter estopx,$(TEST_Q93)),2,$(if $(filter pool,$(TEST_Q93)),3,$(if $(filter poolx,$(TEST_Q93)),4,0))))
+ifneq ($(L5_ON),0)
+ifneq ($(filter 1,$(TEST_QSTRESS))$(filter-out 0,$(Q93_ON)),)
+$(error TEST_L5 - окрема збірка, не разом з TEST_QSTRESS чи TEST_Q93)
+endif
+endif
 ifneq ($(Q93_ON),0)
 ifneq ($(ARCH_ON),qpc)
 $(error TEST_Q93 лише для ARCH=qpc)

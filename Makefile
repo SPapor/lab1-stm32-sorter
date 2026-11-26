@@ -13,7 +13,7 @@ $(foreach v,ARCH LTO TICK_HZ SIM_CRIT ASSERT,$(if $(filter environment%,$(origin
 # Варіант збірки: make build LAB2_CAP=1 (harness ЛР2), TEST_I2C_FAULT=1 (тест FR-09),
 # PERF=0 (без вимірювального модуля, docs/perf.md).
 # Архітектура (docs/rtos-design.md): ARCH=superloop (за замовчуванням) | rtos,
-# LTO=0|1, TICK_HZ=<Гц> (лише rtos, за замовчуванням 1000)
+# LTO=0|1, TICK_HZ=<Гц> (rtos і qpc, за замовчуванням 1000)
 FW_VARS = ARCH=$(ARCH) LTO=$(LTO) TICK_HZ=$(TICK_HZ) SIM_CRIT=$(SIM_CRIT) ASSERT=$(ASSERT) \
 	LAB2_CAP=$(LAB2_CAP) TEST_I2C_FAULT=$(TEST_I2C_FAULT) TEST_I2C_DIAG=$(TEST_I2C_DIAG) TEST_PRIMASK=$(TEST_PRIMASK) \
 	TEST_BOOTMARK=$(TEST_BOOTMARK) TEST_APIPROBE=$(TEST_APIPROBE) TEST_KSTRESS=$(TEST_KSTRESS) TEST_QSTRESS=$(TEST_QSTRESS) TEST_QPCHECK=$(TEST_QPCHECK) TEST_CRITCOST=$(TEST_CRITCOST) TEST_INVERSION=$(TEST_INVERSION) TEST_Q93=$(TEST_Q93) TEST_L5=$(TEST_L5) TEST_OS=$(TEST_OS) OSMETRICS=$(OSMETRICS) PERF=$(PERF) GIT_HASH=$(GIT_HASH)

@@ -96,7 +96,11 @@ extern volatile uint32_t qp_post_fail;
 #define INCLUDE_vTaskPrioritySet            0
 #define INCLUDE_uxTaskPriorityGet           0
 #define INCLUDE_vTaskDelete                 0
+#if defined(TEST_L5) && TEST_L5 == 1
+#define INCLUDE_vTaskSuspend                1
+#else
 #define INCLUDE_vTaskSuspend                0
+#endif
 #if defined(TEST_L5) && (TEST_L5 == 2 || TEST_L5 == 3)
 #define INCLUDE_vTaskDelay                  1
 #else
